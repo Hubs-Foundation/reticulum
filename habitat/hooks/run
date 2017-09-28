@@ -1,0 +1,19 @@
+#!{{ pkgPathFor "core/bash" }}/bin/bash
+
+set -e
+exec 2>&1
+
+echo "Executing reticulum run hook"
+
+export LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
+export MIX_ENV=prod
+export PORT={{cfg.phx.port}}
+export RELEASE_CONFIG_DIR={{ pkg.svc_config_path }}
+export RELEASE_MUTABLE_DIR={{ pkg.svc_var_path }}
+
+escript {{ pkg.path }}/bin/conform --conf {{ pkg.svc_config_path }}/ret.prod.conf --schema {{ pkg.svc_config_path }}/ret.schema.exs --config {{ pkg.path }}/releases/{{ pkg.version }}/sys.config --output-dir {{ pkg.svc_config_path }}
+
+{{ pkg.path }}/bin/ret command Elixir.Ret.ReleaseTasks createdb
+{{ pkg.path }}/bin/ret command Elixir.Ret.ReleaseTasks migrate
+
+exec {{ pkg.path }}/bin/ret foreground

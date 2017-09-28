@@ -1,0 +1,19 @@
+[phx]
+port = 4000
+secret_key = "txlMOtlaY5x3crvOCko4uV5PM29ul3zGo1oBGNO3cDXx+7GHLKqt0gR9qzgThxb5"
+
+[guardian]
+secret_key = "txlMOtlaY5x3crvOCko4uV5PM29ul3zGo1oBGNO3cDXx+7GHLKqt0gR9qzgThxb5"
+
+[oauth_google]
+client_id = "foo"
+client_secret = "bar"
+
+[db]
+username = "admin"
+password = "admin"
+hostname = "localhost"
+database = "ret_dev"
+template = "template0"
+pool_size = 16
+
