@@ -41,7 +41,7 @@ defmodule RetWeb.AuthController do
     conn
     |> Guardian.Plug.sign_in(user)
     |> put_flash(:info, "Authenticated successfully.")
-    |> redirect(to: Helpers.page_path(conn, :index))
+    |> redirect(to: Helpers.chat_path(conn, :index, "lobby"))
   end
 
   defp handle_login("json" = _format, conn, %User{} = user) do

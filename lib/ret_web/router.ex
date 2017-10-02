@@ -27,6 +27,7 @@ defmodule RetWeb.Router do
     pipe_through [:browser, :csrf_check, :browser_auth]
 
     get "/", PageController, :index
+    get "/chat/:room_id", ChatController, :index
   end
 
   scope "/api/login", RetWeb do

@@ -3,6 +3,7 @@ defmodule RetWeb.UserSocket do
 
   ## Channels
   channel "room:*", RetWeb.RoomChannel
+  channel "global:*", RetWeb.GlobalChannel
 
   ## Transports
   transport :websocket, Phoenix.Transports.WebSocket
