@@ -1,5 +1,5 @@
 ## Node name
--name ret@${HOSTNAME}
+-name ret@${NODE_NAME}
 
 ## Node cookie, used for distribution
 -setcookie ${NODE_COOKIE}
