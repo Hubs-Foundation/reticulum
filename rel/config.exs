@@ -39,6 +39,7 @@ environment :prod do
   set include_src: false
   set cookie: :"!bv%`t^j]ZEXxL}x%,aHRe/N^{Wp$ipKnSh3M0WsXD[n=|c]qaTt8XfIpQvkxVKO"
   set boot_opts: [:no_dot_erlang]
+  set vm_args: "rel/prod.vm_args"
 end
 
 # You may define one or more releases in this file.

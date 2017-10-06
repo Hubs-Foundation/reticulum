@@ -16,6 +16,14 @@
       hidden: false,
       to: "ueberauth.Elixir.Ueberauth.Strategy.Google.OAuth.client_secret"
     ],
+    "ret.Elixir.RetWeb.Endpoint.http.port": [
+      commented: false,
+      datatype: :integer,
+      default: 4000,
+      doc: "Provide documentation for ret.Elixir.RetWeb.Endpoint.http.port here.",
+      hidden: false,
+      to: "ret.Elixir.RetWeb.Endpoint.http.port"
+    ],
     "ret.Elixir.RetWeb.Endpoint.secret_key_base": [
       commented: false,
       datatype: :binary,
@@ -71,6 +79,22 @@
       doc: "Provide documentation for ret.Elixir.Ret.Repo.pool_size here.",
       hidden: false,
       to: "ret.Elixir.Ret.Repo.pool_size"
+    ],
+    "ret.Elixir.Ret.PeerageProvider.ip": [
+      commented: false,
+      datatype: :binary,
+      default: "127.0.0.1",
+      doc: "Provide documentation for ret.Elixir.Ret.PeerageProvider.ip here.",
+      hidden: false,
+      to: "ret.Elixir.Ret.PeerageProvider.ip"
+    ],
+    "ret.Elixir.Ret.PeerageProvider.http_port": [
+      commented: false,
+      datatype: :integer,
+      default: 9631,
+      doc: "Provide documentation for ret.Elixir.Ret.PeerageProvider.http_port here.",
+      hidden: false,
+      to: "ret.Elixir.Ret.PeerageProvider.http_port"
     ],
     "guardian.Elixir.Guardian.secret_key": [
       commented: false,

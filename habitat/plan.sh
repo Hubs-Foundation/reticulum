@@ -24,9 +24,7 @@ pkg_build_deps=(
 pkg_exports=(
    [port]=phx.port
 )
-pkg_binds=(
-   [database]="port host"
-)
+
 pkg_description="A moral imperative."
 
 do_verify() {

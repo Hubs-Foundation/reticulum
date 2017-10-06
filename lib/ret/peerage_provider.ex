@@ -5,7 +5,11 @@ defmodule Ret.PeerageProvider do
   end
 
   defp get_service_name do
-    fetch_json("http://localhost:9631/services")
+    habitat_config = Application.get_env(:ret, Ret.PeerageProvider)
+    habitat_ip = habitat_config[:ip]
+    habitat_port = habitat_config[:http_port]
+
+    fetch_json("http://#{habitat_ip}:#{habitat_port}/services")
     |> Enum.map(&(&1["service_group"]))
     |> Enum.filter(&(String.starts_with?(&1, "reticulum")))
     |> List.first
@@ -16,7 +20,11 @@ defmodule Ret.PeerageProvider do
   end
 
   defp get_hosts_for_service(service_name) do
-    fetch_json("http://localhost:9631/census")
+    habitat_config = Application.get_env(:ret, Ret.PeerageProvider)
+    habitat_ip = habitat_config[:ip]
+    habitat_port = habitat_config[:http_port]
+
+    fetch_json("http://#{habitat_ip}:#{habitat_port}/census")
     |> get_in(["census_groups", service_name, "population"])
     |> Map.values
     |> Enum.map(&("ret@#{&1["sys"]["ip"]}"))

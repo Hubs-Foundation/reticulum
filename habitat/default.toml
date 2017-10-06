@@ -1,9 +1,17 @@
 [phx]
 port = 4000
+ip = "127.0.0.1"
 secret_key = "txlMOtlaY5x3crvOCko4uV5PM29ul3zGo1oBGNO3cDXx+7GHLKqt0gR9qzgThxb5"
 
 [guardian]
 secret_key = "txlMOtlaY5x3crvOCko4uV5PM29ul3zGo1oBGNO3cDXx+7GHLKqt0gR9qzgThxb5"
+
+[erlang]
+node_cookie = "txlMOtlaY5x3crvOCko4uV5PM29ul3zGo1oBGNO3cDXx+7GHLKqt0gR9qzgThxb5"
+
+[habitat]
+ip = "127.0.0.1"
+http_port = 9631
 
 [oauth_google]
 client_id = "foo"
