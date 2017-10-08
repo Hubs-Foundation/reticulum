@@ -40,6 +40,7 @@ environment :prod do
   set cookie: :"!bv%`t^j]ZEXxL}x%,aHRe/N^{Wp$ipKnSh3M0WsXD[n=|c]qaTt8XfIpQvkxVKO"
   set boot_opts: [:no_dot_erlang]
   set vm_args: "rel/prod.vm_args"
+  set post_start_hook: "rel/hooks/post_start"
 end
 
 # You may define one or more releases in this file.

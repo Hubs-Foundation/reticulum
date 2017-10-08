@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+set +e
+
+while true; do  
+  nodetool ping
+  EXIT_CODE=$?
+  if [ $EXIT_CODE -eq 0 ]; then
+    echo "Reticulum started"
+    break
+  fi
+done
+
+set -e
+
+echo "Running migrations"  
+bin/ret rpc Elixir.Ret.ReleaseTasks migrate  
+echo "Migrations finished"
