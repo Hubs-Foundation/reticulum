@@ -26,7 +26,12 @@ export NODE_NAME=$(echo $HOSTNAME | sed 's/\([^.]*\)\(.*\)$/\1-local\2/')
 export NODE_COOKIE={{ cfg.erlang.node_cookie }}
 
 echo "Generating config"
-sleep 1 # Race condition on habitat config generation
+
+while [[ ! -f {{ pkg.svc_config_path }}/ret.prod.conf ]]
+do
+  sleep 0.1 # Wait for config generation
+done
+
 escript {{ pkg.path }}/bin/conform --conf {{ pkg.svc_config_path }}/ret.prod.conf --schema {{ pkg.svc_config_path }}/ret.schema.exs --config {{ pkg.path }}/releases/{{ pkg.version }}/sys.config --output-dir {{ pkg.svc_config_path }}
 
 echo "Starting server"
