@@ -4,22 +4,22 @@ defmodule RetWeb.RoomChannel do
   alias RetWeb.Presence
 
   def join("room:" <> _room_id, _payload, socket) do
-      send self(), :after_join
-      {:ok, socket}
+    send self(), :after_join
+    {:ok, socket}
   end
 
   def handle_in("message:new", message, socket) do
     broadcast! socket, "message:new", %{
-      user: socket.assigns.username,
-      body: message,
-      timestamp: :os.system_time(:milli_seconds)
+      sender: socket.assigns.username,
+      body: message["body"],
+      timestamp: :os.system_time(:seconds)
     }
     {:noreply, socket}
   end
 
   def handle_info(:after_join, socket) do
     Presence.track(socket, socket.assigns.username, %{
-      online_at: :os.system_time(:milli_seconds)
+      online_at: :os.system_time(:seconds)
     })
     push socket, "presence_state", Presence.list(socket)
     {:noreply, socket}

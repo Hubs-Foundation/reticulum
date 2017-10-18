@@ -1,0 +1,39 @@
+namespace Chat;
+
+table Response {
+}
+
+table Meta {
+  online_at:uint;
+  phx_ref:string;
+}
+
+table Metas {
+  user:string;
+  metas:[Meta];
+}
+
+table Payload {
+  body:string;
+  receiver:string;
+  sender:string;
+  timestamp:uint;
+  response:Response;
+  status:string;
+  joins:[Metas];
+  leaves:[Metas];
+  state:[Metas];
+}
+
+table Message {
+  ref:string;
+  join_ref:string;
+  topic:string;
+  event:string;
+  payload:Payload;
+  status:string;
+}
+
+root_type Message;
+
+file_identifier "CHAT";

@@ -1,0 +1,10 @@
+{ 
+    "ref": "1",
+    "topic": "room:lobby",
+    "event": "message:new",
+    "payload": {
+      "sender": "klee@mozilla.com",
+      "body": "hello world",
+      "timestamp": 1507939718
+    }
+}
