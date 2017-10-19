@@ -13,31 +13,27 @@ defmodule RetWeb.Transports.FlatBuffersSerializer do
 
     broadcast
     |> Map.put(:payload, payload)
-    |> pack_and_push!
+    |> encode_and_pack!
   end
 
   def fastlane!(%Broadcast{} = broadcast) do
-    pack_and_push!(broadcast)
+    encode_and_pack!(broadcast)
   end
 
   def encode!(%Reply{} = reply) do
     reply
     |> Map.put(:event, "phx_reply")
     |> Map.put(:payload, %{status: reply.status, response: reply.payload})
-    |> pack_and_push!
+    |> encode_and_pack!
   end
 
   def encode!(%Message{event: "presence_state"} = msg) do
-    %Message{msg | payload: %{state: format_presence(msg.payload)}} |> pack_and_push!
+    %Message{msg | payload: %{state: format_presence(msg.payload)}} 
+    |> encode_and_pack!
   end
 
   def encode!(%Message{} = msg) do
-    pack_and_push!(msg)
-  end
-
-  defp pack_and_push!(%{} = msg) do
-    {:ok, data} = pack_data(Poison.encode!(msg))
-    {:socket_push, :binary, data}
+    encode_and_pack!(msg)
   end
 
   def decode!(raw_message, _opts \\ []) do
@@ -82,6 +78,11 @@ defmodule RetWeb.Transports.FlatBuffersSerializer do
       {:response, "ok"} ->
         {:ok, "load schema ok"}
     end
+  end
+
+  defp encode_and_pack!(msg) do
+    {:ok, data} = pack_data(Poison.encode!(msg))
+    {:socket_push, :binary, data}
   end
 
   defp format_presence(payload) do

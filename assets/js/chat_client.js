@@ -8,26 +8,18 @@ let ChatClient = {
     let encode = function(msg, callback) {
       let builder = new flatbuffers.Builder(1024)
 
-      let body, sender, receiver, timestamp, join_ref
+      let body, sender, join_ref
 
       if(msg.payload.body)
         body = builder.createString(msg.payload.body)
-      if(msg.payload.sender)
+    if(msg.payload.sender)
         sender = builder.createString(msg.payload.sender)
-      if(msg.payload.receiver)
-        receiver = builder.createString(msg.payload.receiver)
-      if(msg.payload.timestamp)
-        timestamp = builder.createString(msg.payload.timestamp)
 
       Chat.Payload.startPayload(builder)
       if(body)
         Chat.Payload.addBody(builder, body)
       if(sender)
         Chat.Payload.addSender(builder, sender)
-      if(receiver)
-        Chat.Payload.addReceiver(builder, receiver)
-      if(timestamp)
-        Chat.Payload.addTimestamp(builder, timestamp)
 
       let payload = Chat.Payload.endPayload(builder)
       if(msg.join_ref)
@@ -35,9 +27,6 @@ let ChatClient = {
       let ref = builder.createString(msg.ref)
       let topic = builder.createString(msg.topic)
       let event = builder.createString(msg.event)
-      let status
-      if (msg.status)
-        status = msg.status
 
       Chat.Message.startMessage(builder)
       if(join_ref)
@@ -45,8 +34,6 @@ let ChatClient = {
       Chat.Message.addRef(builder, ref)
       Chat.Message.addTopic(builder, topic)
       Chat.Message.addEvent(builder, event)
-      if(status)
-        Chat.Message.addStatus(builder, status)
       Chat.Message.addPayload(builder, payload)
       let message = Chat.Message.endMessage(builder)
       Chat.Message.finishMessageBuffer(builder, message)
@@ -89,7 +76,7 @@ let ChatClient = {
     }
 
     let parse_presence = function(resp, payload, name) {
-        for (let i = 0; i < payload[name + "Length"](); i++) {
+      for (let i = 0; i < payload[name + "Length"](); i++) {
         let payloadRoot = payload[name](i)
         let respRoot = resp.payload[name]
         let user = payloadRoot.user()
