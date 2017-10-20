@@ -14,6 +14,7 @@ defmodule Ret.Application do
       supervisor(RetWeb.Endpoint, []),
       # Start your own worker by calling: Ret.Worker.start_link(arg1, arg2, arg3)
       # worker(Ret.Worker, [arg1, arg2, arg3]),
+      supervisor(RetWeb.Presence, []),
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

@@ -17,7 +17,6 @@
         <nav role="navigation">
           <ul class="nav nav-pills pull-right">
             <%= if @current_user do %>
-              <script>window.username = "<%= @current_user.email %>"</script>
               <li><%= @current_user.email %></li>
             <% end %>
           </ul>
