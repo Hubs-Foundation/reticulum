@@ -23,11 +23,20 @@ defmodule RetWeb.Router do
     plug JaSerializer.Deserializer
   end
 
+  pipeline :private do
+    plug Guardian.Plug.EnsureAuthenticated, [handler: RetWeb.AuthController]
+  end
+
   scope "/", RetWeb do
     pipe_through [:browser, :csrf_check, :browser_auth]
 
     get "/", PageController, :index
     get "/chat/:room_id", ChatController, :index
+  end
+
+  scope "/client", RetWeb do
+    pipe_through [:browser, :csrf_check, :browser_auth, :private]
+    get "/", ClientController, :index
   end
 
   scope "/api/login", RetWeb do

@@ -2,10 +2,13 @@
   "repository": {},
   "license": "MIT",
   "scripts": {
+    "build": "npm explore mr-social-client -- npm run build && cp -rf node_modules/mr-social-client/public ../priv/static/client",
     "deploy": "brunch build --production",
     "watch": "brunch watch --stdin"
   },
   "dependencies": {
+    "webpack": "^3.6.0",
+    "mr-social-client": "mozilla/mr-social-client#feature\/auth_for_allhands",
     "phoenix": "file:../deps/phoenix",
     "phoenix_html": "file:../deps/phoenix_html"
   },
