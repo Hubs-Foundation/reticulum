@@ -50,6 +50,7 @@ defmodule Ret.Mixfile do
       {:peerage, "~> 1.0"},
       {:httpoison, "~> 0.13"},
       {:poison, "~> 3.1"},
+      {:basic_auth, "~> 2.2"}
     ]
   end
 

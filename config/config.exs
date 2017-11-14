@@ -7,7 +7,12 @@ use Mix.Config
 
 # General application configuration
 config :ret,
-  ecto_repos: [Ret.Repo]
+  ecto_repos: [Ret.Repo],
+  basic_auth: [
+    username: "test",
+    password: "test",
+    realm:    "Y'All Hands"
+  ]
 
 config :phoenix, :format_encoders, "json-api": Posion
 

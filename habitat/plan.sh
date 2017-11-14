@@ -2,7 +2,7 @@ pkg_name=reticulum
 pkg_origin=mozillareality
 pkg_version="0.0.1"
 pkg_maintainer="Mozilla Mixed Reality <mixreality@mozilla.com>"
-pkg_upstream_url="http://github.com/mozilla/socialmr"
+pkg_upstream_url="http://github.com/mozilla/reticulum"
 pkg_license=('MPL-2.0')
 
 pkg_deps=(
@@ -51,6 +51,7 @@ do_build() {
     cd assets
     yarn install
     ./node_modules/brunch/bin/brunch build -p
+    npm run build
     cd ..
 
     mix phx.digest
