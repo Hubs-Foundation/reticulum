@@ -9,9 +9,9 @@ use Mix.Config
 config :ret,
   ecto_repos: [Ret.Repo],
   basic_auth: [
-    username: "test",
-    password: "test",
-    realm:    "Y'All Hands"
+    username: System.get_env("BASIC_AUTH_USERNAME"),
+    password: System.get_env("BASIC_AUTH_PASSWORD"),
+    realm: "Mozilla MR"
   ]
 
 config :phoenix, :format_encoders, "json-api": Posion
