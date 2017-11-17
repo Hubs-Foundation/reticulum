@@ -35,6 +35,10 @@ defmodule RetWeb.Router do
     get "/chat/:room_id", ChatController, :index
   end
 
+  scope "/health", RetWeb do
+    get "/", HealthController, :index
+  end
+
   scope "/client", RetWeb do
     pipe_through [:browser, :csrf_check, :browser_auth, :private]
     get "/", ClientController, :index
