@@ -2,7 +2,6 @@
   "repository": {},
   "license": "MIT",
   "scripts": {
-    "build": "npm explore mr-social-client -- npm run build && cp -rf node_modules/mr-social-client/public ../priv/static/client",
     "deploy": "brunch build --production",
     "watch": "brunch watch --stdin"
   },

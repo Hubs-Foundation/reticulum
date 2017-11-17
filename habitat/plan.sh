@@ -51,7 +51,10 @@ do_build() {
     cd assets
     yarn install
     ./node_modules/brunch/bin/brunch build -p
-    npm run build
+    npm explore mr-social-client -- yarn install
+    npm explore mr-social-client -- npm run build
+    mkdir -p ../priv/static
+    cp -rf node_modules/mr-social-client/public ../priv/static/client
     cd ..
 
     mix phx.digest
