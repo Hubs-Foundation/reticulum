@@ -6,7 +6,8 @@ defmodule RetWeb.UserSocket do
   channel "global:*", RetWeb.GlobalChannel
 
   ## Transports
-  transport :websocket, Phoenix.Transports.WebSocket
+  transport :websocket, Phoenix.Transports.WebSocket,
+    serializer: [{RetWeb.Transports.FlatBuffersSerializer, "~> 2.0.0"}]
   # transport :longpoll, Phoenix.Transports.LongPoll
 
   # Socket params are passed from the client and can

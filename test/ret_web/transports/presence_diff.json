@@ -1,0 +1,18 @@
+{ 
+  "topic": "room:lobby",
+  "event": "presence_diff",
+  "payload": {
+    "joins": [
+      {
+        "user": "klee@mozilla.com", 
+        "metas": [
+          {
+            "online_at": 1507939718,
+            "phx_ref": "wAM7sYbo0Nw="
+          }
+        ]
+      }
+    ],
+    "leaves": []
+  }
+}

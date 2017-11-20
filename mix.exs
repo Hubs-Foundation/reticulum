@@ -50,6 +50,7 @@ defmodule Ret.Mixfile do
       {:peerage, "~> 1.0"},
       {:httpoison, "~> 0.13"},
       {:poison, "~> 3.1"},
+      {:flatbuffer_port, [github: "Reimerei/elixir-flatbuffers"]},
     ]
   end
 
@@ -67,3 +68,4 @@ defmodule Ret.Mixfile do
     ]
   end
 end
+

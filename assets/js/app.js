@@ -13,7 +13,6 @@
 // to also remove its path from "config.paths.watched".
 import "phoenix_html"
 
-
 // Import local files
 //
 // Local files can be imported directly using relative
@@ -21,6 +20,10 @@ import "phoenix_html"
 
 // import socket from "./socket"
 
-import Chat from "./chat"
+import "flatbuffers"
 
-Chat.init()
+import "./schemas/chat_generated"
+
+import ChatClient from "./chat_client"
+ChatClient.init()
+

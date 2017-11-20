@@ -17,7 +17,7 @@ defmodule RetWeb.GlobalChannel do
         receiver: payload["receiver"],
         sender: payload["sender"],
         body: payload["body"],
-        timestamp: :os.system_time(:milli_seconds)
+        timestamp: :os.system_time(:seconds)
       }
     end
     {:noreply, socket}
@@ -32,7 +32,7 @@ defmodule RetWeb.GlobalChannel do
 
   def handle_info(:after_join, socket) do
     Presence.track(socket, socket.assigns.username, %{
-      online_at: :os.system_time(:milli_seconds)
+      online_at: :os.system_time(:seconds)
     })
     push socket, "presence_state", Presence.list(socket)
     {:noreply, socket}
