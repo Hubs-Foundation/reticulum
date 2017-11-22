@@ -106,14 +106,14 @@
     ],
     "ret.basic_auth.username": [
       commented: false,
-      datatype: :atom,
+      datatype: :binary,
       doc: "basic auth username",
       hidden: false,
       to: "ret.basic_auth.username"
     ],
     "ret.basic_auth.password": [
       commented: false,
-      datatype: :atom,
+      datatype: :binary,
       doc: "basic auth password",
       hidden: false,
       to: "ret.basic_auth.password"
