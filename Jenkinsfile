@@ -18,9 +18,5 @@ pipeline {
        archive 'results/**/.hart'
        deleteDir()
      }
-
-     success {
-       
-     }
    }
 }
