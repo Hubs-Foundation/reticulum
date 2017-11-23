@@ -11,6 +11,7 @@ pipeline {
     stage('build') {
       steps {
         sh '''
+          echo $(pwd)
           rm -rf ./results ./tmp
           mkdir -p ./tmp
           hab studio run \\"bash scripts/build.sh \\; echo \\\\\\\$! \\> tmp/build.exitcode\\"
