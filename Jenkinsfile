@@ -13,7 +13,7 @@ pipeline {
         sh 'rm -rf ./results ./tmp'
         sh 'mkdir -p ./tmp'
         sh '''
-          hab studio run \\"pwd \\; ls \\; bash scripts/build.sh \\; echo \\\\\\\$! \\> tmp/build.exitcode\\"
+          hab studio run \\"pwd \\; ls\\"
           exit \\$(cat tmp/build.exitcode)
         '''
       }
