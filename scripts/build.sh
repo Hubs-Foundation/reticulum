@@ -30,4 +30,8 @@ MIX_ENV=test
 
 mix do local.hex --force, local.rebar --force, deps.get, ecto.create, ecto.migrate, test && build
 
+test_pid=$!
+
 hab svc stop core/postgresql
+
+exit $!
