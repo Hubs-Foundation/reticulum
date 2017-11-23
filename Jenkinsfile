@@ -2,21 +2,16 @@ pipeline {
   agent any
 
   stages {
-    stage('checkout') {
+    stage('pre-build') {
       steps {
         checkout scm
+        sh 'rm -rf ./results ./tmp'
       }
     }
 
     stage('build') {
       steps {
-        sh 'rm -rf ./results ./tmp'
-        sh 'mkdir -p ./tmp'
-        sh '''
-          hab studio run ls scripts
-          hab studio run /bin/bash scripts/build.sh
-          exit \\$(cat tmp/build.exitcode)
-        '''
+        sh 'hab studio run /bin/bash scripts/build.sh'
       }
     }
   }
