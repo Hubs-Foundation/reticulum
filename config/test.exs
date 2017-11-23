@@ -12,8 +12,8 @@ config :logger, level: :warn
 # Configure your database
 config :ret, Ret.Repo,
   adapter: Ecto.Adapters.Postgres,
-  username: "postgres",
-  password: "postgres",
+  username: "admin",
+  password: "admin",
   database: "ret_test",
   hostname: "localhost",
   template: "template0",
