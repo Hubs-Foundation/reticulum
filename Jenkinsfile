@@ -12,8 +12,9 @@ pipeline {
       steps {
         sh 'rm -rf ./results ./tmp'
         sh 'mkdir -p ./tmp'
+        sh 'ls scripts'
         sh '''
-          hab studio run \\"ls\\"
+          hab studio run \\"bash scripts/build.sh \\; echo \\\\\\\$! \\> tmp/build.exitcode\\"
           exit \\$(cat tmp/build.exitcode)
         '''
       }
