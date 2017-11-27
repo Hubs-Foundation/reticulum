@@ -8,7 +8,7 @@
     <meta name="author" content="">
 
     <title>Hello Ret!</title>
-    <link rel="stylesheet" href="<%= static_path(@conn, "/css/app.css") %>">
+    <link rel="stylesheet" href="<%= static_url(@conn, "/css/app.css") %>">
   </head>
 
   <body>
