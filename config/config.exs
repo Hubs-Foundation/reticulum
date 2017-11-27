@@ -34,7 +34,7 @@ config :logger, :console,
 
 config :ueberauth, Ueberauth,
   base_path: "/api/login",
-  providers: [google: { Ueberauth.Strategy.Google, [] }]
+  providers: [google: { Ueberauth.Strategy.Google, [default_scope: "profile email"] }]
 
 # Ueberauth Strategy Config for Google oauth
 config :ueberauth, Ueberauth.Strategy.Google.OAuth,
