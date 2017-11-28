@@ -7,7 +7,12 @@ use Mix.Config
 
 # General application configuration
 config :ret,
-  ecto_repos: [Ret.Repo]
+  ecto_repos: [Ret.Repo],
+  basic_auth: [
+    username: System.get_env("BASIC_AUTH_USERNAME"),
+    password: System.get_env("BASIC_AUTH_PASSWORD"),
+    realm: "Mozilla MR"
+  ]
 
 config :phoenix, :format_encoders, "json-api": Posion
 
@@ -29,13 +34,12 @@ config :logger, :console,
 
 config :ueberauth, Ueberauth,
   base_path: "/api/login",
-  providers: [google: { Ueberauth.Strategy.Google, [] }]
+  providers: [google: { Ueberauth.Strategy.Google, [default_scope: "profile email"] }]
 
 # Ueberauth Strategy Config for Google oauth
 config :ueberauth, Ueberauth.Strategy.Google.OAuth,
   client_id: System.get_env("GOOGLE_CLIENT_ID"),
-  client_secret: System.get_env("GOOGLE_CLIENT_SECRET"),
-  redirect_uri: System.get_env("GOOGLE_REDIRECT_URI")
+  client_secret: System.get_env("GOOGLE_CLIENT_SECRET")
 
 # Guardian configuration
 config :guardian, Guardian,

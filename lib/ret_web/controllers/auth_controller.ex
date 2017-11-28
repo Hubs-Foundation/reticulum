@@ -11,6 +11,10 @@ defmodule RetWeb.AuthController do
   def request(_, _) do
   end
 
+  def unauthenticated(conn, _) do
+    redirect(conn, to: Helpers.auth_path(conn, :request, :google))
+  end
+
   def callback(%{ assigns: %{ ueberauth_failure: _failure }} = conn, _params) do
     conn
     |> put_flash(:error, "Failed to authenticate.")
@@ -38,10 +42,17 @@ defmodule RetWeb.AuthController do
   end
 
   defp handle_login("html" = _format, conn, %User{} = user) do
-    conn
+    conn = conn
     |> Guardian.Plug.sign_in(user)
     |> put_flash(:info, "Authenticated successfully.")
-    |> redirect(to: Helpers.chat_path(conn, :index, "lobby"))
+
+    {:ok, jwt, claims} = 
+      Guardian.Plug.current_resource(conn) 
+      |> Guardian.encode_and_sign(%{email: user.email, name: user.name})
+
+    conn
+    |> put_resp_cookie("jwt", jwt, http_only: false)
+    |> redirect(to: Helpers.client_path(conn, :index))
   end
 
   defp handle_login("json" = _format, conn, %User{} = user) do

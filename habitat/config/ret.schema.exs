@@ -103,6 +103,20 @@
       doc: "Provide documentation for guardian.Elixir.Guardian.secret_key here.",
       hidden: false,
       to: "guardian.Elixir.Guardian.secret_key"
+    ],
+    "ret.basic_auth.username": [
+      commented: false,
+      datatype: :binary,
+      doc: "basic auth username",
+      hidden: false,
+      to: "ret.basic_auth.username"
+    ],
+    "ret.basic_auth.password": [
+      commented: false,
+      datatype: :binary,
+      doc: "basic auth password",
+      hidden: false,
+      to: "ret.basic_auth.password"
     ]
   ],
   transforms: [],

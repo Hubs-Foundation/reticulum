@@ -17,6 +17,10 @@ http_port = 9631
 client_id = "foo"
 client_secret = "bar"
 
+[basic_auth]
+username = "foo"
+password = "bar"
+
 [db]
 username = "admin"
 password = "admin"

@@ -2,7 +2,7 @@ pkg_name=reticulum
 pkg_origin=mozillareality
 pkg_version="0.0.1"
 pkg_maintainer="Mozilla Mixed Reality <mixreality@mozilla.com>"
-pkg_upstream_url="http://github.com/mozilla/socialmr"
+pkg_upstream_url="http://github.com/mozilla/reticulum"
 pkg_license=('MPL-2.0')
 
 pkg_deps=(
@@ -15,7 +15,7 @@ pkg_deps=(
 pkg_build_deps=(
     core/coreutils
     core/git
-    core/yarn
+    idolgirev/yarn
     core/node
     core/erlang/20.0
     core/elixir/1.5.0
@@ -50,7 +50,13 @@ do_build() {
 
     cd assets
     yarn install
+    yarn upgrade mr-social-client
     ./node_modules/brunch/bin/brunch build -p
+    npm explore mr-social-client -- yarn install
+    npm explore mr-social-client -- npm run build
+    rm -rf ../priv/static/client
+    mkdir -p ../priv/static
+    cp -rf node_modules/mr-social-client/public ../priv/static/client
     cd ..
 
     mix phx.digest

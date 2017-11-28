@@ -41,8 +41,8 @@ defmodule Ret.Mixfile do
       {:phoenix_live_reload, "~> 1.0", only: :dev},
       {:gettext, "~> 0.11"},
       {:cowboy, "~> 1.0"},
-      {:ueberauth, "~> 0.4"},
-      {:ueberauth_google, "~> 0.6.0"},
+      {:ueberauth, "~> 0.5"},
+      {:ueberauth_google, "~> 0.7.0"},
       {:ja_serializer, "~> 0.12.0"},
       {:guardian, "~> 0.14.5"},
       {:distillery, "~> 1.5", runtime: false, github: "gfodor/distillery", branch: "feature/boot_opts"},
@@ -50,6 +50,7 @@ defmodule Ret.Mixfile do
       {:peerage, "~> 1.0"},
       {:httpoison, "~> 0.13"},
       {:poison, "~> 3.1"},
+      {:basic_auth, "~> 2.2"}
     ]
   end
 
