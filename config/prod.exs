@@ -16,7 +16,7 @@ use Mix.Config
 config :ret, RetWeb.Endpoint,
   http: [],
   url: [host: "reticulum.io", port: 80],
-  static_url: [scheme: "https", host: "assets-dev.reticulum.io", port: 443]
+  static_url: [scheme: "https", host: "assets-dev.reticulum.io", port: 443],
   cache_static_manifest: "priv/static/cache_manifest.json",
   server: true,
   root: "."
