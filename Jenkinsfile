@@ -11,7 +11,7 @@ pipeline {
 
     stage('build') {
       steps {
-        sh 'HAB_ORIGIN=mozillareality sudo hab-studio run /bin/bash scripts/build.sh'
+        sh 'sudo hab-studio run /bin/bash scripts/build.sh'
       }
     }
   }
@@ -19,7 +19,7 @@ pipeline {
   post {
      always {
        archive 'tmp/*.out'
-       sh 'HAB_ORIGIN=mozillareality sudo hab-studio rm'
+       sh 'sudo hab-studio rm'
        deleteDir()
      }
    }
