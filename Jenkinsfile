@@ -11,7 +11,9 @@ pipeline {
 
     stage('build') {
       steps {
-        sh '/usr/bin/script \\-\\-return \\-c \\"sudo /usr/bin/hab-docker-studio run /bin/bash scripts/build.sh\\" /dev/null'
+        sh '''
+          /usr/bin/script --return -c \\"sudo /usr/bin/hab-docker-studio run /bin/bash scripts/build.sh\\" /dev/null'
+	'''
       }
     }
   }
