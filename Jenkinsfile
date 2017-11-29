@@ -4,7 +4,7 @@ pipeline {
   stages {
     stage('pre-build') {
       steps {
-        checkout scm: [clean: false]
+        checkout scm
         sh 'rm -rf ./results ./tmp'
       }
     }
