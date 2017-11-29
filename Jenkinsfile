@@ -8,7 +8,7 @@ pipeline {
           $class: 'GitSCM',
           branches: scm.branches,
           extensions: scm.extensions + [[$class: 'CleanCheckout']],
-          userRemoteConfigs: scm.userRemoteConfigs
+          userRemoteConfigs: scm.userRemoteConfigs,
           clean: false,
           clearWorkspace: false
         ])
