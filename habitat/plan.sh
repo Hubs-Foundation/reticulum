@@ -49,11 +49,11 @@ do_build() {
     mix compile
 
     cd assets
-    mkdir yarn-cache
-    yarn --cache-folder yarn-cache install
-    yarn --cache-folder yarn-cache upgrade mr-social-client
+    mkdir .yarn
+    yarn install --cache-folder .yarn
+    yarn upgrade --cache-folder .yarn mr-social-client
     ./node_modules/brunch/bin/brunch build -p
-    npm explore mr-social-client -- yarn install --cache-folder yarn-cache
+    npm explore mr-social-client -- yarn install --cache-folder .yarn
     npm explore mr-social-client -- npm run build
     rm -rf ../priv/static/client
     mkdir -p ../priv/static
