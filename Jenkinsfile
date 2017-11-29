@@ -11,7 +11,7 @@ pipeline {
 
     stage('build') {
       steps {
-        sh 'hab studio run /bin/bash scripts/build.sh'
+        sh 'sudo hab studio run /bin/bash scripts/build.sh'
       }
     }
   }
