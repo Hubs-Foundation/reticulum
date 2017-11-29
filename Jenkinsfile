@@ -20,7 +20,7 @@ pipeline {
 
   post {
      always {
-       archive 'tmp/*.out'
+       archive 'tmp/*.log'
        deleteDir()
      }
    }
