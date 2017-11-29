@@ -48,12 +48,12 @@ do_build() {
     mix deps.get --only prod
     mix compile
 
-    mkdir -p tmp/yarn-cache
     cd assets
-    yarn --cache-folder ../tmp/yarn-cache install
-    yarn --cache-folder ../tmp/yarn-cache upgrade mr-social-client
+    mkdir yarn-cache
+    yarn --cache-folder yarn-cache install
+    yarn --cache-folder yarn-cache upgrade mr-social-client
     ./node_modules/brunch/bin/brunch build -p
-    npm explore mr-social-client -- yarn install --cache-folder ../tmp/yarn-cache
+    npm explore mr-social-client -- yarn install --cache-folder yarn-cache
     npm explore mr-social-client -- npm run build
     rm -rf ../priv/static/client
     mkdir -p ../priv/static
