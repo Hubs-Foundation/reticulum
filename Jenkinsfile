@@ -19,7 +19,6 @@ pipeline {
   post {
      always {
        archive 'tmp/*.out'
-       archive 'results/**/.hart'
        deleteDir()
      }
    }
