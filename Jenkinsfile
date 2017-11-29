@@ -11,7 +11,7 @@ pipeline {
 
     stage('build') {
       steps {
-        sh 'sudo hab studio -D run /bin/bash scripts/build.sh'
+        sh 'sudo /usr/bin/hab-docker-studio run /bin/bash scripts/build.sh'
       }
     }
   }
