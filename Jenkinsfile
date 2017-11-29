@@ -4,7 +4,15 @@ pipeline {
   stages {
     stage('pre-build') {
       steps {
-        checkout scm: [ clearWorkspace: false, clean: false ]
+        checkout([
+          $class: 'GitSCM',
+          branches: scm.branches,
+          extensions: scm.extensions + [[$class: 'CleanCheckout']],
+          userRemoteConfigs: scm.userRemoteConfigs
+          clean: false,
+          clearWorkspace: false
+        ])
+
         sh 'rm -rf ./results ./tmp'
       }
     }
@@ -13,7 +21,7 @@ pipeline {
       steps {
         sh '''
           /usr/bin/script --return -c \\\\"sudo /usr/bin/hab-docker-studio -k mozillareality run /bin/bash scripts/build.sh\\\\" /dev/null
-	'''
+        '''
       }
     }
   }
