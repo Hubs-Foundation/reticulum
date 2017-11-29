@@ -21,7 +21,6 @@ pipeline {
   post {
      always {
        archive 'tmp/*.log'
-       deleteDir()
      }
    }
 }
