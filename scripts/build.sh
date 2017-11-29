@@ -29,15 +29,7 @@ ln -s "$(hab pkg path core/coreutils)/bin/env" /usr/bin/env
 deps="$(join_by " " "${pkg_deps[@]}") $(join_by " " "${pkg_build_deps[@]}") $(join_by " " "${pkg_test_deps[@]}")"
 
 
-echo "Installing dependencies"
 hab pkg install -b $deps
-
-echo "Starting supervisor"
-# Need to run supervisor on a non-standard port, since we may be running on a node already running a supervisor.
-hab sup run --listen-gossip 0.0.0.0:10638 --listen-http 0.0.0.0:10631 &
-sleep 5
-
-echo "Starting PostgreSQL"
 hab svc start core/postgresql &
 
 MIX_ENV=test
