@@ -30,6 +30,10 @@ deps="$(join_by " " "${pkg_deps[@]}") $(join_by " " "${pkg_build_deps[@]}") $(jo
 
 
 hab pkg install -b $deps
+
+# Need to run supervisor on a non-standard port, since we may be running on a node already running a supervisor.
+hab sup run --listen-gossip 0.0.0.0:10638 --listen-http 0.0.0.0:10631 &
+sleep 1
 hab svc start core/postgresql &
 
 MIX_ENV=test
