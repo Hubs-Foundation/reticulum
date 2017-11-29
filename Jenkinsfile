@@ -19,6 +19,7 @@ pipeline {
   post {
      always {
        archive 'tmp/*.out'
+       sh 'sudo hab-studio rm'
        deleteDir()
      }
    }
