@@ -11,7 +11,7 @@ pipeline {
 
     stage('build') {
       steps {
-        sh 'sudo hab-studio -D run /bin/bash scripts/build.sh'
+        sh 'sudo hab -D studio run /bin/bash scripts/build.sh'
       }
     }
   }
@@ -19,7 +19,6 @@ pipeline {
   post {
      always {
        archive 'tmp/*.out'
-       sh 'sudo hab-studio rm'
        deleteDir()
      }
    }
