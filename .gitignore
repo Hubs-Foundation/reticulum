@@ -26,7 +26,7 @@ npm-debug.log
 # Alternatively, you may comment the line below and commit the
 # secrets files as long as you replace their contents by environment
 # variables.
-/config/*.secret.exs
+# /config/*.secret.exs
 
 .env
 results/
