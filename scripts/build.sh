@@ -41,7 +41,9 @@ mix do local.hex --force, local.rebar --force, deps.get, ecto.create, ecto.migra
 
 mix test > tmp/reticulum-test-$(date +%Y%m%d%H%M%S).log && build
 
-test_pid=$!
+TEST_PID=$!
+
+echo "Test and build exit code: $TEST_PID"
 
 hab svc stop core/postgresql
 popd
