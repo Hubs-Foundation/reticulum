@@ -41,11 +41,11 @@ mix do local.hex --force, local.rebar --force, deps.get, ecto.create, ecto.migra
 
 mix test > tmp/reticulum-test-$(date +%Y%m%d%H%M%S).log && build
 
-TEST_PID=$!
+TEST_EXIT_CODE=$?
 
-echo "Test and build exit code: $TEST_PID"
+echo "Test and build exit code: $TEST_EXIT_CODE"
 
 hab svc stop core/postgresql
 popd
 
-exit $!
+exit $TEST_EXIT_CODE
