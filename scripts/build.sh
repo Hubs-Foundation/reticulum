@@ -36,7 +36,7 @@ MIX_ENV=test
 
 mix do local.hex --force, local.rebar --force, deps.get, ecto.create, ecto.migrate
 
-mix test > tmp/reticulum-test-$(date +%Y%m%d%H%M%S).out && build
+mix test > tmp/reticulum-test-$(date +%Y%m%d%H%M%S).log && build
 
 test_pid=$!
 
