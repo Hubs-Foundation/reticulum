@@ -34,6 +34,7 @@ deps="$(join_by " " "${pkg_deps[@]}") $(join_by " " "${pkg_build_deps[@]}") $(jo
 
 hab pkg install -b $deps
 hab svc start core/postgresql &
+while hab svc status | grep postgres | grep state:down ; do sleep 0.1; done
 
 MIX_ENV=test
 
