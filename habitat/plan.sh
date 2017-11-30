@@ -50,6 +50,11 @@ do_build() {
 
     cd assets
     mkdir -p .yarn
+
+    # Yarn expects /usr/local/share
+    # https://github.com/yarnpkg/yarn/issues/4628
+    mkdir -p /usr/local/share
+
     yarn install --cache-folder .yarn
     yarn upgrade --cache-folder .yarn mr-social-client
     ./node_modules/brunch/bin/brunch build -p
