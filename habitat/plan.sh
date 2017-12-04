@@ -50,6 +50,12 @@ do_build() {
 
     cd assets
     mkdir -p .yarn
+    mkdir -p node_modules
+
+    # TODO, issues with yarn cache not having up to date code
+    rm -rf .yarn
+    rm -rf node_modules
+
 
     # Yarn expects /usr/local/share
     # https://github.com/yarnpkg/yarn/issues/4628
