@@ -54,6 +54,9 @@ config :ret, Ret.Repo,
   migration_source: "schema_migrations",
   after_connect: { Ret.Repo, :set_search_path, ["public, ret0"] }
 
+config :peerage,
+  log_results: false
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{Mix.env}.exs"
