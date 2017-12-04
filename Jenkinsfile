@@ -6,7 +6,7 @@ pipeline {
       steps {
         checkout scm: [$class: 'GitSCM', clean: false, clearWorkspace: false]
 
-        sh 'rm -rf ./results ./tmp'
+        sh 'rm -rf ./habitat/results ./tmp'
       }
     }
 
@@ -16,11 +16,11 @@ pipeline {
           /usr/bin/script --return -c \\\\"sudo /usr/bin/hab-docker-studio -k mozillareality run /bin/bash scripts/build.sh\\\\" /dev/null
         '''
 
-        sh 'sudo /usr/bin/hab-pkg-upload $(ls -rt results/*.hart | head -n 1)'
+        sh 'sudo /usr/bin/hab-pkg-upload $(ls -rt habitat/results/*.hart | head -n 1)'
 
         script {
             // Grab IDENT file and cat it from .hart
-            def s = $/eval 'ls -rt results/*.hart | head -n 1'/$
+            def s = $/eval 'ls -rt habitat/results/*.hart | head -n 1'/$
             def hart = sh(returnStdout: true, script: "${s}").trim()
             s = $/eval 'tail -n +6 ${hart} | xzcat | tar tf - | grep IDENT'/$
             def identPath = sh(returnStdout: true, script: "${s}").trim()
