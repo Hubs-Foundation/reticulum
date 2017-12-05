@@ -50,6 +50,12 @@ do_build() {
 
     cd assets
     mkdir -p .yarn
+    mkdir -p node_modules
+
+    # TODO, issues with yarn cache not having up to date code
+    rm -rf .yarn
+    rm -rf node_modules
+
 
     # Yarn expects /usr/local/share
     # https://github.com/yarnpkg/yarn/issues/4628
@@ -59,7 +65,7 @@ do_build() {
     yarn upgrade --cache-folder .yarn mr-social-client
     ./node_modules/brunch/bin/brunch build -p
     npm explore mr-social-client -- yarn install --cache-folder .yarn
-    npm explore mr-social-client -- npm run build
+    BASE_ASSETS_PATH="https://assets-dev.reticulum.io/client/" npm explore mr-social-client -- npm run build
     rm -rf ../priv/static/client
     mkdir -p ../priv/static
     cp -rf node_modules/mr-social-client/public ../priv/static/client
