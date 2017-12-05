@@ -6,7 +6,7 @@
     "watch": "brunch watch --stdin"
   },
   "dependencies": {
-    "mr-social-client": "mozilla/mr-social-client#cdn-assets",
+    "mr-social-client": "mozilla/mr-social-client",
     "phoenix": "file:../deps/phoenix",
     "phoenix_html": "file:../deps/phoenix_html"
   },
