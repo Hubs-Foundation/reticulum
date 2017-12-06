@@ -6,7 +6,6 @@ defmodule RetWeb.Router do
     plug :fetch_session
     plug :fetch_flash
     plug :put_secure_browser_headers
-    plug BasicAuth, use_config: {:ret, :basic_auth}
   end
 
   pipeline :csrf_check do
