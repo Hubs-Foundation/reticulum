@@ -36,7 +36,7 @@ defmodule Ret.BasicAuth do
 
   def call(conn, options) do
     case current_path(conn, %{}) do
-      "/client/"<>_path ->
+      "/client/index.html" ->
         header_content = Plug.Conn.get_req_header(conn, "authorization")
         respond(conn, header_content, options)
       _ -> conn
