@@ -2,11 +2,10 @@
   "repository": {},
   "license": "MIT",
   "scripts": {
-    "deploy": "brunch build --production",
+    "build": "brunch build --production",
     "watch": "brunch watch --stdin"
   },
   "dependencies": {
-    "mr-social-client": "mozilla/mr-social-client",
     "phoenix": "file:../deps/phoenix",
     "phoenix_html": "file:../deps/phoenix_html"
   },

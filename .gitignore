@@ -31,5 +31,3 @@ npm-debug.log
 
 .env
 results/
-
-assets/yarn.lock
