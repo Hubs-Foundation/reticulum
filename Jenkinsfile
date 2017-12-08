@@ -3,6 +3,10 @@ import groovy.json.JsonOutput
 pipeline {
   agent any
 
+  options {
+    ansiColor('xterm')
+  }
+
   stages {
     stage('pre-build') {
       steps {
