@@ -11,7 +11,7 @@ config :ret,
   basic_auth: [
     username: System.get_env("BASIC_AUTH_USERNAME"),
     password: System.get_env("BASIC_AUTH_PASSWORD"),
-    realm: "Mozilla MR"
+    realm: "Same as the hotel wifi!"
   ]
 
 config :phoenix, :format_encoders, "json-api": Posion

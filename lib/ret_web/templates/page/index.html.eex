@@ -1,6 +1,19 @@
-<div class="jumbotron">
-<a class="btn btn-primary btn-lg" href="/api/login/google">
-  <i class="fa fa-google"></i>
-  Sign in with Google
-</a>
+<br>
+<div class="center">
+  <a href="https://blog.mozvr.com/enabling-the-social-3d-web/">Read about Mozilla's Social Mixed Reality</a>
 </div>
+<br>
+<div class="center">
+  <a href="https://github.com/mozilla/reticulum">https://github.com/mozilla/reticulum</a>
+</div>
+<br>
+<div class="center">
+  <%= unless @current_user do %>
+  <a class="btn btn-primary btn-lg" href="/api/login/google">Sign in with Google</a>
+  <% else %>
+  <a class="btn btn-primary btn-lg" href="/client">Launch Meeting Room</a>
+  <% end %>
+</div>
+
+
+

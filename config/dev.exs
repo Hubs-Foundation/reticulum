@@ -33,7 +33,7 @@ config :ret, RetWeb.Endpoint,
 
 # Watch static and templates for browser reloading.
 config :ret, RetWeb.Endpoint,
-  static_url: [scheme: "https", host: "assets-dev.reticulum.io", port: 443],
+  # static_url: [scheme: "https", host: "assets-dev.reticulum.io", port: 443],
   live_reload: [
     patterns: [
       ~r{priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$},

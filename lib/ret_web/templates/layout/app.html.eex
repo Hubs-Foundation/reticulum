@@ -7,29 +7,62 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>Hello Ret!</title>
+    <title>Reticulum</title>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
     <link rel="stylesheet" href="<%= static_url(@conn, "/css/app.css") %>">
+
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
   </head>
 
   <body>
-    <div class="container">
-      <header class="header">
-        <nav role="navigation">
-          <ul class="nav nav-pills pull-right">
-            <%= if @current_user do %>
-              <li><%= @current_user.email %></li>
-            <% end %>
-          </ul>
-        </nav>
-        <span class="logo"></span>
-      </header>
-
-      <p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>
-      <p class="alert alert-danger" role="alert"><%= get_flash(@conn, :error) %></p>
-
-      <main role="main">
-        <%= render @view_module, @view_template, assigns %>
-      </main>
+    <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+      <a class="navbar-brand" href="#">Reticulum</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#toggler" aria-controls="toggler" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="toggler">
+        <ul class="navbar-nav ml-auto">
+          <%= if @current_user do %>
+          <li class="nav-item">
+            <span class="navbar-text"><%= @current_user.email %></span>
+          </li>
+          <li class="">
+            <a class="nav-link active" href="/api/login/google">Switch User</a>
+          </li>
+        <% end %>
+        </ul>
+      </div>
+    </nav>
+    <main role="main">
+      <div class="jumbotron">
+        <div class="container">
+          <div class="row">
+            <div class="col-sm-3"></div>
+            <div class="col-sm-6">
+              <p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>
+              <p class="alert alert-danger" role="alert"><%= get_flash(@conn, :error) %></p>
+            </div>          
+          </div>
+        </div>
+        <div class="container">
+          <%= render @view_module, @view_template, assigns %>
+        </div>
+      </div>
+      <div class="container">
+        <div class="row">
+          <div class="col-md-12">
+            <h3>Reticulum</h3>
+            <p>(1) When not capitalized, a reticule formed by the interconnection of two or more smaller reticules. </p>
+            <p>(2) When capitalized, the largest reticulum, joining together the preponderance of all reticules in the world. Sometimes abbreviated to Ret. </p>
+            <p><a href="https://en.wikipedia.org/wiki/Anathem">The Dictionary</a>, 4th Edition, A.R. 3000<p>
+          </div>
+        </div>
+      </div>
+      <hr>
+    </main>
 
     </div> <!-- /container -->
     <script src="<%= static_path(@conn, "/js/app.js") %>"></script>

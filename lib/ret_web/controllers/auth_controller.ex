@@ -48,7 +48,7 @@ defmodule RetWeb.AuthController do
 
     {:ok, jwt, claims} = 
       Guardian.Plug.current_resource(conn) 
-      |> Guardian.encode_and_sign(%{email: user.email, name: user.name})
+      |> Guardian.encode_and_sign(%{email: user.email, name: user.first_name})
 
     conn
     |> put_resp_cookie("jwt", jwt, http_only: false)
