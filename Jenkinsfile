@@ -31,7 +31,7 @@ pipeline {
 
             def gitMessage = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'%h [%an] %s'").trim()
             def slackURL = env.SLACK_URL
-            def text = "*<http://localhost:8080/job/${env.JOB_NAME}/${env.BUILD_NUMBER}|#${env.BUILD_NUMBER}>* *${env.JOB_NAME}* <https://bldr.habitat.sh/#/pkgs/${packageIdent}|${packageIdent}>\n`${gitMessage}`\n<https://smoke-dev.reticulum.io/client/smoke-room.html?room=smoke|Smoke Test> To push:\n`/mr hab promote ${packageIdent}`"
+            def text = "*<http://localhost:8080/job/${env.JOB_NAME}/${env.BUILD_NUMBER}|#${env.BUILD_NUMBER}>* *${env.JOB_NAME}* <https://bldr.habitat.sh/#/pkgs/${packageIdent}|${packageIdent}>\n`${gitMessage}`\n<https://smoke-dev.reticulum.io/client/smoke-room.html?room=1|Smoke Test> To push:\n`/mr hab promote ${packageIdent}`"
             def payload = JsonOutput.toJson([text      : text, channel   : "#mr-builds", username  : "buildbot", icon_emoji: ":gift:"])
             sh "curl -X POST --data-urlencode \'payload=${payload}\' ${slackURL}"
         }
