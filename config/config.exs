@@ -7,12 +7,7 @@ use Mix.Config
 
 # General application configuration
 config :ret,
-  ecto_repos: [Ret.Repo],
-  basic_auth: [
-    username: System.get_env("BASIC_AUTH_USERNAME"),
-    password: System.get_env("BASIC_AUTH_PASSWORD"),
-    realm: "Same as the hotel wifi!"
-  ]
+  ecto_repos: [Ret.Repo]
 
 config :phoenix, :format_encoders, "json-api": Posion
 

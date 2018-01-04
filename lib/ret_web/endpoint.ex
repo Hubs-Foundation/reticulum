@@ -3,8 +3,6 @@ defmodule RetWeb.Endpoint do
 
   socket "/socket", RetWeb.UserSocket
 
-  plug Ret.BasicAuth, use_config: {:ret, :basic_auth}
-
   # Serve at "/" the static files from "priv/static" directory.
   #
   # You should set gzip to true if you are running phoenix.digest
