@@ -60,7 +60,7 @@ do_build() {
     yarn build
 
     rm -rf client
-    git clone https://github.com/mozilla/mr-social-client.git client
+    git clone https://github.com/mozilla/mr-social-client.git -b experiment/super-hands-ownership-transfer client
     
     cd client
     yarn install --cache-folder ../.yarn
