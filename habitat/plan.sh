@@ -63,7 +63,7 @@ do_build() {
     git clone https://github.com/mozilla/mr-social-client.git client
     
     cd client
-    git checkout feature/hud2
+    git checkout feature/mode-switching
     yarn install --cache-folder ../.yarn
     GENERATE_SMOKE_TESTS=true BASE_ASSETS_PATH="https://assets-dev.reticulum.io/client/" yarn build
     cd ..
