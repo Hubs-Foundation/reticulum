@@ -17,13 +17,13 @@ defmodule RetWeb.Router do
     plug JaSerializer.Deserializer
   end
 
+  scope "/health", RetWeb do
+    get "/", HealthController, :index
+  end
+
   scope "/", RetWeb do
     pipe_through [:browser, :csrf_check]
 
-    get "/", PageController, :index
-  end
-
-  scope "/health", RetWeb do
-    get "/", HealthController, :index
+    resources "/", PageController, only: [:index, :show]
   end
 end
