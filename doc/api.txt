@@ -1,0 +1,25 @@
+/api/hubs/my-hub.json
+
+{ 
+  "hubs": [
+    {
+      "hub_id": "my-hub",
+
+      "channels": [
+        "channel_media": ["space"],
+        "channel_id": "my-hub/home",
+        "attributes": [["default-space"]]
+        "assets": [
+          { "asset_type": "scene", "url": "http://..." }
+        ]
+      ]
+    }
+  ]
+}
+
+POST /api/hubs
+
+{
+  "hub_id": "my-hub-id",
+  "default_scene_url": "url"
+}
