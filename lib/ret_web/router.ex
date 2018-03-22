@@ -12,42 +12,18 @@ defmodule RetWeb.Router do
     plug :protect_from_forgery
   end
 
-  pipeline :browser_auth do
-    plug Guardian.Plug.VerifySession
-    plug Guardian.Plug.LoadResource
-    plug Ret.Plug.Session
-  end
-
   pipeline :api do
     plug :accepts, ["json"]
     plug JaSerializer.Deserializer
   end
 
-  pipeline :private do
-    plug Guardian.Plug.EnsureAuthenticated, [handler: RetWeb.AuthController]
-  end
-
   scope "/", RetWeb do
-    pipe_through [:browser, :csrf_check, :browser_auth]
+    pipe_through [:browser, :csrf_check]
 
     get "/", PageController, :index
-    get "/chat/:room_id", ChatController, :index
   end
 
   scope "/health", RetWeb do
     get "/", HealthController, :index
-  end
-
-  scope "/client", RetWeb do
-    pipe_through [:browser, :csrf_check, :browser_auth, :private]
-    get "/", ClientController, :index
-  end
-
-  scope "/api/login", RetWeb do
-    pipe_through [:api, :browser]
-
-    get "/:provider", AuthController, :request
-    get "/:provider/callback", AuthController, :callback
-    post "/:provider/callback", AuthController, :callback
   end
 end
