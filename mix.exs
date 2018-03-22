@@ -20,7 +20,7 @@ defmodule Ret.Mixfile do
   def application do
     [
       mod: {Ret.Application, []},
-      extra_applications: [:logger, :runtime_tools, :ueberauth, :ueberauth_google, :peerage]
+      extra_applications: [:logger, :runtime_tools, :peerage]
     ]
   end
 
