@@ -20,7 +20,7 @@ defmodule Ret.Hub do
     |> validate_required([:hub_sid, :default_environment_gltf_bundle_url])
   end
 
-  def janus_sfu_room_for_hub(hub) do
+  def janus_room_id_for_hub(hub) do
     hub.hub_id &&& 0xFFFFFFFF
   end
 end

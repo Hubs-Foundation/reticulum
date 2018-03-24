@@ -15,7 +15,7 @@ defmodule RetWeb.Api.V1.HubController do
       hub -> { :ok, hub }
     end
 
-    render(conn, "show.json", hub: hub)
+    render(conn, "create.json", hub: hub)
   end
 
   def show(conn, %{ "id" => id }) do
