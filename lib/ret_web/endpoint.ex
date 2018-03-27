@@ -37,6 +37,7 @@ defmodule RetWeb.Endpoint do
     key: "_ret_key",
     signing_salt: "kV37y5aE"
 
+  plug CORSPlug
   plug RetWeb.Router
 
   @doc """

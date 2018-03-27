@@ -60,3 +60,5 @@ config :ret, Ret.Repo,
   template: "template0",
   pool_size: 10
 
+# Allow any origin for API access in dev
+config :cors_plug, origin: ["*"]

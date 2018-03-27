@@ -47,7 +47,8 @@ defmodule Ret.Mixfile do
       {:peerage, "~> 1.0"},
       {:httpoison, "~> 0.13"},
       {:poison, "~> 3.1"},
-      {:ecto_autoslug_field, "~> 0.3"}
+      {:ecto_autoslug_field, "~> 0.3"},
+      {:cors_plug, "~> 1.5"}
     ]
   end
 
