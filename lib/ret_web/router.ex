@@ -30,6 +30,6 @@ defmodule RetWeb.Router do
   scope "/", RetWeb do
     pipe_through [:browser, :csrf_check]
 
-    resources "/", PageController, only: [:index, :show]
+    get "/*path", PageController, only: [:index]
   end
 end

@@ -1,11 +1,15 @@
 defmodule RetWeb.PageController do
   use RetWeb, :controller
 
-  def index(conn, _params) do
+  def call(conn, _params) do
+    render_for_path(conn.request_path, conn)
+  end
+
+  def render_for_path("/", conn) do
     render_file(conn, "index.html")
   end
 
-  def show(conn, _params) do
+  def render_for_path(_, conn) do
     render_file(conn, "hub.html")
   end
 
