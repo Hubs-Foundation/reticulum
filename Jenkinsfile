@@ -22,7 +22,7 @@ pipeline {
           /usr/bin/script --return -c \\\\"sudo /usr/bin/hab-docker-studio -k mozillareality run /bin/bash scripts/build.sh\\\\" /dev/null
         '''*/
 
-        sh 'sudo /usr/bin/hab-pkg-upload $(ls -rt results/*.hart | head -n 1)'
+        //sh 'sudo /usr/bin/hab-pkg-upload $(ls -rt results/*.hart | head -n 1)'
 
         script {
             // Grab IDENT file and cat it from .hart
