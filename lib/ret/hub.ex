@@ -50,7 +50,7 @@ defmodule Ret.Hub do
   end
 
   def janus_room_id_for_hub(hub) do
-    with << room_id :: size(64) , _ :: binary >> <- hub.hub_sid do
+    with << room_id :: size(64) , _ :: binary >> <- :crypto.hash(:sha256, hub.hub_sid) do
       room_id
     end
   end
