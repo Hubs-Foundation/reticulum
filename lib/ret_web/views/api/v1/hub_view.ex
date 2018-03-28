@@ -19,7 +19,7 @@ defmodule RetWeb.Api.V1.HubView do
             %{
               channel_media: [:space],
               channel_id: "#{hub.hub_sid}/#{hub.slug}",
-              janus_room_id: Integer.to_string(Hub.janus_room_id_for_hub(hub)),
+              janus_room_id: Hub.janus_room_id_for_hub(hub),
               attributes: [["default-space"]],
               assets: [
                 %{ asset_type: :gltf_bundle, src: hub.default_environment_gltf_bundle_url }
