@@ -50,7 +50,8 @@ defmodule Ret.Hub do
   end
 
   def janus_room_id_for_hub(hub) do
-    with << room_id :: size(64) , _ :: binary >> <- :crypto.hash(:sha256, hub.hub_sid) do
+    # Cap to 53 bits of entropy because of Javascript :/
+    with << room_id :: size(53) , _ :: size(11) , _ :: binary >> <- :crypto.hash(:sha256, hub.hub_sid) do
       room_id
     end
   end
