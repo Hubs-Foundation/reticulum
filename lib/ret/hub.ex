@@ -50,7 +50,8 @@ defmodule Ret.Hub do
   end
 
   def janus_room_id_for_hub(hub) do
-    << room_id :: size(64) , _ :: binary >> = hub.hub_sid
-    room_id
+    with << room_id :: size(64) , _ :: binary >> <- hub.hub_sid do
+      room_id
+    end
   end
 end
