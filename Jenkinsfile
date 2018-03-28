@@ -18,30 +18,27 @@ pipeline {
 
     stage('build') {
       steps {
-        /*sh '''
+        sh '''
           /usr/bin/script --return -c \\\\"sudo /usr/bin/hab-docker-studio -k mozillareality run /bin/bash scripts/build.sh\\\\" /dev/null
-        '''*/
+        '''
 
-        //sh 'sudo /usr/bin/hab-pkg-upload $(ls -rt results/*.hart | head -n 1)'
+        sh 'sudo /usr/bin/hab-pkg-upload $(ls -rt results/*.hart | head -n 1)'
 
         script {
             // Grab IDENT file and cat it from .hart
-            //def s = $/eval 'ls -rt results/*.hart | head -n 1'/$
-            //def hart = sh(returnStdout: true, script: "${s}").trim()
-            //s = $/eval 'tail -n +6 ${hart} | xzcat | tar tf - | grep IDENT'/$
-            //def identPath = sh(returnStdout: true, script: "${s}").trim()
-            //s = $/eval 'tail -n +6 ${hart} | xzcat | tar xf - "${identPath}" -O'/$
-            //def packageIdent = sh(returnStdout: true, script: "${s}").trim()
-            def hart = "";
-            def identPath = "";
-            def packageIdent = "";
+            def s = $/eval 'ls -rt results/*.hart | head -n 1'/$
+            def hart = sh(returnStdout: true, script: "${s}").trim()
+            s = $/eval 'tail -n +6 ${hart} | xzcat | tar tf - | grep IDENT'/$
+            def identPath = sh(returnStdout: true, script: "${s}").trim()
+            s = $/eval 'tail -n +6 ${hart} | xzcat | tar xf - "${identPath}" -O'/$
+            def packageIdent = sh(returnStdout: true, script: "${s}").trim()
 
             def gitMessage = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'[%an] %s'").trim()
             def gitSha = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'%h'").trim()
             def gitMessageClient = sh(returnStdout: true, script: "curl --silent 'https://api.github.com/repos/mozilla/mr-social-client/commits?per_page=1' | jq -r '.[0] | (\"[\" + .commit.author.name + \"] \" + .commit.message)'").trim()
             def gitClientSha = sh(returnStdout: true, script: "curl --silent 'https://api.github.com/repos/mozilla/mr-social-client/commits?per_page=1' | jq -r '.[0] | .sha[0:7]'").trim()
             def slackURL = env.SLACK_URL
-            def text = "*<http://localhost:8080/job/${env.JOB_NAME}/${env.BUILD_NUMBER}|#${env.BUILD_NUMBER}>* *${env.JOB_NAME}* <https://bldr.habitat.sh/#/pkgs/${packageIdent}|${packageIdent}>\n<https://github.com/mozilla/mr-social-client/commit/${gitClientSha}|${gitClientSha}> Client:```${gitClientSha} ${gitMessageClient}```\n<https://github.com/mozilla/reticulum/commit/$gitSha|$gitSha> Reticulum: ```${gitSha} ${gitMessage}```\n<https://smoke-dev.reticulum.io/client/smoke-room.html?room=1|Smoke Test> To push:\n`/mr hab promote ${packageIdent}`"
+            def text = "*<http://localhost:8080/job/${env.JOB_NAME}/${env.BUILD_NUMBER}|#${env.BUILD_NUMBER}>* *${env.JOB_NAME}* <https://bldr.habitat.sh/#/pkgs/${packageIdent}|${packageIdent}>\n<https://github.com/mozilla/mr-social-client/commit/${gitClientSha}|${gitClientSha}> Client:```${gitClientSha} ${gitMessageClient}```\n<https://github.com/mozilla/reticulum/commit/$gitSha|$gitSha> Reticulum: ```${gitSha} ${gitMessage}```\n<https://smoke-dev.reticulum.io/client/smoke-room.html?room=1|Smoke Test> - to push:\n`/mr hab promote ${packageIdent}`"
             def payload = JsonOutput.toJson([text      : text, channel   : "#mr-builds", username  : "buildbot", icon_emoji: ":gift:"])
             sh "curl -X POST --data-urlencode \'payload=${payload}\' ${slackURL}"
         }
