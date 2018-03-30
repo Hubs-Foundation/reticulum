@@ -43,6 +43,9 @@ do_prepare() {
 }
 
 do_build() {
+    rm -rf priv/static
+    mkdir -p priv/static
+
     mix local.hex --force
     mix local.rebar --force
     mix deps.get --only prod
@@ -51,9 +54,6 @@ do_build() {
     pushd assets
     mkdir -p .yarn
     mkdir -p node_modules
-
-    rm -rf ../priv/static
-    mkdir -p ../priv/static
 
     # Yarn expects /usr/local/share
     # https://github.com/yarnpkg/yarn/issues/4628
@@ -69,6 +69,8 @@ do_build() {
     yarn install --cache-folder ../.yarn
     GENERATE_SMOKE_TESTS=true BASE_ASSETS_PATH="https://assets-dev.reticulum.io/client/" yarn build -- --output-path ../../priv/static
     popd
+
+    rm -rf client
 
     popd
     mix phx.digest
