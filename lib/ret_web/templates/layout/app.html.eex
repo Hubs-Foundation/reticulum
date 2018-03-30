@@ -25,14 +25,6 @@
       </button>
       <div class="collapse navbar-collapse" id="toggler">
         <ul class="navbar-nav ml-auto">
-          <%= if @current_user do %>
-          <li class="nav-item">
-            <span class="navbar-text"><%= @current_user.email %></span>
-          </li>
-          <li class="">
-            <a class="nav-link active" href="/api/login/google">Switch User</a>
-          </li>
-        <% end %>
         </ul>
       </div>
     </nav>

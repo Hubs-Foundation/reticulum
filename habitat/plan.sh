@@ -62,15 +62,10 @@ do_build() {
     rm -rf client
     git clone https://github.com/mozilla/mr-social-client.git client
     
-    cd client
+    pushd client
     yarn install --cache-folder ../.yarn
-    GENERATE_SMOKE_TESTS=true BASE_ASSETS_PATH="https://assets-dev.reticulum.io/client/" yarn build
-    cd ..
-
-    rm -rf ../priv/static/client
-    mkdir -p ../priv/static
-    cp -rf client/public ../priv/static/client
-    cd ..
+    GENERATE_SMOKE_TESTS=true BASE_ASSETS_PATH="https://assets-dev.reticulum.io/client/" yarn build -- --output-path ../../priv/static
+    popd
 
     mix phx.digest
 }

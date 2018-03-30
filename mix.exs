@@ -20,7 +20,7 @@ defmodule Ret.Mixfile do
   def application do
     [
       mod: {Ret.Application, []},
-      extra_applications: [:logger, :runtime_tools, :ueberauth, :ueberauth_google, :peerage]
+      extra_applications: [:logger, :runtime_tools, :peerage]
     ]
   end
 
@@ -41,15 +41,14 @@ defmodule Ret.Mixfile do
       {:phoenix_live_reload, "~> 1.0", only: :dev},
       {:gettext, "~> 0.11"},
       {:cowboy, "~> 1.0"},
-      {:ueberauth, "~> 0.5"},
-      {:ueberauth_google, "~> 0.7.0"},
       {:ja_serializer, "~> 0.12.0"},
-      {:guardian, "~> 0.14.5"},
       {:distillery, "~> 1.5", runtime: false, github: "gfodor/distillery", branch: "feature/boot_opts"},
       {:conform, "~> 2.5"},
       {:peerage, "~> 1.0"},
       {:httpoison, "~> 0.13"},
-      {:poison, "~> 3.1"}
+      {:poison, "~> 3.1"},
+      {:ecto_autoslug_field, "~> 0.3"},
+      {:cors_plug, "~> 1.5"}
     ]
   end
 

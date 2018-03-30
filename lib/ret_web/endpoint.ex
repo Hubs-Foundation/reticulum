@@ -1,15 +1,13 @@
 defmodule RetWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :ret
 
-  socket "/socket", RetWeb.UserSocket
-
   # Serve at "/" the static files from "priv/static" directory.
   #
   # You should set gzip to true if you are running phoenix.digest
   # when deploying your static files in production.
   plug Plug.Static,
     at: "/", from: :ret, gzip: false,
-    only: ~w(css fonts images js favicon.ico robots.txt client),
+    only: ~w(assets robots.txt favicon.ico),
     headers: [{"access-control-allow-origin", "*"}]
 
   # Code reloading can be explicitly enabled under the
@@ -39,6 +37,7 @@ defmodule RetWeb.Endpoint do
     key: "_ret_key",
     signing_salt: "kV37y5aE"
 
+  plug CORSPlug
   plug RetWeb.Router
 
   @doc """

@@ -9,12 +9,13 @@ config :ret, RetWeb.Endpoint,
 # Print only warnings and errors during test
 config :logger, level: :warn
 
-# Configure your database
 config :ret, Ret.Repo,
   adapter: Ecto.Adapters.Postgres,
-  username: "admin",
-  password: "admin",
+  username: "postgres",
+  password: "postgres",
   database: "ret_test",
   hostname: "localhost",
   template: "template0",
+  pool_size: 10,
   pool: Ecto.Adapters.SQL.Sandbox
+

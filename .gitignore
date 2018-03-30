@@ -31,3 +31,5 @@ npm-debug.log
 
 .env
 results/
+
+elixir_sense

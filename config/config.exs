@@ -27,24 +27,6 @@ config :logger, :console,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id]
 
-config :ueberauth, Ueberauth,
-  base_path: "/api/login",
-  providers: [google: { Ueberauth.Strategy.Google, [default_scope: "profile email"] }]
-
-# Ueberauth Strategy Config for Google oauth
-config :ueberauth, Ueberauth.Strategy.Google.OAuth,
-  client_id: System.get_env("GOOGLE_CLIENT_ID"),
-  client_secret: System.get_env("GOOGLE_CLIENT_SECRET")
-
-# Guardian configuration
-config :guardian, Guardian,
-  issuer: "reticulum",
-  ttl: { 30, :days },
-  allowed_drift: 2000,
-  verify_issuer: true, # optional
-  secret_key: "JpWapNaJQ4HU1spmFCb5EyWxJAwKXiCl8677nd2GWYCurPYXYksMsHIV3J8zsYvN",
-  serializer: Ret.GuardianSerializer
-
 config :ret, Ret.Repo,
   migration_source: "schema_migrations",
   after_connect: { Ret.Repo, :set_search_path, ["public, ret0"] }
