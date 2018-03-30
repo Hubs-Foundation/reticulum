@@ -6,11 +6,19 @@ defmodule RetWeb.PageController do
   end
 
   def render_for_path("/", conn) do
-    render_file(conn, "index.html")
+    render_file(conn, "#{get_file_prefix(conn)}index.html")
   end
 
   def render_for_path(_, conn) do
-    render_file(conn, "hub.html")
+    render_file(conn, "#{get_file_prefix(conn)}hub.html")
+  end
+
+  defp get_file_prefix(conn) do
+    if conn.host =~ "smoke" do
+      "smoke-"
+    else
+      ""
+    end
   end
 
   defp render_file(conn, file) do

@@ -67,7 +67,7 @@ do_build() {
 
     pushd client
     yarn install --cache-folder ../.yarn
-    GENERATE_SMOKE_TESTS=true BASE_ASSETS_PATH="https://assets-dev.reticulum.io/client/" yarn build -- --output-path ../../priv/static
+    GENERATE_SMOKE_TESTS=true BASE_ASSETS_PATH="https://assets-dev.reticulum.io/" yarn build -- --output-path ../../priv/static
     popd
 
     rm -rf client
