@@ -16,6 +16,6 @@ defmodule RetWeb.PageController do
   defp render_file(conn, file) do
     conn
     |> put_resp_header("content-type", "text/html; charset=utf-8")
-    |> Plug.Conn.send_file(200, "priv/static/#{file}")
+    |> Plug.Conn.send_file(200, "#{Application.app_dir(:ret)}/priv/static/#{file}")
   end
 end
