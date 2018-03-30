@@ -48,9 +48,12 @@ do_build() {
     mix deps.get --only prod
     mix compile
 
-    cd assets
+    pushd assets
     mkdir -p .yarn
     mkdir -p node_modules
+
+    rm -rf ../priv/static
+    mkdir -p ../priv/static
 
     # Yarn expects /usr/local/share
     # https://github.com/yarnpkg/yarn/issues/4628
@@ -61,12 +64,13 @@ do_build() {
 
     rm -rf client
     git clone https://github.com/mozilla/mr-social-client.git client
-    
+
     pushd client
     yarn install --cache-folder ../.yarn
     GENERATE_SMOKE_TESTS=true BASE_ASSETS_PATH="https://assets-dev.reticulum.io/client/" yarn build -- --output-path ../../priv/static
     popd
 
+    popd
     mix phx.digest
 }
 
