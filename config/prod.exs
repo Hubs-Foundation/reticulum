@@ -15,7 +15,7 @@ use Mix.Config
 # which you typically run after static files are built.
 config :ret, RetWeb.Endpoint,
   http: [],
-  url: [host: "reticulum.io", port: 80],
+  url: [host: "dev.reticulum.io", port: 80],
   static_url: [scheme: "https", host: "assets-dev.reticulum.io", port: 443],
   cache_static_manifest: "priv/static/cache_manifest.json",
   server: true,
