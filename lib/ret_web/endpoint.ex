@@ -7,7 +7,7 @@ defmodule RetWeb.Endpoint do
   # when deploying your static files in production.
   plug Plug.Static,
     at: "/", from: :ret, gzip: false,
-    only: ~w(assets robots.txt favicon.ico),
+    only: ~w(assets robots.txt favicon.ico avatar-selector.html),
     headers: [{"access-control-allow-origin", "*"}]
 
   # Code reloading can be explicitly enabled under the
