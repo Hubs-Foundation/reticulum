@@ -48,7 +48,8 @@ defmodule Ret.Mixfile do
       {:httpoison, "~> 0.13"},
       {:poison, "~> 3.1"},
       {:ecto_autoslug_field, "~> 0.3"},
-      {:cors_plug, "~> 1.5"}
+      {:cors_plug, "~> 1.5"},
+      {:basic_auth, "~> 2.2.2"},
     ]
   end
 

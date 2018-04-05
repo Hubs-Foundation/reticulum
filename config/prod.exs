@@ -70,3 +70,5 @@ config :ret, Ret.Repo,
   adapter: Ecto.Adapters.Postgres
 
 config :peerage, via: Ret.PeerageProvider
+
+config :ret, page_auth: [ username: "", password: "", realm: "Reticulum" ]
