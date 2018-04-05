@@ -1,8 +1,6 @@
 defmodule RetWeb.PageController do
   use RetWeb, :controller
 
-  plug BasicAuth, use_config: { :ret, :page_auth }
-
   def call(conn, _params) do
     render_for_path(conn.request_path, conn)
   end

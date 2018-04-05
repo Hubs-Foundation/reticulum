@@ -18,7 +18,7 @@ defmodule RetWeb.Router do
   end
 
   pipeline :http_auth do
-    plug BasicAuth, use_config: { :ret, :page_auth }
+    plug BasicAuth, use_config: { :ret, :basic_auth }
   end
 
   scope "/health", RetWeb do
