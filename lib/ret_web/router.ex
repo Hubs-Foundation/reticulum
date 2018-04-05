@@ -17,6 +17,10 @@ defmodule RetWeb.Router do
     plug JaSerializer.Deserializer
   end
 
+  pipeline :http_auth do
+    plug BasicAuth, use_config: { :ret, :page_auth }
+  end
+
   scope "/health", RetWeb do
     get "/", HealthController, :index
   end
@@ -28,7 +32,7 @@ defmodule RetWeb.Router do
   end
 
   scope "/", RetWeb do
-    pipe_through [:browser, :csrf_check]
+    pipe_through [:browser, :csrf_check] ++ if (Mix.env == :prod), do: [:http_auth], else: []
 
     get "/*path", PageController, only: [:index]
   end
