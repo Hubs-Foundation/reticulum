@@ -99,7 +99,7 @@
     "ret.Elixir.RetWeb.Endpoint.url.host": [
       commented: false,
       datatype: :binary,
-      default: "prod.reticulum.io",
+      default: "reticulum.io",
       doc: "URL hostname",
       hidden: false,
       to: "ret.Elixir.RetWeb.Endpoint.url.host"
@@ -107,7 +107,7 @@
     "ret.Elixir.RetWeb.Endpoint.static_url.host": [
       commented: false,
       datatype: :binary,
-      default: "assets-prod.reticulum.io",
+      default: "assets.reticulum.io",
       doc: "Static Assets URL hostname",
       hidden: false,
       to: "ret.Elixir.RetWeb.Endpoint.static_url.host"
