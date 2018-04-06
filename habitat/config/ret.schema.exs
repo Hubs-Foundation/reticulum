@@ -96,6 +96,22 @@
       hidden: false,
       to: "ret.Elixir.Ret.PeerageProvider.http_port"
     ],
+    "ret.Elixir.RetWeb.Endpoint.url.host": [
+      commented: false,
+      datatype: :binary,
+      default: "prod.reticulum.io",
+      doc: "URL hostname",
+      hidden: false,
+      to: "ret.Elixir.RetWeb.Endpoint.url.host"
+    ],
+    "ret.Elixir.RetWeb.Endpoint.static_url.host": [
+      commented: false,
+      datatype: :binary,
+      default: "assets-prod.reticulum.io",
+      doc: "Static Assets URL hostname",
+      hidden: false,
+      to: "ret.Elixir.RetWeb.Endpoint.static_url.host"
+    ],
     "guardian.Elixir.Guardian.secret_key": [
       commented: false,
       datatype: :binary,
