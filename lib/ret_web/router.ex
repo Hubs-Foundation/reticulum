@@ -3,13 +3,6 @@ defmodule RetWeb.Router do
 
   pipeline :browser do
     plug :accepts, ["html"]
-    plug :fetch_session
-    plug :fetch_flash
-    plug :put_secure_browser_headers
-  end
-
-  pipeline :csrf_check do
-    plug :protect_from_forgery
   end
 
   pipeline :api do
@@ -32,7 +25,7 @@ defmodule RetWeb.Router do
   end
 
   scope "/", RetWeb do
-    pipe_through [:browser, :csrf_check] ++ if (Mix.env == :prod), do: [:http_auth], else: []
+    pipe_through [:browser] ++ if (Mix.env == :prod), do: [:http_auth], else: []
 
     get "/*path", PageController, only: [:index]
   end
