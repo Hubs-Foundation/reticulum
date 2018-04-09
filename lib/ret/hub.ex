@@ -23,6 +23,7 @@ defmodule Ret.Hub do
     field(:hub_sid, :string)
     field(:default_environment_gltf_bundle_url, :string)
     field(:slug, HubSlug.Type)
+    field(:max_occupant_count, :integer)
 
     timestamps()
   end
@@ -37,6 +38,12 @@ defmodule Ret.Hub do
     |> unique_constraint(:hub_sid)
     |> HubSlug.maybe_generate_slug()
     |> HubSlug.unique_constraint()
+  end
+
+  def changeset_for_new_max_occupants(%Hub{} = hub, attrs) do
+    hub
+    |> cast(attrs, [:max_occupant_count])
+    |> validate_required([:max_occupant_count])
   end
 
   defp add_hub_sid_to_changeset(changeset) do
