@@ -40,9 +40,9 @@ defmodule Ret.Hub do
     |> HubSlug.unique_constraint()
   end
 
-  def changeset_for_new_max_occupants(%Hub{} = hub, attrs) do
+  def changeset_for_new_max_occupants(%Hub{} = hub, max_occupant_count) do
     hub
-    |> cast(attrs, [:max_occupant_count])
+    |> cast(%{max_occupant_count: max_occupant_count}, [:max_occupant_count])
     |> validate_required([:max_occupant_count])
   end
 

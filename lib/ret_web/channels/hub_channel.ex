@@ -68,7 +68,7 @@ defmodule RetWeb.HubChannel do
     with hub <- Repo.get_by(Hub, hub_sid: socket.assigns.hub_sid),
          max_occupant_count <- max(occupant_count, hub.max_occupant_count) do
       hub
-      |> Hub.changeset_for_new_max_occupants(%{max_occupant_count: max_occupant_count})
+      |> Hub.changeset_for_new_max_occupants(max_occupant_count)
       |> Repo.update!()
 
       socket
