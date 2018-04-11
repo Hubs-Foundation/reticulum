@@ -38,12 +38,21 @@ defmodule RetWeb.HubChannel do
 
   defp join_with_hub(socket, %Hub{} = hub) do
     with socket <- assign(socket, :hub_sid, hub.hub_sid),
-         session_id <- socket.assigns.session_id,
-         started_at <- socket.assigns.started_at,
-         stat_attrs <- %{session_id: session_id, started_at: started_at},
-         changeset <- %SessionStat{} |> SessionStat.changeset(stat_attrs),
          response <- RetWeb.Api.V1.HubView.render("show.json", %{hub: hub}) do
-      Repo.insert(changeset)
+      existing_stat_count =
+        socket
+        |> SessionStat.stat_query_for_socket()
+        |> Repo.all()
+        |> length
+
+      unless existing_stat_count > 0 do
+        with session_id <- socket.assigns.session_id,
+             started_at <- socket.assigns.started_at,
+             stat_attrs <- %{session_id: session_id, started_at: started_at},
+             changeset <- %SessionStat{} |> SessionStat.changeset(stat_attrs) do
+          Repo.insert(changeset)
+        end
+      end
 
       {:ok, response, socket}
     end

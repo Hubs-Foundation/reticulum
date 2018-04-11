@@ -27,11 +27,12 @@ defmodule Ret.SessionStat do
   end
 
   def stat_query_for_socket(socket) do
-    # Use date constraint to land on right partition for stat record for the socket's session
+    # Use date constraint to limit partitions to recent partitions, assume sessions don't last more than a week
     from(
       s in SessionStat,
       where:
-        s.session_id == ^socket.assigns.session_id and s.started_at == ^socket.assigns.started_at
+        s.session_id == ^socket.assigns.session_id and
+          s.started_at >= datetime_add(^NaiveDateTime.utc_now(), -1, "week")
     )
   end
 end
