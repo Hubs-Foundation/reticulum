@@ -31,4 +31,20 @@ sleep 3 # Habitat may kill this process if it is re-generating config, so pause
 escript {{ pkg.path }}/bin/conform --conf {{ pkg.svc_config_path }}/ret.prod.conf --schema {{ pkg.svc_config_path }}/ret.schema.exs --config {{ pkg.path }}/releases/{{ pkg.version }}/sys.config --output-dir {{ pkg.svc_config_path }}
 
 echo "Starting server"
+
+{{#if cfg.aws.alb_target_group_arn ~}}
+  INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
+  REGION=$(curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone | sed 's/[a-z]$//')
+  SMOKE=$(aws ec2 --region $REGION describe-instances |  jq -r ".Reservations | map(.Instances) | flatten | .[] | select(.InstanceId == \"$INSTANCE_ID\") | .Tags | .[] | select(.Key == \"smoke\") | .Value ")
+
+  if [ "$SMOKE" == "true" ]; then
+    ALB_GROUP="{{ ../cfg.aws.smoke_alb_target_group_arn }}"
+  else
+    ALB_GROUP="{{ ../cfg.aws.alb_target_group_arn }}"
+  fi
+
+  echo "Adding to alb group $ALB_GROUP"
+  aws elbv2 register-targets --target-group-arn="$ALB_GROUP" --targets="Id=$INSTANCE_ID" --region "$REGION"
+{{/if}}
+
 exec {{ pkg.path }}/bin/ret foreground
