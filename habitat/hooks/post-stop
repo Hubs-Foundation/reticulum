@@ -16,10 +16,4 @@ exec 2>&1
 
   echo "Removing from alb group $ALB_GROUP"
   aws elbv2 deregister-targets --target-group-arn="$ALB_GROUP" --targets="Id=$INSTANCE_ID" --region "$REGION"
-
-  until aws elbv2 describe-target-health --target-group-arn="$ALB_GROUP" --targets="Id=$INSTANCE_ID" --region "$REGION" | jq -r ". .TargetHealthDescriptions[] .TargetHealth .State" | grep "unused"
-  do
-    echo "Waiting for drain"
-    sleep 1
-  done
 {{/if}}
