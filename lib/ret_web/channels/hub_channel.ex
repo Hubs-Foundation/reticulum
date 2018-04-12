@@ -3,7 +3,7 @@ defmodule RetWeb.HubChannel do
 
   use RetWeb, :channel
 
-  alias Ret.{Hub, Repo, SessionStat}
+  alias Ret.{Hub, Repo, SessionStat, Statix}
   alias RetWeb.{Presence}
 
   def join("hub:" <> hub_sid, _payload, socket) do
@@ -17,11 +17,15 @@ defmodule RetWeb.HubChannel do
     |> handle_max_occupant_update(occupant_count)
     |> handle_entered_event(payload)
 
+    Statix.increment("ret.channels.hub.event_entered", 1)
+
     {:noreply, socket}
   end
 
   def handle_in("events:entered", payload, socket) do
     handle_entered_event(socket, payload)
+
+    Statix.increment("ret.channels.hub.event_entered", 1)
 
     {:noreply, socket}
   end
@@ -30,10 +34,15 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
+  def handle_info({:begin_tracking, session_id, hub_sid}, socket) do
+    {:ok, _} = Presence.track(socket, session_id, %{hub_id: hub_sid})
+    {:noreply, socket}
+  end
+
   def terminate(_reason, socket) do
     socket
     |> SessionStat.stat_query_for_socket()
-    |> Repo.update_all(set: [ended_at: DateTime.utc_now()])
+    |> Repo.update_all(set: [ended_at: NaiveDateTime.utc_now()])
 
     :ok
   end
@@ -56,18 +65,24 @@ defmodule RetWeb.HubChannel do
         end
       end
 
+      send(self(), {:begin_tracking, socket.assigns.session_id, hub.hub_sid})
+
+      Statix.increment("ret.channels.hub.joins.ok")
+
       {:ok, response, socket}
     end
   end
 
-  defp join_with_hub(nil, socket) do
+  defp join_with_hub(nil, _socket) do
+    Statix.increment("ret.channels.hub.joins.not_found")
+
     {:error, %{message: "No such Hub"}}
   end
 
   defp handle_entered_event(socket, payload) do
     with stat_attributes <- [
            entered_event_payload: payload,
-           entered_event_received_at: DateTime.utc_now()
+           entered_event_received_at: NaiveDateTime.utc_now()
          ] do
       socket
       |> SessionStat.stat_query_for_socket()

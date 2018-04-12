@@ -12,7 +12,7 @@ defmodule RetWeb.SessionSocket do
     socket =
       socket
       |> assign(:session_id, session_id)
-      |> assign(:started_at, DateTime.utc_now())
+      |> assign(:started_at, NaiveDateTime.utc_now())
 
     {:ok, socket}
   end
