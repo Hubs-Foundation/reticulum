@@ -6,8 +6,9 @@ defmodule RetWeb.HubChannel do
   alias Ret.{Hub, Repo, SessionStat}
 
   def join("hub:" <> hub_sid, _payload, socket) do
-    hub = Repo.get_by(Hub, hub_sid: hub_sid)
-    socket |> join_with_hub(hub)
+    hub_sid
+    |> Repo.get_by(Hub, hub_sid: hub_sid)
+    |> join_with_hub(socket)
   end
 
   def handle_in("events:entered", %{"initialOccupantCount" => occupant_count} = payload, socket) do
@@ -36,7 +37,7 @@ defmodule RetWeb.HubChannel do
     :ok
   end
 
-  defp join_with_hub(socket, %Hub{} = hub) do
+  defp join_with_hub(%Hub{} = hub, socket) do
     with socket <- assign(socket, :hub_sid, hub.hub_sid),
          response <- RetWeb.Api.V1.HubView.render("show.json", %{hub: hub}) do
       existing_stat_count =
@@ -58,7 +59,7 @@ defmodule RetWeb.HubChannel do
     end
   end
 
-  defp join_with_hub(socket, nil) do
+  defp join_with_hub(nil, socket) do
     {:error, %{message: "No such Hub"}}
   end
 

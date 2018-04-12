@@ -17,6 +17,7 @@ defmodule Ret.Hub do
 
   @schema_prefix "ret0"
   @primary_key {:hub_id, :integer, []}
+  @num_random_bits_for_hub_sid 16
 
   schema "hubs" do
     field(:name, :string)
@@ -48,7 +49,7 @@ defmodule Ret.Hub do
 
   defp add_hub_sid_to_changeset(changeset) do
     hub_sid =
-      16
+      @num_random_bits_for_hub_sid
       |> :crypto.strong_rand_bytes()
       |> Base.encode32()
       |> String.downcase()
