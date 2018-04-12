@@ -7,7 +7,8 @@ defmodule RetWeb.HubChannel do
   alias RetWeb.{Presence}
 
   def join("hub:" <> hub_sid, _payload, socket) do
-    Repo.get_by(Hub, hub_sid: hub_sid)
+    Hub
+    |> Repo.get_by(hub_sid: hub_sid)
     |> join_with_hub(socket)
   end
 
