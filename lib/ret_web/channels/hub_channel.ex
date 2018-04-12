@@ -4,10 +4,10 @@ defmodule RetWeb.HubChannel do
   use RetWeb, :channel
 
   alias Ret.{Hub, Repo, SessionStat}
+  alias RetWeb.{Presence}
 
   def join("hub:" <> hub_sid, _payload, socket) do
-    hub_sid
-    |> Repo.get_by(Hub, hub_sid: hub_sid)
+    Repo.get_by(Hub, hub_sid: hub_sid)
     |> join_with_hub(socket)
   end
 
