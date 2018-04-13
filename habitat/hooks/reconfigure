@@ -1,0 +1,25 @@
+#!{{ pkgPathFor "core/bash" }}/bin/bash
+
+for f in {{ pkg.svc_config_path }}/*
+do
+  # Replace instances of EC2_PUBLIC_IP in the configuration file with EC2 public IP address.
+  grep -q EC2_PUBLIC_IP $f && sed -i "s/EC2_PUBLIC_IP/$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)/g" $f
+
+  # Replace instances of EC2_PRIVATE_IP in the configuration file with EC2 private IP address.
+  grep -q EC2_PRIVATE_IP $f && sed -i "s/EC2_PRIVATE_IP/$(curl -s http://169.254.169.254/latest/meta-data/local-ipv4)/g" $f
+done
+
+export HOME={{ pkg.svc_var_path }}
+export LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
+export REPLACE_OS_VARS=true # Inlines OS vars into vm args
+export MIX_ENV=prod
+
+export RELEASE_CONFIG_DIR={{ pkg.svc_config_path }}
+export RELEASE_MUTABLE_DIR={{ pkg.svc_var_path }}
+
+export NODE_NAME=$(echo $HOSTNAME | sed 's/\([^.]*\)\(.*\)$/\1-local\2/')
+export NODE_COOKIE={{ cfg.erlang.node_cookie }}
+
+echo "Generating reticulum config"
+
+escript {{ pkg.path }}/bin/conform --conf {{ pkg.svc_config_path }}/ret.prod.conf --schema {{ pkg.svc_config_path }}/ret.schema.exs --config {{ pkg.path }}/releases/{{ pkg.version }}/sys.config --output-dir {{ pkg.svc_config_path }}
