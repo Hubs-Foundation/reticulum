@@ -71,4 +71,4 @@ config :ret, Ret.Repo,
 
 config :peerage, via: Ret.PeerageProvider
 
-#config :ret, page_auth: [ username: "", password: "", realm: "Reticulum" ]
+config :ret, page_auth: [ username: "", password: "", realm: "Reticulum" ]

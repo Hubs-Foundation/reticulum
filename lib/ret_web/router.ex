@@ -32,7 +32,7 @@ defmodule RetWeb.Router do
   end
 
   scope "/", RetWeb do
-    pipe_through [:browser, :csrf_check] ++ if (Mix.env == :prod), do: [:http_auth], else: []
+    pipe_through [:browser, :csrf_check] ++ if (Mix.env == :prod), do: [], else: []
 
     get "/*path", PageController, only: [:index]
   end
