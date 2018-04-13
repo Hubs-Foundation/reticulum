@@ -22,4 +22,7 @@ export NODE_COOKIE={{ cfg.erlang.node_cookie }}
 
 echo "Generating reticulum config"
 
+# Habitat can kill this during regeneration, so sleep
+sleep 3
+
 escript {{ pkg.path }}/bin/conform --conf {{ pkg.svc_config_path }}/ret.prod.conf --schema {{ pkg.svc_config_path }}/ret.schema.exs --config {{ pkg.path }}/releases/{{ pkg.version }}/sys.config --output-dir {{ pkg.svc_config_path }}
