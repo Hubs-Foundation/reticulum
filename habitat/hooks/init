@@ -14,3 +14,18 @@
   echo "Removing from alb group $ALB_GROUP"
   aws elbv2 deregister-targets --target-group-arn="$ALB_GROUP" --targets="Id=$INSTANCE_ID" --region "$REGION"
 {{/if}}
+
+export HOME={{ pkg.svc_var_path }}
+export LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
+export REPLACE_OS_VARS=true # Inlines OS vars into vm args
+export MIX_ENV=prod
+
+export RELEASE_CONFIG_DIR={{ pkg.svc_config_path }}
+export RELEASE_MUTABLE_DIR={{ pkg.svc_var_path }}
+
+export NODE_NAME=$(echo $HOSTNAME | sed 's/\([^.]*\)\(.*\)$/\1-local\2/')
+export NODE_COOKIE={{ cfg.erlang.node_cookie }}
+
+echo "Generating reticulum config"
+
+escript {{ pkg.path }}/bin/conform --conf {{ pkg.svc_config_path }}/ret.prod.conf --schema {{ pkg.svc_config_path }}/ret.schema.exs --config {{ pkg.path }}/releases/{{ pkg.version }}/sys.config --output-dir {{ pkg.svc_config_path }}

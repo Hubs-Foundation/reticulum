@@ -1,6 +1,4 @@
 defmodule Ret.ReleaseTasks do
-  @start_apps [:crypto, :ssl, :postgrex, :ecto]
-
   def migrate do
     {:ok, _} = Application.ensure_all_started(:ret)
     Ecto.Migrator.run(Ret.Repo, migrations_path(:ret), :up, all: true)

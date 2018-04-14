@@ -6,8 +6,7 @@
 use Mix.Config
 
 # General application configuration
-config :ret,
-  ecto_repos: [Ret.Repo]
+config :ret, ecto_repos: [Ret.Repo]
 
 config :phoenix, :format_encoders, "json-api": Posion
 
@@ -29,11 +28,12 @@ config :logger, :console,
 
 config :ret, Ret.Repo,
   migration_source: "schema_migrations",
-  after_connect: { Ret.Repo, :set_search_path, ["public, ret0"] }
+  after_connect: {Ret.Repo, :set_search_path, ["public, ret0"]}
 
-config :peerage,
-  log_results: false
+config :peerage, log_results: false
+
+config :statix, prefix: "ret"
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
-import_config "#{Mix.env}.exs"
+import_config "#{Mix.env()}.exs"

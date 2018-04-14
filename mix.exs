@@ -6,9 +6,9 @@ defmodule Ret.Mixfile do
       app: :ret,
       version: "0.0.1",
       elixir: "~> 1.4",
-      elixirc_paths: elixirc_paths(Mix.env),
-      compilers: [:phoenix, :gettext] ++ Mix.compilers,
-      start_permanent: Mix.env == :prod,
+      elixirc_paths: elixirc_paths(Mix.env()),
+      compilers: [:phoenix, :gettext] ++ Mix.compilers(),
+      start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps()
     ]
@@ -20,13 +20,13 @@ defmodule Ret.Mixfile do
   def application do
     [
       mod: {Ret.Application, []},
-      extra_applications: [:logger, :runtime_tools, :peerage]
+      extra_applications: [:runtime_tools]
     ]
   end
 
   # Specifies which paths to compile per environment.
   defp elixirc_paths(:test), do: ["lib", "test/support"]
-  defp elixirc_paths(_),     do: ["lib"]
+  defp elixirc_paths(_), do: ["lib"]
 
   # Specifies your project dependencies.
   #
@@ -42,14 +42,19 @@ defmodule Ret.Mixfile do
       {:gettext, "~> 0.11"},
       {:cowboy, "~> 1.0"},
       {:ja_serializer, "~> 0.12.0"},
-      {:distillery, "~> 1.5", runtime: false, github: "gfodor/distillery", branch: "feature/boot_opts"},
+      {:distillery, "~> 1.5",
+       runtime: false, github: "gfodor/distillery", branch: "feature/boot_opts"},
       {:conform, "~> 2.5"},
       {:peerage, "~> 1.0"},
       {:httpoison, "~> 0.13"},
       {:poison, "~> 3.1"},
       {:ecto_autoslug_field, "~> 0.3"},
       {:cors_plug, "~> 1.5"},
-      {:basic_auth, "~> 2.2.2"},
+      {:basic_auth, "~> 2.2"},
+      {:statix, "~> 1.1"},
+      {:quantum, "~> 2.2"},
+      {:credo, "~> 0.9.1", only: [:dev, :test], runtime: false},
+      {:plug_attack, "~> 0.3"},
     ]
   end
 
@@ -63,7 +68,7 @@ defmodule Ret.Mixfile do
     [
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
-      "test": ["ecto.create --quiet", "ecto.migrate", "test"]
+      test: ["ecto.create --quiet", "ecto.migrate", "test"]
     ]
   end
 end

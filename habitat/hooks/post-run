@@ -11,6 +11,6 @@
     ALB_GROUP="{{ ../cfg.aws.alb_target_group_arn }}"
   fi
 
-  echo "Removing from alb group $ALB_GROUP"
-  aws elbv2 deregister-targets --target-group-arn="$ALB_GROUP" --targets="Id=$INSTANCE_ID" --region "$REGION"
+  echo "Adding to alb group $ALB_GROUP"
+  aws elbv2 register-targets --target-group-arn="$ALB_GROUP" --targets="Id=$INSTANCE_ID" --region "$REGION"
 {{/if}}
