@@ -55,7 +55,6 @@ defmodule Ret.Mixfile do
       {:quantum, "~> 2.2"},
       {:credo, "~> 0.9.1", only: [:dev, :test], runtime: false},
       {:plug_attack, "~> 0.3"},
-      {:credo, "~> 0.9.0-rc1", only: [:dev, :test], runtime: false},
     ]
   end
 
