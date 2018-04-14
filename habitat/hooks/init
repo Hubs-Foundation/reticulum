@@ -15,15 +15,6 @@
   aws elbv2 deregister-targets --target-group-arn="$ALB_GROUP" --targets="Id=$INSTANCE_ID" --region "$REGION"
 {{/if}}
 
-for f in {{ pkg.svc_config_path }}/*
-do
-  # Replace instances of EC2_PUBLIC_IP in the configuration file with EC2 public IP address.
-  grep -q EC2_PUBLIC_IP $f && sed -i "s/EC2_PUBLIC_IP/$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)/g" $f
-
-  # Replace instances of EC2_PRIVATE_IP in the configuration file with EC2 private IP address.
-  grep -q EC2_PRIVATE_IP $f && sed -i "s/EC2_PRIVATE_IP/$(curl -s http://169.254.169.254/latest/meta-data/local-ipv4)/g" $f
-done
-
 export HOME={{ pkg.svc_var_path }}
 export LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
 export REPLACE_OS_VARS=true # Inlines OS vars into vm args
