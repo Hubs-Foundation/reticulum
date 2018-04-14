@@ -51,8 +51,10 @@ defmodule Ret.Mixfile do
       {:ecto_autoslug_field, "~> 0.3"},
       {:cors_plug, "~> 1.5"},
       {:basic_auth, "~> 2.2"},
+      {:statix, "~> 1.1"},
+      {:quantum, "~> 2.2"},
+      {:credo, "~> 0.9.1", only: [:dev, :test], runtime: false},
       {:plug_attack, "~> 0.3"},
-      {:credo, "~> 0.9.0-rc1", only: [:dev, :test], runtime: false}
     ]
   end
 

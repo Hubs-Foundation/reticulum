@@ -6,6 +6,8 @@ defmodule Ret.Application do
   def start(_type, _args) do
     import Supervisor.Spec
 
+    :ok = Ret.Statix.connect()
+
     # Define workers and child supervisors to be supervised
     children = [
       # Start the Ecto repository
@@ -15,8 +17,10 @@ defmodule Ret.Application do
       # Start your own worker by calling: Ret.Worker.start_link(arg1, arg2, arg3)
       # worker(Ret.Worker, [arg1, arg2, arg3]),
       supervisor(RetWeb.Presence, []),
+      # Quantum scheduler
+      worker(Ret.Scheduler, []),
       # Storage for rate limiting
-      worker(PlugAttack.Storage.Ets, [RetWeb.RateLimit.Storage, [clean_period: 60_000]])
+      worker(PlugAttack.Storage.Ets, [RetWeb.RateLimit.Storage, [clean_period: 60_000]]),
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
