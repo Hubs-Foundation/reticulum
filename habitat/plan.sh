@@ -18,7 +18,7 @@ pkg_build_deps=(
     idolgirev/yarn
     core/node
     core/erlang/20.0
-    core/elixir/1.5.0
+    core/elixir/1.5.1
 )
 
 pkg_exports=(
