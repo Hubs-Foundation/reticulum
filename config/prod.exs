@@ -66,9 +66,17 @@ config :logger, level: :info
 # which should be versioned separately.
 import_config "prod.secret.exs"
 
-config :ret, Ret.Repo,
-  adapter: Ecto.Adapters.Postgres
+config :ret, Ret.Repo, adapter: Ecto.Adapters.Postgres
 
 config :peerage, via: Ret.PeerageProvider
 
-config :ret, page_auth: [ username: "", password: "", realm: "Reticulum" ]
+config :ret, page_auth: [username: "", password: "", realm: "Reticulum"]
+
+config :ret, Ret.Scheduler,
+  jobs: [
+    # Send stats to StatsD every 5 seconds
+    {{:extended, "*/5 * * * *"}, {Ret.StatsJob, :send_statsd_gauges, []}},
+
+    # Flush stats to db every 5 minutes
+    {{:cron, "*/5 * * * *"}, {Ret.StatsJob, :save_node_stats, []}}
+  ]
