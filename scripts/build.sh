@@ -12,7 +12,7 @@ pushd "$DIR/.."
 
 pkg_test_deps=(
   core/git
-  core/postgresql
+  mozillareality/postgresql10
   core/hab-sup
 )
 
