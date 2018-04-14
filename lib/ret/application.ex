@@ -18,7 +18,9 @@ defmodule Ret.Application do
       # worker(Ret.Worker, [arg1, arg2, arg3]),
       supervisor(RetWeb.Presence, []),
       # Quantum scheduler
-      worker(Ret.Scheduler, [])
+      worker(Ret.Scheduler, []),
+      # Storage for rate limiting
+      worker(PlugAttack.Storage.Ets, [RetWeb.RateLimit.Storage, [clean_period: 60_000]]),
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

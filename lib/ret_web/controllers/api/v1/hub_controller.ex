@@ -4,6 +4,9 @@ defmodule RetWeb.Api.V1.HubController do
   alias Ret.Hub
   alias Ret.Repo
 
+  # Limit to 1 TPS
+  plug(RetWeb.RateLimit)
+
   def create(conn, %{"hub" => hub_params}) do
     {result, hub} =
       %Hub{}

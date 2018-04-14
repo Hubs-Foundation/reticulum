@@ -20,7 +20,7 @@ defmodule Ret.Mixfile do
   def application do
     [
       mod: {Ret.Application, []},
-      extra_applications: [:logger, :runtime_tools, :peerage]
+      extra_applications: [:runtime_tools]
     ]
   end
 
@@ -53,7 +53,9 @@ defmodule Ret.Mixfile do
       {:basic_auth, "~> 2.2"},
       {:statix, "~> 1.1"},
       {:quantum, "~> 2.2"},
-      {:credo, "~> 0.9.1", only: [:dev, :test], runtime: false}
+      {:credo, "~> 0.9.1", only: [:dev, :test], runtime: false},
+      {:plug_attack, "~> 0.3"},
+      {:credo, "~> 0.9.0-rc1", only: [:dev, :test], runtime: false},
     ]
   end
 
