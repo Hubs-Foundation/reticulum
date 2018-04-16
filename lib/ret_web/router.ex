@@ -20,7 +20,7 @@ defmodule RetWeb.Router do
 
   scope "/api", RetWeb do
     scope "/v1", as: :api_v1 do
-      resources("/hubs", Api.V1.HubController, only: [:create])
+      resources("/hubs", Api.V1.HubController, only: [:create, :delete])
     end
   end
 

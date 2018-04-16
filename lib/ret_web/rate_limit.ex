@@ -1,4 +1,4 @@
-defmodule RetWeb.RateLimit do
+defmodule RetWeb.Plugs.RateLimit do
   import Plug.Conn
 
   use PlugAttack

@@ -66,5 +66,9 @@ config :ret, Ret.Repo,
   template: "template0",
   pool_size: 10
 
+config :ret, RetWeb.Plugs.HeaderAuthorization,
+  header_name: "x-ret-admin-access-key",
+  header_value: "admin-only"
+
 # Allow any origin for API access in dev
 config :cors_plug, origin: ["*"]

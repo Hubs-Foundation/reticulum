@@ -5,14 +5,16 @@
     "ueberauth.Elixir.Ueberauth.Strategy.Google.OAuth.client_id": [
       commented: false,
       datatype: :atom,
-      doc: "Provide documentation for ueberauth.Elixir.Ueberauth.Strategy.Google.OAuth.client_id here.",
+      doc:
+        "Provide documentation for ueberauth.Elixir.Ueberauth.Strategy.Google.OAuth.client_id here.",
       hidden: false,
       to: "ueberauth.Elixir.Ueberauth.Strategy.Google.OAuth.client_id"
     ],
     "ueberauth.Elixir.Ueberauth.Strategy.Google.OAuth.client_secret": [
       commented: false,
       datatype: :atom,
-      doc: "Provide documentation for ueberauth.Elixir.Ueberauth.Strategy.Google.OAuth.client_secret here.",
+      doc:
+        "Provide documentation for ueberauth.Elixir.Ueberauth.Strategy.Google.OAuth.client_secret here.",
       hidden: false,
       to: "ueberauth.Elixir.Ueberauth.Strategy.Google.OAuth.client_secret"
     ],
@@ -133,6 +135,13 @@
       doc: "basic auth password",
       hidden: false,
       to: "ret.basic_auth.password"
+    ],
+    "ret.Elixir.RetWeb.Plugs.HeaderAuthorization.header_value": [
+      commented: false,
+      datatype: :binary,
+      doc: "header value for admin access key to access privileged APIs",
+      hidden: false,
+      to: "ret.Elixir.RetWeb.Plugs.HeaderAuthorization.header_value"
     ]
   ],
   transforms: [],

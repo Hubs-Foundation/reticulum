@@ -4,6 +4,7 @@ ip = "127.0.0.1"
 secret_key = "txlMOtlaY5x3crvOCko4uV5PM29ul3zGo1oBGNO3cDXx+7GHLKqt0gR9qzgThxb5"
 url_host_prefix = ""
 static_url_host_prefix = ""
+admin_access_key = ""
 
 [guardian]
 secret_key = "txlMOtlaY5x3crvOCko4uV5PM29ul3zGo1oBGNO3cDXx+7GHLKqt0gR9qzgThxb5"

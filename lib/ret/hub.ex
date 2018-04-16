@@ -11,7 +11,7 @@ defmodule Ret.Hub do
   import Ecto.Changeset
 
   alias Ret.Hub
-  alias Ret.Hub.HubSlug
+  alias Ret.Hub.{HubSlug}
 
   use Bitwise
 
@@ -25,6 +25,7 @@ defmodule Ret.Hub do
     field(:default_environment_gltf_bundle_url, :string)
     field(:slug, HubSlug.Type)
     field(:max_occupant_count, :integer)
+    field(:entry_mode, Ret.Hub.EntryMode)
 
     timestamps()
   end
@@ -45,6 +46,11 @@ defmodule Ret.Hub do
     hub
     |> cast(%{max_occupant_count: max_occupant_count}, [:max_occupant_count])
     |> validate_required([:max_occupant_count])
+  end
+
+  def changeset_to_deny_entry(%Hub{} = hub) do
+    hub
+    |> cast(%{entry_mode: :deny}, [:entry_mode])
   end
 
   defp add_hub_sid_to_changeset(changeset) do
