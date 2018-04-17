@@ -2,7 +2,7 @@ defmodule RetWeb.Router do
   use RetWeb, :router
 
   pipeline :ssl_only do
-    plug(Plug.SSL, hsts: true)
+    plug(Plug.SSL, hsts: true, rewrite_on: [:x_forwarded_proto])
   end
 
   pipeline :browser do
