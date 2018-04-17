@@ -19,7 +19,6 @@ config :ret, RetWeb.Endpoint,
   static_url: [scheme: "https", host: "", port: 443],
   cache_static_manifest: "priv/static/cache_manifest.json",
   server: true,
-  force_ssl: [hsts: true],
   root: "."
 
 # Do not print debug messages in production
