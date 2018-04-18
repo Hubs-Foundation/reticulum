@@ -68,26 +68,3 @@ config :ret, Ret.Repo,
 
 # Allow any origin for API access in dev
 config :cors_plug, origin: ["*"]
-
-asset_hosts =
-  "http://localhost:4000 https://assets-prod.reticulum.io https://smoke-assets-prod.reticulum.io https://assets-dev.reticulum.io https://smoke-assets-dev.reticulum.io"
-
-asset_bundle_hosts =
-  "http://localhost:4000 https://asset-bundles-prod.reticulum.io https://smoke-asset-bundles-prod.reticulum.io https://asset-bundles-dev.reticulum.io https://smoke-asset-bundles-dev.reticulum.io"
-
-websocket_hosts =
-  "ws://localhost:4000 wss://prod.reticulum.com wss://smoke-prod.reticulum.io wss://dev.reticulum.io wss://smoke-dev.reticulum.io wss://prod-janus.reticulum.io wss://dev-janus.reticulum.io "
-
-config :secure_headers, SecureHeaders,
-  secure_headers: [
-    config: [
-      content_security_policy:
-        "default-src none; script-src 'self' #{asset_hosts} https://aframe.io 'unsafe-eval'; font-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://cdn.aframe.io #{
-          asset_hosts
-        }; style-src 'self' https://fonts.googleapis.com #{asset_hosts} 'unsafe-inline'; connect-src 'self' #{
-          websocket_hosts
-        } #{asset_bundle_hosts} https://cdn.aframe.io data:; img-src 'self' #{asset_hosts} #{
-          asset_bundle_hosts
-        } https://cdn.aframe.io data: blob:; media-src 'self' #{asset_hosts} #{asset_bundle_hosts} data:; frame-src 'self';"
-    ]
-  ]
