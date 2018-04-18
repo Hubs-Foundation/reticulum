@@ -15,6 +15,7 @@ defmodule RetWeb.Api.V1.HubView do
       hubs: [
         %{
           hub_id: hub.hub_sid,
+          name: hub.name,
           topics: [
             %{
               topic_id: "#{hub.hub_sid}/#{hub.slug}",
