@@ -80,5 +80,3 @@ config :ret, Ret.Scheduler,
     # Flush stats to db every 5 minutes
     {{:cron, "*/5 * * * *"}, {Ret.StatsJob, :save_node_stats, []}}
   ]
-
-config :secure_headers, SecureHeaders, secure_headers: [ config: [] ]

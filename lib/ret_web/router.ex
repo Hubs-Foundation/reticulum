@@ -33,13 +33,13 @@ defmodule RetWeb.Router do
 
   pipeline :browser do
     plug(:accepts, ["html"])
-    plug(SecureHeaders, secure_headers: [merge: true, config: secure_header_config])
+    plug(SecureHeaders, secure_headers: [merge: Mix.env() == :dev, config: secure_header_config])
   end
 
   pipeline :api do
     plug(:accepts, ["json"])
     plug(JaSerializer.Deserializer)
-    plug(SecureHeaders, secure_headers: [merge: true, config: secure_header_config])
+    plug(SecureHeaders, secure_headers: [merge: Mix.env() == :dev, config: secure_header_config])
   end
 
   pipeline :http_auth do
