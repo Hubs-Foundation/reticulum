@@ -133,6 +133,13 @@
       doc: "basic auth password",
       hidden: false,
       to: "ret.basic_auth.password"
+    ],
+    "ret.cors_plug.origin": [
+      commented: false,
+      datatype: [list: :binary],
+      doc: "origin to allow via CORS",
+      hidden: false,
+      to: "cors_plug.origin"
     ]
   ],
   transforms: [],
