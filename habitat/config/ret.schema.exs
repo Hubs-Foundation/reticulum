@@ -134,7 +134,7 @@
       hidden: false,
       to: "ret.basic_auth.password"
     ],
-    "ret.cors_plug.origin": [
+    "cors_plug.origin": [
       commented: false,
       datatype: [list: :binary],
       doc: "origin to allow via CORS",
