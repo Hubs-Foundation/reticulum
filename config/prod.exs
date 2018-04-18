@@ -81,31 +81,4 @@ config :ret, Ret.Scheduler,
     {{:cron, "*/5 * * * *"}, {Ret.StatsJob, :save_node_stats, []}}
   ]
 
-asset_hosts =
-  "https://assets-prod.reticulum.io https://smoke-assets-prod.reticulum.io https://assets-dev.reticulum.io https://smoke-assets-dev.reticulum.io"
-
-asset_bundle_hosts =
-  "https://asset-bundles-prod.reticulum.io https://smoke-asset-bundles-prod.reticulum.io https://asset-bundles-dev.reticulum.io https://smoke-asset-bundles-dev.reticulum.io"
-
-websocket_hosts =
-  "wss://prod.reticulum.com wss://smoke-prod.reticulum.io wss://dev.reticulum.io wss://smoke-dev.reticulum.io wss://prod-janus.reticulum.io wss://dev-janus.reticulum.io "
-
-config :secure_headers, SecureHeaders,
-  secure_headers: [
-    config: [
-      content_security_policy:
-        "default-src none; script-src 'self' #{asset_hosts} https://aframe.io 'unsafe-eval'; font-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://cdn.aframe.io #{
-          asset_hosts
-        }; style-src 'self' https://fonts.googleapis.com #{asset_hosts} 'unsafe-inline'; connect-src 'self' #{
-          websocket_hosts
-        } #{asset_bundle_hosts} https://cdn.aframe.io data:; img-src 'self' #{asset_hosts} #{
-          asset_bundle_hosts
-        } https://cdn.aframe.io data: blob:; media-src 'self' #{asset_hosts} #{asset_bundle_hosts} data:; frame-src 'self';",
-      x_content_type_options: "nosniff",
-      x_frame_options: "sameorigin",
-      x_xss_protection: "1; mode=block",
-      x_download_options: "noopen",
-      x_permitted_cross_domain_policies: "master-only",
-      strict_transport_security: "max-age=631138519"
-    ]
-  ]
+config :secure_headers, SecureHeaders, secure_headers: [ config: [] ]

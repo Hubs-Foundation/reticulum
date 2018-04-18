@@ -88,12 +88,6 @@ config :secure_headers, SecureHeaders,
           websocket_hosts
         } #{asset_bundle_hosts} https://cdn.aframe.io data:; img-src 'self' #{asset_hosts} #{
           asset_bundle_hosts
-        } https://cdn.aframe.io data: blob:; media-src 'self' #{asset_hosts} #{asset_bundle_hosts} data:; frame-src 'self';",
-      x_content_type_options: "nosniff",
-      x_frame_options: "sameorigin",
-      x_xss_protection: "1; mode=block",
-      x_download_options: "noopen",
-      x_permitted_cross_domain_policies: "master-only",
-      strict_transport_security: "max-age=631138519"
+        } https://cdn.aframe.io data: blob:; media-src 'self' #{asset_hosts} #{asset_bundle_hosts} data:; frame-src 'self';"
     ]
   ]
