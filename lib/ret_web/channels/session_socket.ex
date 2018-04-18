@@ -1,7 +1,13 @@
 defmodule RetWeb.SessionSocket do
   use Phoenix.Socket
 
-  transport(:websocket, Phoenix.Transports.WebSocket)
+  # If origin * was specified, disable origin check for websockets
+  if Enum.member?(Application.get_env(:cors_plug, :origin) || [], "*") do
+    transport(:websocket, Phoenix.Transports.WebSocket, check_origin: false)
+  else
+    transport(:websocket, Phoenix.Transports.WebSocket)
+  end
+
   channel("hub:*", RetWeb.HubChannel)
 
   def id(socket) do
