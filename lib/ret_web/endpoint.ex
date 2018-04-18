@@ -31,7 +31,7 @@ defmodule RetWeb.Endpoint do
   plug Plug.MethodOverride
   plug Plug.Head
 
-  plug CORSPlug
+  plug CORSPlug, init_mode: :runtime
   plug RetWeb.Router
 
   @doc """
