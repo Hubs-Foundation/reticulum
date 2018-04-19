@@ -4,23 +4,16 @@ defmodule RetWeb.Router do
   asset_hosts =
     "#{
       if Mix.env() == :dev do
-        "http://localhost:4000"
+        "http://ret.dev:4000 https://ret.dev:4000 http://ret.dev:8080 https://ret.dev:8080"
       end
-    } https://assets-prod.reticulum.io https://smoke-assets-prod.reticulum.io https://assets-dev.reticulum.io https://smoke-assets-dev.reticulum.io"
-
-  asset_bundle_hosts =
-    "#{
-      if Mix.env() == :dev do
-        "http://localhost:4000"
-      end
-    } https://asset-bundles-prod.reticulum.io https://smoke-asset-bundles-prod.reticulum.io https://asset-bundles-dev.reticulum.io https://smoke-asset-bundles-dev.reticulum.io"
+    } https://assets-prod.reticulum.io https://smoke-assets-prod.reticulum.io https://assets-dev.reticulum.io https://smoke-assets-dev.reticulum.io https://asset-bundles-prod.reticulum.io https://smoke-asset-bundles-prod.reticulum.io https://asset-bundles-dev.reticulum.io https://smoke-asset-bundles-dev.reticulum.io"
 
   websocket_hosts =
     "#{
       if Mix.env() == :dev do
-        "ws://localhost:4000"
+        "ws://ret.dev:4000 wss://ret.dev:4000 ws://ret.dev:8080 wss://ret.dev:8080"
       end
-    } wss://prod.reticulum.com wss://smoke-prod.reticulum.io wss://dev.reticulum.io wss://smoke-dev.reticulum.io wss://prod-janus.reticulum.io wss://dev-janus.reticulum.io "
+    } wss://prod.reticulum.com wss://smoke-prod.reticulum.io wss://dev.reticulum.io wss://smoke-dev.reticulum.io wss://prod-janus.reticulum.io wss://dev-janus.reticulum.io"
 
   pipeline :secure_headers do
     plug(
@@ -32,11 +25,9 @@ defmodule RetWeb.Router do
               asset_hosts
             }; style-src 'self' https://fonts.googleapis.com #{asset_hosts} 'unsafe-inline'; connect-src 'self' #{
               websocket_hosts
-            } #{asset_bundle_hosts} https://cdn.aframe.io data:; img-src 'self' #{asset_hosts} #{
-              asset_bundle_hosts
-            } https://cdn.aframe.io data: blob:; media-src 'self' #{asset_hosts} #{
-              asset_bundle_hosts
-            } data:; frame-src 'self'; frame-ancestors 'self'; base-uri 'none'; form-action 'self';",
+            } https://cdn.aframe.io data:; img-src 'self' #{asset_hosts}
+            https://cdn.aframe.io data: blob:; media-src 'self' #{asset_hosts}
+            data:; frame-src 'self'; frame-ancestors 'self'; base-uri 'none'; form-action 'self';",
           x_content_type_options: "nosniff",
           x_frame_options: "sameorigin",
           x_xss_protection: "1; mode=block",
