@@ -13,7 +13,7 @@ defmodule RetWeb.Router do
       if Mix.env() == :dev do
         "ws://hubs.dev:4000 wss://hubs.dev:4000 ws://hubs.dev:8080 wss://hubs.dev:8080"
       end
-    } wss://prod.reticulum.com wss://smoke-prod.reticulum.io wss://dev.reticulum.io wss://smoke-dev.reticulum.io wss://prod-janus.reticulum.io wss://dev-janus.reticulum.io"
+    } wss://prod.reticulum.io wss://smoke-prod.reticulum.io wss://dev.reticulum.io wss://smoke-dev.reticulum.io wss://prod-janus.reticulum.io wss://dev-janus.reticulum.io"
 
   pipeline :secure_headers do
     plug(
