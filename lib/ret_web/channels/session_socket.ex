@@ -13,8 +13,7 @@ defmodule RetWeb.SessionSocket do
         "https://smoke-prod.reticulum.io",
         "https://dev.reticulum.io",
         "https://smoke-dev.reticulum.io",
-        "http://hubs.dev:4000",
-        "https://hubs.dev:8080"
+        "https://localhost:8080"
       ]
     )
   end

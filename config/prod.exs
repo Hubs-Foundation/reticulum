@@ -80,3 +80,5 @@ config :ret, Ret.Scheduler,
     # Flush stats to db every 5 minutes
     {{:cron, "*/5 * * * *"}, {Ret.StatsJob, :save_node_stats, []}}
   ]
+
+config :cors_plug, origin: ["https://prod.reticulum.io", "https://smoke-prod.reticulum.io", "https://dev.reticulum.io", "https://smoke-dev.reticulum.io", "https://localhost:8080"]
