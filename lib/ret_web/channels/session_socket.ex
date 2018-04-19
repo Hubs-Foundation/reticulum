@@ -2,10 +2,21 @@ defmodule RetWeb.SessionSocket do
   use Phoenix.Socket
 
   # If origin * was specified, disable origin check for websockets
-  if Enum.member?(Application.get_env(:cors_plug, :origin) || [], "*") do
-    transport(:websocket, Phoenix.Transports.WebSocket, check_origin: false)
-  else
+  if Mix.env() == :dev do
     transport(:websocket, Phoenix.Transports.WebSocket)
+  else
+    transport(
+      :websocket,
+      Phoenix.Transports.WebSocket,
+      check_origin: [
+        "https://prod.reticulum.io",
+        "https://smoke-prod.reticulum.io",
+        "https://dev.reticulum.io",
+        "https://smoke-dev.reticulum.io",
+        "http://hubs.dev:4000",
+        "https://hubs.dev:8080"
+      ]
+    )
   end
 
   channel("hub:*", RetWeb.HubChannel)
