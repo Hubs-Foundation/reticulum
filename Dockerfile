@@ -7,5 +7,4 @@ COPY mix.exs /ret/mix.exs
 COPY mix.lock /ret/mix.lock
 RUN mix local.hex --force
 RUN mix local.rebar --force
-RUN mix deps.get
 COPY . /ret

@@ -3,13 +3,13 @@ services:
     db:
         image: postgres:10
         environment:
-            - POSTGRES_USER: postgres
-            - POSTGRES_PASSWORD: postgres
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: postgres
         volumes:
             - ./tmp/db:/var/lib/postgresql/data
     ret:
         build: .
-        command: bash -c "source ~/.bashrc; pushd assets; yarn; popd; mix ecto.create; mix ecto.migrate; mix phx.server"
+        command: bash -c "source ~/.bashrc; pushd assets; yarn; popd; mix deps.get; mix ecto.create; mix ecto.migrate; mix phx.server"
         volumes:
             - .:/ret
         ports:
