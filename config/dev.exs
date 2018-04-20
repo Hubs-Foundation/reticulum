@@ -7,6 +7,7 @@ use Mix.Config
 # watchers to your application. For example, we use it
 # with brunch.io to recompile .js and .css sources.
 config :ret, RetWeb.Endpoint,
+  url: [host: "localhost"],
   http: [port: 4000],
   debug_errors: true,
   code_reloader: true,
@@ -62,7 +63,7 @@ config :ret, Ret.Repo,
   username: "postgres",
   password: "postgres",
   database: "ret_dev",
-  hostname: "localhost",
+  hostname: "db",
   template: "template0",
   pool_size: 10
 
