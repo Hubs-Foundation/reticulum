@@ -59,7 +59,7 @@ defmodule Ret.Hub do
       |> :crypto.strong_rand_bytes()
       |> Base.encode32()
       |> String.downcase()
-      |> String.slice(0, 7)
+      |> String.slice(0, 10)
 
     # Prefix with 0 just to make migration off of these links easier.
     Ecto.Changeset.put_change(changeset, :hub_sid, "0#{hub_sid}")
