@@ -1,7 +1,23 @@
 defmodule RetWeb.SessionSocket do
   use Phoenix.Socket
 
-  transport(:websocket, Phoenix.Transports.WebSocket)
+  # If origin * was specified, disable origin check for websockets
+  if Mix.env() == :dev do
+    transport(:websocket, Phoenix.Transports.WebSocket)
+  else
+    transport(
+      :websocket,
+      Phoenix.Transports.WebSocket,
+      check_origin: [
+        "https://prod.reticulum.io",
+        "https://smoke-prod.reticulum.io",
+        "https://dev.reticulum.io",
+        "https://smoke-dev.reticulum.io",
+        "https://localhost:8080"
+      ]
+    )
+  end
+
   channel("hub:*", RetWeb.HubChannel)
 
   def id(socket) do

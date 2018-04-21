@@ -84,3 +84,5 @@ config :ret, Ret.Scheduler,
 config :ret, RetWeb.Plugs.HeaderAuthorization,
   header_name: "x-ret-admin-access-key",
   header_value: "admin-only"
+
+config :cors_plug, origin: ["https://prod.reticulum.io", "https://smoke-prod.reticulum.io", "https://dev.reticulum.io", "https://smoke-dev.reticulum.io", "https://localhost:8080"]
