@@ -135,6 +135,13 @@
       doc: "basic auth password",
       hidden: false,
       to: "ret.basic_auth.password"
+    ],
+    "ret.Elixir.RetWeb.Plugs.HeaderAuthorization.header_value": [
+      commented: false,
+      datatype: :binary,
+      doc: "header value for admin access key to access privileged APIs",
+      hidden: false,
+      to: "ret.Elixir.RetWeb.Plugs.HeaderAuthorization.header_value"
     ]
   ],
   transforms: [],

@@ -64,7 +64,7 @@ defmodule RetWeb.Router do
     pipe_through([:secure_headers, :api] ++ if(Mix.env() == :prod, do: [:ssl_only], else: []))
 
     scope "/v1", as: :api_v1 do
-      resources("/hubs", Api.V1.HubController, only: [:create])
+      resources("/hubs", Api.V1.HubController, only: [:create, :delete])
     end
   end
 

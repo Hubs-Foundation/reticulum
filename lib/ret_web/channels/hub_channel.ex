@@ -47,6 +47,10 @@ defmodule RetWeb.HubChannel do
     :ok
   end
 
+  defp join_with_hub(%Hub{entry_mode: :deny}, _socket) do
+    {:error, %{message: "Hub no longer accessible", reason: "closed"}}
+  end
+
   defp join_with_hub(%Hub{} = hub, socket) do
     with socket <- assign(socket, :hub_sid, hub.hub_sid),
          response <- RetWeb.Api.V1.HubView.render("show.json", %{hub: hub}) do
