@@ -63,7 +63,7 @@ do_build() {
     yarn build
 
     rm -rf client
-    git clone https://github.com/mozilla/mr-social-client.git client
+    git clone https://github.com/mozilla/hubs.git client
 
     pushd client
     yarn install --cache-folder ../.yarn

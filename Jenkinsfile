@@ -52,14 +52,14 @@ pipeline {
             def gitMessageClient = sh(
               returnStdout: true,
               script: (
-                "curl --silent 'https://api.github.com/repos/mozilla/mr-social-client/commits?per_page=1' | " +
+                "curl --silent 'https://api.github.com/repos/mozilla/hubs/commits?per_page=1' | " +
                 "jq -r '.[0] | (\"[\" + .commit.author.name + \"] \" + .commit.message)'"
               )
             ).trim()
             def gitClientSha = sh(
               returnStdout: true,
               script: (
-                "curl --silent 'https://api.github.com/repos/mozilla/mr-social-client/commits?per_page=1' | " +
+                "curl --silent 'https://api.github.com/repos/mozilla/hubs/commits?per_page=1' | " +
                 "jq -r '.[0] | .sha[0:7]'"
               )
             ).trim()
@@ -67,7 +67,7 @@ pipeline {
             def text = (
               "*<http://localhost:8080/job/${env.JOB_NAME}/${env.BUILD_NUMBER}|#${env.BUILD_NUMBER}>* *${env.JOB_NAME}* " +
               "<https://bldr.habitat.sh/#/pkgs/${packageIdent}|${packageIdent}>\n" +
-              "<https://github.com/mozilla/mr-social-client/commit/${gitClientSha}|${gitClientSha}> " + 
+              "<https://github.com/mozilla/hubs/commit/${gitClientSha}|${gitClientSha}> " + 
               "Client:```${gitClientSha} ${gitMessageClient}```\n" +
               "<https://github.com/mozilla/reticulum/commit/$gitSha|$gitSha> " +
               "Reticulum: ```${gitSha} ${gitMessage}```\n" +
