@@ -71,7 +71,7 @@ pipeline {
               "Client:```${gitClientSha} ${gitMessageClient}```\n" +
               "<https://github.com/mozilla/reticulum/commit/$gitSha|$gitSha> " +
               "Reticulum: ```${gitSha} ${gitMessage}```\n" +
-              "<https://smoke-hubs.mozilla.com/0re3tjyl/smoke-test|Smoke Test> - to push:\n" +
+              "<https://smoke-hubs.mozilla.com/0zuesf6c6mf/smoke-test|Smoke Test> - to push:\n" +
               "`/mr hab promote ${packageIdent}`"
             )
             def payload = 'payload=' + JsonOutput.toJson([
