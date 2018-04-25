@@ -48,7 +48,6 @@ do_build() {
 
     mix local.hex --force
     mix local.rebar --force
-    mix deps.get --only prod
 
     pushd assets
     mkdir -p .yarn
@@ -73,6 +72,7 @@ do_build() {
 
     popd
 
+    mix deps.get --only prod
     mix compile
     mix phx.digest
 }
