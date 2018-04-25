@@ -49,7 +49,6 @@ do_build() {
     mix local.hex --force
     mix local.rebar --force
     mix deps.get --only prod
-    mix compile
 
     pushd assets
     mkdir -p .yarn
@@ -73,6 +72,8 @@ do_build() {
     rm -rf client
 
     popd
+
+    mix compile
     mix phx.digest
 }
 
