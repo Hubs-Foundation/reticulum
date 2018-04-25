@@ -34,7 +34,10 @@ defmodule RetWeb.PageController do
     hub_meta_tags = Phoenix.View.render_to_string(RetWeb.PageView, "hub-meta.html", hub: hub)
 
     body = List.insert_at(get_hub_html_chunks(conn), 1, hub_meta_tags)
-    conn |> send_resp(200, body)
+
+    conn
+    |> put_resp_header("content-type", "text/html; charset=utf-8")
+    |> send_resp(200, body)
   end
 
   defp get_hub_html_chunks(conn) do
