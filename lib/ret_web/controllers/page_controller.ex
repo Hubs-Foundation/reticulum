@@ -3,11 +3,18 @@ defmodule RetWeb.PageController do
   alias Ret.{Repo, Hub}
 
   # Split the HTML file into two parts, on the line that contains HUB_META_TAGS, so we can add meta tags
+  # TODO DRY
   @hub_html_chunks "#{Application.app_dir(:ret)}/priv/static/hub.html"
                    |> File.read!()
                    |> String.split("\n")
                    |> Enum.split_while(&(!Regex.match?(~r/HUB_META_TAGS/, &1)))
                    |> Tuple.to_list()
+
+  @smoke_hub_html_chunks "#{Application.app_dir(:ret)}/priv/static/smoke-hub.html"
+                         |> File.read!()
+                         |> String.split("\n")
+                         |> Enum.split_while(&(!Regex.match?(~r/HUB_META_TAGS/, &1)))
+                         |> Tuple.to_list()
 
   def call(conn, _params) do
     render_for_path(conn.request_path, conn)
@@ -26,8 +33,16 @@ defmodule RetWeb.PageController do
     hub = Hub |> Repo.get_by(hub_sid: hub_sid)
     hub_meta_tags = Phoenix.View.render_to_string(RetWeb.PageView, "hub-meta.html", hub: hub)
 
-    body = List.insert_at(@hub_html_chunks, 1, hub_meta_tags)
+    body = List.insert_at(get_hub_html_chunks(conn), 1, hub_meta_tags)
     conn |> send_resp(200, body)
+  end
+
+  defp get_hub_html_chunks(conn) do
+    if conn.host =~ "smoke" do
+      @smoke_hub_html_chunks
+    else
+      @hub_html_chunks
+    end
   end
 
   defp get_file_prefix(conn) do
