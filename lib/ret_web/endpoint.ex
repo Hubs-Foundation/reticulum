@@ -12,7 +12,8 @@ defmodule RetWeb.Endpoint do
     at: "/",
     from: :ret,
     gzip: false,
-    only: ~w(assets robots.txt favicon.ico avatar-selector.html smoke-avatar-selector.html),
+    only:
+      ~w(assets robots.txt favicon.ico hub-preview.png avatar-selector.html smoke-avatar-selector.html),
     headers: [{"access-control-allow-origin", "*"}]
   )
 
