@@ -52,6 +52,10 @@ defmodule RetWeb.Router do
     plug(JaSerializer.Deserializer)
   end
 
+  pipeline :canonicalize_domain do
+    plug(RetWeb.Plugs.RedirectToMainDomain)
+  end
+
   pipeline :http_auth do
     plug(BasicAuth, use_config: {:ret, :basic_auth})
   end
@@ -61,7 +65,7 @@ defmodule RetWeb.Router do
   end
 
   scope "/api", RetWeb do
-    pipe_through([:secure_headers, :api] ++ if(Mix.env() == :prod, do: [:ssl_only], else: []))
+    pipe_through([:secure_headers, :api] ++ if(Mix.env() == :prod, do: [:ssl_only, :canonicalize_domain], else: []))
 
     scope "/v1", as: :api_v1 do
       resources("/hubs", Api.V1.HubController, only: [:create, :delete])
@@ -70,7 +74,7 @@ defmodule RetWeb.Router do
 
   scope "/", RetWeb do
     pipe_through(
-      [:secure_headers, :browser] ++ if(Mix.env() == :prod, do: [:ssl_only, :http_auth], else: [])
+      [:secure_headers, :browser] ++ if(Mix.env() == :prod, do: [:ssl_only, :canonicalize_domain, :http_auth], else: [])
     )
 
     get("/*path", PageController, only: [:index])
