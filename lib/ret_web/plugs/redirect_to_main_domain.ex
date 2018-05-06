@@ -5,7 +5,6 @@ defmodule RetWeb.Plugs.RedirectToMainDomain do
 
   def call(conn, _options) do
     main_host = RetWeb.Endpoint.config(:url)[:host]
-    main_scheme = RetWeb.Endpoint.config(:url)[:scheme]
 
     if !Regex.match?(~r/\A#{conn.host}\z/i, main_host) do
       conn
