@@ -23,6 +23,18 @@ defmodule RetWeb.XferChannel do
     end
   end
 
+  def handle_in("xfer_request" = message, _payload, socket) do
+    broadcast!(socket, message, %{})
+
+    {:noreply, socket}
+  end
+
+  def handle_in("xfer_response" = message, payload, socket) do
+    broadcast!(socket, message, payload)
+
+    {:noreply, socket}
+  end
+
   def handle_in(_message, _payload, socket) do
     {:noreply, socket}
   end
@@ -34,7 +46,7 @@ defmodule RetWeb.XferChannel do
   end
 
   def handle_info(:channel_expired, socket) do
-    push(socket, "expired", %{})
+    push(socket, "xfer_expired", %{})
     GenServer.cast(self(), :close)
     {:noreply, socket}
   end
