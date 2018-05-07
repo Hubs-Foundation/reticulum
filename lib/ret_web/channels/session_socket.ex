@@ -22,6 +22,7 @@ defmodule RetWeb.SessionSocket do
   end
 
   channel("hub:*", RetWeb.HubChannel)
+  channel("xfer:*", RetWeb.XferChannel)
 
   def id(socket) do
     "session:#{socket.assigns.session_id}"
