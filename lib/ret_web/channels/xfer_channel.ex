@@ -6,6 +6,8 @@ defmodule RetWeb.XferChannel do
   alias Ret.{Statix}
   alias RetWeb.{Presence}
 
+  intercept(["xfer_response"])
+
   def join("xfer:" <> xfer_code, _payload, socket) do
     if Regex.match?(~r/\A[0-9]{4,6}\z/, xfer_code) do
       # Expire channel in 5 minutes
@@ -19,23 +21,35 @@ defmodule RetWeb.XferChannel do
       Statix.increment("ret.channels.xfer.joins.ok")
       {:ok, "{}", socket}
     else
-      {:error, %{message: "Invalid xfer code"}}
+      {:error, %{event: "Invalid xfer code"}}
     end
   end
 
-  def handle_in("xfer_request" = message, _payload, socket) do
-    broadcast!(socket, message, %{})
+  def handle_in("xfer_request" = event, payload, socket) do
+    broadcast!(socket, event, payload)
 
     {:noreply, socket}
   end
 
-  def handle_in("xfer_response" = message, payload, socket) do
-    broadcast!(socket, message, payload)
+  def handle_in("xfer_response" = event, payload, socket) do
+    broadcast!(socket, event, payload)
 
     {:noreply, socket}
   end
 
-  def handle_in(_message, _payload, socket) do
+  def handle_in(_event, _payload, socket) do
+    {:noreply, socket}
+  end
+
+  def handle_out(
+        "xfer_response" = event,
+        %{"target_session_id" => target_session_id} = payload,
+        socket
+      ) do
+    if target_session_id == socket.assigns.session_id do
+      push(socket, event, payload)
+    end
+
     {:noreply, socket}
   end
 
