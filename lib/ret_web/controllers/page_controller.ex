@@ -24,6 +24,10 @@ defmodule RetWeb.PageController do
     render_file(conn, "#{get_file_prefix(conn)}index.html")
   end
 
+  def render_for_path("/link", conn) do
+    render_file(conn, "#{get_file_prefix(conn)}link.html")
+  end
+
   def render_for_path(path, conn) do
     hub_sid =
       path
