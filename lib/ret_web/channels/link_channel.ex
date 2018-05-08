@@ -14,7 +14,7 @@ defmodule RetWeb.LinkChannel do
       Process.send_after(self(), :channel_expired, 60 * 1000 * 5)
 
       # Rate limit joins to reduce attack surface
-      :timer.sleep(2000)
+      :timer.sleep(500)
 
       send(self(), {:begin_tracking, socket.assigns.session_id, link_code})
 
