@@ -22,6 +22,7 @@ export MIX_ENV=prod
 function join_by { local IFS="$1"; shift; echo "$*"; }
 
 mkdir -p tmp
+mkdir -p priv/static/
 
 # Rebar3 will hate us otherwise because it looks for
 # /usr/bin/env when it does some of its compiling
