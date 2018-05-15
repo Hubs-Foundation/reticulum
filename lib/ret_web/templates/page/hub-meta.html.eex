@@ -1,14 +1,11 @@
-<!-- Search engines -->
-<meta name="description" content="Join others in VR at <%= @hub.name %>, right in your browser.">
-<!-- Schema.org for Google -->
-<meta itemprop="name" content="<%= @hub.name %> | Hubs by Mozilla">
-<meta itemprop="description" content="Join others in VR at <%= @hub.name %>, right in your browser.">
-<!-- OpenGraph for Facebook -->
-<meta property="og:type" content="website">
-<meta property="og:url" content="<%= RetWeb.Endpoint.url %>/<%= @hub.hub_sid %>/<%= @hub.slug %>">
-<meta property="og:title" content="<%= @hub.name %> | Hubs by Mozilla">
-<meta property="og:description" content="Join others in VR at <%= @hub.name %>, right in your browser.">
-<meta property="og:image" content="<%= RetWeb.Endpoint.url %>/hub-preview.png">
-<meta property="og:url" content="<%= RetWeb.Endpoint.url %>/<%= @hub.hub_sid %>/<%= @hub.slug %>">
-<!-- Twitter -->
+<meta property="og:type" content="website" />
+<meta property="og:url" content="<%= RetWeb.Endpoint.url %>/<%= @hub.hub_sid %>/<%= @hub.slug %>" />
+<meta property="og:title" content="<%= @hub.name %> | Hubs by Mozilla" />
+<meta property="og:description" content="Join others in VR at <%= @hub.name %>, right in your browser." />
+<meta property="og:image" content="<%= RetWeb.Endpoint.url %>/hub-preview.png" />
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:domain" value="<%= RetWeb.Endpoint.host %>" />
+<meta name="twitter:title" value="<%= @hub.name %> | Hubs by Mozilla" />
+<meta name="twitter:description" content="Join others in VR at <%= @hub.name %>, right in your browser." />
+<meta name="twitter:image" content="<%= RetWeb.Endpoint.url %>/hub-preview.png" />
+<meta name="twitter:url" value="<%= RetWeb.Endpoint.url %>/<%= @hub.hub_sid %>/<%= @hub.slug %>" />
