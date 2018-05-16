@@ -7,8 +7,9 @@ use Mix.Config
 # watchers to your application. For example, we use it
 # with brunch.io to recompile .js and .css sources.
 config :ret, RetWeb.Endpoint,
-  url: [host: "localhost"],
-  http: [port: 4000],
+  url: [scheme: "https", host: "localhost", port: 4000],
+  static_url: [scheme: "https", host: "localhost", port: 4000],
+  https: [port: 4000, otp_app: :ret, keyfile: "#{System.get_env("PWD")}/priv/dev-ssl.key", certfile: "#{System.get_env("PWD")}/priv/dev-ssl.cert"],
   debug_errors: true,
   code_reloader: true,
   check_origin: false,

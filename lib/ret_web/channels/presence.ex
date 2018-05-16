@@ -17,6 +17,12 @@ defmodule RetWeb.Presence do
     __MODULE__
     |> GenServer.call({:list, nil})
     |> State.online_list()
+    |> Enum.filter(fn x ->
+      case x do
+        {{"hub:" <> _hub_id, _pid, _session_id}, _payload, _tag} -> true
+        _ -> false
+      end
+    end)
     |> Enum.map(fn {{_topic, _pid, session_id}, %{hub_id: hub_id}, _tag} ->
       %{session_id: session_id, hub_id: hub_id}
     end)

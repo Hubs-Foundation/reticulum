@@ -4,14 +4,14 @@ defmodule RetWeb.Router do
   asset_hosts =
     "#{
       if Mix.env() == :dev do
-        "http://hubs.dev:4000 https://hubs.dev:4000 http://hubs.dev:8080 https://hubs.dev:8080"
+        "https://localhost:4000 https://localhost:8080"
       end
     } https://assets-prod.reticulum.io https://smoke-assets-prod.reticulum.io https://assets-dev.reticulum.io https://smoke-assets-dev.reticulum.io https://asset-bundles-prod.reticulum.io https://smoke-asset-bundles-prod.reticulum.io https://asset-bundles-dev.reticulum.io https://smoke-asset-bundles-dev.reticulum.io"
 
   websocket_hosts =
     "#{
       if Mix.env() == :dev do
-        "ws://hubs.dev:4000 wss://hubs.dev:4000 ws://hubs.dev:8080 wss://hubs.dev:8080"
+        "https://localhost:4000 https://localhost:8080 wss://localhost:4000"
       end
     } wss://prod.reticulum.io wss://smoke-prod.reticulum.io wss://dev.reticulum.io wss://smoke-dev.reticulum.io wss://prod-janus.reticulum.io wss://dev-janus.reticulum.io wss://hubs.social wss://hubs.mozilla.com wss://smoke-hubs.mozilla.com"
 
