@@ -16,7 +16,8 @@ defmodule RetWeb.SessionSocket do
         "https://hubs.social",
         "https://hubs.mozilla.com",
         "https://smoke-hubs.mozilla.com",
-        "https://localhost:8080"
+        "https://localhost:8080",
+        "https://hubs.test:8080"
       ]
     )
   end
