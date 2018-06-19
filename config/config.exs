@@ -8,7 +8,7 @@ use Mix.Config
 # General application configuration
 config :ret, ecto_repos: [Ret.Repo]
 
-config :phoenix, :format_encoders, "json-api": Posion
+config :phoenix, :format_encoders, "json-api": Poison
 
 config :mime, :types, %{
   "application/vnd.api+json" => ["json-api"]
