@@ -142,6 +142,27 @@
       doc: "header value for admin access key to access privileged APIs",
       hidden: false,
       to: "ret.Elixir.RetWeb.Plugs.HeaderAuthorization.header_value"
+    ],
+    "ret.farspark_signature_key": [
+      commented: false,
+      datatype: :binary,
+      doc: "Farspark signature key",
+      hidden: false,
+      to: "ret.farspark_signature_key"
+    ],
+    "ret.farspark_signature_salt": [
+      commented: false,
+      datatype: :binary,
+      doc: "Farspark signature salt",
+      hidden: false,
+      to: "ret.farspark_signature_salt"
+    ],
+    "ret.farspark_host": [
+      commented: false,
+      datatype: :binary,
+      doc: "Farspark host",
+      hidden: false,
+      to: "ret.farspark_host"
     ]
   ],
   transforms: [],
