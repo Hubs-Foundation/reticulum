@@ -25,9 +25,9 @@ defmodule RetWeb.Router do
               asset_hosts
             }; style-src 'self' https://fonts.googleapis.com #{asset_hosts} 'unsafe-inline'; connect-src 'self' https://sentry.prod.mozaws.net https://dpdb.webvr.rocks #{
               asset_hosts
-            } #{websocket_hosts} https://cdn.aframe.io https://www.mozilla.org data:; img-src 'self' #{asset_hosts} https://cdn.aframe.io data: blob:; media-src 'self' #{
+            } #{websocket_hosts} https://cdn.aframe.io https://www.mozilla.org data:; img-src 'self' #{
               asset_hosts
-            } data:; frame-src 'self'; frame-ancestors 'self'; base-uri 'none'; form-action 'self';",
+            } https://cdn.aframe.io data: blob:; media-src 'self' #{asset_hosts} data:; frame-src 'self'; frame-ancestors 'self'; base-uri 'none'; form-action 'self';",
           x_content_type_options: "nosniff",
           x_frame_options: "sameorigin",
           x_xss_protection: "1; mode=block",
@@ -65,16 +65,21 @@ defmodule RetWeb.Router do
   end
 
   scope "/api", RetWeb do
-    pipe_through([:secure_headers, :api] ++ if(Mix.env() == :prod, do: [:ssl_only, :canonicalize_domain], else: []))
+    pipe_through(
+      [:secure_headers, :api] ++
+        if(Mix.env() == :prod, do: [:ssl_only, :canonicalize_domain], else: [])
+    )
 
     scope "/v1", as: :api_v1 do
       resources("/hubs", Api.V1.HubController, only: [:create, :delete])
+      resources("/media", Api.V1.MediaController, only: [:create])
     end
   end
 
   scope "/", RetWeb do
     pipe_through(
-      [:secure_headers, :browser] ++ if(Mix.env() == :prod, do: [:ssl_only, :canonicalize_domain], else: [])
+      [:secure_headers, :browser] ++
+        if(Mix.env() == :prod, do: [:ssl_only, :canonicalize_domain], else: [])
     )
 
     get("/*path", PageController, only: [:index])

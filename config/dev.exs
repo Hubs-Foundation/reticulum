@@ -74,3 +74,10 @@ config :ret, RetWeb.Plugs.HeaderAuthorization,
 
 # Allow any origin for API access in dev
 config :cors_plug, origin: ["*"]
+
+config :ret,
+  farspark_signature_key:
+    "248cf801c4f5d6fd70c1b0dfea8dedeb57adafa7821027d546f016efef5a501bd8168c8479d33b466199d0ac68c71bb71b68c27537102a63cd70776aa83bca76",
+  farspark_signature_salt:
+    "da914bb89e332b2a815a667875584d067b698fe1f6f5c61d98384dc74d2ed85b67eea0a51325afb9d9c7d798f4bbbd630102a261e152aceb13d9469b02da6b31",
+  farspark_host: "https://farspark-dev.reticulum.io"
