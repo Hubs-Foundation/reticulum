@@ -2,7 +2,7 @@ defmodule RetWeb.Api.V1.MediaController do
   use RetWeb, :controller
 
   def create(conn, %{"media" => %{"url" => url}}) do
-    path = "/raw/0/0/0/#{Base.url_encode64(url, padding: false)}"
+    path = "/raw/0/0/0/0/#{Base.url_encode64(url, padding: false)}"
     host = Application.get_env(:ret, :farspark_host)
     raw_image_url = "#{host}/#{gen_signature(path)}#{path}"
     render(conn, "show.json", %{raw_image_url: raw_image_url})
