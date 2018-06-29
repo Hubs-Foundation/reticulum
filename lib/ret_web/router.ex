@@ -6,7 +6,7 @@ defmodule RetWeb.Router do
       if Mix.env() == :dev do
         "https://localhost:4000 https://localhost:8080 https://hubs.local:4000 https://hubs.local:8080"
       end
-    } https://assets-prod.reticulum.io https://smoke-assets-prod.reticulum.io https://assets-dev.reticulum.io https://smoke-assets-dev.reticulum.io https://asset-bundles-prod.reticulum.io https://smoke-asset-bundles-prod.reticulum.io https://asset-bundles-dev.reticulum.io https://smoke-asset-bundles-dev.reticulum.io"
+    } https://assets-prod.reticulum.io https://smoke-assets-prod.reticulum.io https://assets-dev.reticulum.io https://smoke-assets-dev.reticulum.io https://asset-bundles-prod.reticulum.io https://smoke-asset-bundles-prod.reticulum.io https://asset-bundles-dev.reticulum.io https://smoke-asset-bundles-dev.reticulum.io https://farspark-dev.reticulum.io https://farspark.reticulum.io"
 
   websocket_hosts =
     "#{
