@@ -163,6 +163,13 @@
       doc: "Farspark host",
       hidden: false,
       to: "ret.farspark_host"
+    ],
+    "ret.ytdl_host": [
+      commented: false,
+      datatype: :binary,
+      doc: "YT-DL host",
+      hidden: false,
+      to: "ret.ytdl_host"
     ]
   ],
   transforms: [],

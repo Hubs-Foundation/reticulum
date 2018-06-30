@@ -23,7 +23,13 @@ defmodule Ret.Application do
       # Storage for rate limiting
       worker(PlugAttack.Storage.Ets, [RetWeb.RateLimit.Storage, [clean_period: 60_000]]),
       # Media resolution cache
-      worker(Cachex, [:media, [expiration: expiration(default: :timer.minutes(60))]]),
+      worker(Cachex, [
+        :media_urls,
+        [
+          expiration: expiration(default: :timer.minutes(60)),
+          fallback: fallback(default: &Ret.MediaResolver.resolve/1)
+        ]
+      ]),
       # Reticulum shutdown
       worker(Ret.Shutdown, [], shutdown: 30_000),
       # Graceful shutdown
