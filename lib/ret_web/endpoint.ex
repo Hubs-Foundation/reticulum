@@ -12,8 +12,6 @@ defmodule RetWeb.Endpoint do
     at: "/",
     from: :ret,
     gzip: false,
-    # Due to cloudfront, we want to include max-age in responses
-    cache_control_for_etags: "public, max-age=31536000",
     only:
       ~w(assets robots.txt favicon.ico hub-preview.png avatar-selector.html smoke-avatar-selector.html),
     headers: [{"access-control-allow-origin", "*"}]

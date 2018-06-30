@@ -57,6 +57,8 @@ defmodule Ret.Mixfile do
       {:plug_attack, "~> 0.3"},
       {:ecto_enum, "~> 1.0"},
       {:secure_headers, github: "anotherhale/secure_headers"},
+      {:the_end, "~> 1.1.0"},
+      {:cachex, "~> 3.0.2"}
     ]
   end
 
