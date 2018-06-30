@@ -58,7 +58,8 @@ defmodule Ret.Mixfile do
       {:ecto_enum, "~> 1.0"},
       {:secure_headers, github: "anotherhale/secure_headers"},
       {:the_end, "~> 1.1.0"},
-      {:cachex, "~> 3.0.2"}
+      {:cachex, "~> 3.0.2"},
+      {:retry, "~> 0.10.0"}
     ]
   end
 

@@ -1,7 +1,8 @@
 defmodule RetWeb.Api.V1.MediaController do
   use RetWeb, :controller
+  use Retry
 
-  @resolvable_url_hosts ["www.youtube.com", "youtube.com"]
+  @ytdl_url_hosts ["www.youtube.com", "youtube.com"]
 
   def create(conn, %{"media" => %{"url" => url}} = params) do
     index =
@@ -17,8 +18,28 @@ defmodule RetWeb.Api.V1.MediaController do
     conn |> send_resp(404, "")
   end
 
-  defp handle_url(conn, %URI{host: host} = uri, index) when host in @resolvable_url_hosts do
-    render_response_for_uri_and_index(conn, uri, index)
+  defp handle_url(conn, %URI{host: host} = uri, index) when host in @ytdl_url_hosts do
+    ytdl_url = "http://localhost:9191/api/play?url=#{uri |> URI.to_string() |> URI.encode()}"
+
+    ytdl_resp =
+      retry with: exp_backoff() |> randomize |> cap(3_000) |> expiry(15_000) do
+        # interact with external service
+        HTTPoison.get!(ytdl_url)
+      after
+        result -> result
+      else
+        error -> error
+      end
+
+    case ytdl_resp do
+      %{status_code: 302, headers: headers} ->
+        # TODO need to get header
+        media_uri = headers |> Keyword.get("Location") |> URI.parse()
+        render_response_for_uri_and_index(conn, ytdl_resp, index)
+
+      _ ->
+        conn |> send_resp(404, "")
+    end
   end
 
   defp handle_url(conn, %URI{} = uri, index) do

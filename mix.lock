@@ -67,6 +67,7 @@
   "quantum": {:hex, :quantum, "2.2.7", "134277fdd2b9173d0bb53cb33b61f8f6cc5de75bd61c2e789850a202f72f9b0f", [:mix], [{:calendar, "~> 0.17", [hex: :calendar, repo: "hexpm", optional: true]}, {:crontab, "~> 1.1", [hex: :crontab, repo: "hexpm", optional: false]}, {:gen_stage, "~> 0.12", [hex: :gen_stage, repo: "hexpm", optional: false]}, {:timex, "~> 3.1", [hex: :timex, repo: "hexpm", optional: true]}], "hexpm"},
   "rabbit_common": {:git, "https://github.com/jbrisbin/rabbit_common.git", "9c1965273032ffb79ec0ff80b250e5d0b4608aa7", [ref: ""]},
   "ranch": {:hex, :ranch, "1.3.2", "e4965a144dc9fbe70e5c077c65e73c57165416a901bd02ea899cfd95aa890986", [:rebar3], [], "hexpm"},
+  "retry": {:hex, :retry, "0.10.0", "5bdebcc88716aded650cbcd216dbf2cf05989d29335ae94d97752e970a816d86", [:mix], [], "hexpm"},
   "secure_headers": {:git, "https://github.com/anotherhale/secure_headers.git", "04c354351562a2211d4fafa4ef10947cfbfacb14", []},
   "setup": {:hex, :setup, "1.8.4", "738db0685dc1741f45c6a9bf78478e0d5877f3d0876c0b50fd02f0210edb5aa4", [:rebar], [], "hexpm"},
   "slugger": {:hex, :slugger, "0.2.0", "7c609e6eee6dbb44e7b0db07982932356cab476f00fc8d73320cdc50d7efa18e", [:mix], [], "hexpm"},
