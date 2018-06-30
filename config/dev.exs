@@ -86,4 +86,4 @@ config :ret,
   farspark_signature_salt:
     "da914bb89e332b2a815a667875584d067b698fe1f6f5c61d98384dc74d2ed85b67eea0a51325afb9d9c7d798f4bbbd630102a261e152aceb13d9469b02da6b31",
   farspark_host: "https://farspark-dev.reticulum.io",
-  ytdl_host: "http://ytdl-dev.reticulum.io"
+  ytdl_host: "https://ytdl-dev.reticulum.io"
