@@ -1,48 +1,39 @@
 defmodule Ret.MediaResolver do
   use Retry
 
-  @ytdl_url_hosts [
-    "www.youtube.com",
+  @ytdl_root_hosts [
     "youtube.com",
-    "twitch.tv",
-    "www.twitch.tv",
     "imgur.com",
     "instagram.com",
-    "www.instagram.com",
     "soundcloud.com",
-    "www.soundcloud.com",
-    "crunchyroll.com",
-    "www.crunchyroll.com",
-    "www.tumblr.com",
     "tumblr.com",
-    "twitter.com",
-    "www.twitter.com",
     "facebook.com",
-    "www.facebook.com",
-    "periscope.com",
-    "www.periscope.com",
-    "drive.google.com",
+    "google.com",
     "gfycat.com",
-    "www.gfycat.com",
     "flickr.com",
-    "www.flickr.com",
     "dropbox.com",
-    "www.dropbox.com",
-    "cloudflare.com",
-    "www.cloudflare.com"
+    "cloudflare.com"
   ]
 
   def resolve(url) when is_binary(url) do
-    url |> URI.parse() |> resolve
+    uri = url |> URI.parse()
+    root_host = get_root_host(uri.host)
+    resolve(uri, root_host)
   end
 
-  def resolve(%URI{host: nil}) do
+  def resolve(%URI{host: nil}, _) do
     {:commit, nil}
   end
 
-  def resolve(%URI{host: host} = uri) when host in @ytdl_url_hosts do
+  def resolve(%URI{} = uri, root_host) when root_host in @ytdl_root_hosts do
     ytdl_host = Application.get_env(:ret, :ytdl_host)
-    ytdl_url = "#{ytdl_host}/api/play?url=#{uri |> URI.to_string() |> URI.encode()}"
+
+    ytdl_format = "best[protocol*=http]"
+
+    ytdl_url =
+      "#{ytdl_host}/api/play?format=#{URI.encode(ytdl_format)}&url=#{
+        uri |> URI.to_string() |> URI.encode()
+      }"
 
     ytdl_resp =
       retry with: exp_backoff() |> randomize |> cap(3_000) |> expiry(15_000) do
@@ -55,14 +46,28 @@ defmodule Ret.MediaResolver do
 
     case ytdl_resp do
       %HTTPoison.Response{status_code: 302, headers: headers} ->
-        {:commit, headers |> List.keyfind("Location", 0) |> elem(1)}
+        {:ignore, headers |> media_url_from_headers}
 
       _ ->
+        # TODO handle misses here for images, etc
         {:commit, nil}
     end
   end
 
-  def resolve(%URI{host: _host} = uri) do
+  def resolve(%URI{} = uri, _root_host) do
     {:commit, uri |> URI.to_string()}
+  end
+
+  defp get_root_host(nil) do
+    nil
+  end
+
+  defp get_root_host(host) do
+    # Drop subdomains
+    host |> String.split(".") |> Enum.slice(-2..-1) |> Enum.join(".")
+  end
+
+  defp media_url_from_headers(headers) do
+    headers |> List.keyfind("Location", 0) |> elem(1)
   end
 end
