@@ -88,7 +88,7 @@ defmodule Ret.MediaResolver do
           uri
       end
 
-    {:ignore, uri |> URI.to_string()}
+    {:commit, uri |> URI.to_string()}
   end
 
   def resolve_non_video(%URI{} = uri, "imgur.com") do
