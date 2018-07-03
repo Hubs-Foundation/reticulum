@@ -65,8 +65,7 @@ defmodule Ret.MediaResolver do
         giphy_api_key when is_binary(giphy_api_key) ->
           with gif_id <-
                  uri.path |> String.split("/") |> List.last() |> String.split("-") |> List.last(),
-               giphy_api_url <-
-                 "https://api.giphy.com/v1/gifs/#{gif_id}qqq?api_key=#{giphy_api_key}" do
+               giphy_api_url <- "https://api.giphy.com/v1/gifs/#{gif_id}?api_key=#{giphy_api_key}" do
             giphy_resp =
               retry with: exp_backoff() |> randomize |> cap(3_000) |> expiry(7_000) do
                 case HTTPoison.get!(giphy_api_url) do
