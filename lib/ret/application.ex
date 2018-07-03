@@ -30,8 +30,6 @@ defmodule Ret.Application do
           fallback: fallback(default: &Ret.MediaResolver.resolve/1)
         ]
       ]),
-      # Reticulum shutdown
-      worker(Ret.Shutdown, [], shutdown: 30_000),
       # Graceful shutdown
       supervisor(TheEnd.Of.Phoenix, [[timeout: 10_000, endpoint: RetWeb.Endpoint]])
     ]
