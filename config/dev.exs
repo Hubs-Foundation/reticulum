@@ -88,9 +88,9 @@ config :ret,
   farspark_host: "https://farspark-dev.reticulum.io"
 
 config :ret, Ret.MediaResolver,
-  giphy_api_key: "",
-  deviantart_client_id: "",
-  deviantart_client_secret: "",
-  imgur_mashape_api_key: "",
-  imgur_client_id: "",
+  giphy_api_key: nil,
+  deviantart_client_id: nil,
+  deviantart_client_secret: nil,
+  imgur_mashape_api_key: nil,
+  imgur_client_id: nil,
   ytdl_host: "http://localhost:9191"
