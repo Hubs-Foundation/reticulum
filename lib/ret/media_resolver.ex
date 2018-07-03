@@ -118,8 +118,8 @@ defmodule Ret.MediaResolver do
 
     uri =
       case resp.body |> OpenGraph.parse() do
-        %{image: image} -> image |> URI.parse()
         %{video: video} -> video |> URI.parse()
+        %{image: image} -> image |> URI.parse()
         _ -> uri
       end
 
