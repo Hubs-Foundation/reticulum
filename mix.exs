@@ -46,7 +46,7 @@ defmodule Ret.Mixfile do
        runtime: false, github: "gfodor/distillery", branch: "feature/boot_opts"},
       {:conform, "~> 2.5"},
       {:peerage, "~> 1.0"},
-      {:httpoison, "~> 0.13"},
+      {:httpoison, "~> 1.2.0"},
       {:poison, "~> 3.1"},
       {:ecto_autoslug_field, "~> 0.3"},
       {:cors_plug, "~> 1.5"},
@@ -57,6 +57,10 @@ defmodule Ret.Mixfile do
       {:plug_attack, "~> 0.3"},
       {:ecto_enum, "~> 1.0"},
       {:secure_headers, github: "anotherhale/secure_headers"},
+      {:the_end, "~> 1.1.0"},
+      {:cachex, "~> 3.0.2"},
+      {:retry, "~> 0.10.0"},
+      {:open_graph, "~> 0.0.3"}
     ]
   end
 

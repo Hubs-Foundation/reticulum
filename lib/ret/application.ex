@@ -1,5 +1,6 @@
 defmodule Ret.Application do
   use Application
+  import Cachex.Spec
 
   # See https://hexdocs.pm/elixir/Application.html
   # for more information on OTP Applications
@@ -21,6 +22,16 @@ defmodule Ret.Application do
       worker(Ret.Scheduler, []),
       # Storage for rate limiting
       worker(PlugAttack.Storage.Ets, [RetWeb.RateLimit.Storage, [clean_period: 60_000]]),
+      # Media resolution cache
+      worker(Cachex, [
+        :media_urls,
+        [
+          expiration: expiration(default: :timer.minutes(60)),
+          fallback: fallback(default: &Ret.MediaResolver.resolve/1)
+        ]
+      ]),
+      # Graceful shutdown
+      supervisor(TheEnd.Of.Phoenix, [[timeout: 10_000, endpoint: RetWeb.Endpoint]])
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

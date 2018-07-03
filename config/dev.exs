@@ -9,7 +9,12 @@ use Mix.Config
 config :ret, RetWeb.Endpoint,
   url: [scheme: "https", host: "hubs.local", port: 4000],
   static_url: [scheme: "https", host: "hubs.local", port: 4000],
-  https: [port: 4000, otp_app: :ret, keyfile: "#{System.get_env("PWD")}/priv/dev-ssl.key", certfile: "#{System.get_env("PWD")}/priv/dev-ssl.cert"],
+  https: [
+    port: 4000,
+    otp_app: :ret,
+    keyfile: "#{System.get_env("PWD")}/priv/dev-ssl.key",
+    certfile: "#{System.get_env("PWD")}/priv/dev-ssl.cert"
+  ],
   debug_errors: true,
   code_reloader: true,
   check_origin: false,
@@ -81,3 +86,11 @@ config :ret,
   farspark_signature_salt:
     "da914bb89e332b2a815a667875584d067b698fe1f6f5c61d98384dc74d2ed85b67eea0a51325afb9d9c7d798f4bbbd630102a261e152aceb13d9469b02da6b31",
   farspark_host: "https://farspark-dev.reticulum.io"
+
+config :ret, Ret.MediaResolver,
+  giphy_api_key: nil,
+  deviantart_client_id: nil,
+  deviantart_client_secret: nil,
+  imgur_mashape_api_key: nil,
+  imgur_client_id: nil,
+  ytdl_host: "http://localhost:9191"
