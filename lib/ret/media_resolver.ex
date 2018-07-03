@@ -45,7 +45,8 @@ defmodule Ret.MediaResolver do
           resolve_non_video(uri, root_host)
       end
     else
-      _err -> resolve_non_video(uri, root_host)
+      _err ->
+        resolve_non_video(uri, root_host)
     end
   end
 
@@ -160,11 +161,8 @@ defmodule Ret.MediaResolver do
   defp retry_get_until_success(url, headers \\ []) do
     retry with: exp_backoff() |> randomize |> cap(5_000) |> expiry(10_000) do
       case HTTPoison.get!(url, headers) do
-        %{status_code: status_code} = resp when status_code in @success_status_codes ->
-          resp
-
-        resp ->
-          raise "Retry error for #{url} #{resp}"
+        %{status_code: status_code} = resp when status_code in @success_status_codes -> resp
+        _ -> :error
       end
     after
       result -> result
@@ -182,13 +180,10 @@ defmodule Ret.MediaResolver do
   #
   # https://youtube-dl-api-server.readthedocs.io/en/latest/api.html#api-methods
   defp retry_get_until_valid_ytdl_response(url) do
-    retry with: exp_backoff() |> randomize |> cap(5_000) |> expiry(10_000) do
+    retry with: exp_backoff() |> randomize |> cap(1_000) |> expiry(10_000) do
       case HTTPoison.get!(url) do
-        %{status_code: status_code} = resp when status_code in @ytdl_valid_status_codes ->
-          resp
-
-        resp ->
-          raise "Retry error for #{url} #{resp}"
+        %{status_code: status_code} = resp when status_code in @ytdl_valid_status_codes -> resp
+        _ -> :error
       end
     after
       result -> result
