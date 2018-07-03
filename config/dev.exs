@@ -90,4 +90,6 @@ config :ret,
 config :ret, Ret.MediaResolver,
   imgur_client_id: "",
   giphy_api_key: "",
+  deviantart_client_id: "",
+  deviantart_client_secret: "",
   ytdl_host: "http://localhost:9191"
