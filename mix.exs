@@ -59,7 +59,8 @@ defmodule Ret.Mixfile do
       {:secure_headers, github: "anotherhale/secure_headers"},
       {:the_end, "~> 1.1.0"},
       {:cachex, "~> 3.0.2"},
-      {:retry, "~> 0.10.0"}
+      {:retry, "~> 0.10.0"},
+      {:open_graph, "~> 0.0.3"}
     ]
   end
 

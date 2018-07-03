@@ -113,6 +113,16 @@ defmodule Ret.MediaResolver do
   end
 
   defp resolve_non_video(%URI{} = uri, _root_host) do
+    # Fall back on og: tags
+    resp = retry_get_until_success(uri |> URI.to_string())
+
+    uri =
+      case resp.body |> OpenGraph.parse() do
+        %{image: image} -> image |> URI.parse()
+        %{video: video} -> video |> URI.parse()
+        _ -> uri
+      end
+
     {:commit, uri |> URI.to_string()}
   end
 
