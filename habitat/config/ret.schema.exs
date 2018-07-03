@@ -164,12 +164,47 @@
       hidden: false,
       to: "ret.farspark_host"
     ],
-    "ret.ytdl_host": [
+    "ret.Elixir.Ret.MediaResolver.ytdl_host": [
       commented: false,
       datatype: :binary,
       doc: "YT-DL host",
       hidden: false,
-      to: "ret.ytdl_host"
+      to: "ret.Elixir.Ret.MediaResolver.ytdl_host"
+    ],
+    "ret.Elixir.Ret.MediaResolver.giphy_api_key": [
+      commented: false,
+      datatype: :binary,
+      doc: "Giphy API key",
+      hidden: false,
+      to: "ret.Elixir.Ret.MediaResolver.giphy_api_key"
+    ],
+    "ret.Elixir.Ret.MediaResolver.deviantart_client_id": [
+      commented: false,
+      datatype: :binary,
+      doc: "DeviantArt Client ID",
+      hidden: false,
+      to: "ret.Elixir.Ret.MediaResolver.deviantart_client_id"
+    ],
+    "ret.Elixir.Ret.MediaResolver.deviantart_client_secret": [
+      commented: false,
+      datatype: :binary,
+      doc: "DeviantArt Client Secret",
+      hidden: false,
+      to: "ret.Elixir.Ret.MediaResolver.deviantart_client_secret"
+    ],
+    "ret.Elixir.Ret.MediaResolver.imgur_mashape_api_key": [
+      commented: false,
+      datatype: :binary,
+      doc: "Imgur Mashape API Key",
+      hidden: false,
+      to: "ret.Elixir.Ret.MediaResolver.imgur_mashape_api_key"
+    ],
+    "ret.Elixir.Ret.MediaResolver.imgur_client_id": [
+      commented: false,
+      datatype: :binary,
+      doc: "Imgur Client ID",
+      hidden: false,
+      to: "ret.Elixir.Ret.MediaResolver.imgur_client_id"
     ]
   ],
   transforms: [],
