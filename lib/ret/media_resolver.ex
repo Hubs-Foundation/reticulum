@@ -81,7 +81,15 @@ defmodule Ret.MediaResolver do
     {:commit, uri |> URI.to_string()}
   end
 
-  defp resolve_non_video(%URI{} = uri, "giphy.com") do
+  defp resolve_non_video(%URI{path: "/gifs/" <> _rest} = uri, "giphy.com") do
+    resolve_giphy_media_uri(uri)
+  end
+
+  defp resolve_non_video(%URI{path: "/stickers/" <> _rest} = uri, "giphy.com") do
+    resolve_giphy_media_uri(uri)
+  end
+
+  defp resolve_giphy_media_uri(%URI{} = uri) do
     uri =
       with api_key when is_binary(api_key) <- resolver_config(:giphy_api_key) do
         gif_id = uri.path |> String.split("/") |> List.last() |> String.split("-") |> List.last()
@@ -119,8 +127,8 @@ defmodule Ret.MediaResolver do
 
     uri =
       case resp.body |> OpenGraph.parse() do
-        %{video: video} -> video |> URI.parse()
-        %{image: image} -> image |> URI.parse()
+        %{video: video} when is_binary(video) -> video |> URI.parse()
+        %{image: image} when is_binary(image) -> image |> URI.parse()
         _ -> uri
       end
 
