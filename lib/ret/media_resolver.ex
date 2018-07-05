@@ -82,14 +82,14 @@ defmodule Ret.MediaResolver do
   end
 
   defp resolve_non_video(%URI{path: "/gifs/" <> _rest} = uri, "giphy.com") do
-    resolve_giphy_media_uri(uri)
+    resolve_giphy_media_uri(uri, "mp4")
   end
 
   defp resolve_non_video(%URI{path: "/stickers/" <> _rest} = uri, "giphy.com") do
-    resolve_giphy_media_uri(uri)
+    resolve_giphy_media_uri(uri, "url")
   end
 
-  defp resolve_giphy_media_uri(%URI{} = uri) do
+  defp resolve_giphy_media_uri(%URI{} = uri, preferred_type) do
     uri =
       with api_key when is_binary(api_key) <- resolver_config(:giphy_api_key) do
         gif_id = uri.path |> String.split("/") |> List.last() |> String.split("-") |> List.last()
@@ -99,7 +99,7 @@ defmodule Ret.MediaResolver do
         original_image =
           giphy_resp.body |> Poison.decode!() |> Kernel.get_in(["data", "images", "original"])
 
-        (original_image["mp4"] || original_image["url"]) |> URI.parse()
+        (original_image[preferred_type] || original_image["url"]) |> URI.parse()
       else
         _err -> uri
       end
