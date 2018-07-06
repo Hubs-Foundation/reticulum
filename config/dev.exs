@@ -93,4 +93,5 @@ config :ret, Ret.MediaResolver,
   deviantart_client_secret: nil,
   imgur_mashape_api_key: nil,
   imgur_client_id: nil,
+  google_poly_api_key: nil,
   ytdl_host: "http://localhost:9191"

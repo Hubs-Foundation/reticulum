@@ -30,6 +30,11 @@ defmodule Ret.MediaResolver do
     {:commit, nil}
   end
 
+  # Necessary short circuit around google.com root_host to skip YT-DL check for Poly
+  def resolve(%URI{host: "poly.google.com"} = uri, root_host) do
+    resolve_non_video(uri, root_host)
+  end
+
   def resolve(%URI{} = uri, root_host) when root_host in @ytdl_root_hosts do
     with ytdl_host when is_binary(ytdl_host) <- resolver_config(:ytdl_host) do
       ytdl_format = "best[protocol*=http]"
@@ -89,24 +94,6 @@ defmodule Ret.MediaResolver do
     resolve_giphy_media_uri(uri, "url")
   end
 
-  defp resolve_giphy_media_uri(%URI{} = uri, preferred_type) do
-    uri =
-      with api_key when is_binary(api_key) <- resolver_config(:giphy_api_key) do
-        gif_id = uri.path |> String.split("/") |> List.last() |> String.split("-") |> List.last()
-        giphy_api_url = "https://api.giphy.com/v1/gifs/#{gif_id}?api_key=#{api_key}"
-        giphy_resp = retry_get_until_success(giphy_api_url)
-
-        original_image =
-          giphy_resp.body |> Poison.decode!() |> Kernel.get_in(["data", "images", "original"])
-
-        (original_image[preferred_type] || original_image["url"]) |> URI.parse()
-      else
-        _err -> uri
-      end
-
-    {:commit, uri |> URI.to_string()}
-  end
-
   defp resolve_non_video(%URI{path: "/gallery/" <> gallery_id} = uri, "imgur.com") do
     imgur_api_url = "https://imgur-apiv3.p.mashape.com/3/gallery/#{gallery_id}"
     uri = image_uri_for_imgur_collection_api_url(imgur_api_url) || uri
@@ -121,6 +108,28 @@ defmodule Ret.MediaResolver do
     {:commit, uri |> URI.to_string()}
   end
 
+  defp resolve_non_video(
+         %URI{host: "poly.google.com", path: "/view/" <> asset_id} = uri,
+         "google.com"
+       ) do
+    uri =
+      with api_key when is_binary(api_key) <- resolver_config(:google_poly_api_key) do
+        api_url = "https://poly.googleapis.com/v1/assets/#{asset_id}?key=#{api_key}"
+        api_resp = retry_get_until_success(api_url)
+
+        api_resp.body
+        |> Poison.decode!()
+        |> Kernel.get_in(["formats"])
+        |> Enum.find(&(&1["formatType"] == "GLTF"))
+        |> Kernel.get_in(["root", "url"])
+        |> URI.parse()
+      else
+        _err -> uri
+      end
+
+    {:commit, uri |> URI.to_string()}
+  end
+
   defp resolve_non_video(%URI{} = uri, _root_host) do
     # Fall back on og: tags
     resp = retry_get_until_success(uri |> URI.to_string())
@@ -130,6 +139,24 @@ defmodule Ret.MediaResolver do
         %{video: video} when is_binary(video) -> video |> URI.parse()
         %{image: image} when is_binary(image) -> image |> URI.parse()
         _ -> uri
+      end
+
+    {:commit, uri |> URI.to_string()}
+  end
+
+  defp resolve_giphy_media_uri(%URI{} = uri, preferred_type) do
+    uri =
+      with api_key when is_binary(api_key) <- resolver_config(:giphy_api_key) do
+        gif_id = uri.path |> String.split("/") |> List.last() |> String.split("-") |> List.last()
+        giphy_api_url = "https://api.giphy.com/v1/gifs/#{gif_id}?api_key=#{api_key}"
+        giphy_resp = retry_get_until_success(giphy_api_url)
+
+        original_image =
+          giphy_resp.body |> Poison.decode!() |> Kernel.get_in(["data", "images", "original"])
+
+        (original_image[preferred_type] || original_image["url"]) |> URI.parse()
+      else
+        _err -> uri
       end
 
     {:commit, uri |> URI.to_string()}
