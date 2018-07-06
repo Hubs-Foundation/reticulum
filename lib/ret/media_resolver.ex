@@ -5,12 +5,12 @@ defmodule Ret.MediaResolver do
   @success_status_codes [200]
 
   @ytdl_root_hosts [
-    "youtube.com",
+    # "youtube.com",
     "imgur.com",
-    "instagram.com",
-    "soundcloud.com",
+    # "instagram.com",
+    # "soundcloud.com",
     "tumblr.com",
-    "facebook.com",
+    # "facebook.com",
     "google.com",
     "gfycat.com",
     "flickr.com",
@@ -30,12 +30,19 @@ defmodule Ret.MediaResolver do
     {:commit, nil}
   end
 
+  # Necessary short circuit around google.com root_host to skip YT-DL check for Poly
+  def resolve(%URI{host: "poly.google.com"} = uri, root_host) do
+    resolve_non_video(uri, root_host)
+  end
+
   def resolve(%URI{} = uri, root_host) when root_host in @ytdl_root_hosts do
     with ytdl_host when is_binary(ytdl_host) <- resolver_config(:ytdl_host) do
       ytdl_format = "best[protocol*=http]"
       encoded_url = uri |> URI.to_string() |> URI.encode()
-      ytdl_url = "#{ytdl_host}/api/play?format=#{URI.encode(ytdl_format)}&url=#{encoded_url}"
-      ytdl_resp = retry_get_until_valid_ytdl_response(ytdl_url)
+
+      ytdl_resp =
+        "#{ytdl_host}/api/play?format=#{URI.encode(ytdl_format)}&url=#{encoded_url}"
+        |> retry_get_until_valid_ytdl_response
 
       case ytdl_resp do
         %HTTPoison.Response{status_code: 302, headers: headers} ->
@@ -59,21 +66,24 @@ defmodule Ret.MediaResolver do
       with client_id when is_binary(client_id) <- resolver_config(:deviantart_client_id),
            client_secret when is_binary(client_secret) <-
              resolver_config(:deviantart_client_secret) do
-        page_resp = retry_get_until_success(uri |> URI.to_string())
+        page_resp = uri |> URI.to_string() |> retry_get_until_success
         deviant_id = Regex.run(@deviant_id_regex, page_resp.body) |> Enum.at(1)
         token_host = "https://www.deviantart.com/oauth2/token"
         api_host = "https://www.deviantart.com/api/v1/oauth2"
 
-        token_url =
+        token =
           "#{token_host}?client_id=#{client_id}&client_secret=#{client_secret}&grant_type=client_credentials"
+          |> retry_get_until_success
+          |> Map.get(:body)
+          |> Poison.decode!()
+          |> Map.get("access_token")
 
-        token_resp = retry_get_until_success(token_url)
-        token = token_resp.body |> Poison.decode!() |> Kernel.get_in(["access_token"])
-
-        api_url = "#{api_host}/deviation/#{deviant_id}?access_token=#{token}"
-        api_resp = retry_get_until_success(api_url)
-
-        api_resp.body |> Poison.decode!() |> Kernel.get_in(["content", "src"]) |> URI.parse()
+        "#{api_host}/deviation/#{deviant_id}?access_token=#{token}"
+        |> retry_get_until_success
+        |> Map.get(:body)
+        |> Poison.decode!()
+        |> Kernel.get_in(["content", "src"])
+        |> URI.parse()
       else
         _err -> uri
       end
@@ -82,41 +92,46 @@ defmodule Ret.MediaResolver do
   end
 
   defp resolve_non_video(%URI{path: "/gifs/" <> _rest} = uri, "giphy.com") do
-    resolve_giphy_media_uri(uri)
+    resolve_giphy_media_uri(uri, "mp4")
   end
 
   defp resolve_non_video(%URI{path: "/stickers/" <> _rest} = uri, "giphy.com") do
-    resolve_giphy_media_uri(uri)
-  end
-
-  defp resolve_giphy_media_uri(%URI{} = uri) do
-    uri =
-      with api_key when is_binary(api_key) <- resolver_config(:giphy_api_key) do
-        gif_id = uri.path |> String.split("/") |> List.last() |> String.split("-") |> List.last()
-        giphy_api_url = "https://api.giphy.com/v1/gifs/#{gif_id}?api_key=#{api_key}"
-        giphy_resp = retry_get_until_success(giphy_api_url)
-
-        original_image =
-          giphy_resp.body |> Poison.decode!() |> Kernel.get_in(["data", "images", "original"])
-
-        (original_image["mp4"] || original_image["url"]) |> URI.parse()
-      else
-        _err -> uri
-      end
-
-    {:commit, uri |> URI.to_string()}
+    resolve_giphy_media_uri(uri, "url")
   end
 
   defp resolve_non_video(%URI{path: "/gallery/" <> gallery_id} = uri, "imgur.com") do
-    imgur_api_url = "https://imgur-apiv3.p.mashape.com/3/gallery/#{gallery_id}"
-    uri = image_uri_for_imgur_collection_api_url(imgur_api_url) || uri
+    resolved_uri =
+      "https://imgur-apiv3.p.mashape.com/3/gallery/#{gallery_id}"
+      |> image_uri_for_imgur_collection_api_url
 
-    {:commit, uri |> URI.to_string()}
+    {:commit, (resolved_uri || uri) |> URI.to_string()}
   end
 
   defp resolve_non_video(%URI{path: "/a/" <> album_id} = uri, "imgur.com") do
-    imgur_api_url = "https://imgur-apiv3.p.mashape.com/3/album/#{album_id}"
-    uri = image_uri_for_imgur_collection_api_url(imgur_api_url) || uri
+    resolved_url =
+      "https://imgur-apiv3.p.mashape.com/3/album/#{album_id}"
+      |> image_uri_for_imgur_collection_api_url
+
+    {:commit, (resolved_url || uri) |> URI.to_string()}
+  end
+
+  defp resolve_non_video(
+         %URI{host: "poly.google.com", path: "/view/" <> asset_id} = uri,
+         "google.com"
+       ) do
+    uri =
+      with api_key when is_binary(api_key) <- resolver_config(:google_poly_api_key) do
+        "https://poly.googleapis.com/v1/assets/#{asset_id}?key=#{api_key}"
+        |> retry_get_until_success
+        |> Map.get(:body)
+        |> Poison.decode!()
+        |> Map.get("formats")
+        |> Enum.find(&(&1["formatType"] == "GLTF"))
+        |> Kernel.get_in(["root", "url"])
+        |> URI.parse()
+      else
+        _err -> uri
+      end
 
     {:commit, uri |> URI.to_string()}
   end
@@ -135,18 +150,36 @@ defmodule Ret.MediaResolver do
     {:commit, uri |> URI.to_string()}
   end
 
+  defp resolve_giphy_media_uri(%URI{} = uri, preferred_type) do
+    uri =
+      with api_key when is_binary(api_key) <- resolver_config(:giphy_api_key) do
+        gif_id = uri.path |> String.split("/") |> List.last() |> String.split("-") |> List.last()
+
+        original_image =
+          "https://api.giphy.com/v1/gifs/#{gif_id}?api_key=#{api_key}"
+          |> retry_get_until_success
+          |> Map.get(:body)
+          |> Poison.decode!()
+          |> Kernel.get_in(["data", "images", "original"])
+
+        (original_image[preferred_type] || original_image["url"]) |> URI.parse()
+      else
+        _err -> uri
+      end
+
+    {:commit, uri |> URI.to_string()}
+  end
+
   defp image_uri_for_imgur_collection_api_url(imgur_api_url) do
     with headers when is_list(headers) <- get_imgur_headers() do
-      imgur_resp = retry_get_until_success(imgur_api_url, headers)
-
-      image_id =
-        imgur_resp.body
-        |> Poison.decode!()
-        |> Kernel.get_in(["data", "images"])
-        |> List.first()
-        |> Kernel.get_in(["id"])
-
-      image_uri_for_imgur_id(image_id)
+      imgur_api_url
+      |> retry_get_until_success(headers)
+      |> Map.get(:body)
+      |> Poison.decode!()
+      |> Kernel.get_in(["data", "images"])
+      |> List.first()
+      |> Map.get("id")
+      |> image_uri_for_imgur_id
     else
       _err -> nil
     end
@@ -154,10 +187,9 @@ defmodule Ret.MediaResolver do
 
   defp image_uri_for_imgur_id(image_id) do
     with headers when is_list(headers) <- get_imgur_headers() do
-      imgur_api_url = "https://imgur-apiv3.p.mashape.com/3/image/#{image_id}"
-      imgur_resp = retry_get_until_success(imgur_api_url, headers)
-
-      imgur_resp.body
+      "https://imgur-apiv3.p.mashape.com/3/image/#{image_id}"
+      |> retry_get_until_success(headers)
+      |> Map.get(:body)
       |> Poison.decode!()
       |> Kernel.get_in(["data", "link"])
       |> URI.parse()

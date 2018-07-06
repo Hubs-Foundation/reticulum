@@ -205,6 +205,13 @@
       doc: "Imgur Client ID",
       hidden: false,
       to: "ret.Elixir.Ret.MediaResolver.imgur_client_id"
+    ],
+    "ret.Elixir.Ret.MediaResolver.google_poly_api_key": [
+      commented: false,
+      datatype: :binary,
+      doc: "Google Poly API Key",
+      hidden: false,
+      to: "ret.Elixir.Ret.MediaResolver.google_poly_api_key"
     ]
   ],
   transforms: [],
