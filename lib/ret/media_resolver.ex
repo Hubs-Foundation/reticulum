@@ -121,12 +121,15 @@ defmodule Ret.MediaResolver do
        ) do
     uri =
       with api_key when is_binary(api_key) <- resolver_config(:google_poly_api_key) do
-        "https://poly.googleapis.com/v1/assets/#{asset_id}?key=#{api_key}"
-        |> retry_get_until_success
-        |> Map.get(:body)
-        |> Poison.decode!()
-        |> Map.get("formats")
-        |> Enum.find(&(&1["formatType"] == "GLTF"))
+        formats =
+          "https://poly.googleapis.com/v1/assets/#{asset_id}?key=#{api_key}"
+          |> retry_get_until_success
+          |> Map.get(:body)
+          |> Poison.decode!()
+          |> Map.get("formats")
+
+        (Enum.find(formats, &(&1["formatType"] == "GLTF2")) ||
+           Enum.find(formats, &(&1["formatType"] == "GLTF")))
         |> Kernel.get_in(["root", "url"])
         |> URI.parse()
       else
