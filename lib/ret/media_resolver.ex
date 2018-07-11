@@ -147,7 +147,7 @@ defmodule Ret.MediaResolver do
 
         [uri, meta]
       else
-        _err -> uri
+        _err -> [uri, nil]
       end
 
     {:commit, uri |> resolved(meta)}
