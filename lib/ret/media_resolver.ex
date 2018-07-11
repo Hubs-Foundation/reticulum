@@ -1,8 +1,12 @@
+defmodule Ret.ResolvedMedia do
+  @enforce_keys [:uri]
+  defstruct [:uri, :meta]
+end
+
 defmodule Ret.MediaResolver do
   use Retry
 
   @ytdl_valid_status_codes [200, 302, 500]
-  @success_status_codes [200]
 
   @ytdl_root_hosts [
     # "youtube.com",
@@ -46,7 +50,7 @@ defmodule Ret.MediaResolver do
 
       case ytdl_resp do
         %HTTPoison.Response{status_code: 302, headers: headers} ->
-          {:commit, headers |> media_url_from_ytdl_headers}
+          {:commit, headers |> media_url_from_ytdl_headers |> resolved}
 
         _ ->
           resolve_non_video(uri, root_host)
@@ -88,7 +92,7 @@ defmodule Ret.MediaResolver do
         _err -> uri
       end
 
-    {:commit, uri |> URI.to_string()}
+    {:commit, uri |> resolved}
   end
 
   defp resolve_non_video(%URI{path: "/gifs/" <> _rest} = uri, "giphy.com") do
@@ -104,7 +108,7 @@ defmodule Ret.MediaResolver do
       "https://imgur-apiv3.p.mashape.com/3/gallery/#{gallery_id}"
       |> image_uri_for_imgur_collection_api_url
 
-    {:commit, (resolved_uri || uri) |> URI.to_string()}
+    {:commit, (resolved_uri || uri) |> resolved}
   end
 
   defp resolve_non_video(%URI{path: "/a/" <> album_id} = uri, "imgur.com") do
@@ -112,37 +116,47 @@ defmodule Ret.MediaResolver do
       "https://imgur-apiv3.p.mashape.com/3/album/#{album_id}"
       |> image_uri_for_imgur_collection_api_url
 
-    {:commit, (resolved_url || uri) |> URI.to_string()}
+    {:commit, (resolved_url || uri) |> resolved}
   end
 
   defp resolve_non_video(
          %URI{host: "poly.google.com", path: "/view/" <> asset_id} = uri,
          "google.com"
        ) do
-    uri =
+    [uri, meta] =
       with api_key when is_binary(api_key) <- resolver_config(:google_poly_api_key) do
-        formats =
+        payload =
           "https://poly.googleapis.com/v1/assets/#{asset_id}?key=#{api_key}"
           |> retry_get_until_success
           |> Map.get(:body)
           |> Poison.decode!()
-          |> Map.get("formats")
 
-        (Enum.find(formats, &(&1["formatType"] == "GLTF2")) ||
-           Enum.find(formats, &(&1["formatType"] == "GLTF")))
-        |> Kernel.get_in(["root", "url"])
-        |> URI.parse()
+        meta =
+          %{}
+          |> Map.put(:name, payload["displayName"])
+          |> Map.put(:author, payload["authorName"])
+          |> Map.put(:license, payload["license"])
+
+        formats = payload |> Map.get("formats")
+
+        uri =
+          (Enum.find(formats, &(&1["formatType"] == "GLTF2")) ||
+             Enum.find(formats, &(&1["formatType"] == "GLTF")))
+          |> Kernel.get_in(["root", "url"])
+          |> URI.parse()
+
+        [uri, meta]
       else
         _err -> uri
       end
 
-    {:commit, uri |> URI.to_string()}
+    {:commit, uri |> resolved(meta)}
   end
 
   defp resolve_non_video(%URI{} = uri, _root_host) do
     # Fall back on og: tags
     uri =
-      case uri |> URI.to_string() |> retry_get_until_success do
+      case uri |> URI.to_string() |> retry_get_until_success([{"Range", "bytes=0-32768"}]) do
         :error ->
           uri
 
@@ -154,9 +168,7 @@ defmodule Ret.MediaResolver do
           end
       end
 
-    retry_get_until_success(uri |> URI.to_string())
-
-    uri = {:commit, uri |> URI.to_string()}
+    uri = {:commit, uri |> resolved}
   end
 
   defp resolve_giphy_media_uri(%URI{} = uri, preferred_type) do
@@ -176,7 +188,7 @@ defmodule Ret.MediaResolver do
         _err -> uri
       end
 
-    {:commit, uri |> URI.to_string()}
+    {:commit, uri |> resolved}
   end
 
   defp image_uri_for_imgur_collection_api_url(imgur_api_url) do
@@ -211,7 +223,7 @@ defmodule Ret.MediaResolver do
     retry with: exp_backoff() |> randomize |> cap(5_000) |> expiry(10_000) do
       case HTTPoison.get(url, headers, follow_redirect: true) do
         {:ok, %HTTPoison.Response{status_code: status_code} = resp}
-        when status_code in @success_status_codes ->
+        when status_code >= 200 and status_code < 300 ->
           resp
 
         _ ->
@@ -273,5 +285,13 @@ defmodule Ret.MediaResolver do
     else
       _err -> nil
     end
+  end
+
+  def resolved(%URI{} = uri) do
+    %Ret.ResolvedMedia{uri: uri}
+  end
+
+  def resolved(%URI{} = uri, meta) do
+    %Ret.ResolvedMedia{uri: uri, meta: meta}
   end
 end

@@ -12,27 +12,35 @@ defmodule RetWeb.Api.V1.MediaController do
 
   defp resolve_and_render(conn, url, index) do
     case Cachex.fetch(:media_urls, url) do
-      {_status, media_url} when is_binary(media_url) ->
-        render_resolved_media_url(conn, media_url, index)
+      {_status, %Ret.ResolvedMedia{} = resolved_media} ->
+        render_resolved_media(conn, resolved_media, index)
 
       _ ->
         conn |> send_resp(404, "")
     end
   end
 
-  defp render_resolved_media_url(conn, media_url, index) do
-    raw = gen_farspark_url(media_url, index, "raw", "")
+  defp render_resolved_media(
+         conn,
+         %Ret.ResolvedMedia{uri: uri, meta: meta},
+         index
+       ) do
+    raw = gen_farspark_url(uri, index, "raw", "")
 
     images = %{
-      "png" => gen_farspark_url(media_url, index, "extract", ".png"),
-      "jpg" => gen_farspark_url(media_url, index, "extract", ".jpg")
+      "png" => gen_farspark_url(uri, index, "extract", ".png"),
+      "jpg" => gen_farspark_url(uri, index, "extract", ".jpg")
     }
 
-    conn |> render("show.json", raw: raw, images: images)
+    conn
+    |> render("show.json", origin: uri |> URI.to_string(), raw: raw, meta: meta, images: images)
   end
 
-  defp gen_farspark_url(url, index, method, extension) do
-    path = "/#{method}/0/0/0/#{index}/#{Base.url_encode64(url, padding: false)}#{extension}"
+  defp gen_farspark_url(uri, index, method, extension) do
+    path =
+      "/#{method}/0/0/0/#{index}/#{uri |> URI.to_string() |> Base.url_encode64(padding: false)}#{
+        extension
+      }"
 
     host = Application.get_env(:ret, :farspark_host)
     "#{host}/#{gen_signature(path)}#{path}"
