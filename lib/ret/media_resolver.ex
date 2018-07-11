@@ -166,7 +166,7 @@ defmodule Ret.MediaResolver do
         uri =
           case res do
             :error ->
-              uri
+              :error
 
             res ->
               res
