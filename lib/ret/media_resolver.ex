@@ -203,7 +203,7 @@ defmodule Ret.MediaResolver do
 
   defp retry_get_until_success(url, headers \\ []) do
     retry with: exp_backoff() |> randomize |> cap(5_000) |> expiry(10_000) do
-      case HTTPoison.get(url, headers) do
+      case HTTPoison.get(url, headers, follow_redirect: true) do
         {:ok, %HTTPoison.Response{status_code: status_code} = resp}
         when status_code in @success_status_codes ->
           resp
