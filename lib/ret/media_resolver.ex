@@ -141,16 +141,22 @@ defmodule Ret.MediaResolver do
 
   defp resolve_non_video(%URI{} = uri, _root_host) do
     # Fall back on og: tags
-    resp = retry_get_until_success(uri |> URI.to_string())
-
     uri =
-      case resp.body |> OpenGraph.parse() do
-        %{video: video} when is_binary(video) -> video |> URI.parse()
-        %{image: image} when is_binary(image) -> image |> URI.parse()
-        _ -> uri
+      case uri |> URI.to_string() |> retry_get_until_success do
+        :error ->
+          uri
+
+        resp ->
+          case resp.body |> OpenGraph.parse() do
+            %{video: video} when is_binary(video) -> video |> URI.parse()
+            %{image: image} when is_binary(image) -> image |> URI.parse()
+            _ -> uri
+          end
       end
 
-    {:commit, uri |> URI.to_string()}
+    retry_get_until_success(uri |> URI.to_string())
+
+    uri = {:commit, uri |> URI.to_string()}
   end
 
   defp resolve_giphy_media_uri(%URI{} = uri, preferred_type) do
