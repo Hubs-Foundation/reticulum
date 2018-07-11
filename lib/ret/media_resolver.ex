@@ -49,8 +49,8 @@ defmodule Ret.MediaResolver do
         |> retry_get_until_valid_ytdl_response
 
       case ytdl_resp do
-        %HTTPoison.Response{status_code: 302, headers: headers} ->
-          {:commit, headers |> media_url_from_ytdl_headers |> resolved}
+        %HTTPoison.Response{status_code: 302, headers: headers} = res ->
+          {:commit, headers |> media_url_from_ytdl_headers |> URI.parse() |> resolved}
 
         _ ->
           resolve_non_video(uri, root_host)
