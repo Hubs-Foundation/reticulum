@@ -12,6 +12,9 @@ defmodule RetWeb.Api.V1.MediaController do
 
   defp resolve_and_render(conn, url, index) do
     case Cachex.fetch(:media_urls, url) do
+      {_status, nil} ->
+        conn |> send_resp(404, "")
+
       {_status, %Ret.ResolvedMedia{} = resolved_media} ->
         render_resolved_media(conn, resolved_media, index)
 

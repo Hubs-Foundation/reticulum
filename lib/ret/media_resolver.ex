@@ -50,7 +50,7 @@ defmodule Ret.MediaResolver do
 
       case ytdl_resp do
         %HTTPoison.Response{status_code: 302, headers: headers} ->
-          {:commit, headers |> media_url_from_ytdl_headers |> resolved}
+          {:commit, headers |> media_url_from_ytdl_headers |> URI.parse() |> resolved}
 
         _ ->
           resolve_non_video(uri, root_host)
@@ -153,12 +153,43 @@ defmodule Ret.MediaResolver do
     {:commit, uri |> resolved(meta)}
   end
 
+  defp resolve_non_video(
+         %URI{path: "/models/" <> model_id} = uri,
+         "sketchfab.com"
+       ) do
+    [uri, meta] =
+      with api_key when is_binary(api_key) <- resolver_config(:sketchfab_api_key) do
+        res =
+          "https://api.sketchfab.com/v3/models/#{model_id}/download"
+          |> retry_get_until_success([{"Authorization", "Token #{api_key}"}])
+
+        uri =
+          case res do
+            :error ->
+              :error
+
+            res ->
+              res
+              |> Map.get(:body)
+              |> Poison.decode!()
+              |> Kernel.get_in(["gltf", "url"])
+              |> URI.parse()
+          end
+
+        [uri, %{expected_content_type: "model/gltf+zip"}]
+      else
+        _err -> [uri, nil]
+      end
+
+    {:commit, uri |> resolved(meta)}
+  end
+
   defp resolve_non_video(%URI{} = uri, _root_host) do
     # Fall back on og: tags
     uri =
       case uri |> URI.to_string() |> retry_get_until_success([{"Range", "bytes=0-32768"}]) do
         :error ->
-          uri
+          :error
 
         resp ->
           case resp.body |> OpenGraph.parse() do
@@ -168,7 +199,7 @@ defmodule Ret.MediaResolver do
           end
       end
 
-    uri = {:commit, uri |> resolved}
+    {:commit, uri |> resolved}
   end
 
   defp resolve_giphy_media_uri(%URI{} = uri, preferred_type) do
@@ -226,11 +257,19 @@ defmodule Ret.MediaResolver do
         when status_code >= 200 and status_code < 300 ->
           resp
 
+        {:ok, %HTTPoison.Response{status_code: status_code}}
+        when status_code >= 400 and status_code < 500 ->
+          :unauthorized
+
         _ ->
           :error
       end
     after
-      result -> result
+      result ->
+        case result do
+          :unauthorized -> :error
+          _ -> result
+        end
     else
       error -> error
     end
@@ -285,6 +324,10 @@ defmodule Ret.MediaResolver do
     else
       _err -> nil
     end
+  end
+
+  def resolved(:error) do
+    nil
   end
 
   def resolved(%URI{} = uri) do

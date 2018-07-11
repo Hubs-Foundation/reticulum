@@ -212,6 +212,13 @@
       doc: "Google Poly API Key",
       hidden: false,
       to: "ret.Elixir.Ret.MediaResolver.google_poly_api_key"
+    ],
+    "ret.Elixir.Ret.MediaResolver.sketchfab_api_key": [
+      commented: false,
+      datatype: :binary,
+      doc: "Sketchfab API Key",
+      hidden: false,
+      to: "ret.Elixir.Ret.MediaResolver.sketchfab_api_key"
     ]
   ],
   transforms: [],
