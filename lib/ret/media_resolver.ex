@@ -49,7 +49,7 @@ defmodule Ret.MediaResolver do
         |> retry_get_until_valid_ytdl_response
 
       case ytdl_resp do
-        %HTTPoison.Response{status_code: 302, headers: headers} = res ->
+        %HTTPoison.Response{status_code: 302, headers: headers} ->
           {:commit, headers |> media_url_from_ytdl_headers |> URI.parse() |> resolved}
 
         _ ->
@@ -199,7 +199,7 @@ defmodule Ret.MediaResolver do
           end
       end
 
-    uri = {:commit, uri |> resolved}
+    {:commit, uri |> resolved}
   end
 
   defp resolve_giphy_media_uri(%URI{} = uri, preferred_type) do
@@ -257,7 +257,7 @@ defmodule Ret.MediaResolver do
         when status_code >= 200 and status_code < 300 ->
           resp
 
-        {:ok, %HTTPoison.Response{status_code: status_code} = resp}
+        {:ok, %HTTPoison.Response{status_code: status_code}}
         when status_code >= 400 and status_code < 500 ->
           :unauthorized
 
