@@ -132,7 +132,7 @@ defmodule Ret.MediaResolver do
           |> Poison.decode!()
 
         meta =
-          %{}
+          %{expected_content_type: "model/gltf"}
           |> Map.put(:name, payload["displayName"])
           |> Map.put(:author, payload["authorName"])
           |> Map.put(:license, payload["license"])
