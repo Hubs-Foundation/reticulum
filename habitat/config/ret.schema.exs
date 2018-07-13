@@ -220,19 +220,12 @@
       hidden: false,
       to: "ret.Elixir.Ret.MediaResolver.sketchfab_api_key"
     ],
-    "ret.Elixir.Ret.PageOriginWarmer.page_origin_url": [
+    "ret.Elixir.Ret.PageOriginWarmer.page_origin": [
       commented: false,
       datatype: :binary,
       doc: "Page Origin URL for Hubs HTML root pages",
       hidden: false,
-      to: "ret.Elixir.Ret.PageOriginWarmer.page_origin_url"
-    ],
-    "ret.Elixir.Ret.PageOriginWarmer.page_origin_url_suffix": [
-      commented: false,
-      datatype: :binary,
-      doc: "Optional tail path for origin url to allow user config",
-      hidden: false,
-      to: "ret.Elixir.Ret.PageOriginWarmer.page_origin_url_suffix"
+      to: "ret.Elixir.Ret.PageOriginWarmer.page_origin"
     ]
   ],
   transforms: [],

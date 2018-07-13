@@ -7,7 +7,7 @@ defmodule Ret.PageOriginWarmer do
   def interval, do: :timer.seconds(15)
 
   def execute(_state) do
-    with page_origin when is_binary(page_origin) <- warmer_config(:page_origin_url) do
+    with page_origin when is_binary(page_origin) <- warmer_config(:page_origin) do
       page_set =
         for prefix <- ["", "smoke-"], page <- @pages do
           "#{prefix}#{page}"
@@ -27,7 +27,7 @@ defmodule Ret.PageOriginWarmer do
 
   defp page_to_cache_entry(page) do
     # Split the HTML file into two parts, on the line that contains HUB_META_TAGS, so we can add meta tags
-    case "#{warmer_config(:page_origin_url)}#{warmer_config(:page_origin_url_suffix)}/#{page}.html"
+    case "#{warmer_config(:page_origin)}/#{page}.html"
          |> retry_get_until_success do
       :error ->
         # Nils are rejected after tasks are joined
