@@ -13,7 +13,7 @@ pushd "$DIR/.."
 pkg_test_deps=(
   core/git
   mozillareality/postgresql
-  core/hab-sup/0.55.0
+  core/hab-sup/0.58.0
 )
 
 export LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
