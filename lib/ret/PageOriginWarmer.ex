@@ -46,7 +46,15 @@ defmodule Ret.PageOriginWarmer do
 
   defp retry_get_until_success(url) do
     retry with: exp_backoff() |> randomize |> cap(5_000) |> expiry(10_000) do
-      case HTTPoison.get(url) do
+      hackney_options =
+        if warmer_config(:insecure_ssl) == true do
+          [:insecure]
+        else
+          []
+        end
+
+      # For local dev, allow insecure SSL because of webpack server
+      case HTTPoison.get(url, [], hackney: hackney_options) do
         {:ok, %HTTPoison.Response{status_code: 200} = resp} -> resp
         _ -> :error
       end

@@ -88,8 +88,8 @@ config :ret,
   farspark_host: "https://farspark-dev.reticulum.io"
 
 config :ret, Ret.PageOriginWarmer,
-  page_origin_url:
-    "https://s3-us-west-1.amazonaws.com/assets.reticulum-dev-7f8d39c45878ee2e/pages/live"
+  page_origin_url: "https://hubs.local:8080",
+  insecure_ssl: true
 
 config :ret, Ret.MediaResolver,
   giphy_api_key: nil,
