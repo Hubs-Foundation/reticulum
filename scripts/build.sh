@@ -31,7 +31,7 @@ ln -s "$(hab pkg path core/coreutils)/bin/env" /usr/bin/env
 . habitat/plan.sh
 deps="$(join_by " " "${pkg_deps[@]}") $(join_by " " "${pkg_build_deps[@]}") $(join_by " " "${pkg_test_deps[@]}")"
 
-
+sup-run
 hab pkg install -b $deps
 hab svc load mozillareality/postgresql &
 while ! [ -f /hab/svc/postgresql/PID ] ; do sleep 1; done
