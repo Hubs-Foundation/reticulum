@@ -89,7 +89,7 @@ config :ret,
 
 config :ret, Ret.PageOriginWarmer,
   page_origin_url:
-    "https://s3-us-west-1.amazonaws.com/assets.reticulum-dev-7f8d39c45878ee2e/hubs/pages/live"
+    "https://s3-us-west-1.amazonaws.com/assets.reticulum-dev-7f8d39c45878ee2e/pages/live"
 
 config :ret, Ret.MediaResolver,
   giphy_api_key: nil,

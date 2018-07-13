@@ -18,6 +18,10 @@ defmodule RetWeb.PageController do
     conn |> render_page("avatar-selector")
   end
 
+  def render_for_path("/smoke-avatar-selector.html", conn) do
+    conn |> render_page("avatar-selector")
+  end
+
   def render_for_path(path, conn) do
     hub_sid =
       path
