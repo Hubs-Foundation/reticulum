@@ -4,6 +4,7 @@
 # hab studio run "bash scripts/build.sh"
 
 # On exit, need to make all files writable so CI can clean on next build
+hab sup run &
 trap 'chmod -R a+rw .' EXIT
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
