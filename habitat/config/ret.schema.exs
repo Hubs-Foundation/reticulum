@@ -225,7 +225,7 @@
       datatype: :binary,
       doc: "Page Origin URL for Hubs HTML root pages",
       hidden: false,
-      to: "ret.Elixir.Ret.MediaResolver.page_origin_url"
+      to: "ret.Elixir.Ret.PageOriginWarmer.page_origin_url"
     ]
   ],
   transforms: [],
