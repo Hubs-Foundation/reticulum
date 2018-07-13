@@ -15,12 +15,6 @@ npm-debug.log
 assets/node_modules/
 assets/.yarn/
 
-# Since we are building assets from assets/,
-# we ignore priv/static. You may want to comment
-# this depending on your deployment strategy.
-priv/static/
-
-
 # Self-signed certs for local development
 priv/server.key
 priv/server.pem

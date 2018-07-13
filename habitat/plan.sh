@@ -15,8 +15,6 @@ pkg_deps=(
 pkg_build_deps=(
     core/coreutils
     core/git
-    idolgirev/yarn
-    core/node
     core/erlang/20.0
     core/elixir/1.5.1
 )
@@ -43,37 +41,10 @@ do_prepare() {
 }
 
 do_build() {
-    rm -rf priv/static
-    mkdir -p priv/static
-
-    pushd assets
-    mkdir -p .yarn
-    mkdir -p node_modules
-
-    # Yarn expects /usr/local/share
-    # https://github.com/yarnpkg/yarn/issues/4628
-    mkdir -p /usr/local/share
-
-    yarn install --cache-folder .yarn
-    yarn build
-
-    rm -rf client
-    git clone https://github.com/mozilla/hubs.git client
-
-    pushd client
-    yarn install --cache-folder ../.yarn
-    GENERATE_SMOKE_TESTS=true BASE_ASSETS_PATH="https://assets-prod.reticulum.io/" ASSET_BUNDLE_SERVER="https://asset-bundles-prod.reticulum.io" yarn build -- --output-path ../../priv/static
-    popd
-
-    rm -rf client
-
-    popd
-
     mix local.hex --force
     mix local.rebar --force
     mix deps.get --only prod
     mix compile
-    mix phx.digest
 }
 
 do_install() {

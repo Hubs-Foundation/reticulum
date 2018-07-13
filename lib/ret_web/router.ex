@@ -11,7 +11,7 @@ defmodule RetWeb.Router do
   websocket_hosts =
     "#{
       if Mix.env() == :dev do
-        "https://localhost:4000 https://localhost:8080 wss://localhost:4000 https://hubs.local:4000 https://hubs.local:8080 wss://hubs.local:4000"
+        "https://localhost:4000 https://localhost:8080 wss://localhost:4000 https://hubs.local:4000 https://hubs.local:8080 wss://hubs.local:4000 wss://hubs.local:8080"
       end
     } wss://prod.reticulum.io wss://smoke-prod.reticulum.io wss://dev.reticulum.io wss://smoke-dev.reticulum.io wss://prod-janus.reticulum.io wss://dev-janus.reticulum.io wss://hubs.social wss://hubs.mozilla.com wss://smoke-hubs.mozilla.com"
 

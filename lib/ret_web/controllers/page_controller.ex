@@ -2,30 +2,24 @@ defmodule RetWeb.PageController do
   use RetWeb, :controller
   alias Ret.{Repo, Hub}
 
-  # Split the HTML file into two parts, on the line that contains HUB_META_TAGS, so we can add meta tags
-  # TODO DRY
-  @hub_html_chunks "#{Application.app_dir(:ret)}/priv/static/hub.html"
-                   |> File.read!()
-                   |> String.split("\n")
-                   |> Enum.split_while(&(!Regex.match?(~r/HUB_META_TAGS/, &1)))
-                   |> Tuple.to_list()
-
-  @smoke_hub_html_chunks "#{Application.app_dir(:ret)}/priv/static/smoke-hub.html"
-                         |> File.read!()
-                         |> String.split("\n")
-                         |> Enum.split_while(&(!Regex.match?(~r/HUB_META_TAGS/, &1)))
-                         |> Tuple.to_list()
-
   def call(conn, _params) do
     render_for_path(conn.request_path, conn)
   end
 
   def render_for_path("/", conn) do
-    render_file(conn, "#{get_file_prefix(conn)}index.html")
+    conn |> render_page("index")
   end
 
   def render_for_path("/link", conn) do
-    render_file(conn, "#{get_file_prefix(conn)}link.html")
+    conn |> render_page("link")
+  end
+
+  def render_for_path("/avatar-selector.html", conn) do
+    conn |> render_page("avatar-selector")
+  end
+
+  def render_for_path("/smoke-avatar-selector.html", conn) do
+    conn |> render_page("avatar-selector")
   end
 
   def render_for_path(path, conn) do
@@ -37,32 +31,46 @@ defmodule RetWeb.PageController do
     hub = Hub |> Repo.get_by(hub_sid: hub_sid)
     hub_meta_tags = Phoenix.View.render_to_string(RetWeb.PageView, "hub-meta.html", hub: hub)
 
-    body = List.insert_at(get_hub_html_chunks(conn), 1, hub_meta_tags)
+    chunks =
+      conn
+      |> chunks_for_page("hub")
+      |> List.insert_at(1, hub_meta_tags)
 
     conn
     |> put_resp_header("content-type", "text/html; charset=utf-8")
-    |> send_resp(200, body)
+    |> send_resp(200, chunks)
   end
 
-  defp get_hub_html_chunks(conn) do
+  defp with_page_prefix(page, conn) do
     if conn.host =~ "smoke" do
-      @smoke_hub_html_chunks
+      "smoke-#{page}"
     else
-      @hub_html_chunks
+      page
     end
   end
 
-  defp get_file_prefix(conn) do
-    if conn.host =~ "smoke" do
-      "smoke-"
+  defp render_page(conn, page) do
+    chunks = conn |> chunks_for_page(page)
+    conn |> render_chunks(chunks)
+  end
+
+  defp chunks_for_page(conn, page) do
+    key = page |> with_page_prefix(conn)
+
+    with {:ok, chunks} <- Cachex.get(:page_chunks, key) do
+      chunks
     else
-      ""
+      _ -> nil
     end
   end
 
-  defp render_file(conn, file) do
+  defp render_chunks(conn, nil) do
+    conn |> send_resp(404, "")
+  end
+
+  defp render_chunks(conn, chunks) do
     conn
     |> put_resp_header("content-type", "text/html; charset=utf-8")
-    |> Plug.Conn.send_file(200, "#{Application.app_dir(:ret)}/priv/static/#{file}")
+    |> send_resp(200, chunks)
   end
 end

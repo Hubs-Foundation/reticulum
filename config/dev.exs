@@ -87,6 +87,10 @@ config :ret,
     "da914bb89e332b2a815a667875584d067b698fe1f6f5c61d98384dc74d2ed85b67eea0a51325afb9d9c7d798f4bbbd630102a261e152aceb13d9469b02da6b31",
   farspark_host: "https://farspark-dev.reticulum.io"
 
+config :ret, Ret.PageOriginWarmer,
+  page_origin_url: "https://hubs.local:8080",
+  insecure_ssl: true
+
 config :ret, Ret.MediaResolver,
   giphy_api_key: nil,
   deviantart_client_id: nil,

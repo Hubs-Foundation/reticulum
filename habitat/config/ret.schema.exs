@@ -219,6 +219,13 @@
       doc: "Sketchfab API Key",
       hidden: false,
       to: "ret.Elixir.Ret.MediaResolver.sketchfab_api_key"
+    ],
+    "ret.Elixir.Ret.PageOriginWarmer.page_origin_url": [
+      commented: false,
+      datatype: :binary,
+      doc: "Page Origin URL for Hubs HTML root pages",
+      hidden: false,
+      to: "ret.Elixir.Ret.MediaResolver.page_origin_url"
     ]
   ],
   transforms: [],
