@@ -34,7 +34,7 @@ deps="$(join_by " " "${pkg_deps[@]}") $(join_by " " "${pkg_build_deps[@]}") $(jo
 
 
 hab pkg install -b $deps
-hab svc start mozillareality/postgresql &
+hab svc load mozillareality/postgresql &
 while ! [ -f /hab/svc/postgresql/PID ] ; do sleep 1; done
 
 MIX_ENV=test
@@ -50,7 +50,7 @@ TEST_EXIT_CODE=$?
 
 echo "Test and build exit code: $TEST_EXIT_CODE"
 
-hab svc stop mozillareality/postgresql
+hab svc unload mozillareality/postgresql
 popd
 
 exit $TEST_EXIT_CODE
