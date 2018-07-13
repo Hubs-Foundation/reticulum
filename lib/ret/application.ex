@@ -23,13 +23,30 @@ defmodule Ret.Application do
       # Storage for rate limiting
       worker(PlugAttack.Storage.Ets, [RetWeb.RateLimit.Storage, [clean_period: 60_000]]),
       # Media resolution cache
-      worker(Cachex, [
-        :media_urls,
+      worker(
+        Cachex,
         [
-          expiration: expiration(default: :timer.minutes(60)),
-          fallback: fallback(default: &Ret.MediaResolver.resolve/1)
-        ]
-      ]),
+          :media_urls,
+          [
+            expiration: expiration(default: :timer.minutes(60)),
+            fallback: fallback(default: &Ret.MediaResolver.resolve/1)
+          ]
+        ],
+        id: :media_url_cache
+      ),
+
+      # Page origin chunk cache
+      worker(
+        Cachex,
+        [
+          :page_chunks,
+          [
+            warmers: [warmer(module: Ret.PageOriginWarmer)]
+          ]
+        ],
+        id: :page_chunk_cache
+      ),
+
       # Graceful shutdown
       supervisor(TheEnd.Of.Phoenix, [[timeout: 10_000, endpoint: RetWeb.Endpoint]])
     ]
