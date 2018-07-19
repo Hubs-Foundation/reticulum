@@ -71,6 +71,17 @@ defmodule Ret.Crypto do
   end
 
   # At beginning, skip header
+  defp decrypt_chunk(ciphertext, {nil, total_bytes, state, _plaintext})
+       when total_bytes < @chunk_size do
+    max_bytes = min(total_bytes, @chunk_size)
+
+    {state, <<_header::binary-size(12), body::binary-size(max_bytes), _padding::binary>>} =
+      :crypto.stream_decrypt(state, ciphertext)
+
+    {String.length(body), total_bytes, state, body}
+  end
+
+  # At beginning, skip header
   defp decrypt_chunk(ciphertext, {nil, total_bytes, state, _plaintext}) do
     {state, <<_header::binary-size(12), body::binary>>} =
       :crypto.stream_decrypt(state, ciphertext)
