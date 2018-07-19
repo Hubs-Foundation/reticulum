@@ -11,7 +11,9 @@ config :ret, ecto_repos: [Ret.Repo]
 config :phoenix, :format_encoders, "json-api": Poison
 
 config :mime, :types, %{
-  "application/vnd.api+json" => ["json-api"]
+  "application/vnd.api+json" => ["json-api"],
+  "model/gltf+json" => ["gltf"],
+  "model/gltf+binary" => ["glb"]
 }
 
 # Configures the endpoint
