@@ -1,7 +1,7 @@
 defmodule Ret.Uploads do
   require Logger
 
-  @chunk_size 128 * 1024
+  @chunk_size 1024 * 1024
 
   # Given a Plug.Upload and an optional encryption key, returns an id
   # that can be used to fetch a stream to the uploaded file after this call.

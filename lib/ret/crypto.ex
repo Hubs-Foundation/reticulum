@@ -1,6 +1,6 @@
 defmodule Ret.Crypto do
   @header_bytes <<184, 165, 211, 58, 11, 5, 200, 155>>
-  @chunk_size 128 * 1024
+  @chunk_size 1024 * 1024
 
   # Takes the file at source path and stream encrypts it using AES-CTR
   # to a file at dest path. The file has a header that has a magic number
@@ -78,7 +78,7 @@ defmodule Ret.Crypto do
     {state, <<_header::binary-size(12), body::binary-size(max_bytes), _padding::binary>>} =
       :crypto.stream_decrypt(state, ciphertext)
 
-    {String.length(body), total_bytes, state, body}
+    {byte_size(body), total_bytes, state, body}
   end
 
   # At beginning, skip header
@@ -86,7 +86,7 @@ defmodule Ret.Crypto do
     {state, <<_header::binary-size(12), body::binary>>} =
       :crypto.stream_decrypt(state, ciphertext)
 
-    {String.length(body), total_bytes, state, body}
+    {byte_size(body), total_bytes, state, body}
   end
 
   defp decrypt_chunk(ciphertext, {decrypted_bytes, total_bytes, state, _plaintext}) do
@@ -95,6 +95,6 @@ defmodule Ret.Crypto do
     {state, <<plaintext::binary-size(max_bytes), _padding::binary>>} =
       :crypto.stream_decrypt(state, ciphertext)
 
-    {decrypted_bytes + String.length(plaintext), total_bytes, state, plaintext}
+    {decrypted_bytes + byte_size(plaintext), total_bytes, state, plaintext}
   end
 end
