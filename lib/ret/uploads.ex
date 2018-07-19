@@ -6,8 +6,7 @@ defmodule Ret.Uploads do
   # Given a Plug.Upload and an optional encryption key, returns an id
   # that can be used to fetch a stream to the uploaded file after this call.
   def store(%Plug.Upload{content_type: content_type, filename: filename, path: path}, key) do
-    with uploads_storage_path when is_binary(uploads_storage_path) <-
-           module_config(:uploads_storage_path) do
+    with uploads_storage_path when is_binary(uploads_storage_path) <- module_config(:storage_path) do
       {:ok, %{size: content_length}} = File.stat(path)
       uuid = Ecto.UUID.generate()
 
@@ -37,8 +36,7 @@ defmodule Ret.Uploads do
   end
 
   def fetch(id, key) do
-    with uploads_storage_path when is_binary(uploads_storage_path) <-
-           module_config(:uploads_storage_path) do
+    with uploads_storage_path when is_binary(uploads_storage_path) <- module_config(:storage_path) do
       case Ecto.UUID.cast(id) do
         {:ok, uuid} ->
           [_upload_path, meta_file_path, blob_file_path] = paths_for_uuid(uuid)
@@ -70,8 +68,8 @@ defmodule Ret.Uploads do
     Logger.info("Uploads: Beginning Vacuum.")
 
     with uploads_storage_path when is_binary(uploads_storage_path) <-
-           module_config(:uploads_storage_path),
-         uploads_ttl when is_integer(uploads_ttl) <- module_config(:uploads_ttl) do
+           module_config(:storage_path),
+         uploads_ttl when is_integer(uploads_ttl) <- module_config(:ttl) do
       process_meta = fn meta_file, _acc ->
         meta = File.read!(meta_file) |> Poison.decode!()
         blob_file = meta["blob"]
@@ -130,7 +128,7 @@ defmodule Ret.Uploads do
 
   defp paths_for_uuid(uuid) do
     upload_path =
-      "#{module_config(:uploads_storage_path)}/expiring/#{String.slice(uuid, 0, 2)}/#{
+      "#{module_config(:storage_path)}/expiring/#{String.slice(uuid, 0, 2)}/#{
         String.slice(uuid, 2, 2)
       }"
 

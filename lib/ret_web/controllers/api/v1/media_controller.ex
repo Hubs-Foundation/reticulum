@@ -16,8 +16,7 @@ defmodule RetWeb.Api.V1.MediaController do
 
     case Ret.Uploads.store(upload, token) do
       {:ok, upload_id} ->
-        upload_host =
-          Application.get_env(:ret, Ret.Uploads)[:uploads_host] || RetWeb.Endpoint.url()
+        upload_host = Application.get_env(:ret, Ret.Uploads)[:host] || RetWeb.Endpoint.url()
 
         filename = [upload_id, ext] |> Enum.reject(&is_nil/1) |> Enum.join(".")
         uri = "#{upload_host}/uploads/#{filename}" |> URI.parse()
@@ -31,6 +30,9 @@ defmodule RetWeb.Api.V1.MediaController do
           images: images,
           meta: %{access_token: token, expected_content_type: content_type}
         )
+
+      {:error, :not_allowed} ->
+        conn |> send_resp(401, "")
     end
   end
 

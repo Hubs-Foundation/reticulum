@@ -102,6 +102,6 @@ config :ret, Ret.MediaResolver,
   ytdl_host: "http://localhost:9191"
 
 config :ret, Ret.Uploads,
-  uploads_storage_path: "uploads",
-  uploads_ttl: 60 * 60 * 24,
-  uploads_host: "https://localhost:4000"
+  storage_path: "uploads",
+  ttl: 60 * 60 * 24,
+  host: "https://localhost:4000"
