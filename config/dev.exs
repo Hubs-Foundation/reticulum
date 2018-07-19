@@ -103,5 +103,4 @@ config :ret, Ret.MediaResolver,
 
 config :ret, Ret.Uploads,
   storage_path: "uploads",
-  ttl: 60 * 60 * 24,
-  host: "https://localhost:4000"
+  ttl: 60 * 60 * 24
