@@ -1,6 +1,6 @@
 defmodule Ret.Crypto do
   @header_bytes <<184, 165, 211, 58, 11, 5, 200, 155>>
-  @chunk_size 32 * 1024
+  @chunk_size 128 * 1024
 
   # Takes the file at source path and stream encrypts it using AES-CTR
   # to a file at dest path. The file has a header that has a magic number
