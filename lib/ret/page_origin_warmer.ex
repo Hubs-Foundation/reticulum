@@ -7,7 +7,7 @@ defmodule Ret.PageOriginWarmer do
   def interval, do: :timer.seconds(15)
 
   def execute(_state) do
-    with page_origin when is_binary(page_origin) <- warmer_config(:page_origin) do
+    with page_origin when is_binary(page_origin) <- module_config(:page_origin) do
       page_set =
         for prefix <- ["", "smoke-"], page <- @pages do
           "#{prefix}#{page}"
@@ -27,7 +27,7 @@ defmodule Ret.PageOriginWarmer do
 
   defp page_to_cache_entry(page) do
     # Split the HTML file into two parts, on the line that contains HUB_META_TAGS, so we can add meta tags
-    case "#{warmer_config(:page_origin)}/#{page}.html"
+    case "#{module_config(:page_origin)}/#{page}.html"
          |> retry_get_until_success do
       :error ->
         # Nils are rejected after tasks are joined
@@ -48,7 +48,7 @@ defmodule Ret.PageOriginWarmer do
   defp retry_get_until_success(url) do
     retry with: exp_backoff() |> randomize |> cap(5_000) |> expiry(10_000) do
       hackney_options =
-        if warmer_config(:insecure_ssl) == true do
+        if module_config(:insecure_ssl) == true do
           [:insecure]
         else
           []
@@ -66,7 +66,7 @@ defmodule Ret.PageOriginWarmer do
     end
   end
 
-  defp warmer_config(key) do
-    Application.get_env(:ret, Ret.PageOriginWarmer)[key]
+  defp module_config(key) do
+    Application.get_env(:ret, __MODULE__)[key]
   end
 end

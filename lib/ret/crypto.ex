@@ -6,10 +6,10 @@ defmodule Ret.Crypto do
   # to a file at dest path. The file has a header that has a magic number
   # (to easily check if the decryption key is correct) as well as the
   # original file length.
-  def encrypt_file(source_path, key, dest_path) do
+  def encrypt_file(source_path, destination_path, key) do
     case File.stat(source_path) do
       {:ok, %{size: source_size}} ->
-        outfile = File.stream!(dest_path, [], @chunk_size)
+        outfile = File.stream!(destination_path, [], @chunk_size)
         infile = source_path |> File.stream!([], @chunk_size)
 
         state = :crypto.stream_init(:aes_ctr, :crypto.hash(:sha256, key), <<0::size(128)>>)
@@ -22,29 +22,36 @@ defmodule Ret.Crypto do
         |> Stream.map(fn x -> elem(x, 1) end)
         |> Enum.into(outfile)
 
-        {:ok, outfile}
+        :ok
 
       {:error, _reason} = err ->
         err
     end
   end
 
+  # Given the source path and the user-specified decryption key, return
+  # { :error, reason } if decryption fails, or return { :ok, stream }
+  # where stream is a Stream of the decrypted file contents.
   def stream_decrypt_file(source_path, key) do
     infile = source_path |> File.stream!([], @chunk_size)
-    state = :crypto.stream_init(:aes_ctr, :crypto.hash(:sha256, key), <<0::size(128)>>)
+    aes_key = :crypto.hash(:sha256, key)
+    state = :crypto.stream_init(:aes_ctr, aes_key, <<0::size(128)>>)
 
     [<<header_ciphertext::binary-size(12), header_chunk::binary>>] =
       infile |> Stream.take(1) |> Enum.map(& &1)
 
     case :crypto.stream_decrypt(state, header_ciphertext) do
       {_state, <<@header_bytes, file_size::size(32)>>} ->
-        state = :crypto.stream_init(:aes_ctr, :crypto.hash(:sha256, key), <<0::size(128)>>)
+        state = :crypto.stream_init(:aes_ctr, aes_key, <<0::size(128)>>)
 
-        infile
-        |> Stream.flat_map(&:binary.bin_to_list/1)
-        |> Stream.chunk_every(@chunk_size)
-        |> Stream.scan({nil, file_size, state, nil}, &decrypt_chunk/2)
-        |> Stream.map(fn x -> elem(x, 3) end)
+        stream =
+          infile
+          |> Stream.flat_map(&:binary.bin_to_list/1)
+          |> Stream.chunk_every(@chunk_size)
+          |> Stream.scan({nil, file_size, state, nil}, &decrypt_chunk/2)
+          |> Stream.map(fn x -> elem(x, 3) end)
+
+        {:ok, stream}
 
       _ ->
         {:error, :invalid_key}
