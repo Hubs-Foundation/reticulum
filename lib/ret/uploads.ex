@@ -95,7 +95,7 @@ defmodule Ret.Uploads do
         "\\.meta\\.json$",
         true,
         process_meta,
-        :acc
+        nil
       )
     end
 
