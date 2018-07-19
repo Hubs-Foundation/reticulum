@@ -36,6 +36,13 @@ config :peerage, log_results: false
 
 config :statix, prefix: "ret"
 
+config :ret, Ret.SingletonScheduler,
+  global: true,
+  jobs: [
+    # Vacuum uploads folder
+    {"@daily", {Ret.Uploads, :vacuum, []}}
+  ]
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{Mix.env()}.exs"

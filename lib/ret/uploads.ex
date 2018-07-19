@@ -70,7 +70,7 @@ defmodule Ret.Uploads do
     with uploads_storage_path when is_binary(uploads_storage_path) <-
            module_config(:uploads_storage_path),
          uploads_ttl when is_integer(uploads_ttl) <- module_config(:uploads_ttl) do
-      process_meta = fn meta_file, acc ->
+      process_meta = fn meta_file, _acc ->
         meta = File.read!(meta_file) |> Poison.decode!()
         blob_file = meta["blob"]
 
