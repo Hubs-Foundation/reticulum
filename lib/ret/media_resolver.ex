@@ -312,10 +312,6 @@ defmodule Ret.MediaResolver do
     headers |> List.keyfind("Location", 0) |> elem(1)
   end
 
-  defp module_config(key) do
-    Application.get_env(:ret, __MODULE__)[key]
-  end
-
   defp get_imgur_headers() do
     with client_id when is_binary(client_id) <- module_config(:imgur_client_id),
          api_key when is_binary(api_key) <- module_config(:imgur_mashape_api_key) do
@@ -335,5 +331,9 @@ defmodule Ret.MediaResolver do
 
   def resolved(%URI{} = uri, meta) do
     %Ret.ResolvedMedia{uri: uri, meta: meta}
+  end
+
+  defp module_config(key) do
+    Application.get_env(:ret, __MODULE__)[key]
   end
 end
