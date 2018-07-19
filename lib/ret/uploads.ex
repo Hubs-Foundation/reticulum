@@ -8,6 +8,7 @@ defmodule Ret.Uploads do
   def store(%Plug.Upload{content_type: content_type, filename: filename, path: path}, key) do
     with uploads_storage_path when is_binary(uploads_storage_path) <-
            module_config(:uploads_storage_path) do
+      {:ok, %{size: content_length}} = File.stat(path)
       uuid = Ecto.UUID.generate()
 
       [upload_path, meta_file_path, blob_file_path] = paths_for_uuid(uuid)
@@ -17,6 +18,7 @@ defmodule Ret.Uploads do
         :ok ->
           meta = %{
             content_type: content_type,
+            content_length: content_length,
             filename: filename,
             blob: blob_file_path,
             encrypted: key != nil
