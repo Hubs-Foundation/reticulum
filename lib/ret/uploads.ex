@@ -1,7 +1,9 @@
 defmodule Ret.Uploads do
+  require Logger
+
   @chunk_size 32 * 1024
 
-  # Given a Plug.Upload and an optional encryption key, returns a UUID
+  # Given a Plug.Upload and an optional encryption key, returns an id
   # that can be used to fetch a stream to the uploaded file after this call.
   def store(%Plug.Upload{content_type: content_type, filename: filename, path: path}, key) do
     with uploads_storage_path when is_binary(uploads_storage_path) <-
@@ -28,7 +30,7 @@ defmodule Ret.Uploads do
           err
       end
     else
-      _ -> {:error, :uploads_not_allowed}
+      _ -> {:error, :not_allowed}
     end
   end
 
@@ -45,7 +47,7 @@ defmodule Ret.Uploads do
 
               case read_blob_file(blob_file_path, meta, key) do
                 {:ok, stream} -> {:ok, meta, stream}
-                {:error, :invalid_key} = err -> err
+                {:error, :invalid_key} -> {:error, :not_allowed}
                 _ -> {:error, :not_found}
               end
 
@@ -57,7 +59,36 @@ defmodule Ret.Uploads do
           {:error, :not_found}
       end
     else
-      _ -> {:error, :uploads_not_allowed}
+      _ -> {:error, :not_allowed}
+    end
+  end
+
+  # Vacuums up TTLed out uploads
+  def vacuum do
+    with uploads_storage_path when is_binary(uploads_storage_path) <-
+           module_config(:uploads_storage_path),
+         uploads_ttl when is_integer(uploads_ttl) <- module_config(:uploads_ttl) do
+      process_meta = fn meta_file, acc ->
+        meta = File.read!(meta_file) |> Poison.decode!()
+        blob_file = meta["blob"]
+
+        {:ok, %{atime: atime}} = File.stat(blob_file)
+
+        now = DateTime.utc_now()
+        atime_datetime = atime |> NaiveDateTime.from_erl!() |> DateTime.from_naive!("Etc/UTC")
+        seconds_since_access = DateTime.diff(now, atime_datetime)
+
+        if seconds_since_access > uploads_ttl do
+          Logger.info(
+            "Uploads: Removing #{blob_file} after #{seconds_since_access}s since last access."
+          )
+
+          File.rm!(blob_file)
+          File.rm!(meta_file)
+        end
+      end
+
+      :filelib.fold_files(uploads_storage_path, "\\.meta\\.json$", true, process_meta, :acc)
     end
   end
 
