@@ -65,6 +65,8 @@ defmodule Ret.Uploads do
 
   # Vacuums up TTLed out uploads
   def vacuum do
+    Logger.info("Uploads: Beginning Vacuum.")
+
     with uploads_storage_path when is_binary(uploads_storage_path) <-
            module_config(:uploads_storage_path),
          uploads_ttl when is_integer(uploads_ttl) <- module_config(:uploads_ttl) do
@@ -88,8 +90,16 @@ defmodule Ret.Uploads do
         end
       end
 
-      :filelib.fold_files(uploads_storage_path, "\\.meta\\.json$", true, process_meta, :acc)
+      :filelib.fold_files(
+        "#{uploads_storage_path}/expiring",
+        "\\.meta\\.json$",
+        true,
+        process_meta,
+        :acc
+      )
     end
+
+    Logger.info("Uploads: Vacuum Finished.")
   end
 
   defp read_blob_file(_source_path, %{"encrypted" => true}, nil) do
@@ -118,7 +128,7 @@ defmodule Ret.Uploads do
 
   defp paths_for_uuid(uuid) do
     upload_path =
-      "#{module_config(:uploads_storage_path)}/#{String.slice(uuid, 0, 2)}/#{
+      "#{module_config(:uploads_storage_path)}/expiring/#{String.slice(uuid, 0, 2)}/#{
         String.slice(uuid, 2, 2)
       }"
 
