@@ -21,7 +21,7 @@ defmodule RetWeb.UploadController do
               |> put_resp_header("Transfer-Encoding", "chunked")
               |> send_chunked(200)
 
-            chunk_stream = stream |> Stream.map(&chunk(conn, &1)) |> Stream.run()
+            stream |> Stream.map(&chunk(conn, &1)) |> Stream.run()
 
             conn
 
