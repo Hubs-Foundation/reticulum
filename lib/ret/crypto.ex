@@ -89,7 +89,7 @@ defmodule Ret.Crypto do
   end
 
   defp decrypt_chunk(ciphertext, {decrypted_bytes, total_bytes, state, _plaintext}) do
-    max_bytes = min(total_bytes - decrypted_bytes, @chunk_size)
+    max_bytes = min(total_bytes - decrypted_bytes, byte_size(ciphertext))
 
     {state, <<plaintext::binary-size(max_bytes), _padding::binary>>} =
       :crypto.stream_decrypt(state, ciphertext)
