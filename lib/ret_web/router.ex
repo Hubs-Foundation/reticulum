@@ -77,12 +77,17 @@ defmodule RetWeb.Router do
   end
 
   scope "/", RetWeb do
+    pipe_through([:secure_headers, :browser] ++ if(Mix.env() == :prod, do: [:ssl_only], else: []))
+
+    resources("/uploads", UploadController, only: [:show])
+  end
+
+  scope "/", RetWeb do
     pipe_through(
       [:secure_headers, :browser] ++
         if(Mix.env() == :prod, do: [:ssl_only, :canonicalize_domain], else: [])
     )
 
-    resources("/uploads", UploadController, only: [:show])
     get("/*path", PageController, only: [:index])
   end
 end

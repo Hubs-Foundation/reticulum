@@ -58,7 +58,7 @@ defmodule RetWeb.Api.V1.MediaController do
   end
 
   defp images_for_uri_and_index(uri, index) do
-    images = %{
+    %{
       "png" => gen_farspark_url(uri, index, "extract", ".png"),
       "jpg" => gen_farspark_url(uri, index, "extract", ".jpg")
     }
