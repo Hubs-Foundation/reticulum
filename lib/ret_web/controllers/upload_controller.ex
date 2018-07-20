@@ -19,6 +19,7 @@ defmodule RetWeb.UploadController do
               |> put_resp_content_type(content_type)
               |> put_resp_header("Content-Length", "#{content_length}")
               |> put_resp_header("Transfer-Encoding", "chunked")
+              |> put_resp_header("Cache-Control", "public, max-age=31536000")
               |> send_chunked(200)
 
             stream |> Stream.map(&chunk(conn, &1)) |> Stream.run()
