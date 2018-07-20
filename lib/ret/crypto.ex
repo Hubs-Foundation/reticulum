@@ -37,7 +37,7 @@ defmodule Ret.Crypto do
     aes_key = :crypto.hash(:sha256, key)
     state = :crypto.stream_init(:aes_ctr, aes_key, <<0::size(128)>>)
 
-    [<<header_ciphertext::binary-size(12), header_chunk::binary>>] =
+    [<<header_ciphertext::binary-size(12), _header_chunk::binary>>] =
       infile |> Stream.take(1) |> Enum.map(& &1)
 
     case :crypto.stream_decrypt(state, header_ciphertext) do
