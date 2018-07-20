@@ -1,6 +1,8 @@
 defmodule Ret.Crypto do
   @header_bytes <<184, 165, 211, 58, 11, 5, 200, 155>>
+
   @chunk_size 1024 * 1024
+  @min_aes_size 12
 
   # Takes the file at source path and stream encrypts it using AES-CTR
   # to a file at dest path. The file has a header that has a magic number
@@ -14,9 +16,7 @@ defmodule Ret.Crypto do
 
         state = :crypto.stream_init(:aes_ctr, :crypto.hash(:sha256, key), <<0::size(128)>>)
 
-        Stream.concat([@header_bytes, <<source_size::size(32)>>], infile)
-        |> Stream.flat_map(&:binary.bin_to_list/1)
-        |> Stream.chunk_every(@chunk_size)
+        Stream.concat([@header_bytes <> <<source_size::size(32)>>], infile)
         |> Stream.map(&pad_chunk/1)
         |> Stream.scan({state, nil}, &encrypt_chunk/2)
         |> Stream.map(fn x -> elem(x, 1) end)
@@ -46,8 +46,6 @@ defmodule Ret.Crypto do
 
         stream =
           infile
-          |> Stream.flat_map(&:binary.bin_to_list/1)
-          |> Stream.chunk_every(@chunk_size)
           |> Stream.scan({nil, file_size, state, nil}, &decrypt_chunk/2)
           |> Stream.map(fn x -> elem(x, 3) end)
 
@@ -58,12 +56,13 @@ defmodule Ret.Crypto do
     end
   end
 
-  defp pad_chunk(chunk) when length(chunk) == @chunk_size, do: chunk
+  defp pad_chunk(chunk) when byte_size(chunk) >= @min_aes_size, do: chunk
 
   defp pad_chunk(chunk) do
-    rem = @chunk_size - length(chunk)
-    zeros = List.duplicate(0, rem)
-    Enum.concat([chunk, zeros])
+    rem = @min_aes_size - byte_size(chunk)
+    zeros_size = rem * 8
+    zeros = <<0::size(zeros_size)>>
+    chunk <> zeros
   end
 
   defp encrypt_chunk(chunk, {state, _ciphertext}) do
@@ -72,8 +71,8 @@ defmodule Ret.Crypto do
 
   # At beginning, skip header
   defp decrypt_chunk(ciphertext, {nil, total_bytes, state, _plaintext})
-       when total_bytes < @chunk_size do
-    max_bytes = min(total_bytes, @chunk_size)
+       when total_bytes < @min_aes_size do
+    max_bytes = min(total_bytes, @min_aes_size)
 
     {state, <<_header::binary-size(12), body::binary-size(max_bytes), _padding::binary>>} =
       :crypto.stream_decrypt(state, ciphertext)
