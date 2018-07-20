@@ -35,7 +35,7 @@ defmodule RetWeb.Endpoint do
     pass: ["*/*"],
     json_decoder: Poison,
     length: 100_000_000,
-    read_timeout: 300
+    read_timeout: 300_000
   )
 
   plug(Plug.MethodOverride)
