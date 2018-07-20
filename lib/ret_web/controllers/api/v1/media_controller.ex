@@ -10,6 +10,32 @@ defmodule RetWeb.Api.V1.MediaController do
     resolve_and_render(conn, url, 0)
   end
 
+  def create(conn, %{"media" => %Plug.Upload{content_type: content_type} = upload}) do
+    token = SecureRandom.hex()
+    ext = MIME.extensions(content_type) |> List.first()
+
+    case Ret.Uploads.store(upload, token) do
+      {:ok, upload_id} ->
+        upload_host = Application.get_env(:ret, Ret.Uploads)[:host] || RetWeb.Endpoint.url()
+
+        filename = [upload_id, ext] |> Enum.reject(&is_nil/1) |> Enum.join(".")
+        uri = "#{upload_host}/uploads/#{filename}" |> URI.parse()
+        images = images_for_uri_and_index(uri, 0)
+
+        conn
+        |> render(
+          "show.json",
+          origin: uri |> URI.to_string(),
+          raw: uri |> URI.to_string(),
+          images: images,
+          meta: %{access_token: token, expected_content_type: content_type}
+        )
+
+      {:error, :not_allowed} ->
+        conn |> send_resp(401, "")
+    end
+  end
+
   defp resolve_and_render(conn, url, index) do
     case Cachex.fetch(:media_urls, url) do
       {_status, nil} ->
@@ -23,20 +49,19 @@ defmodule RetWeb.Api.V1.MediaController do
     end
   end
 
-  defp render_resolved_media(
-         conn,
-         %Ret.ResolvedMedia{uri: uri, meta: meta},
-         index
-       ) do
+  defp render_resolved_media(conn, %Ret.ResolvedMedia{uri: uri, meta: meta}, index) do
     raw = gen_farspark_url(uri, index, "raw", "")
+    images = images_for_uri_and_index(uri, index)
 
+    conn
+    |> render("show.json", origin: uri |> URI.to_string(), raw: raw, meta: meta, images: images)
+  end
+
+  defp images_for_uri_and_index(uri, index) do
     images = %{
       "png" => gen_farspark_url(uri, index, "extract", ".png"),
       "jpg" => gen_farspark_url(uri, index, "extract", ".jpg")
     }
-
-    conn
-    |> render("show.json", origin: uri |> URI.to_string(), raw: raw, meta: meta, images: images)
   end
 
   defp gen_farspark_url(uri, index, method, extension) do

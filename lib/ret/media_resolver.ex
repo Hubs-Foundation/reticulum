@@ -40,7 +40,7 @@ defmodule Ret.MediaResolver do
   end
 
   def resolve(%URI{} = uri, root_host) when root_host in @ytdl_root_hosts do
-    with ytdl_host when is_binary(ytdl_host) <- resolver_config(:ytdl_host) do
+    with ytdl_host when is_binary(ytdl_host) <- module_config(:ytdl_host) do
       ytdl_format = "best[protocol*=http]"
       encoded_url = uri |> URI.to_string() |> URI.encode()
 
@@ -67,9 +67,8 @@ defmodule Ret.MediaResolver do
 
   defp resolve_non_video(%URI{} = uri, "deviantart.com") do
     uri =
-      with client_id when is_binary(client_id) <- resolver_config(:deviantart_client_id),
-           client_secret when is_binary(client_secret) <-
-             resolver_config(:deviantart_client_secret) do
+      with client_id when is_binary(client_id) <- module_config(:deviantart_client_id),
+           client_secret when is_binary(client_secret) <- module_config(:deviantart_client_secret) do
         page_resp = uri |> URI.to_string() |> retry_get_until_success
         deviant_id = Regex.run(@deviant_id_regex, page_resp.body) |> Enum.at(1)
         token_host = "https://www.deviantart.com/oauth2/token"
@@ -124,7 +123,7 @@ defmodule Ret.MediaResolver do
          "google.com"
        ) do
     [uri, meta] =
-      with api_key when is_binary(api_key) <- resolver_config(:google_poly_api_key) do
+      with api_key when is_binary(api_key) <- module_config(:google_poly_api_key) do
         payload =
           "https://poly.googleapis.com/v1/assets/#{asset_id}?key=#{api_key}"
           |> retry_get_until_success
@@ -158,7 +157,7 @@ defmodule Ret.MediaResolver do
          "sketchfab.com"
        ) do
     [uri, meta] =
-      with api_key when is_binary(api_key) <- resolver_config(:sketchfab_api_key) do
+      with api_key when is_binary(api_key) <- module_config(:sketchfab_api_key) do
         res =
           "https://api.sketchfab.com/v3/models/#{model_id}/download"
           |> retry_get_until_success([{"Authorization", "Token #{api_key}"}])
@@ -204,7 +203,7 @@ defmodule Ret.MediaResolver do
 
   defp resolve_giphy_media_uri(%URI{} = uri, preferred_type) do
     uri =
-      with api_key when is_binary(api_key) <- resolver_config(:giphy_api_key) do
+      with api_key when is_binary(api_key) <- module_config(:giphy_api_key) do
         gif_id = uri.path |> String.split("/") |> List.last() |> String.split("-") |> List.last()
 
         original_image =
@@ -313,13 +312,9 @@ defmodule Ret.MediaResolver do
     headers |> List.keyfind("Location", 0) |> elem(1)
   end
 
-  defp resolver_config(key) do
-    Application.get_env(:ret, Ret.MediaResolver)[key]
-  end
-
   defp get_imgur_headers() do
-    with client_id when is_binary(client_id) <- resolver_config(:imgur_client_id),
-         api_key when is_binary(api_key) <- resolver_config(:imgur_mashape_api_key) do
+    with client_id when is_binary(client_id) <- module_config(:imgur_client_id),
+         api_key when is_binary(api_key) <- module_config(:imgur_mashape_api_key) do
       [{"Authorization", "Client-ID #{client_id}"}, {"X-Mashape-Key", api_key}]
     else
       _err -> nil
@@ -336,5 +331,9 @@ defmodule Ret.MediaResolver do
 
   def resolved(%URI{} = uri, meta) do
     %Ret.ResolvedMedia{uri: uri, meta: meta}
+  end
+
+  defp module_config(key) do
+    Application.get_env(:ret, __MODULE__)[key]
   end
 end

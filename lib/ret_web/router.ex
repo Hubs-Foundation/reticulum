@@ -82,6 +82,7 @@ defmodule RetWeb.Router do
         if(Mix.env() == :prod, do: [:ssl_only, :canonicalize_domain], else: [])
     )
 
+    resources("/uploads", UploadController, only: [:show])
     get("/*path", PageController, only: [:index])
   end
 end

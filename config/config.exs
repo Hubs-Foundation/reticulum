@@ -11,7 +11,9 @@ config :ret, ecto_repos: [Ret.Repo]
 config :phoenix, :format_encoders, "json-api": Poison
 
 config :mime, :types, %{
-  "application/vnd.api+json" => ["json-api"]
+  "application/vnd.api+json" => ["json-api"],
+  "model/gltf+json" => ["gltf"],
+  "model/gltf+binary" => ["glb"]
 }
 
 # Configures the endpoint
@@ -33,6 +35,13 @@ config :ret, Ret.Repo,
 config :peerage, log_results: false
 
 config :statix, prefix: "ret"
+
+config :ret, Ret.SingletonScheduler,
+  global: true,
+  jobs: [
+    # Vacuum uploads folder
+    {"@daily", {Ret.Uploads, :vacuum, []}}
+  ]
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

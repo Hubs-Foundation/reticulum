@@ -226,6 +226,27 @@
       doc: "Page Origin URL for Hubs HTML root pages",
       hidden: false,
       to: "ret.Elixir.Ret.PageOriginWarmer.page_origin"
+    ],
+    "ret.Elixir.Ret.Uploads.storage_path": [
+      commented: false,
+      datatype: :binary,
+      doc: "Local filesystem path to store uploaded files",
+      hidden: false,
+      to: "ret.Elixir.Ret.Uploads.storage_path"
+    ],
+    "ret.Elixir.Ret.Uploads.ttl": [
+      commented: false,
+      datatype: :integer,
+      doc: "TTL (in seconds) to remove expiring uploaded files that have not been accessed",
+      hidden: false,
+      to: "ret.Elixir.Ret.Uploads.ttl"
+    ],
+    "ret.Elixir.Ret.Uploads.host": [
+      commented: false,
+      datatype: :binary,
+      doc: "External host to point clients to for downloading uploaded files.",
+      hidden: false,
+      to: "ret.Elixir.Ret.Uploads.host"
     ]
   ],
   transforms: [],

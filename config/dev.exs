@@ -100,3 +100,7 @@ config :ret, Ret.MediaResolver,
   google_poly_api_key: nil,
   sketchfab_api_key: nil,
   ytdl_host: "http://localhost:9191"
+
+config :ret, Ret.Uploads,
+  storage_path: "uploads",
+  ttl: 60 * 60 * 24
