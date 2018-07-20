@@ -21,7 +21,7 @@ defmodule RetWeb.Router do
       secure_headers: [
         config: [
           content_security_policy:
-            "default-src 'none'; script-src 'self' #{asset_hosts} https://cdn.rawgit.com https://aframe.io 'unsafe-eval'; worker-src: 'self' #{
+            "default-src 'none'; script-src 'self' #{asset_hosts} https://cdn.rawgit.com https://aframe.io 'unsafe-eval'; worker-src 'self' #{
               asset_hosts
             }; font-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://cdn.aframe.io #{
               asset_hosts
