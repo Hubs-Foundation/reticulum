@@ -7,6 +7,8 @@ defmodule Ret.Application do
   def start(_type, _args) do
     import Supervisor.Spec
 
+    PhoenixCowboyLogging.enable_for(:ret, RetWeb.Endpoint)
+
     :ok = Ret.Statix.connect()
 
     # Define workers and child supervisors to be supervised

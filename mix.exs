@@ -61,7 +61,8 @@ defmodule Ret.Mixfile do
       {:cachex, "~> 3.0.2"},
       {:retry, "~> 0.10.0"},
       {:open_graph, "~> 0.0.3"},
-      {:secure_random, "~> 0.5.1"}
+      {:secure_random, "~> 0.5.1"},
+      {:phoenix_cowboy_logging, "~> 1.0"}
     ]
   end
 
