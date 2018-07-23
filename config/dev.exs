@@ -88,7 +88,7 @@ config :ret,
   farspark_host: "https://farspark-dev.reticulum.io"
 
 config :ret, Ret.PageOriginWarmer,
-  page_origin_url: "https://hubs.local:8080",
+  page_origin: "https://hubs.local:8080",
   insecure_ssl: true
 
 config :ret, Ret.MediaResolver,
