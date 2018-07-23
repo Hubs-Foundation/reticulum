@@ -8,13 +8,8 @@ defmodule Ret.PageOriginWarmer do
 
   def execute(_state) do
     with page_origin when is_binary(page_origin) <- module_config(:page_origin) do
-      page_set =
-        for prefix <- ["", "smoke-"], page <- @pages do
-          "#{prefix}#{page}"
-        end
-
       cache_values =
-        page_set
+        @pages
         |> Enum.map(&Task.async(fn -> page_to_cache_entry(&1) end))
         |> Enum.map(&Task.await(&1, 15000))
         |> Enum.reject(&is_nil/1)
