@@ -25,9 +25,9 @@ defmodule RetWeb.Router do
               asset_hosts
             }; style-src 'self' https://fonts.googleapis.com #{asset_hosts} 'unsafe-inline'; connect-src 'self' https://sentry.prod.mozaws.net https://dpdb.webvr.rocks #{
               asset_hosts
-            } #{websocket_hosts} https://cdn.aframe.io https://www.mozilla.org data:; img-src 'self' #{
+            } #{websocket_hosts} https://cdn.aframe.io https://www.mozilla.org data: blob:; img-src 'self' #{
               asset_hosts
-            } https://cdn.aframe.io data: blob:; media-src 'self' #{asset_hosts} data:; frame-src 'self'; frame-ancestors 'self'; base-uri 'none'; form-action 'self';",
+            } https://cdn.aframe.io data: blob:; media-src 'self' #{asset_hosts} data: blob:; frame-src 'self'; frame-ancestors 'self'; base-uri 'none'; form-action 'self';",
           x_content_type_options: "nosniff",
           x_frame_options: "sameorigin",
           x_xss_protection: "1; mode=block",
