@@ -8,3 +8,4 @@ Use `docker-compose` to setup a local environment.
 You may have to configure the `RetWeb.Endpoint` host in `config/dev.exs`.
 
     $ docker-compose up
+    

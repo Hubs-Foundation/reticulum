@@ -18,10 +18,6 @@ defmodule RetWeb.PageController do
     conn |> render_page("avatar-selector")
   end
 
-  def render_for_path("/smoke-avatar-selector.html", conn) do
-    conn |> render_page("avatar-selector")
-  end
-
   def render_for_path(path, conn) do
     hub_sid =
       path
@@ -41,23 +37,13 @@ defmodule RetWeb.PageController do
     |> send_resp(200, chunks)
   end
 
-  defp with_page_prefix(page, conn) do
-    if conn.host =~ "smoke" do
-      "smoke-#{page}"
-    else
-      page
-    end
-  end
-
   defp render_page(conn, page) do
     chunks = conn |> chunks_for_page(page)
     conn |> render_chunks(chunks)
   end
 
   defp chunks_for_page(conn, page) do
-    key = page |> with_page_prefix(conn)
-
-    with {:ok, chunks} <- Cachex.get(:page_chunks, key) do
+    with {:ok, chunks} <- Cachex.get(:page_chunks, page) do
       chunks
     else
       _ -> nil
