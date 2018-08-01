@@ -2,7 +2,20 @@ defmodule RetWeb.Router do
   use RetWeb, :router
 
   pipeline :secure_headers do
-    plug(SecureHeaders, secure_headers: [merge: true])
+    plug(
+      SecureHeaders,
+      secure_headers: [
+        config: [
+          x_content_type_options: "nosniff",
+          x_frame_options: "sameorigin",
+          x_xss_protection: "1; mode=block",
+          x_download_options: "noopen",
+          x_permitted_cross_domain_policies: "master-only",
+          strict_transport_security: "max-age=631138519"
+        ],
+        merge: true
+      ]
+    )
   end
 
   pipeline :ssl_only do
