@@ -19,6 +19,7 @@ config :ret, RetWeb.Endpoint,
   code_reloader: true,
   check_origin: false,
   secret_key_base: "txlMOtlaY5x3crvOCko4uV5PM29ul3zGo1oBGNO3cDXx+7GHLKqt0gR9qzgThxb5",
+  allowed_origins: ["*"],
   watchers: [
     node: [
       "node_modules/brunch/bin/brunch",
@@ -124,3 +125,5 @@ config :secure_headers, SecureHeaders,
         } https://cdn.aframe.io data: blob:; media-src 'self' #{asset_hosts} data: blob:; frame-src 'self'; frame-ancestors 'self'; base-uri 'none'; form-action 'self';"
     ]
   ]
+
+config :cors_plug, origin: &RetWeb.Endpoint.get_cors_origins/0

@@ -255,12 +255,12 @@
       hidden: false,
       to: "secure_headers.Elixir.SecureHeaders.secure_headers.config.content_security_policy"
     ],
-    "cors_plug.origin": [
+    "ret.Elixir.RetWeb.Endpoint.allowed_origins": [
       commented: false,
       datatype: [list: :binary],
       doc: "Origins to permit in CORS",
       hidden: false,
-      to: "cors_plug.origin"
+      to: "ret.Elixir.RetWeb.Endpoint.allowed_origins"
     ]
   ],
   transforms: [],
