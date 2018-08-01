@@ -2,7 +2,7 @@ defmodule RetWeb.Router do
   use RetWeb, :router
 
   pipeline :secure_headers do
-    plug(SecureHeaders, secure_headers: [merge: true])
+    if Mix.env() != :test, do: plug(SecureHeaders, secure_headers: [merge: true])
   end
 
   pipeline :ssl_only do
