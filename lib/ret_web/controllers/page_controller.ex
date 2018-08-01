@@ -28,8 +28,7 @@ defmodule RetWeb.PageController do
     hub_meta_tags = Phoenix.View.render_to_string(RetWeb.PageView, "hub-meta.html", hub: hub)
 
     chunks =
-      conn
-      |> chunks_for_page("hub")
+      chunks_for_page("hub")
       |> List.insert_at(1, hub_meta_tags)
 
     conn
@@ -38,11 +37,11 @@ defmodule RetWeb.PageController do
   end
 
   defp render_page(conn, page) do
-    chunks = conn |> chunks_for_page(page)
+    chunks = page |> chunks_for_page
     conn |> render_chunks(chunks)
   end
 
-  defp chunks_for_page(conn, page) do
+  defp chunks_for_page(page) do
     with {:ok, chunks} <- Cachex.get(:page_chunks, page) do
       chunks
     else
