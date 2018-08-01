@@ -18,3 +18,5 @@ config :ret, Ret.Repo,
   template: "template0",
   pool_size: 10,
   pool: Ecto.Adapters.SQL.Sandbox
+
+config :secure_headers, SecureHeaders, secure_headers: [config: []]
