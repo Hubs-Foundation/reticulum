@@ -81,7 +81,4 @@ config :ret, Ret.Scheduler,
     {{:cron, "*/5 * * * *"}, {Ret.StatsJob, :save_node_stats, []}}
   ]
 
-config :ret, RetWeb.Plugs.HeaderAuthorization,
-  header_name: "x-ret-admin-access-key"
-
-config :cors_plug, origin: ["https://prod.reticulum.io", "https://smoke-prod.reticulum.io", "https://dev.reticulum.io", "https://smoke-dev.reticulum.io", "https://localhost:8080", "https://hubs.local", "https://hubs.local:8080", "https://hubs.local:4000"]
+config :ret, RetWeb.Plugs.HeaderAuthorization, header_name: "x-ret-admin-access-key"

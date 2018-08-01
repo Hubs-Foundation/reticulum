@@ -251,9 +251,16 @@
     "secure_headers.Elixir.SecureHeaders.secure_headers.config.content_security_policy": [
       commented: false,
       datatype: :binary,
-      doc: "CSP for pages served by Reticulum",
+      doc: "Content Security Policy for pages served by Reticulum",
       hidden: false,
       to: "secure_headers.Elixir.SecureHeaders.secure_headers.config.content_security_policy"
+    ],
+    "cors_plug.origin": [
+      commented: false,
+      datatype: [list: :binary],
+      doc: "Origins to permit in CORS",
+      hidden: false,
+      to: "cors_plug.origin"
     ]
   ],
   transforms: [],
