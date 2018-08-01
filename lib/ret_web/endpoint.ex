@@ -43,7 +43,7 @@ defmodule RetWeb.Endpoint do
   plug(Plug.MethodOverride)
   plug(Plug.Head)
 
-  plug(CORSPlug)
+  plug(CORSPlug, origin: &RetWeb.Endpoint.get_cors_origin/0)
   plug(RetWeb.Router)
 
   @doc """

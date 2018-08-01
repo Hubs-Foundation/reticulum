@@ -4,6 +4,7 @@ use Mix.Config
 # you can enable the server option below.
 config :ret, RetWeb.Endpoint,
   http: [port: 4001],
+  allowed_origins: ["*"],
   server: false
 
 # Print only warnings and errors during test
