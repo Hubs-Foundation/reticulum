@@ -104,3 +104,29 @@ config :ret, Ret.MediaResolver,
 config :ret, Ret.Uploads,
   storage_path: "uploads",
   ttl: 60 * 60 * 24
+
+asset_hosts =
+  "https://localhost:4000 https://localhost:8080 https://hubs.local:4000 https://hubs.local:8080 https://asset-bundles-prod.reticulum.io"
+
+websocket_hosts =
+  "https://localhost:4000 https://localhost:8080 wss://localhost:4000 https://hubs.local:4000 https://hubs.local:8080 wss://hubs.local:4000 wss://hubs.local:8080 wss://prod-janus.reticulum.io"
+
+config :secure_headers, SecureHeaders,
+  secure_headers: [
+    config: [
+      x_content_type_options: "nosniff",
+      x_frame_options: "sameorigin",
+      x_xss_protection: "1; mode=block",
+      x_download_options: "noopen",
+      x_permitted_cross_domain_policies: "master-only",
+      strict_transport_security: "max-age=631138519",
+      content_security_policy:
+        "default-src 'none'; script-src 'self' #{asset_hosts} https://cdn.rawgit.com https://aframe.io 'unsafe-eval'; worker-src blob:; font-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://cdn.aframe.io #{
+          asset_hosts
+        }; style-src 'self' https://fonts.googleapis.com #{asset_hosts} 'unsafe-inline'; connect-src 'self' https://sentry.prod.mozaws.net https://dpdb.webvr.rocks #{
+          asset_hosts
+        } #{websocket_hosts} https://cdn.aframe.io https://www.mozilla.org data: blob:; img-src 'self' #{
+          asset_hosts
+        } https://cdn.aframe.io data: blob:; media-src 'self' #{asset_hosts} data: blob:; frame-src 'self'; frame-ancestors 'self'; base-uri 'none'; form-action 'self';"
+    ]
+  ]

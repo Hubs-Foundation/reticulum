@@ -247,6 +247,13 @@
       doc: "External host to point clients to for downloading uploaded files.",
       hidden: false,
       to: "ret.Elixir.Ret.Uploads.host"
+    ],
+    "secure_headers.Elixir.SecureHeaders.secure_headers.config.content_security_policy": [
+      commented: false,
+      datatype: :binary,
+      doc: "CSP for pages served by Reticulum",
+      hidden: false,
+      to: "secure_headers.Elixir.SecureHeaders.secure_headers.config.content_security_policy"
     ]
   ],
   transforms: [],
