@@ -3,8 +3,7 @@ defmodule RetWeb.Api.V1.MediaSearchController do
   use Retry
 
   def index(conn, %{"api" => api, "user" => user}) when api in ["sketchfab"] do
-    query = %Ret.MediaSearchQuery{api: api, user: user}
-    results = Ret.MediaSearch.search(query)
+    results = %Ret.MediaSearchQuery{api: api, user: user} |> Ret.MediaSearch.search()
     conn |> render("index.json", results: results)
   end
 
