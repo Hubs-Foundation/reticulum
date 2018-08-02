@@ -52,6 +52,7 @@ defmodule RetWeb.Router do
     scope "/v1", as: :api_v1 do
       resources("/hubs", Api.V1.HubController, only: [:create, :delete])
       resources("/media", Api.V1.MediaController, only: [:create])
+      resources("/media/search", Api.V1.MediaSearchController, only: [:index])
     end
   end
 
