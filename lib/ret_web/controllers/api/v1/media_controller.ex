@@ -3,7 +3,7 @@ defmodule RetWeb.Api.V1.MediaController do
   use Retry
 
   def create(conn, %{"media" => %{"url" => url, "index" => index}}) do
-    resolve_and_render(conn, url, index |> Integer.parse())
+    resolve_and_render(conn, url, index)
   end
 
   def create(conn, %{"media" => %{"url" => url}}) do
