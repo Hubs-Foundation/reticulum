@@ -10,11 +10,22 @@ defmodule RetWeb.Api.V1.MediaController do
     resolve_and_render(conn, url, 0)
   end
 
+  def create(conn, %{
+        "media" =>
+          %Plug.Upload{filename: filename, content_type: "application/octet-stream"} = upload
+      }) do
+    render_upload(conn, upload, MIME.from_path(filename))
+  end
+
   def create(conn, %{"media" => %Plug.Upload{content_type: content_type} = upload}) do
+    render_upload(conn, upload, content_type)
+  end
+
+  defp render_upload(conn, %Plug.Upload{} = upload, content_type) do
     token = SecureRandom.hex()
     ext = MIME.extensions(content_type) |> List.first()
 
-    case Ret.Uploads.store(upload, token) do
+    case Ret.Uploads.store(upload, content_type, token) do
       {:ok, upload_id} ->
         upload_host = Application.get_env(:ret, Ret.Uploads)[:host] || RetWeb.Endpoint.url()
 
