@@ -3,7 +3,7 @@ defmodule Ret.Uploads do
 
   @chunk_size 1024 * 1024
 
-  # Given a Plug.Upload and an optional encryption key, returns an id
+  # Given a Plug.Upload, a content-type, and an optional encryption key, returns an id
   # that can be used to fetch a stream to the uploaded file after this call.
   def store(%Plug.Upload{filename: filename, path: path}, content_type, key) do
     with uploads_storage_path when is_binary(uploads_storage_path) <- module_config(:storage_path) do
