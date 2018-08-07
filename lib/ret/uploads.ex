@@ -18,7 +18,6 @@ defmodule Ret.Uploads do
           meta = %{
             content_type: content_type,
             content_length: content_length,
-            filename: filename,
             blob: blob_file_path,
             encrypted: key != nil
           }
