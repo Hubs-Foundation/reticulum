@@ -56,7 +56,7 @@ defmodule Ret.Hub do
   def changeset_for_new_spawned_object_type(%Hub{} = hub, object_type)
       when object_type in 1..32 do
     # spawned_object_types is a bitmask of the seen object types
-    new_spawned_object_types = hub.spawned_object_types ||| object_type
+    new_spawned_object_types = hub.spawned_object_types ||| 1 <<< object_type
 
     hub
     |> cast(%{spawned_object_types: new_spawned_object_types}, [:spawned_object_types])
