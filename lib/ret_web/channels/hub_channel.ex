@@ -104,7 +104,8 @@ defmodule RetWeb.HubChannel do
   end
 
   defp handle_max_occupant_update(socket, occupant_count) do
-    Repo.get_by(Hub, hub_sid: socket.assigns.hub_sid)
+    socket
+    |> hub_for_socket
     |> Hub.changeset_for_new_seen_occupant_count(occupant_count)
     |> Repo.update!()
 
@@ -112,10 +113,15 @@ defmodule RetWeb.HubChannel do
   end
 
   defp handle_object_spawned(socket, object_type) do
-    Repo.get_by(Hub, hub_sid: socket.assigns.hub_sid)
+    socket
+    |> hub_for_socket
     |> Hub.changeset_for_new_spawned_object_type(object_type)
     |> Repo.update!()
 
     socket
+  end
+
+  defp hub_for_socket(socket) do
+    Repo.get_by(Hub, hub_sid: socket.assigns.hub_sid)
   end
 end
