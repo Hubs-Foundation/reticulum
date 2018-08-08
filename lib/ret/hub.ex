@@ -8,6 +8,8 @@ end
 
 defmodule Ret.Hub do
   use Ecto.Schema
+  use Bitwise
+
   import Ecto.Changeset
 
   alias Ret.Hub
@@ -24,7 +26,8 @@ defmodule Ret.Hub do
     field(:hub_sid, :string)
     field(:default_environment_gltf_bundle_url, :string)
     field(:slug, HubSlug.Type)
-    field(:max_occupant_count, :integer)
+    field(:max_occupant_count, :integer, default: 0)
+    field(:spawned_object_types, :integer, default: 0)
     field(:entry_mode, Ret.Hub.EntryMode)
 
     timestamps()
@@ -42,10 +45,22 @@ defmodule Ret.Hub do
     |> HubSlug.unique_constraint()
   end
 
-  def changeset_for_new_max_occupants(%Hub{} = hub, max_occupant_count) do
+  def changeset_for_new_seen_occupant_count(%Hub{} = hub, occupant_count) do
+    new_max_occupant_count = max(hub.max_occupant_count, occupant_count)
+
     hub
-    |> cast(%{max_occupant_count: max_occupant_count}, [:max_occupant_count])
+    |> cast(%{max_occupant_count: new_max_occupant_count}, [:max_occupant_count])
     |> validate_required([:max_occupant_count])
+  end
+
+  def changeset_for_new_spawned_object_type(%Hub{} = hub, object_type)
+      when object_type in 1..32 do
+    # spawned_object_types is a bitmask of the seen object types
+    new_spawned_object_types = hub.spawned_object_types ||| object_type
+
+    hub
+    |> cast(%{spawned_object_types: new_spawned_object_types}, [:spawned_object_types])
+    |> validate_required([:spawned_object_types])
   end
 
   def changeset_to_deny_entry(%Hub{} = hub) do

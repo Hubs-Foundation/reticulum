@@ -30,6 +30,15 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
+  def handle_in("events:object_spawned", %{"object_type" => object_type}, socket) do
+    socket
+    |> handle_object_spawned(object_type)
+
+    Statix.increment("ret.channels.hub.objects_spawned", 1)
+
+    {:noreply, socket}
+  end
+
   def handle_in(_message, _payload, socket) do
     {:noreply, socket}
   end
@@ -95,13 +104,18 @@ defmodule RetWeb.HubChannel do
   end
 
   defp handle_max_occupant_update(socket, occupant_count) do
-    with hub <- Repo.get_by(Hub, hub_sid: socket.assigns.hub_sid),
-         max_occupant_count <- max(occupant_count, hub.max_occupant_count) do
-      hub
-      |> Hub.changeset_for_new_max_occupants(max_occupant_count)
-      |> Repo.update!()
+    Repo.get_by(Hub, hub_sid: socket.assigns.hub_sid)
+    |> Hub.changeset_for_new_seen_occupant_count(occupant_count)
+    |> Repo.update!()
 
-      socket
-    end
+    socket
+  end
+
+  defp handle_object_spawned(socket, object_type) do
+    Repo.get_by(Hub, hub_sid: socket.assigns.hub_sid)
+    |> Hub.changeset_for_new_spawned_object_type(object_type)
+    |> Repo.update!()
+
+    socket
   end
 end
