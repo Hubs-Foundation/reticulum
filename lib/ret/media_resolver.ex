@@ -9,7 +9,7 @@ defmodule Ret.MediaResolver do
   @ytdl_valid_status_codes [200, 302, 500]
 
   @ytdl_root_hosts [
-    # "youtube.com",
+    "youtube.com",
     "imgur.com",
     # "instagram.com",
     # "soundcloud.com",
