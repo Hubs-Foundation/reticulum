@@ -45,13 +45,14 @@ defmodule RetWeb.Router do
 
   scope "/api", RetWeb do
     pipe_through(
-      [:secure_headers, :api] ++
+      [:api] ++
         if(Mix.env() == :prod, do: [:ssl_only, :canonicalize_domain], else: [])
     )
 
     scope "/v1", as: :api_v1 do
       resources("/hubs", Api.V1.HubController, only: [:create, :delete])
       resources("/media", Api.V1.MediaController, only: [:create])
+      resources("/scenes", Api.V1.SceneController, only: [:create, :show])
     end
   end
 

@@ -1,0 +1,1 @@
+MAX_LINES=8 rs curl -X POST -H 'content-type: application/json' localhost:4000/api/v1/scenes -d '{"scene": {"name": "test", "description": "a test scene", "attribution_name": "a guy", "attribution_link": "twitter.com/a_guy", "upload_id": "234234"}}'

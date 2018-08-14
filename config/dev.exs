@@ -7,13 +7,13 @@ use Mix.Config
 # watchers to your application. For example, we use it
 # with brunch.io to recompile .js and .css sources.
 config :ret, RetWeb.Endpoint,
-  url: [scheme: "https", host: "hubs.local", port: 4000],
-  static_url: [scheme: "https", host: "hubs.local", port: 4000],
-  https: [
+  url: [scheme: "http", host: "hubs.local", port: 4000],
+  static_url: [scheme: "http", host: "hubs.local", port: 4000],
+  http: [
     port: 4000,
     otp_app: :ret,
-    keyfile: "#{System.get_env("PWD")}/priv/dev-ssl.key",
-    certfile: "#{System.get_env("PWD")}/priv/dev-ssl.cert"
+    # keyfile: "#{System.get_env("PWD")}/priv/dev-ssl.key",
+    # certfile: "#{System.get_env("PWD")}/priv/dev-ssl.cert"
   ],
   debug_errors: true,
   code_reloader: true,
@@ -70,7 +70,7 @@ config :ret, Ret.Repo,
   username: "postgres",
   password: "postgres",
   database: "ret_dev",
-  hostname: "localhost",
+  hostname: "db",
   template: "template0",
   pool_size: 10
 
