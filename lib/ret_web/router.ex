@@ -45,7 +45,7 @@ defmodule RetWeb.Router do
 
   scope "/api", RetWeb do
     pipe_through(
-      [:api] ++
+      [:secure_headers, :api] ++
         if(Mix.env() == :prod, do: [:ssl_only, :canonicalize_domain], else: [])
     )
 
