@@ -70,7 +70,7 @@ config :ret, Ret.Repo,
   username: "postgres",
   password: "postgres",
   database: "ret_dev",
-  hostname: "db",
+  hostname: "#{System.get_env("DB_HOST")}" || "localhost",
   template: "template0",
   pool_size: 10
 
