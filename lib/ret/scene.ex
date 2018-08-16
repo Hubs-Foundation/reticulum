@@ -22,10 +22,12 @@ defmodule Ret.Scene do
     field(:slug, SceneSlug.Type)
     field(:name, :string)
     field(:description, :string)
+    # TODO: BP account and upload tables don't exist yet.
     field(:author_account_id, :integer)
     field(:upload_id, :integer)
     field(:attribution_name, :string)
     field(:attribution_link, :string)
+    # TODO: BP haven't setup foreign keys yet.
     field(:derived_from_scene_id, :integer)
 
     timestamps()
@@ -36,6 +38,7 @@ defmodule Ret.Scene do
     |> cast(attrs, [:name, :description, :attribution_name, :attribution_link, :author_account_id, :upload_id])
     |> validate_required([:name, :attribution_name, :author_account_id, :upload_id])
     |> validate_length(:name, min: 4, max: 64)
+    # TODO: BP this is repeated from hub.ex. Maybe refactor the regex out.
     |> validate_format(:name, ~r/^[A-Za-z0-9-':"!@#$%^&*(),.?~ ]+$/)
     |> add_scene_sid_to_changeset
     |> unique_constraint(:scene_sid)
