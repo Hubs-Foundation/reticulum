@@ -13,8 +13,6 @@ defmodule Ret.Scene do
   alias Ret.Scene
   alias Ret.Scene.{SceneSlug}
 
-  use Bitwise
-
   @schema_prefix "ret0"
   @primary_key {:scene_id, :integer, []}
   @num_random_bits_for_scene_sid 16
