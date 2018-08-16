@@ -5,6 +5,7 @@ defmodule RetWeb.Api.V1.SceneController do
   alias Ret.Repo
 
   # Limit to 1 TPS
+  plug(RetWeb.Plugs.RateLimit)
 
   def show(conn, %{"id" => scene_sid}) do
     scene = Repo.get_by(Scene, scene_sid: scene_sid)
