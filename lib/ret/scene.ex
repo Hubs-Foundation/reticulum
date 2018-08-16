@@ -20,6 +20,8 @@ defmodule Ret.Scene do
   @num_random_bits_for_scene_sid 16
 
   schema "scenes" do
+    field(:scene_sid, :string)
+    field(:slug, SceneSlug.Type)
     field(:name, :string)
     field(:description, :string)
     field(:author_account_id, :integer)
@@ -27,16 +29,14 @@ defmodule Ret.Scene do
     field(:attribution_name, :string)
     field(:attribution_link, :string)
     field(:derived_from_scene_id, :integer)
-    field(:scene_sid, :string)
-    field(:slug, SceneSlug.Type)
 
     timestamps()
   end
 
   def changeset(%Scene{} = scene, attrs) do
     scene
-    |> cast(attrs, [:name, :description, :attribution_name, :attribution_link, :upload_id])
-    |> validate_required([:name, :attribution_name, :upload_id])
+    |> cast(attrs, [:name, :description, :attribution_name, :attribution_link, :author_account_id, :upload_id])
+    |> validate_required([:name, :attribution_name, :author_account_id, :upload_id])
     |> validate_length(:name, min: 4, max: 64)
     |> validate_format(:name, ~r/^[A-Za-z0-9-':"!@#$%^&*(),.?~ ]+$/)
     |> add_scene_sid_to_changeset
