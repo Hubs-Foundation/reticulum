@@ -5,10 +5,14 @@ defmodule RetWeb.Api.V1.SceneController do
   alias Ret.Repo
 
   # Limit to 1 TPS
-  plug(RetWeb.Plugs.RateLimit)
 
-  # Only allow access with secret header
-  plug(RetWeb.Plugs.HeaderAuthorization when action in [:delete])
+  def show(conn, %{"id" => scene_sid}) do
+    scene = Repo.get_by(Scene, scene_sid: scene_sid)
+    case scene do
+      nil -> conn |> send_resp(404, "scene not found")
+      _ -> render(conn, "show.json", scene: scene)
+    end
+  end
 
   def create(conn, %{"scene" => scene_params}) do
     {result, scene} =
