@@ -15,7 +15,6 @@ defmodule Ret.Scene do
 
   @schema_prefix "ret0"
   @primary_key {:scene_id, :integer, []}
-  @num_random_bits_for_scene_sid 16
 
   schema "scenes" do
     field(:scene_sid, :string)
@@ -46,15 +45,8 @@ defmodule Ret.Scene do
     |> SceneSlug.unique_constraint()
   end
 
-  # TODO: BP this is repeated from hub.ex. Refactor it out.
   defp add_scene_sid_to_changeset(changeset) do
-    scene_sid =
-      @num_random_bits_for_scene_sid
-      |> :crypto.strong_rand_bytes()
-      |> Base.encode32()
-      |> String.downcase()
-      |> String.slice(0, 10)
-
-    Ecto.Changeset.put_change(changeset, :scene_sid, "#{scene_sid}")
+    scene_sid = Ret.Sids.generate_sid()
+    put_change(changeset, :scene_sid, "#{scene_sid}")
   end
 end

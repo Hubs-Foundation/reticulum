@@ -17,7 +17,6 @@ defmodule Ret.Hub do
 
   @schema_prefix "ret0"
   @primary_key {:hub_id, :integer, []}
-  @num_random_bits_for_hub_sid 16
 
   schema "hubs" do
     field(:name, :string)
@@ -54,15 +53,9 @@ defmodule Ret.Hub do
   end
 
   defp add_hub_sid_to_changeset(changeset) do
-    hub_sid =
-      @num_random_bits_for_hub_sid
-      |> :crypto.strong_rand_bytes()
-      |> Base.encode32()
-      |> String.downcase()
-      |> String.slice(0, 10)
-
+    hub_sid = Ret.Sids.generate_sid()
     # Prefix with 0 just to make migration off of these links easier.
-    Ecto.Changeset.put_change(changeset, :hub_sid, "0#{hub_sid}")
+    put_change(changeset, :hub_sid, "0#{hub_sid}")
   end
 
   def janus_room_id_for_hub(hub) do
