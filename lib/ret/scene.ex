@@ -21,13 +21,13 @@ defmodule Ret.Scene do
     field(:slug, SceneSlug.Type)
     field(:name, :string)
     field(:description, :string)
+    # One of "unlisted", "listed", "pinned"
+    field(:state, :string)
     # TODO: BP account and upload tables don't exist yet.
     field(:author_account_id, :integer)
     field(:upload_id, :integer)
     field(:attribution_name, :string)
     field(:attribution_link, :string)
-    # TODO: BP haven't setup foreign keys yet.
-    field(:derived_from_scene_id, :integer)
 
     timestamps()
   end

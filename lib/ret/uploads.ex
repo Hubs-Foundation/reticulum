@@ -1,5 +1,26 @@
 defmodule Ret.Uploads do
+  use Ecto.Schema
+  import Ecto.Changeset
   require Logger
+
+  alias Ret.Upload
+
+  @schema_prefix "ret0"
+  @primary_key {:upload_id, :integer, []}
+  @num_random_bits_for_upload_sid 16
+
+  schema "uploads" do
+    field(:upload_sid, :string)
+    field(:uploader_account_id, :integer)
+    # One of "available" or "marked_for_deletion"
+    field(:state, :string)
+    field(:size, :integer)
+
+    timestamps()
+  end
+
+  def changeset(%Upload{} = upload, attrs) do
+  end
 
   @chunk_size 1024 * 1024
 
