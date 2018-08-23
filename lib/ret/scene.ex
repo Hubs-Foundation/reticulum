@@ -25,7 +25,8 @@ defmodule Ret.Scene do
     field(:state, :string)
     # TODO BP: account and upload tables don't exist yet.
     field(:author_account_id, :integer)
-    field(:upload_id, :integer)
+    field(:model_upload_id, :integer)
+    field(:screenshot_upload_id, :integer)
     field(:attribution_name, :string)
     field(:attribution_link, :string)
 

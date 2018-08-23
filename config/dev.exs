@@ -64,13 +64,15 @@ config :logger, :console, format: "[$level] $message\n"
 # in production as building large stacktraces may be expensive.
 config :phoenix, :stacktrace_depth, 20
 
+env_db_host = "#{System.get_env("DB_HOST")}"
+
 # Configure your database
 config :ret, Ret.Repo,
   adapter: Ecto.Adapters.Postgres,
   username: "postgres",
   password: "postgres",
   database: "ret_dev",
-  hostname: "#{System.get_env("DB_HOST")}" || "localhost",
+  hostname: (if env_db_host == "", do: "localhost", else: env_db_host),
   template: "template0",
   pool_size: 10
 
