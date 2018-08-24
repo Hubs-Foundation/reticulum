@@ -13,6 +13,8 @@ defmodule Ret.Upload do
     # TODO BP: Use a state machine library?
     # One of "available" or "marked_for_deletion"
     field(:state, :string)
+    # TODO BP: content_length is already stored in the upload's meta file.
+    # Does it make sense to include it here as well?
     field(:size, :integer)
 
     timestamps()
@@ -23,7 +25,7 @@ defmodule Ret.Upload do
     # TODO BP: API should not accept an account_id in the request params. It should be derived from the session via
     # the auth token
     |> cast(attrs, [:uploader_account_id])
-    |> validate_required([:author_account_id])
+    |> validate_required([:uploader_account_id])
   end
 end
 
