@@ -26,10 +26,10 @@ defmodule RetWeb.Api.V1.MediaController do
     ext = MIME.extensions(content_type) |> List.first()
 
     case Ret.Uploads.store(upload, content_type, token) do
-      {:ok, upload_id} ->
+      {:ok, upload_uuid} ->
         upload_host = Application.get_env(:ret, Ret.Uploads)[:host] || RetWeb.Endpoint.url()
 
-        filename = [upload_id, ext] |> Enum.reject(&is_nil/1) |> Enum.join(".")
+        filename = [upload_uuid, ext] |> Enum.reject(&is_nil/1) |> Enum.join(".")
         uri = "#{upload_host}/uploads/#{filename}" |> URI.parse()
         images = images_for_uri_and_index(uri, 0)
 

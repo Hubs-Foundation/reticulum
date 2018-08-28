@@ -21,9 +21,12 @@ defmodule Ret.Scene do
     field(:slug, SceneSlug.Type)
     field(:name, :string)
     field(:description, :string)
-    # TODO: BP account and upload tables don't exist yet.
+    # One of "unlisted", "listed", "pinned"
+    field(:state, :string)
+    # TODO BP: account and upload tables don't exist yet.
     field(:author_account_id, :integer)
-    field(:upload_id, :integer)
+    field(:model_upload_id, :integer)
+    field(:screenshot_upload_id, :integer)
     field(:attribution_name, :string)
     field(:attribution_link, :string)
 
@@ -32,17 +35,26 @@ defmodule Ret.Scene do
 
   def changeset(%Scene{} = scene, attrs) do
     scene
+    # TODO BP: API should not accept an account_id in the request params. It should be derived from the session via
+    # the auth token
     |> cast(attrs, [
+      :author_account_id,
       :name,
       :description,
       :attribution_name,
       :attribution_link,
-      :author_account_id,
-      :upload_id
+      :model_upload_id,
+      :screenshot_upload_id
     ])
-    |> validate_required([:name, :attribution_name, :author_account_id, :upload_id])
+    |> validate_required([
+      :author_account_id,
+      :name,
+      :attribution_name,
+      :model_upload_id,
+      :screenshot_upload_id
+    ])
     |> validate_length(:name, min: 4, max: 64)
-    # TODO: BP this is repeated from hub.ex. Maybe refactor the regex out.
+    # TODO BP: this is repeated from hub.ex. Maybe refactor the regex out.
     |> validate_format(:name, ~r/^[A-Za-z0-9-':"!@#$%^&*(),.?~ ]+$/)
     |> add_scene_sid_to_changeset
     |> unique_constraint(:scene_sid)
