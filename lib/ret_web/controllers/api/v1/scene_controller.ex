@@ -7,8 +7,8 @@ defmodule RetWeb.Api.V1.SceneController do
   # Limit to 1 TPS
   plug(RetWeb.Plugs.RateLimit)
 
-  def show(conn, %{"id" => scene_sid}) do
-    scene = Repo.get_by(Scene, scene_sid: scene_sid)
+  def show(conn, %{"id" => scene_id}) do
+    scene = Repo.get(Scene, scene_id)
 
     case scene do
       nil -> conn |> send_resp(404, "scene not found")
