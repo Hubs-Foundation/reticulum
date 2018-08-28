@@ -26,8 +26,6 @@ defmodule Ret.Scene do
     field(:upload_id, :integer)
     field(:attribution_name, :string)
     field(:attribution_link, :string)
-    # TODO: BP haven't setup foreign keys yet.
-    field(:derived_from_scene_id, :integer)
 
     timestamps()
   end
