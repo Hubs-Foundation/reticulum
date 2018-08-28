@@ -8,7 +8,6 @@ echo "model_upload_id $model_upload_id"
 screenshot_upload_id=$(curl -skX POST -F 'file=@screenshot.png' "$base/api/v1/uploads" | jq -r '.upload_id')
 echo "screenshot_upload_id $screenshot_upload_id"
 
-
 json=$(cat <<JSON
 {"scene": {
   "name": "test",
@@ -22,10 +21,7 @@ json=$(cat <<JSON
 JSON
 )
 
-result=$(curl -skX POST -H 'content-type: application/json' "$base/api/v1/scenes" -d "$json")
-echo "$result"
+scene_id=$(curl -skX POST -H 'content-type: application/json' "$base/api/v1/scenes" -d "$json" | jq -r '.scene_id')
+echo "scene_id $scene_id"
 
-scene_id=$(echo "$result" | jq -r '.scene_id')
-echo "$scene_id"
-
-curl -sk "https://localhost:4000/api/v1/scenes/$scene_id"
+curl -sk "$base/api/v1/scenes/$scene_id" | cut -c -100 | head -10

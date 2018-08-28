@@ -84,6 +84,8 @@ config :ret, RetWeb.Plugs.HeaderAuthorization,
 config :cors_plug, origin: ["*"]
 
 config :ret,
+  upload_encryption_key:
+    "a8dedeb57adafa7821027d546f016efef5a501bd",
   farspark_signature_key:
     "248cf801c4f5d6fd70c1b0dfea8dedeb57adafa7821027d546f016efef5a501bd8168c8479d33b466199d0ac68c71bb71b68c27537102a63cd70776aa83bca76",
   farspark_signature_salt:
