@@ -11,8 +11,9 @@ defmodule RetWeb.Api.V1.MediaController do
   end
 
   def create(conn, %{
-    "media" => %Plug.Upload{filename: filename, content_type: "application/octet-stream"} = upload
-  }) do
+        "media" =>
+          %Plug.Upload{filename: filename, content_type: "application/octet-stream"} = upload
+      }) do
     render_upload(conn, upload, MIME.from_path(filename))
   end
 

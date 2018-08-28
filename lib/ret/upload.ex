@@ -28,4 +28,3 @@ defmodule Ret.Upload do
     |> validate_required([:uploader_account_id])
   end
 end
-

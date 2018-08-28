@@ -8,8 +8,9 @@ defmodule RetWeb.Api.V1.UploadController do
   plug(RetWeb.Plugs.RateLimit)
 
   def create(conn, %{
-    "file" => %Plug.Upload{filename: filename, content_type: "application/octet-stream"} = file
-  }) do
+        "file" =>
+          %Plug.Upload{filename: filename, content_type: "application/octet-stream"} = file
+      }) do
     create_with_content_type(conn, file, MIME.from_path(filename))
   end
 
@@ -19,6 +20,7 @@ defmodule RetWeb.Api.V1.UploadController do
 
   defp create_with_content_type(conn, %Plug.Upload{} = file, content_type) do
     key = Application.get_env(:ret, :upload_encryption_key) |> Base.decode16!(case: :lower)
+
     case Ret.Uploads.store(file, content_type, key) do
       {:ok, upload_uuid} ->
         {result, upload} =

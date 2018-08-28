@@ -5,7 +5,10 @@ defmodule RetWeb.UploadController do
     fetch_upload(conn, upload_uuid, token)
   end
 
-  def show(conn, %{"id" => <<upload_uuid::binary-size(36), ".", _extension::binary>>, "token" => token}) do
+  def show(conn, %{
+        "id" => <<upload_uuid::binary-size(36), ".", _extension::binary>>,
+        "token" => token
+      }) do
     fetch_upload(conn, upload_uuid, token)
   end
 
@@ -43,7 +46,8 @@ defmodule RetWeb.UploadController do
   defp fetch_upload_with_token_from_header(conn, upload_uuid) do
     case conn |> get_req_header("authorization") do
       [<<"Token ", token::binary>>] ->
-          fetch_upload(conn, upload_uuid, token)
+        fetch_upload(conn, upload_uuid, token)
+
       _ ->
         conn |> send_resp(401, "")
     end
