@@ -8,8 +8,11 @@ defmodule Ret.Repo.Migrations.CreateScenesTable do
       add :slug, :string, null: false
       add :name, :string, null: false
       add :description, :string
+      # TODO BP: This should probably be non-null
+      add :state, :string
       add :author_account_id, :integer, null: false
-      add :upload_id, :integer, null: false
+      add :model_upload_id, :bigint, null: false
+      add :screenshot_upload_id, :bigint, null: false
       add :attribution_name, :string, null: false
       add :attribution_link, :string
       add :derived_from_scene_id, :integer

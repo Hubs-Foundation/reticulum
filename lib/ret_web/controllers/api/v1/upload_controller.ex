@@ -20,7 +20,6 @@ defmodule RetWeb.Api.V1.UploadController do
   defp create_with_content_type(conn, %Plug.Upload{} = file, content_type) do
     case Ret.Uploads.store(file, content_type) do
       {:ok, upload_uuid} ->
-
         {result, upload} =
           %Upload{}
           |> Upload.changeset(%{
@@ -28,7 +27,7 @@ defmodule RetWeb.Api.V1.UploadController do
             # TODO BP: Need actual authentication here
             :uploader_account_id => 1234
           })
-          |> Repo.insert()
+          |> Repo.insert(returning: true)
 
         case result do
           :ok -> render(conn, "create.json", upload: upload)
