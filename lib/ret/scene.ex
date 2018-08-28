@@ -32,7 +32,14 @@ defmodule Ret.Scene do
 
   def changeset(%Scene{} = scene, attrs) do
     scene
-    |> cast(attrs, [:name, :description, :attribution_name, :attribution_link, :author_account_id, :upload_id])
+    |> cast(attrs, [
+      :name,
+      :description,
+      :attribution_name,
+      :attribution_link,
+      :author_account_id,
+      :upload_id
+    ])
     |> validate_required([:name, :attribution_name, :author_account_id, :upload_id])
     |> validate_length(:name, min: 4, max: 64)
     # TODO: BP this is repeated from hub.ex. Maybe refactor the regex out.

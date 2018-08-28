@@ -9,6 +9,7 @@ defmodule RetWeb.Api.V1.SceneController do
 
   def show(conn, %{"id" => scene_sid}) do
     scene = Repo.get_by(Scene, scene_sid: scene_sid)
+
     case scene do
       nil -> conn |> send_resp(404, "scene not found")
       _ -> render(conn, "show.json", scene: scene)
