@@ -12,7 +12,6 @@ defmodule Ret.Repo.Migrations.CreateScenesTable do
       add :upload_id, :integer, null: false
       add :attribution_name, :string, null: false
       add :attribution_link, :string
-      add :derived_from_scene_id, :integer
 
       timestamps()
     end
