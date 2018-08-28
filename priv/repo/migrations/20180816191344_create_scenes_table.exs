@@ -1,4 +1,4 @@
-defmodule Ret.Repo.Migrations.CreateScenes do
+defmodule Ret.Repo.Migrations.CreateScenesTable do
   use Ecto.Migration
 
   def change do
