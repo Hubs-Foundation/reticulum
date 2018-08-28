@@ -9,7 +9,7 @@ defmodule RetWeb.Api.V1.SceneView do
   def render("create.json", %{scene: scene}) do
     %{
       status: :ok,
-      scene_id: scene.scene_id,
+      scene_id: to_string(scene.scene_id),
       url: url_for_scene(scene)
     }
   end
@@ -18,7 +18,7 @@ defmodule RetWeb.Api.V1.SceneView do
     %{
       scenes: [
         %{
-          scene_id: scene.scene_id,
+          scene_id: to_string(scene.scene_id),
           name: scene.name,
           attribution_name: scene.attribution_name,
           attribution_link: scene.attribution_link,

@@ -19,7 +19,7 @@ defmodule RetWeb.Api.V1.SceneController do
     {result, scene} =
       %Scene{}
       |> Scene.changeset(scene_params)
-      |> Repo.insert()
+      |> Repo.insert(returning: true)
 
     case result do
       :ok -> render(conn, "create.json", scene: scene)
