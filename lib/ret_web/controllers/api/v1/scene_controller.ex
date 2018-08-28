@@ -4,11 +4,11 @@ defmodule RetWeb.Api.V1.SceneController do
   alias Ret.Scene
   alias Ret.Repo
 
-  # Limit to 1 TPS
-  plug(RetWeb.Plugs.RateLimit)
+  plug(RetWeb.Plugs.RateLimit when action in [:create])
 
-  def show(conn, %{"id" => scene_sid}) do
-    scene = Repo.get_by(Scene, scene_sid: scene_sid)
+  def show(conn, %{"id" => scene_id}) do
+    scene = Repo.get(Scene, scene_id)
+
     case scene do
       nil -> conn |> send_resp(404, "scene not found")
       _ -> render(conn, "show.json", scene: scene)
@@ -19,7 +19,7 @@ defmodule RetWeb.Api.V1.SceneController do
     {result, scene} =
       %Scene{}
       |> Scene.changeset(scene_params)
-      |> Repo.insert()
+      |> Repo.insert(returning: true)
 
     case result do
       :ok -> render(conn, "create.json", scene: scene)

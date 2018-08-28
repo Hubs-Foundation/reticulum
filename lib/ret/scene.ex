@@ -37,8 +37,22 @@ defmodule Ret.Scene do
     scene
     # TODO BP: API should not accept an account_id in the request params. It should be derived from the session via
     # the auth token
-    |> cast(attrs, [:author_account_id, :name, :description, :attribution_name, :attribution_link, :model_upload_id, :screenshot_upload_id])
-    |> validate_required([:author_account_id, :name, :attribution_name, :model_upload_id, :screenshot_upload_id])
+    |> cast(attrs, [
+      :author_account_id,
+      :name,
+      :description,
+      :attribution_name,
+      :attribution_link,
+      :model_upload_id,
+      :screenshot_upload_id
+    ])
+    |> validate_required([
+      :author_account_id,
+      :name,
+      :attribution_name,
+      :model_upload_id,
+      :screenshot_upload_id
+    ])
     |> validate_length(:name, min: 4, max: 64)
     # TODO BP: this is repeated from hub.ex. Maybe refactor the regex out.
     |> validate_format(:name, ~r/^[A-Za-z0-9-':"!@#$%^&*(),.?~ ]+$/)
