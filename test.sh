@@ -1,4 +1,4 @@
-result=$(curl -k -X POST -H 'content-type: application/json' https://localhost:4000/api/v1/scenes -d '
+result=$(curl -skX POST -H 'content-type: application/json' https://localhost:4000/api/v1/scenes -d '
 {"scene": {
 	"name": "test",
 	"description": "a test scene",
@@ -8,8 +8,7 @@ result=$(curl -k -X POST -H 'content-type: application/json' https://localhost:4
 	"upload_id": "234234"
 }}')
 echo "$result"
-
-scene_id=$(echo $result | jq -r '.scene_id')
+scene_id=$(echo "$result" | jq -r '.scene_id')
 echo "$scene_id"
 
-curl -k "https://localhost:4000/api/v1/scenes/$scene_id"
+curl -sk "https://localhost:4000/api/v1/scenes/$scene_id" | cut -c -100 | head -5
