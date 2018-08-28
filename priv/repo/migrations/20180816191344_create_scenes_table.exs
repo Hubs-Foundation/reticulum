@@ -8,7 +8,6 @@ defmodule Ret.Repo.Migrations.CreateScenesTable do
       add(:slug, :string, null: false)
       add(:name, :string, null: false)
       add(:description, :string)
-      add(:state, :string, null: false)
       add(:author_account_id, :bigint, null: false)
       add(:upload_id, :bigint, null: false)
       add(:attribution_name, :string, null: false)
