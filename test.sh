@@ -1,3 +1,4 @@
+# TODO BP: Replace this with an actual integration test
 result=$(curl -skX POST -H 'content-type: application/json' https://localhost:4000/api/v1/scenes -d '
 {"scene": {
 	"name": "test",
