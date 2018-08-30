@@ -13,5 +13,6 @@ defmodule Ret.Repo.Migrations.CreateLogin do
     end
 
     create(index(:logins, [:email], unique: true))
+    create(index(:logins, [:account_id]))
   end
 end
