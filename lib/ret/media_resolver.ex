@@ -8,18 +8,9 @@ defmodule Ret.MediaResolver do
 
   @ytdl_valid_status_codes [200, 302, 500]
 
-  @ytdl_root_hosts [
-    "youtube.com",
-    "imgur.com",
-    # "instagram.com",
-    # "soundcloud.com",
-    "tumblr.com",
-    # "facebook.com",
-    "google.com",
-    "gfycat.com",
-    "flickr.com",
-    "dropbox.com",
-    "cloudflare.com"
+  @non_video_root_hosts [
+    "sketchfab.com",
+    "giphy.com"
   ]
 
   @deviant_id_regex ~r/\"DeviantArt:\/\/deviation\/([^"]+)/
@@ -39,7 +30,11 @@ defmodule Ret.MediaResolver do
     resolve_non_video(uri, root_host)
   end
 
-  def resolve(%URI{} = uri, root_host) when root_host in @ytdl_root_hosts do
+  def resolve(%URI{} = uri, root_host) when root_host in @non_video_root_hosts do
+    resolve_non_video(uri, root_host)
+  end
+
+  def resolve(%URI{} = uri, root_host) do
     with ytdl_host when is_binary(ytdl_host) <- module_config(:ytdl_host) do
       ytdl_format = "best[protocol*=http]"
       encoded_url = uri |> URI.to_string() |> URI.encode()
@@ -59,10 +54,6 @@ defmodule Ret.MediaResolver do
       _err ->
         resolve_non_video(uri, root_host)
     end
-  end
-
-  def resolve(%URI{} = uri, root_host) do
-    resolve_non_video(uri, root_host)
   end
 
   defp resolve_non_video(%URI{} = uri, "deviantart.com") do
