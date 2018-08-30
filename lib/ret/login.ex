@@ -7,6 +7,7 @@ defmodule Ret.Login do
 
   schema "logins" do
     field(:email, :string)
+    belongs_to(:account, Ret.Account, references: :account_id)
 
     timestamps()
   end

@@ -6,6 +6,7 @@ defmodule Ret.Account do
   @primary_key {:account_id, :integer, []}
 
   schema "accounts" do
+    has_one(:login, Ret.Login, foreign_key: :login_id)
     timestamps()
   end
 
