@@ -3,29 +3,44 @@ defmodule RetWeb.AuthChannel do
 
   use RetWeb, :channel
 
-  alias Ret.{Statix}
+  alias Ret.{Statix, LoginToken, Repo}
   alias RetWeb.{Presence}
 
   intercept(["link_response"])
 
-  def join("auth:" <> key, _payload, socket) do
+  def join("auth:" <> topic_key = topic, _payload, socket) do
     # Expire channel in 5 minutes
     Process.send_after(self(), :channel_expired, 60 * 1000 * 5)
+    socket = socket |> assign(:topic, topic)
 
     # Rate limit joins to reduce attack surface
-    :timer.sleep(3000)
+    :timer.sleep(500)
 
     Statix.increment("ret.channels.auth.joins.ok")
     {:ok, "{}", socket}
   end
 
   def handle_in("auth_request", %{"email" => email}, socket) do
-    # Send email
+    if !Map.get(socket.assigns, :used) do
+      socket = socket |> assign(:used, true)
 
-    {:noreply, socket}
+      # Create token + send email
+      token =
+        %LoginToken{}
+        |> LoginToken.changeset(%{email: email})
+        |> Repo.insert!()
+        |> Map.get(:token)
+
+      signin_args = %{topic: socket.assigns.topic, token: token}
+      RetWeb.Email.auth_email(email, signin_args) |> Ret.Mailer.deliver_now()
+
+      {:noreply, socket}
+    else
+      {:reply, {:error, "Already sent"}, socket}
+    end
   end
 
-  def handle_in("auth_verified" = event, _payload, socket) do
+  def handle_in("auth_verified" = event, %{"token" => token}, socket) do
     # Generate JWT, respond, close after 5 seconds
     Process.send_after(self(), :close_channel, 1000 * 5)
     token = "foo"
