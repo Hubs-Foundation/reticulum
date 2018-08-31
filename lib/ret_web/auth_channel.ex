@@ -41,11 +41,13 @@ defmodule RetWeb.AuthChannel do
   end
 
   def handle_in("auth_verified" = event, %{"token" => token}, socket) do
-    # Generate JWT, respond, close after 5 seconds
+    # Look up token, if found, create or fetch account, remove token, generate JWT, and broadcast it into the channel
     Process.send_after(self(), :close_channel, 1000 * 5)
-    token = "foo"
+    jwt = "foo"
 
-    {:reply, {:ok, %{"token" => token}}, socket}
+    broadcast!(socket, event, %{credentials: jwt})
+
+    {:noreply, socket}
   end
 
   def handle_in(_event, _payload, socket) do
