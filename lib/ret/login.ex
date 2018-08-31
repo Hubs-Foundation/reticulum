@@ -15,9 +15,12 @@ defmodule Ret.Login do
   @doc """
   Builds a changeset based on the `struct` and `params`.
   """
-  def changeset(struct, params \\ %{}) do
+  def changeset(struct, account, params \\ %{}) do
     struct
     |> cast(params, [:email])
     |> validate_required([:email])
+    |> validate_format(:email, ~r/@/)
+    |> unique_constraint(:email)
+    |> put_assoc(:account, account)
   end
 end
