@@ -3,12 +3,11 @@ defmodule RetWeb.AuthChannel do
 
   use RetWeb, :channel
 
-  alias Ret.{Statix, LoginToken, Repo}
-  alias RetWeb.{Presence}
+  alias Ret.{Statix, LoginToken, Account}
 
   intercept(["link_response"])
 
-  def join("auth:" <> topic_key = topic, _payload, socket) do
+  def join("auth:" <> _topic_key = topic, _payload, socket) do
     # Expire channel in 5 minutes
     Process.send_after(self(), :channel_expired, 60 * 1000 * 5)
     socket = socket |> assign(:topic, topic)
@@ -25,13 +24,9 @@ defmodule RetWeb.AuthChannel do
       socket = socket |> assign(:used, true)
 
       # Create token + send email
-      token =
-        %LoginToken{}
-        |> LoginToken.changeset(%{email: email})
-        |> Repo.insert!()
-        |> Map.get(:token)
-
+      token = LoginToken.new_token_for_email(email)
       signin_args = %{topic: socket.assigns.topic, token: token}
+
       RetWeb.Email.auth_email(email, signin_args) |> Ret.Mailer.deliver_now()
 
       {:noreply, socket}
@@ -40,12 +35,14 @@ defmodule RetWeb.AuthChannel do
     end
   end
 
-  def handle_in("auth_verified" = event, %{"token" => token}, socket) do
-    # Look up token, if found, create or fetch account, remove token, generate JWT, and broadcast it into the channel
+  def handle_in("auth_verified", %{"token" => token}, socket) do
     Process.send_after(self(), :close_channel, 1000 * 5)
-    jwt = "foo"
 
-    broadcast!(socket, event, %{credentials: jwt})
+    # Slow down token guessing
+    :timer.sleep(500)
+
+    token |> LoginToken.valid_email_for_token() |> broadcast_credentials_for_email(socket)
+    LoginToken.expire!(token)
 
     {:noreply, socket}
   end
@@ -57,5 +54,12 @@ defmodule RetWeb.AuthChannel do
   def handle_info(:close_channel, socket) do
     GenServer.cast(self(), :close)
     {:noreply, socket}
+  end
+
+  defp broadcast_credentials_for_email(nil, _socket), do: nil
+
+  defp broadcast_credentials_for_email(email, socket) do
+    credentials = email |> Account.credentials_for_email()
+    broadcast!(socket, "auth_credentials", %{credentials: credentials})
   end
 end

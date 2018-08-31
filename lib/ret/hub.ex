@@ -16,7 +16,7 @@ defmodule Ret.Hub do
   use Bitwise
 
   @schema_prefix "ret0"
-  @primary_key {:hub_id, :integer, []}
+  @primary_key {:hub_id, :id, autogenerate: true}
 
   schema "hubs" do
     field(:name, :string)

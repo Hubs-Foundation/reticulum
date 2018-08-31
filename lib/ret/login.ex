@@ -3,7 +3,7 @@ defmodule Ret.Login do
   import Ecto.Changeset
 
   @schema_prefix "ret0"
-  @primary_key {:login_id, :integer, []}
+  @primary_key {:login_id, :id, autogenerate: true}
 
   schema "logins" do
     field(:email, :string)
