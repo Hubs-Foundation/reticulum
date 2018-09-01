@@ -89,3 +89,5 @@ config :ret, Ret.Mailer,
   tls: :always,
   ssl: false,
   retries: 3
+
+config :ret, Ret.Guardian, issuer: "ret"

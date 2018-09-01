@@ -114,13 +114,13 @@
       hidden: false,
       to: "ret.Elixir.RetWeb.Endpoint.static_url.host"
     ],
-    "guardian.Elixir.Guardian.secret_key": [
+    "ret.Elixir.Ret.Guardian.secret_key": [
       commented: false,
       datatype: :binary,
       default: "JpWapNaJQ4HU1spmFCb5EyWxJAwKXiCl8677nd2GWYCurPYXYksMsHIV3J8zsYvN",
-      doc: "Provide documentation for guardian.Elixir.Guardian.secret_key here.",
+      doc: "Guardian secret key",
       hidden: false,
-      to: "guardian.Elixir.Guardian.secret_key"
+      to: "ret.Elixir.Ret.Guardian.secret_key"
     ],
     "ret.basic_auth.username": [
       commented: false,
