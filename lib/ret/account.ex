@@ -3,7 +3,7 @@ defmodule Ret.Account do
   import Ecto.Changeset
   import Ecto.Query
 
-  alias Ret.{Repo, Account, Login}
+  alias Ret.{Repo, Account, Login, Guardian}
 
   @schema_prefix "ret0"
   @primary_key {:account_id, :id, autogenerate: true}
@@ -44,5 +44,7 @@ defmodule Ret.Account do
   end
 
   defp credentials_for_account(account) do
+    {:ok, token, _claims} = account |> Guardian.encode_and_sign()
+    token
   end
 end

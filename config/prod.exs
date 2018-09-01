@@ -90,4 +90,4 @@ config :ret, Ret.Mailer,
   ssl: false,
   retries: 3
 
-config :ret, Ret.Guardian, issuer: "ret"
+config :ret, Ret.Guardian, issuer: "ret", ttl: {12, :weeks}

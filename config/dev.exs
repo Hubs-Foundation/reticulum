@@ -143,4 +143,5 @@ config :ret, RetWeb.Email, from: "info@hubs-mail.com"
 
 config :ret, Ret.Guardian,
   issuer: "ret",
-  secret_key: "47iqPEdWcfE7xRnyaxKDLt9OGEtkQG3SycHBEMOuT2qARmoESnhc76IgCUjaQIwX"
+  secret_key: "47iqPEdWcfE7xRnyaxKDLt9OGEtkQG3SycHBEMOuT2qARmoESnhc76IgCUjaQIwX",
+  ttl: {12, :weeks}
