@@ -7,7 +7,7 @@ defmodule RetWeb.Email do
     |> from(from_address())
     |> subject("Your Hubs Sign-In Link")
     |> text_body(
-      "To sign-in to Hubs, please visit the link below. If you did not make this request, please ignore this e-email.:\n\n#{
+      "To sign-in to Hubs, please visit the link below. If you did not make this request, please ignore this e-email.\n\n#{
         RetWeb.Endpoint.url()
       }/signin?#{URI.encode_query(signin_args)}"
     )
