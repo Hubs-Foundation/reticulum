@@ -5,7 +5,7 @@ defmodule RetWeb.AuthChannel do
 
   alias Ret.{Statix, LoginToken, Account}
 
-  intercept(["link_response"])
+  intercept(["auth_credentials"])
 
   def join("auth:" <> _topic_key, _payload, socket) do
     # Expire channel in 5 minutes
@@ -40,7 +40,10 @@ defmodule RetWeb.AuthChannel do
     # Slow down token guessing
     :timer.sleep(500)
 
-    token |> LoginToken.valid_email_for_token() |> broadcast_credentials_for_email(socket)
+    token
+    |> LoginToken.identifier_hash_for_token()
+    |> broadcast_credentials_for_identifier_hash(socket)
+
     LoginToken.expire!(token)
 
     {:noreply, socket}
@@ -55,10 +58,16 @@ defmodule RetWeb.AuthChannel do
     {:noreply, socket}
   end
 
-  defp broadcast_credentials_for_email(nil, _socket), do: nil
+  def handle_out("auth_credentials" = event, payload, socket) do
+    Process.send_after(self(), :close_channel, 1000 * 5)
+    push(socket, event, payload)
+    {:noreply, socket}
+  end
 
-  defp broadcast_credentials_for_email(email, socket) do
-    credentials = email |> Account.credentials_for_email()
+  defp broadcast_credentials_for_identifier_hash(nil, _socket), do: nil
+
+  defp broadcast_credentials_for_identifier_hash(hash, socket) do
+    credentials = hash |> Account.credentials_for_identifier_hash()
     broadcast!(socket, "auth_credentials", %{credentials: credentials})
   end
 end

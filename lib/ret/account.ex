@@ -23,8 +23,10 @@ defmodule Ret.Account do
   end
 
   def account_for_email(email) do
-    identifier_hash = email |> String.downcase() |> Ret.Crypto.hash()
+    email |> identifier_hash_for_email |> account_for_identifier_hash
+  end
 
+  def account_for_identifier_hash(identifier_hash) do
     login =
       Login
       |> where([t], t.identifier_hash == ^identifier_hash)
@@ -37,14 +39,18 @@ defmodule Ret.Account do
     end
   end
 
-  def credentials_for_email(email) do
-    email
-    |> account_for_email
+  def credentials_for_identifier_hash(identifier_hash) do
+    identifier_hash
+    |> account_for_identifier_hash
     |> credentials_for_account
   end
 
   defp credentials_for_account(account) do
     {:ok, token, _claims} = account |> Guardian.encode_and_sign()
     token
+  end
+
+  def identifier_hash_for_email(email) do
+    email |> String.downcase() |> Ret.Crypto.hash()
   end
 end

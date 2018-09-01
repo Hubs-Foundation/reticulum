@@ -3,8 +3,7 @@ defmodule Ret.LoginToken do
   import Ecto.Changeset
   import Ecto.Query
 
-  alias Phoenix.Token
-  alias Ret.Repo
+  alias Ret.{Repo, Account}
 
   @schema_prefix "ret0"
   @primary_key {:login_token_id, :id, autogenerate: true}
@@ -12,6 +11,7 @@ defmodule Ret.LoginToken do
 
   schema "login_tokens" do
     field(:token, :string)
+    field(:identifier_hash, :string)
 
     timestamps()
   end
@@ -23,7 +23,8 @@ defmodule Ret.LoginToken do
     login_token
     |> cast(%{}, [])
     |> put_change(:token, token)
-    |> validate_required([:token])
+    |> put_change(:identifier_hash, email |> Account.identifier_hash_for_email())
+    |> validate_required([:token, :identifier_hash])
   end
 
   def new_token_for_email(email) do
@@ -34,15 +35,19 @@ defmodule Ret.LoginToken do
   end
 
   def identifier_hash_for_token(token) do
-    with %Ret.LoginToken{} <- Repo.get_by(Ret.LoginToken, token: token) do
-      token_check = Token.verify(RetWeb.Endpoint, "login_token", token, max_age: @token_max_age)
+    login_token =
+      Ret.LoginToken
+      |> where([t], t.token == ^token)
+      |> where(
+        [t],
+        t.inserted_at > datetime_add(^NaiveDateTime.utc_now(), ^(@token_max_age * -1), "second")
+      )
+      |> Repo.one()
 
-      case token_check do
-        {:ok, identifier_hash} -> identifier_hash
-        _ -> nil
-      end
+    if login_token do
+      login_token.identifier_hash
     else
-      _ -> nil
+      nil
     end
   end
 
@@ -52,9 +57,18 @@ defmodule Ret.LoginToken do
     |> Repo.delete_all()
   end
 
+  def expire_stale! do
+    Ret.LoginToken
+    |> where(
+      [t],
+      t.inserted_at < datetime_add(^NaiveDateTime.utc_now(), ^(@token_max_age * -1), "second")
+    )
+    |> Repo.delete_all()
+  end
+
   defp generate_token(nil), do: nil
 
-  defp generate_token(email) do
-    Token.sign(RetWeb.Endpoint, "login_token", email |> String.downcase() |> Ret.Crypto.hash())
+  defp generate_token(_email) do
+    SecureRandom.hex()
   end
 end

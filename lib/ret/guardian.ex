@@ -10,7 +10,7 @@ defmodule Ret.Guardian do
     {:error, "Not found"}
   end
 
-  def resource_from_claims(%{"sub" => account_id} = claims) do
+  def resource_from_claims(%{"sub" => account_id}) do
     {:ok, Account |> Repo.get(account_id)}
   end
 
