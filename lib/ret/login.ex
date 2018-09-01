@@ -6,7 +6,7 @@ defmodule Ret.Login do
   @primary_key {:login_id, :id, autogenerate: true}
 
   schema "logins" do
-    field(:email, :string)
+    field(:identifier_hash, :string)
     belongs_to(:account, Ret.Account, references: :account_id)
 
     timestamps()
@@ -17,10 +17,9 @@ defmodule Ret.Login do
   """
   def changeset(struct, account, params \\ %{}) do
     struct
-    |> cast(params, [:email])
-    |> validate_required([:email])
-    |> validate_format(:email, ~r/@/)
-    |> unique_constraint(:email)
+    |> cast(params, [:identifier_hash])
+    |> validate_required([:identifier_hash])
+    |> unique_constraint(:identifier_hash)
     |> put_assoc(:account, account)
   end
 end

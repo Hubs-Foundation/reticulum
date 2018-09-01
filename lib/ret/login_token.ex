@@ -33,12 +33,12 @@ defmodule Ret.LoginToken do
     |> Map.get(:token)
   end
 
-  def valid_email_for_token(token) do
+  def identifier_hash_for_token(token) do
     with %Ret.LoginToken{} <- Repo.get_by(Ret.LoginToken, token: token) do
       token_check = Token.verify(RetWeb.Endpoint, "login_token", token, max_age: @token_max_age)
 
       case token_check do
-        {:ok, email} -> email
+        {:ok, identifier_hash} -> identifier_hash
         _ -> nil
       end
     else
@@ -55,6 +55,6 @@ defmodule Ret.LoginToken do
   defp generate_token(nil), do: nil
 
   defp generate_token(email) do
-    Token.sign(RetWeb.Endpoint, "login_token", email)
+    Token.sign(RetWeb.Endpoint, "login_token", Ret.Crypto.hash(email))
   end
 end

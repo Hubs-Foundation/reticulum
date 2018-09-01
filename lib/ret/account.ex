@@ -23,15 +23,26 @@ defmodule Ret.Account do
   end
 
   def account_for_email(email) do
+    identifier_hash = Ret.Crypto.hash(email)
+
     login =
       Login
-      |> where([t], t.email == ^email)
+      |> where([t], t.identifier_hash == ^identifier_hash)
       |> Repo.one()
 
     if login do
       Account |> Repo.get(login.account_id) |> Repo.preload(:login)
     else
-      Repo.insert!(%Account{login: %Login{email: email}})
+      Repo.insert!(%Account{login: %Login{identifier_hash: identifier_hash}})
     end
+  end
+
+  def credentials_for_email(email) do
+    email
+    |> account_for_email
+    |> credentials_for_account
+  end
+
+  defp credentials_for_account(account) do
   end
 end
