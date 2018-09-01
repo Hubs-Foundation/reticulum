@@ -23,7 +23,7 @@ defmodule Ret.Account do
   end
 
   def account_for_email(email) do
-    identifier_hash = Ret.Crypto.hash(email)
+    identifier_hash = email |> String.downcase() |> Ret.Crypto.hash()
 
     login =
       Login

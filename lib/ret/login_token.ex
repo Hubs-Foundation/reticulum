@@ -55,6 +55,6 @@ defmodule Ret.LoginToken do
   defp generate_token(nil), do: nil
 
   defp generate_token(email) do
-    Token.sign(RetWeb.Endpoint, "login_token", Ret.Crypto.hash(email))
+    Token.sign(RetWeb.Endpoint, "login_token", email |> String.downcase() |> Ret.Crypto.hash())
   end
 end
