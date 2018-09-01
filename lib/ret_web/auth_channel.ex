@@ -7,10 +7,9 @@ defmodule RetWeb.AuthChannel do
 
   intercept(["link_response"])
 
-  def join("auth:" <> _topic_key = topic, _payload, socket) do
+  def join("auth:" <> _topic_key, _payload, socket) do
     # Expire channel in 5 minutes
     Process.send_after(self(), :channel_expired, 60 * 1000 * 5)
-    socket = socket |> assign(:topic, topic)
 
     # Rate limit joins to reduce attack surface
     :timer.sleep(500)
@@ -25,7 +24,7 @@ defmodule RetWeb.AuthChannel do
 
       # Create token + send email
       token = LoginToken.new_token_for_email(email)
-      signin_args = %{topic: socket.assigns.topic, token: token}
+      signin_args = %{topic: socket.topic, token: token}
 
       RetWeb.Email.auth_email(email, signin_args) |> Ret.Mailer.deliver_now()
 
