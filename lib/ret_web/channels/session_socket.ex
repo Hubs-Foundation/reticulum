@@ -5,6 +5,7 @@ defmodule RetWeb.SessionSocket do
 
   channel("hub:*", RetWeb.HubChannel)
   channel("link:*", RetWeb.LinkChannel)
+  channel("auth:*", RetWeb.AuthChannel)
 
   def id(socket) do
     "session:#{socket.assigns.session_id}"

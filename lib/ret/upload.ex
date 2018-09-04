@@ -5,7 +5,7 @@ defmodule Ret.Upload do
   alias Ret.Upload
 
   @schema_prefix "ret0"
-  @primary_key {:upload_id, :integer, []}
+  @primary_key {:upload_id, :id, autogenerate: true}
 
   schema "uploads" do
     field(:upload_uuid, :string)

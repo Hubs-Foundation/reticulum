@@ -14,7 +14,7 @@ defmodule Ret.Scene do
   alias Ret.Scene.{SceneSlug}
 
   @schema_prefix "ret0"
-  @primary_key {:scene_id, :integer, []}
+  @primary_key {:scene_id, :id, autogenerate: true}
 
   schema "scenes" do
     field(:scene_sid, :string)

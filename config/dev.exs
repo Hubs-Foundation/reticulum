@@ -130,3 +130,18 @@ config :secure_headers, SecureHeaders,
   ]
 
 config :cors_plug, origin: &RetWeb.Endpoint.get_cors_origins/0
+
+config :ret, Ret.Mailer,
+  adapter: Bamboo.SMTPAdapter,
+  server: "email-smtp.us-east-1.amazonaws.com",
+  port: 25,
+  tls: :always,
+  ssl: false,
+  retries: 3
+
+config :ret, RetWeb.Email, from: "info@hubs-mail.com"
+
+config :ret, Ret.Guardian,
+  issuer: "ret",
+  secret_key: "47iqPEdWcfE7xRnyaxKDLt9OGEtkQG3SycHBEMOuT2qARmoESnhc76IgCUjaQIwX",
+  ttl: {12, :weeks}

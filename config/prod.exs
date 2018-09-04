@@ -83,3 +83,11 @@ config :ret, Ret.Scheduler,
 
 config :ret, RetWeb.Plugs.HeaderAuthorization, header_name: "x-ret-admin-access-key"
 config :secure_headers, SecureHeaders, secure_headers: []
+
+config :ret, Ret.Mailer,
+  adapter: Bamboo.SMTPAdapter,
+  tls: :always,
+  ssl: false,
+  retries: 3
+
+config :ret, Ret.Guardian, issuer: "ret", ttl: {12, :weeks}

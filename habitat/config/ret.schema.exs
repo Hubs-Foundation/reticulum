@@ -114,13 +114,13 @@
       hidden: false,
       to: "ret.Elixir.RetWeb.Endpoint.static_url.host"
     ],
-    "guardian.Elixir.Guardian.secret_key": [
+    "ret.Elixir.Ret.Guardian.secret_key": [
       commented: false,
       datatype: :binary,
       default: "JpWapNaJQ4HU1spmFCb5EyWxJAwKXiCl8677nd2GWYCurPYXYksMsHIV3J8zsYvN",
-      doc: "Provide documentation for guardian.Elixir.Guardian.secret_key here.",
+      doc: "Guardian secret key",
       hidden: false,
-      to: "guardian.Elixir.Guardian.secret_key"
+      to: "ret.Elixir.Ret.Guardian.secret_key"
     ],
     "ret.basic_auth.username": [
       commented: false,
@@ -261,6 +261,41 @@
       doc: "Origins to permit in CORS",
       hidden: false,
       to: "ret.Elixir.RetWeb.Endpoint.allowed_origins"
+    ],
+    "ret.Elixir.RetWeb.Email.from": [
+      commented: false,
+      datatype: :binary,
+      doc: "From: email address for outgoing emails",
+      hidden: false,
+      to: "ret.Elixir.RetWeb.Email.from"
+    ],
+    "ret.Elixir.Ret.Mailer.server": [
+      commented: false,
+      datatype: :binary,
+      doc: "SMTP server for sending outgoing email",
+      hidden: false,
+      to: "ret.Elixir.Ret.Mailer.server"
+    ],
+    "ret.Elixir.Ret.Mailer.port": [
+      commented: false,
+      datatype: :integer,
+      doc: "SMTP server port for sending outgoing email",
+      hidden: false,
+      to: "ret.Elixir.Ret.Mailer.port"
+    ],
+    "ret.Elixir.Ret.Mailer.username": [
+      commented: false,
+      datatype: :binary,
+      doc: "SMTP server username for sending outgoing email",
+      hidden: false,
+      to: "ret.Elixir.Ret.Mailer.username"
+    ],
+    "ret.Elixir.Ret.Mailer.password": [
+      commented: false,
+      datatype: :binary,
+      doc: "SMTP server password for sending outgoing email",
+      hidden: false,
+      to: "ret.Elixir.Ret.Mailer.password"
     ]
   ],
   transforms: [],

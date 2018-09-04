@@ -35,7 +35,7 @@ defmodule Ret.Mixfile do
     [
       {:phoenix, "~> 1.3.0"},
       {:phoenix_pubsub, "~> 1.0"},
-      {:phoenix_ecto, "~> 3.2"},
+      {:phoenix_ecto, "~> 3.3"},
       {:postgrex, ">= 0.0.0"},
       {:phoenix_html, "~> 2.10"},
       {:phoenix_live_reload, "~> 1.0", only: :dev},
@@ -61,7 +61,10 @@ defmodule Ret.Mixfile do
       {:cachex, "~> 3.0.2"},
       {:retry, "~> 0.10.0"},
       {:open_graph, "~> 0.0.3"},
-      {:secure_random, "~> 0.5.1"}
+      {:secure_random, "~> 0.5.1"},
+      {:bamboo, "~> 1.0.0"},
+      {:bamboo_smtp, "~> 1.5"},
+      {:guardian, "~> 1.1"}
     ]
   end
 

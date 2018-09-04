@@ -40,7 +40,8 @@ config :ret, Ret.SingletonScheduler,
   global: true,
   jobs: [
     # Vacuum uploads folder
-    {"@daily", {Ret.Uploads, :vacuum, []}}
+    {"@daily", {Ret.Uploads, :vacuum, []}},
+    {"@daily", {Ret.LoginToken, :expire_stale, []}}
   ]
 
 # Import environment specific config. This must remain at the bottom

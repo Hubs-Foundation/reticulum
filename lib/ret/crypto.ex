@@ -56,6 +56,13 @@ defmodule Ret.Crypto do
     end
   end
 
+  def hash(plaintext) do
+    secret = Application.get_env(:ret, RetWeb.Endpoint)[:secret_key_base]
+
+    :crypto.hash(:sha256, plaintext <> :crypto.hash(:sha256, plaintext <> secret))
+    |> :base64.encode()
+  end
+
   defp pad_chunk(chunk) when byte_size(chunk) >= @min_aes_size, do: chunk
 
   defp pad_chunk(chunk) do
