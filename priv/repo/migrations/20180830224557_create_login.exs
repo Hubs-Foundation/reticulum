@@ -11,6 +11,6 @@ defmodule Ret.Repo.Migrations.CreateLogin do
     end
 
     create(index(:logins, [:identifier_hash], unique: true))
-    create(index(:logins, [:account_id]))
+    create(index(:logins, [:account_id], unique: true))
   end
 end

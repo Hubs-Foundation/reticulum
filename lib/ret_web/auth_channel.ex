@@ -24,7 +24,7 @@ defmodule RetWeb.AuthChannel do
 
       # Create token + send email
       token = LoginToken.new_token_for_email(email)
-      signin_args = %{topic: socket.topic, token: token}
+      signin_args = %{auth_topic: socket.topic, auth_token: token}
 
       RetWeb.Email.auth_email(email, signin_args) |> Ret.Mailer.deliver_now()
 
@@ -44,7 +44,7 @@ defmodule RetWeb.AuthChannel do
     |> LoginToken.identifier_hash_for_token()
     |> broadcast_credentials_for_identifier_hash(socket)
 
-    LoginToken.expire!(token)
+    LoginToken.expire(token)
 
     {:noreply, socket}
   end

@@ -4,12 +4,12 @@ defmodule RetWeb.Email do
   def auth_email(to_address, signin_args) do
     new_email()
     |> to(to_address)
-    |> from(from_address())
+    |> from({"Hubs by Mozilla", from_address()})
     |> subject("Your Hubs Sign-In Link")
     |> text_body(
-      "To sign-in to Hubs, please visit the link below. If you did not make this request, please ignore this e-email.\n\n#{
+      "To sign-in to Hubs, please visit the link below. If you did not make this request, please ignore this e-mail.\n\n#{
         RetWeb.Endpoint.url()
-      }/signin?#{URI.encode_query(signin_args)}"
+      }/?#{URI.encode_query(signin_args)}"
     )
   end
 

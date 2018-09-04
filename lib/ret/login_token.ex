@@ -51,13 +51,13 @@ defmodule Ret.LoginToken do
     end
   end
 
-  def expire!(token) do
+  def expire(token) do
     Ret.LoginToken
     |> where([t], t.token == ^token)
     |> Repo.delete_all()
   end
 
-  def expire_stale! do
+  def expire_stale do
     Ret.LoginToken
     |> where(
       [t],
