@@ -18,8 +18,7 @@ defmodule Ret.StoredFiles do
           meta = %{
             content_type: content_type,
             content_length: content_length,
-            blob: blob_file_path,
-            encrypted: key != nil
+            blob: blob_file_path
           }
 
           meta_file_path |> File.write!(Poison.encode!(meta))
@@ -100,24 +99,12 @@ defmodule Ret.StoredFiles do
     Logger.info("Stored Files: Vacuum Finished.")
   end
 
-  defp read_blob_file(_source_path, %{"encrypted" => true}, nil) do
-    {:error, :invalid_key}
-  end
-
-  defp read_blob_file(source_path, %{"encrypted" => false}, _key) do
-    {:ok, File.stream!(source_path, [], @chunk_size)}
-  end
-
   defp read_blob_file(source_path, _meta, key) do
-    Ret.Crypto.stream_decrypt_file(source_path, key)
-  end
-
-  defp write_blob_file(source_path, destination_path, nil) do
-    File.cp!(source_path, destination_path)
+    Ret.Crypto.stream_decrypt_file(source_path, key |> Ret.Crypto.hash())
   end
 
   defp write_blob_file(source_path, destination_path, key) do
-    Ret.Crypto.encrypt_file(source_path, destination_path, key)
+    Ret.Crypto.encrypt_file(source_path, destination_path, key |> Ret.Crypto.hash())
   end
 
   defp module_config(key) do

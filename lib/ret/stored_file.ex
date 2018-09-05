@@ -8,8 +8,9 @@ defmodule Ret.StoredFile do
 
   schema "stored_files" do
     field(:stored_file_sid, :string)
-    field(:mime_type, :string)
-    field(:size, :integer)
+    field(:key, :string)
+    field(:content_type, :string)
+    field(:content_length, :integer)
     field(:state, StoredFile.State)
     belongs_to(:account, Ret.Account, references: :account_id)
 
