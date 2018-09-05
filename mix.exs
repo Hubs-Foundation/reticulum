@@ -64,7 +64,8 @@ defmodule Ret.Mixfile do
       {:secure_random, "~> 0.5.1"},
       {:bamboo, "~> 1.0.0"},
       {:bamboo_smtp, "~> 1.5"},
-      {:guardian, "~> 1.1"}
+      {:guardian, "~> 1.1"},
+      {:temp, "~> 0.4"}
     ]
   end
 

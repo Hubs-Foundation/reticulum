@@ -105,8 +105,8 @@ config :ret, Ret.MediaResolver,
   sketchfab_api_key: nil,
   ytdl_host: "http://localhost:9191"
 
-config :ret, Ret.Uploads,
-  storage_path: "uploads",
+config :ret, Ret.StoredFiles,
+  storage_path: "uploads/dev",
   ttl: 60 * 60 * 24
 
 asset_hosts =

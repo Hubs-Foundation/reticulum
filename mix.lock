@@ -80,6 +80,7 @@
   "slugger": {:hex, :slugger, "0.2.0", "7c609e6eee6dbb44e7b0db07982932356cab476f00fc8d73320cdc50d7efa18e", [:mix], [], "hexpm"},
   "ssl_verify_fun": {:hex, :ssl_verify_fun, "1.1.1", "28a4d65b7f59893bc2c7de786dec1e1555bd742d336043fe644ae956c3497fbe", [:make, :rebar], [], "hexpm"},
   "statix": {:hex, :statix, "1.1.0", "af9a4586c5cd58f879e0595f06a4790878715de5b8f75f6346693aaa38da2424", [:mix], [], "hexpm"},
+  "temp": {:hex, :temp, "0.4.5", "c62ee92c778ddebb2738212fecea372f1a9beba10bacbd7e54e7efe29357a82e", [:mix], [], "hexpm"},
   "the_end": {:hex, :the_end, "1.1.0", "cd11af29051d8823b2e4d0109aa0bf0f08a00ce60ca36080ad2014e11e7f9d52", [:mix], [], "hexpm"},
   "ueberauth": {:hex, :ueberauth, "0.5.0", "4570ec94d7f784dc4c4aa94c83391dbd9b9bd7b66baa30e95a666c5ec1b168b1", [:mix], [{:plug, "~> 1.2", [hex: :plug, repo: "hexpm", optional: false]}], "hexpm"},
   "ueberauth_google": {:hex, :ueberauth_google, "0.7.0", "835ae570548b236e9a91fe600ed1b817a7abf7c05650f1c74798078e366ddd46", [:mix], [{:oauth2, "~> 0.9", [hex: :oauth2, repo: "hexpm", optional: false]}, {:ueberauth, "~> 0.4", [hex: :ueberauth, repo: "hexpm", optional: false]}], "hexpm"},

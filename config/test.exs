@@ -25,3 +25,7 @@ config :secure_headers, SecureHeaders, secure_headers: []
 config :ret, Ret.Guardian,
   issuer: "ret",
   secret_key: "47iqPEdWcfE7xRnyaxKDLt9OGEtkQG3SycHBEMOuT2qARmoESnhc76IgCUjaQIwX"
+
+config :ret, Ret.StoredFiles,
+  storage_path: "uploads/test",
+  ttl: 60 * 60 * 24

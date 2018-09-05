@@ -15,7 +15,7 @@ defmodule Ret.LoginTokenTest do
 
   test "should allow expiring a token" do
     token = LoginToken.new_token_for_email("test@mozilla.com")
-    LoginToken.expire!(token)
+    LoginToken.expire(token)
     assert LoginToken.identifier_hash_for_token(token) == nil
   end
 end
