@@ -3,14 +3,6 @@ defmodule RetWeb.FileController do
 
   alias Ret.{StoredFile, StoredFiles, Repo}
 
-  def show(conn, %{"id" => <<uuid::binary-size(36)>>}) do
-    render_file_with_token_from_header(conn, uuid)
-  end
-
-  def show(conn, %{"id" => <<uuid::binary-size(36), ".", _extension::binary>>}) do
-    render_file_with_token_from_header(conn, uuid)
-  end
-
   def show(conn, %{"id" => <<uuid::binary-size(36)>>, "token" => token}) do
     render_file_with_token(conn, uuid, token)
   end
@@ -20,6 +12,14 @@ defmodule RetWeb.FileController do
         "token" => token
       }) do
     render_file_with_token(conn, uuid, token)
+  end
+
+  def show(conn, %{"id" => <<uuid::binary-size(36)>>}) do
+    render_file_with_token_from_header(conn, uuid)
+  end
+
+  def show(conn, %{"id" => <<uuid::binary-size(36), ".", _extension::binary>>}) do
+    render_file_with_token_from_header(conn, uuid)
   end
 
   defp render_file_with_token_from_header(conn, uuid) do
