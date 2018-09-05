@@ -29,10 +29,32 @@ defmodule Ret.Crypto do
     end
   end
 
+  def stream_check_key(source_path, key) do
+    case stream_decode_encrypted_header(source_path, key) do
+      {:ok, _, _, _} -> {:ok}
+      result -> result
+    end
+  end
+
   # Given the source path and the user-specified decryption key, return
   # { :error, reason } if decryption fails, or return { :ok, stream }
   # where stream is a Stream of the decrypted file contents.
   def stream_decrypt_file(source_path, key) do
+    case stream_decode_encrypted_header(source_path, key) do
+      {:ok, file_size, aes_key, stream} ->
+        state = :crypto.stream_init(:aes_ctr, aes_key, <<0::size(128)>>)
+
+        {:ok,
+         stream
+         |> Stream.scan({nil, file_size, state, nil}, &decrypt_chunk/2)
+         |> Stream.map(fn x -> elem(x, 3) end)}
+
+      result ->
+        result
+    end
+  end
+
+  defp stream_decode_encrypted_header(source_path, key) do
     infile = source_path |> File.stream!([], @chunk_size)
     aes_key = :crypto.hash(:sha256, key)
     state = :crypto.stream_init(:aes_ctr, aes_key, <<0::size(128)>>)
@@ -42,14 +64,7 @@ defmodule Ret.Crypto do
 
     case :crypto.stream_decrypt(state, header_ciphertext) do
       {_state, <<@header_bytes, file_size::size(32)>>} ->
-        state = :crypto.stream_init(:aes_ctr, aes_key, <<0::size(128)>>)
-
-        stream =
-          infile
-          |> Stream.scan({nil, file_size, state, nil}, &decrypt_chunk/2)
-          |> Stream.map(fn x -> elem(x, 3) end)
-
-        {:ok, stream}
+        {:ok, file_size, aes_key, infile}
 
       _ ->
         {:error, :invalid_key}

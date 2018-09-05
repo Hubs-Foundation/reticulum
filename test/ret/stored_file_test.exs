@@ -19,12 +19,23 @@ defmodule Ret.StoredFileTest do
     assert stream |> Enum.map(& &1) |> Enum.join() == "test"
   end
 
-  test "bad key should fail", %{temp_file: temp_file} do
+  test "bad key should fail fetch", %{temp_file: temp_file} do
     {:ok, uuid} = Ret.StoredFiles.store(%Plug.Upload{path: temp_file}, "text/plain", "secret")
     {result, message} = Ret.StoredFiles.fetch(uuid, "secret2")
 
     assert result == :error
     assert message == :not_allowed
+  end
+
+  test "promote a stored file", %{temp_file: temp_file} do
+    account = Ret.Repo.insert!(%Ret.Account{})
+
+    {:ok, uuid} = Ret.StoredFiles.store(%Plug.Upload{path: temp_file}, "text/plain", "secret")
+    {:ok, stored_file} = Ret.StoredFiles.promote(uuid, "secret", account)
+    {:ok, %{"content_type" => content_type}, stream} = Ret.StoredFiles.fetch(stored_file)
+
+    assert content_type == "text/plain"
+    assert stream |> Enum.map(& &1) |> Enum.join() == "test"
   end
 
   defp generate_temp_file do
