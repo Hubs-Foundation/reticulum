@@ -35,7 +35,7 @@ defmodule RetWeb.FileController do
   defp render_file_with_token(conn, uuid, token) do
     {uuid, token}
     |> lookup_stored_file
-    |> fetch_and_render_stored_file(conn)
+    |> fetch_and_render(conn)
   end
 
   # Given a tuple of a UUID and a (optional) user specified token, check to see if there is a StoredFile
@@ -47,11 +47,11 @@ defmodule RetWeb.FileController do
     end
   end
 
-  defp fetch_and_render_stored_file({uuid, token}, conn) do
+  defp fetch_and_render({uuid, token}, conn) do
     StoredFiles.fetch(uuid, token) |> render_fetch_result(conn)
   end
 
-  defp fetch_and_render_stored_file(%StoredFile{} = stored_file, conn) do
+  defp fetch_and_render(%StoredFile{} = stored_file, conn) do
     stored_file |> StoredFiles.fetch() |> render_fetch_result(conn)
   end
 
