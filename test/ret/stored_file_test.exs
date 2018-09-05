@@ -10,7 +10,7 @@ defmodule Ret.StoredFileTest do
   end
 
   setup _context do
-    %{temp_file: generate_temp_file(), temp_file_2: generate_temp_file()}
+    %{temp_file: generate_temp_file("test"), temp_file_2: generate_temp_file("test2")}
   end
 
   test "store a file", %{temp_file: temp_file} do
@@ -67,7 +67,7 @@ defmodule Ret.StoredFileTest do
     r2 = StoredFiles.fetch(stored_file_t2)
 
     assert_fetch_result(r1, "text/plain", "test")
-    assert_fetch_result(r2, "text/plain", "test")
+    assert_fetch_result(r2, "text/plain", "test2")
   end
 
   defp assert_fetch_result(result, expected_content_type, expected_content) do
@@ -77,10 +77,10 @@ defmodule Ret.StoredFileTest do
     assert stream |> Enum.map(& &1) |> Enum.join() == expected_content
   end
 
-  defp generate_temp_file do
+  defp generate_temp_file(contents) do
     {:ok, temp_path} = Temp.mkdir("stored-file-test")
     file_path = temp_path |> Path.join("test.txt")
-    file_path |> File.write("test")
+    file_path |> File.write(contents)
     file_path
   end
 
