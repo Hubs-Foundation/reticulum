@@ -12,7 +12,7 @@ defmodule Ret.StoredFile do
     field(:content_type, :string)
     field(:content_length, :integer)
     field(:state, StoredFile.State)
-    belongs_to(:account, Ret.Account, references: :account_id)
+    belongs_to(:account, Account, references: :account_id)
 
     timestamps()
   end
