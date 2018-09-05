@@ -28,23 +28,29 @@ defmodule RetWeb.FileController do
         render_file_with_token(conn, uuid, token)
 
       _ ->
-        conn |> send_resp(401, "")
+        render_file_with_token(conn, uuid, nil)
     end
   end
 
   defp render_file_with_token(conn, uuid, token) do
     {uuid, token}
-    |> lookup_stored_file
+    |> resolve_fetch_args
     |> fetch_and_render(conn)
   end
 
   # Given a tuple of a UUID and a (optional) user specified token, check to see if there is a StoredFile
-  # record for the given UUID. If, so, return it, otherwise return the passed in tuple.
-  defp lookup_stored_file({uuid, _token} = args) do
+  # record for the given UUID. If, so, return it, since we want to pass that to Ret.StoredFiles.fetch.
+  #
+  # Otherwise return the passed in tuple, which will be used as-is.
+  defp resolve_fetch_args({uuid, token} = args) do
     case StoredFile |> Repo.get_by(stored_file_sid: uuid) do
       %StoredFile{} = stored_file -> stored_file
       _ -> args
     end
+  end
+
+  defp fetch_and_render({uuid, nil}, conn) do
+    conn |> send_resp(401, "")
   end
 
   defp fetch_and_render({uuid, token}, conn) do
