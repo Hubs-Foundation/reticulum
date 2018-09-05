@@ -1,4 +1,4 @@
-defmodule Ret.Uploads do
+defmodule Ret.StoredFiles do
   require Logger
 
   @chunk_size 1024 * 1024
@@ -6,12 +6,12 @@ defmodule Ret.Uploads do
   # Given a Plug.Upload, a content-type, and an optional encryption key, returns an id
   # that can be used to fetch a stream to the uploaded file after this call.
   def store(%Plug.Upload{path: path}, content_type, key) do
-    with uploads_storage_path when is_binary(uploads_storage_path) <- module_config(:storage_path) do
+    with storage_path when is_binary(storage_path) <- module_config(:storage_path) do
       {:ok, %{size: content_length}} = File.stat(path)
       uuid = Ecto.UUID.generate()
 
-      [upload_path, meta_file_path, blob_file_path] = paths_for_uuid(uuid)
-      File.mkdir_p!(upload_path)
+      [file_path, meta_file_path, blob_file_path] = paths_for_uuid(uuid)
+      File.mkdir_p!(file_path)
 
       case write_blob_file(path, blob_file_path, key) do
         :ok ->
@@ -35,10 +35,10 @@ defmodule Ret.Uploads do
   end
 
   def fetch(id, key) do
-    with uploads_storage_path when is_binary(uploads_storage_path) <- module_config(:storage_path) do
+    with storage_path when is_binary(storage_path) <- module_config(:storage_path) do
       case Ecto.UUID.cast(id) do
         {:ok, uuid} ->
-          [_upload_path, meta_file_path, blob_file_path] = paths_for_uuid(uuid)
+          [_file_path, meta_file_path, blob_file_path] = paths_for_uuid(uuid)
 
           case [File.stat(meta_file_path), File.stat(blob_file_path)] do
             [{:ok, _stat}, {:ok, _blob_stat}] ->
@@ -62,13 +62,12 @@ defmodule Ret.Uploads do
     end
   end
 
-  # Vacuums up TTLed out uploads
+  # Vacuums up TTLed out files
   def vacuum do
-    Logger.info("Uploads: Beginning Vacuum.")
+    Logger.info("Stored Files: Beginning Vacuum.")
 
-    with uploads_storage_path when is_binary(uploads_storage_path) <-
-           module_config(:storage_path),
-         uploads_ttl when is_integer(uploads_ttl) <- module_config(:ttl) do
+    with storage_path when is_binary(storage_path) <- module_config(:storage_path),
+         ttl when is_integer(ttl) <- module_config(:ttl) do
       process_meta = fn meta_file, _acc ->
         meta = File.read!(meta_file) |> Poison.decode!()
         blob_file = meta["blob"]
@@ -79,9 +78,9 @@ defmodule Ret.Uploads do
         atime_datetime = atime |> NaiveDateTime.from_erl!() |> DateTime.from_naive!("Etc/UTC")
         seconds_since_access = DateTime.diff(now, atime_datetime)
 
-        if seconds_since_access > uploads_ttl do
+        if seconds_since_access > ttl do
           Logger.info(
-            "Uploads: Removing #{blob_file} after #{seconds_since_access}s since last access."
+            "Stored Files: Removing #{blob_file} after #{seconds_since_access}s since last access."
           )
 
           File.rm!(blob_file)
@@ -90,7 +89,7 @@ defmodule Ret.Uploads do
       end
 
       :filelib.fold_files(
-        "#{uploads_storage_path}/expiring",
+        "#{storage_path}/expiring",
         "\\.meta\\.json$",
         true,
         process_meta,
@@ -98,7 +97,7 @@ defmodule Ret.Uploads do
       )
     end
 
-    Logger.info("Uploads: Vacuum Finished.")
+    Logger.info("Stored Files: Vacuum Finished.")
   end
 
   defp read_blob_file(_source_path, %{"encrypted" => true}, nil) do
@@ -126,14 +125,14 @@ defmodule Ret.Uploads do
   end
 
   defp paths_for_uuid(uuid) do
-    upload_path =
+    path =
       "#{module_config(:storage_path)}/expiring/#{String.slice(uuid, 0, 2)}/#{
         String.slice(uuid, 2, 2)
       }"
 
-    blob_file_path = "#{upload_path}/#{uuid}.blob"
-    meta_file_path = "#{upload_path}/#{uuid}.meta.json"
+    blob_file_path = "#{path}/#{uuid}.blob"
+    meta_file_path = "#{path}/#{uuid}.meta.json"
 
-    [upload_path, meta_file_path, blob_file_path]
+    [path, meta_file_path, blob_file_path]
   end
 end

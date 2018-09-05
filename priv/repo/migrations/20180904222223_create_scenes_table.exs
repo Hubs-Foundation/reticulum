@@ -8,15 +8,15 @@ defmodule Ret.Repo.Migrations.CreateScenesTable do
       add(:slug, :string, null: false)
       add(:name, :string, null: false)
       add(:description, :string)
-      add(:author_account_id, :bigint, null: false)
-      add(:model_upload_id, :bigint, null: false)
-      add(:screenshot_upload_id, :bigint, null: false)
-      add(:attribution_name, :string, null: false)
-      add(:attribution_link, :string)
+      add(:account_id, :bigint, null: false)
+      add(:model_stored_file_id, :bigint, null: false)
+      add(:screenshot_stored_file_id, :bigint, null: false)
+      add(:state, :scene_state, null: false, default: "active")
 
       timestamps()
     end
 
     create(index(:scenes, [:scene_sid], unique: true))
+    create(index(:scenes, [:account_id]))
   end
 end

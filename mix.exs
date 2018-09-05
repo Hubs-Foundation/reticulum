@@ -55,7 +55,7 @@ defmodule Ret.Mixfile do
       {:quantum, "~> 2.2"},
       {:credo, "~> 0.9.1", only: [:dev, :test], runtime: false},
       {:plug_attack, "~> 0.3"},
-      {:ecto_enum, "~> 1.0"},
+      {:ecto_enum, "~> 1.1"},
       {:secure_headers, git: "https://github.com/gfodor/secure_headers.git", branch: "master"},
       {:the_end, "~> 1.1.0"},
       {:cachex, "~> 3.0.2"},

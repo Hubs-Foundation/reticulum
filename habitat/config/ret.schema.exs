@@ -227,26 +227,26 @@
       hidden: false,
       to: "ret.Elixir.Ret.PageOriginWarmer.page_origin"
     ],
-    "ret.Elixir.Ret.Uploads.storage_path": [
+    "ret.Elixir.Ret.StoredFiles.storage_path": [
       commented: false,
       datatype: :binary,
-      doc: "Local filesystem path to store uploaded files",
+      doc: "Local filesystem path to store hosted files",
       hidden: false,
-      to: "ret.Elixir.Ret.Uploads.storage_path"
+      to: "ret.Elixir.Ret.StoredFiles.storage_path"
     ],
-    "ret.Elixir.Ret.Uploads.ttl": [
+    "ret.Elixir.Ret.StoredFiles.ttl": [
       commented: false,
       datatype: :integer,
-      doc: "TTL (in seconds) to remove expiring uploaded files that have not been accessed",
+      doc: "TTL (in seconds) to remove expiring hosted files that have not been accessed",
       hidden: false,
-      to: "ret.Elixir.Ret.Uploads.ttl"
+      to: "ret.Elixir.Ret.StoredFiles.ttl"
     ],
-    "ret.Elixir.Ret.Uploads.host": [
+    "ret.Elixir.Ret.StoredFiles.host": [
       commented: false,
       datatype: :binary,
-      doc: "External host to point clients to for downloading uploaded files.",
+      doc: "External host to point clients to for downloading hosted files.",
       hidden: false,
-      to: "ret.Elixir.Ret.Uploads.host"
+      to: "ret.Elixir.Ret.StoredFiles.host"
     ],
     "secure_headers.Elixir.SecureHeaders.secure_headers.config.content_security_policy": [
       commented: false,

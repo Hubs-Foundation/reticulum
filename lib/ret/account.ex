@@ -9,6 +9,7 @@ defmodule Ret.Account do
 
   schema "accounts" do
     has_one(:login, Ret.Login, foreign_key: :account_id)
+    has_many(:stored_files, Ret.StoredFile, foreign_key: :account_id)
     timestamps()
   end
 

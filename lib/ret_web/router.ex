@@ -53,14 +53,13 @@ defmodule RetWeb.Router do
       resources("/hubs", Api.V1.HubController, only: [:create, :delete])
       resources("/media", Api.V1.MediaController, only: [:create])
       resources("/scenes", Api.V1.SceneController, only: [:create, :show])
-      resources("/uploads", Api.V1.UploadController, only: [:create, :show])
     end
   end
 
   scope "/", RetWeb do
     pipe_through([:secure_headers, :browser] ++ if(Mix.env() == :prod, do: [:ssl_only], else: []))
 
-    resources("/uploads", UploadController, only: [:show])
+    resources("/files", FileController, only: [:show])
   end
 
   scope "/", RetWeb do
