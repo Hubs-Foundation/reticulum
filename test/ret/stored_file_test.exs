@@ -60,8 +60,8 @@ defmodule Ret.StoredFileTest do
     {:ok, uuid_1} = StoredFiles.store(%Plug.Upload{path: temp_file}, "text/plain", "secret")
     {:ok, uuid_2} = StoredFiles.store(%Plug.Upload{path: temp_file_2}, "text/plain", "secret")
 
-    {:ok, %{t1: stored_file_t1, t2: stored_file_t2}} =
-      StoredFiles.promote_multi(%{t1: {uuid_1, "secret"}, t2: {uuid_2, "secret"}}, account)
+    %{t1: {:ok, stored_file_t1}, t2: {:ok, stored_file_t2}} =
+      StoredFiles.promote(%{t1: {uuid_1, "secret"}, t2: {uuid_2, "secret"}}, account)
 
     r1 = StoredFiles.fetch(stored_file_t1)
     r2 = StoredFiles.fetch(stored_file_t2)

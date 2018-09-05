@@ -74,16 +74,11 @@ defmodule Ret.StoredFiles do
   # Promotes multiple files into the given account.
   #
   # Given a map that has { id, key } tuple values, returns a similarly-keyed map
-  # that has StoredFiles as values.
-  def promote_multi(map, %Account{} = account) when is_map(map) do
-    stored_files = map
-    |> Enum.map(fn {k, {id, key}} ->
-      {:ok, stored_file} = promote(id, key, account)
-      {k, stored_file}
-    end)
+  # that has the return values of promote as values.
+  def promote(map, %Account{} = account) when is_map(map) do
+    map
+    |> Enum.map(fn {k, {id, key}} -> {k, promote(id, key, account)} end)
     |> Enum.into(%{})
-
-    { :ok, stored_files }
   end
 
   # Promotes an expiring stored file to a permanently stored file in the specified Account.
