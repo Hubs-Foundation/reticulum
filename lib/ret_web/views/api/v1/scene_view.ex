@@ -1,6 +1,5 @@
 defmodule RetWeb.Api.V1.SceneView do
   use RetWeb, :view
-  alias Ret.Scene
 
   defp url_for_scene(scene) do
     "#{RetWeb.Endpoint.url()}/scenes/#{scene.scene_sid}/#{scene.slug}"
@@ -9,7 +8,7 @@ defmodule RetWeb.Api.V1.SceneView do
   def render("create.json", %{scene: scene}) do
     %{
       status: :ok,
-      scene_id: to_string(scene.scene_id),
+      scene_id: scene.scene_sid,
       url: url_for_scene(scene)
     }
   end
@@ -18,14 +17,11 @@ defmodule RetWeb.Api.V1.SceneView do
     %{
       scenes: [
         %{
-          scene_id: to_string(scene.scene_id),
+          scene_id: scene.scene_sid,
           name: scene.name,
-          attribution_name: scene.attribution_name,
-          attribution_link: scene.attribution_link,
-          author_account_id: to_string(scene.author_account_id),
-          # TODO BP: Maybe these should be upload fetch urls instead
-          model_upload_id: to_string(scene.model_upload_id),
-          screenshot_upload_id: to_string(scene.screenshot_upload_id),
+          description: scene.description,
+          model_url: "",
+          screenshot_url: "",
           url: url_for_scene(scene)
         }
       ]

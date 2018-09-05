@@ -42,14 +42,14 @@ defmodule RetWeb.FileController do
   # record for the given UUID. If, so, return it, since we want to pass that to Ret.StoredFiles.fetch.
   #
   # Otherwise return the passed in tuple, which will be used as-is.
-  defp resolve_fetch_args({uuid, token} = args) do
+  defp resolve_fetch_args({uuid, _token} = args) do
     case StoredFile |> Repo.get_by(stored_file_sid: uuid) do
       %StoredFile{} = stored_file -> stored_file
       _ -> args
     end
   end
 
-  defp fetch_and_render({uuid, nil}, conn) do
+  defp fetch_and_render({_uuid, nil}, conn) do
     conn |> send_resp(401, "")
   end
 

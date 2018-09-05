@@ -71,8 +71,34 @@ defmodule Ret.StoredFiles do
     end
   end
 
+  # Promotes multiple files into the given account.
+  #
+  # Given a map that has { id, key } tuple values, returns a similarly-keyed map
+  # that has StoredFiles as values.
+  def promote_multi(map, %Account{} = account) when is_map(map) do
+    stored_files = map
+    |> Enum.map(fn {k, {id, key}} ->
+      {:ok, stored_file} = promote(id, key, account)
+      {k, stored_file}
+    end)
+    |> Enum.into(%{})
+
+    { :ok, stored_files }
+  end
+
   # Promotes an expiring stored file to a permanently stored file in the specified Account.
   def promote(id, key, %Account{} = account) do
+    # Check if this file has already been promoted
+    StoredFile
+    |> Repo.get_by(stored_file_sid: id)
+    |> promote_or_return_stored_file(id, key, account)
+  end
+
+  defp promote_or_return_stored_file(%StoredFile{} = stored_file, _id, _key, _account) do
+    {:ok, stored_file}
+  end
+
+  defp promote_or_return_stored_file(nil, id, key, account) do
     with storage_path when is_binary(storage_path) <- module_config(:storage_path) do
       case Ecto.UUID.cast(id) do
         {:ok, uuid} ->

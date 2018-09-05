@@ -10,7 +10,7 @@ defmodule Ret.Scene do
   use Ecto.Schema
   import Ecto.Changeset
 
-  alias Ret.Scene
+  alias Ret.{Scene}
   alias Ret.Scene.{SceneSlug}
 
   @schema_prefix "ret0"

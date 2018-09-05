@@ -1,8 +1,7 @@
 defmodule RetWeb.Api.V1.SceneController do
   use RetWeb, :controller
 
-  alias Ret.Scene
-  alias Ret.Repo
+  alias Ret.{Repo, Scene}
 
   plug(RetWeb.Plugs.RateLimit when action in [:create])
 
@@ -16,9 +15,14 @@ defmodule RetWeb.Api.V1.SceneController do
   end
 
   def create(conn, %{"scene" => scene_params}) do
+    account = Guardian.Plug.current_resource(conn)
+
+    %{model_stored_file: model_stored_file, screenshot_stored_file: screenshot_stored_file} =
+      Scene.promote_files_from_scene_params(scene_params)
+
     {result, scene} =
       %Scene{}
-      |> Scene.changeset(scene_params)
+      |> Scene.changeset(account, model_stored_file, screenshot_stored_file, scene_params)
       |> Repo.insert(returning: true)
 
     case result do
