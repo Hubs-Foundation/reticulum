@@ -21,8 +21,8 @@ defmodule RetWeb.Api.V1.SceneView do
           scene_id: scene.scene_sid,
           name: scene.name,
           description: scene.description,
-          model_url: StoredFile.url_for(scene.model_stored_file) |> URI.to_string(),
-          screenshot_url: StoredFile.url_for(scene.screenshot_stored_file) |> URI.to_string(),
+          model_url: scene.model_stored_file |> StoredFile.url_for() |> URI.to_string(),
+          screenshot_url: scene.screenshot_stored_file |> StoredFile.url_for() |> URI.to_string(),
           url: url_for_scene(scene)
         }
       ]
