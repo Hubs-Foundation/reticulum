@@ -17,6 +17,13 @@ defmodule Ret.StoredFile do
     timestamps()
   end
 
+  def url_for(%StoredFile{stored_file_sid: file_sid, content_type: content_type}) do
+    file_host = Application.get_env(:ret, Ret.StoredFiles)[:host] || RetWeb.Endpoint.url()
+    ext = MIME.extensions(content_type) |> List.first()
+    filename = [file_sid, ext] |> Enum.reject(&is_nil/1) |> Enum.join(".")
+    "#{file_host}/files/#{filename}" |> URI.parse()
+  end
+
   def changeset(struct, account, params \\ %{}) do
     struct
     |> cast(params, [:stored_file_sid, :key, :content_type, :content_length, :state])

@@ -39,8 +39,11 @@ defmodule RetWeb.Api.V1.SceneController do
           |> Repo.insert()
 
         case result do
-          :ok -> render(conn, "create.json", scene: scene)
-          :error -> conn |> send_resp(422, "invalid scene")
+          :ok ->
+            conn |> render("create.json", scene: scene)
+
+          :error ->
+            conn |> send_resp(422, "invalid scene")
         end
 
       {:error, :not_found} ->

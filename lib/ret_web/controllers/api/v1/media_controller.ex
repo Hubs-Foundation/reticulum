@@ -23,14 +23,15 @@ defmodule RetWeb.Api.V1.MediaController do
 
   defp render_upload(conn, %Plug.Upload{} = upload, content_type) do
     token = SecureRandom.hex()
-    ext = MIME.extensions(content_type) |> List.first()
 
     case Ret.StoredFiles.store(upload, content_type, token) do
       {:ok, uuid} ->
-        file_host = Application.get_env(:ret, Ret.StoredFiles)[:host] || RetWeb.Endpoint.url()
+        uri =
+          Ret.StoredFile.url_for(%Ret.StoredFile{
+            stored_file_sid: uuid,
+            content_type: content_type
+          })
 
-        filename = [uuid, ext] |> Enum.reject(&is_nil/1) |> Enum.join(".")
-        uri = "#{file_host}/files/#{filename}" |> URI.parse()
         images = images_for_uri_and_index(uri, 0)
 
         conn
