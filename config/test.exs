@@ -28,5 +28,5 @@ config :ret, Ret.Guardian,
   secret_key: "47iqPEdWcfE7xRnyaxKDLt9OGEtkQG3SycHBEMOuT2qARmoESnhc76IgCUjaQIwX"
 
 config :ret, Ret.Storage,
-  storage_path: "uploads/test",
+  storage_path: "storage/test",
   ttl: 60 * 60 * 24
