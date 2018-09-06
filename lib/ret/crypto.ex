@@ -29,6 +29,8 @@ defmodule Ret.Crypto do
     end
   end
 
+  # Given the source path and the user-specified decryption key, return
+  # { :ok } if the key is valid otherwise a relevant error.
   def stream_check_key(source_path, key) do
     case stream_decode_encrypted_header(source_path, key) do
       {:ok, _, _, _} -> {:ok}
