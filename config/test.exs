@@ -5,6 +5,7 @@ use Mix.Config
 config :ret, RetWeb.Endpoint,
   http: [port: 4001],
   allowed_origins: ["*"],
+  secret_key_base: "txlMOtlaY5x3crvOCko4uV5PM29ul3zGo1oBGNO3cDXx+4GHLKqt0gR9qzgThxa5",
   server: false
 
 # Print only warnings and errors during test
@@ -21,3 +22,11 @@ config :ret, Ret.Repo,
   pool: Ecto.Adapters.SQL.Sandbox
 
 config :secure_headers, SecureHeaders, secure_headers: []
+
+config :ret, Ret.Guardian,
+  issuer: "ret",
+  secret_key: "47iqPEdWcfE7xRnyaxKDLt9OGEtkQG3SycHBEMOuT2qARmoESnhc76IgCUjaQIwX"
+
+config :ret, Ret.Storage,
+  storage_path: "storage/test",
+  ttl: 60 * 60 * 24

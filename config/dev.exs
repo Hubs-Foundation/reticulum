@@ -64,13 +64,15 @@ config :logger, :console, format: "[$level] $message\n"
 # in production as building large stacktraces may be expensive.
 config :phoenix, :stacktrace_depth, 20
 
+env_db_host = "#{System.get_env("DB_HOST")}"
+
 # Configure your database
 config :ret, Ret.Repo,
   adapter: Ecto.Adapters.Postgres,
   username: "postgres",
   password: "postgres",
   database: "ret_dev",
-  hostname: "localhost",
+  hostname: if(env_db_host == "", do: "localhost", else: env_db_host),
   template: "template0",
   pool_size: 10
 
@@ -82,6 +84,7 @@ config :ret, RetWeb.Plugs.HeaderAuthorization,
 config :cors_plug, origin: ["*"]
 
 config :ret,
+  upload_encryption_key: "a8dedeb57adafa7821027d546f016efef5a501bd",
   farspark_signature_key:
     "248cf801c4f5d6fd70c1b0dfea8dedeb57adafa7821027d546f016efef5a501bd8168c8479d33b466199d0ac68c71bb71b68c27537102a63cd70776aa83bca76",
   farspark_signature_salt:
@@ -102,8 +105,8 @@ config :ret, Ret.MediaResolver,
   sketchfab_api_key: nil,
   ytdl_host: "http://localhost:9191"
 
-config :ret, Ret.Uploads,
-  storage_path: "uploads",
+config :ret, Ret.Storage,
+  storage_path: "storage/dev",
   ttl: 60 * 60 * 24
 
 asset_hosts =
@@ -127,3 +130,18 @@ config :secure_headers, SecureHeaders,
   ]
 
 config :cors_plug, origin: &RetWeb.Endpoint.get_cors_origins/0
+
+config :ret, Ret.Mailer,
+  adapter: Bamboo.SMTPAdapter,
+  server: "email-smtp.us-east-1.amazonaws.com",
+  port: 25,
+  tls: :always,
+  ssl: false,
+  retries: 3
+
+config :ret, RetWeb.Email, from: "info@hubs-mail.com"
+
+config :ret, Ret.Guardian,
+  issuer: "ret",
+  secret_key: "47iqPEdWcfE7xRnyaxKDLt9OGEtkQG3SycHBEMOuT2qARmoESnhc76IgCUjaQIwX",
+  ttl: {12, :weeks}

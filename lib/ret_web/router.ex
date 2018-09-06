@@ -31,6 +31,10 @@ defmodule RetWeb.Router do
     plug(JaSerializer.Deserializer)
   end
 
+  pipeline :authenticated do
+    plug(RetWeb.Guardian.AuthPipeline)
+  end
+
   pipeline :canonicalize_domain do
     plug(RetWeb.Plugs.RedirectToMainDomain)
   end
@@ -52,13 +56,19 @@ defmodule RetWeb.Router do
     scope "/v1", as: :api_v1 do
       resources("/hubs", Api.V1.HubController, only: [:create, :delete])
       resources("/media", Api.V1.MediaController, only: [:create])
+      resources("/scenes", Api.V1.SceneController, only: [:show])
+    end
+
+    scope "/v1", as: :api_v1 do
+      pipe_through([:authenticated])
+      resources("/scenes", Api.V1.SceneController, only: [:create, :update])
     end
   end
 
   scope "/", RetWeb do
     pipe_through([:secure_headers, :browser] ++ if(Mix.env() == :prod, do: [:ssl_only], else: []))
 
-    resources("/uploads", UploadController, only: [:show])
+    resources("/files", FileController, only: [:show])
   end
 
   scope "/", RetWeb do
