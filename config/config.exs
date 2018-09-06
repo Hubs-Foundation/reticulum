@@ -40,7 +40,7 @@ config :ret, Ret.SingletonScheduler,
   global: true,
   jobs: [
     # Vacuum stored files
-    {"@daily", {Ret.StoredFiles, :vacuum, []}},
+    {"@daily", {Ret.Storage, :vacuum, []}},
     {"@daily", {Ret.LoginToken, :expire_stale, []}}
   ]
 

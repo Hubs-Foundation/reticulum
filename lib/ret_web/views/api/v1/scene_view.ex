@@ -1,6 +1,6 @@
 defmodule RetWeb.Api.V1.SceneView do
   use RetWeb, :view
-  alias Ret.StoredFile
+  alias Ret.OwnedFile
 
   defp url_for_scene(scene) do
     "#{RetWeb.Endpoint.url()}/scenes/#{scene.scene_sid}/#{scene.slug}"
@@ -21,8 +21,8 @@ defmodule RetWeb.Api.V1.SceneView do
           scene_id: scene.scene_sid,
           name: scene.name,
           description: scene.description,
-          model_url: scene.model_stored_file |> StoredFile.url_for() |> URI.to_string(),
-          screenshot_url: scene.screenshot_stored_file |> StoredFile.url_for() |> URI.to_string(),
+          model_url: scene.model_owned_file |> OwnedFile.uri_for() |> URI.to_string(),
+          screenshot_url: scene.screenshot_owned_file |> OwnedFile.uri_for() |> URI.to_string(),
           url: url_for_scene(scene)
         }
       ]

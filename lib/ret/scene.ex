@@ -22,8 +22,8 @@ defmodule Ret.Scene do
     field(:name, :string)
     field(:description, :string)
     belongs_to(:account, Ret.Account, references: :account_id)
-    belongs_to(:model_stored_file, Ret.StoredFile, references: :stored_file_id)
-    belongs_to(:screenshot_stored_file, Ret.StoredFile, references: :stored_file_id)
+    belongs_to(:model_owned_file, Ret.OwnedFile, references: :owned_file_id)
+    belongs_to(:screenshot_owned_file, Ret.OwnedFile, references: :owned_file_id)
     field(:state, Scene.State)
 
     timestamps()
@@ -32,8 +32,8 @@ defmodule Ret.Scene do
   def changeset(
         %Scene{} = scene,
         account,
-        model_stored_file,
-        screenshot_stored_file,
+        model_owned_file,
+        screenshot_owned_file,
         params \\ %{}
       ) do
     scene
@@ -51,8 +51,8 @@ defmodule Ret.Scene do
     |> maybe_add_scene_sid_to_changeset
     |> unique_constraint(:scene_sid)
     |> put_assoc(:account, account)
-    |> put_assoc(:model_stored_file, model_stored_file)
-    |> put_assoc(:screenshot_stored_file, screenshot_stored_file)
+    |> put_assoc(:model_owned_file, model_owned_file)
+    |> put_assoc(:screenshot_owned_file, screenshot_owned_file)
     |> SceneSlug.maybe_generate_slug()
     |> SceneSlug.unique_constraint()
   end

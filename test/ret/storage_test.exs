@@ -1,7 +1,7 @@
-defmodule Ret.StoredFileTest do
+defmodule Ret.StorageTest do
   use Ret.DataCase
 
-  alias Ret.{StoredFile, StoredFiles}
+  alias Ret.{OwnedFile, Storage}
 
   setup do
     on_exit(fn ->
@@ -14,16 +14,16 @@ defmodule Ret.StoredFileTest do
   end
 
   test "store a file", %{temp_file: temp_file} do
-    {:ok, uuid} = StoredFiles.store(%Plug.Upload{path: temp_file}, "text/plain", "secret")
-    {:ok, %{"content_type" => content_type}, stream} = StoredFiles.fetch(uuid, "secret")
+    {:ok, uuid} = Storage.store(%Plug.Upload{path: temp_file}, "text/plain", "secret")
+    {:ok, %{"content_type" => content_type}, stream} = Storage.fetch(uuid, "secret")
 
     assert content_type == "text/plain"
     assert stream |> Enum.map(& &1) |> Enum.join() == "test"
   end
 
   test "bad key should fail fetch", %{temp_file: temp_file} do
-    {:ok, uuid} = StoredFiles.store(%Plug.Upload{path: temp_file}, "text/plain", "secret")
-    {result, message} = StoredFiles.fetch(uuid, "secret2")
+    {:ok, uuid} = Storage.store(%Plug.Upload{path: temp_file}, "text/plain", "secret")
+    {result, message} = Storage.fetch(uuid, "secret2")
 
     assert result == :error
     assert message == :not_allowed
@@ -32,9 +32,9 @@ defmodule Ret.StoredFileTest do
   test "promote a stored file", %{temp_file: temp_file} do
     account = Ret.Repo.insert!(%Ret.Account{})
 
-    {:ok, uuid} = StoredFiles.store(%Plug.Upload{path: temp_file}, "text/plain", "secret")
-    {:ok, stored_file} = StoredFiles.promote(uuid, "secret", account)
-    result = StoredFiles.fetch(stored_file)
+    {:ok, uuid} = Storage.store(%Plug.Upload{path: temp_file}, "text/plain", "secret")
+    {:ok, owned_file} = Storage.promote(uuid, "secret", account)
+    result = Storage.fetch(owned_file)
 
     assert_fetch_result(result, "text/plain", "test")
   end
@@ -42,14 +42,13 @@ defmodule Ret.StoredFileTest do
   test "should be able to re-promote without failure", %{temp_file: temp_file} do
     account = Ret.Repo.insert!(%Ret.Account{})
 
-    {:ok, uuid} = StoredFiles.store(%Plug.Upload{path: temp_file}, "text/plain", "secret")
-    {:ok, _stored_file} = StoredFiles.promote(uuid, "secret", account)
-    {:ok, stored_file} = StoredFiles.promote(uuid, "secret", account)
+    {:ok, uuid} = Storage.store(%Plug.Upload{path: temp_file}, "text/plain", "secret")
+    {:ok, _owned_file} = Storage.promote(uuid, "secret", account)
+    {:ok, owned_file} = Storage.promote(uuid, "secret", account)
 
-    stored_file_id = stored_file.stored_file_id
+    owned_file_id = owned_file.owned_file_id
 
-    {:ok, %StoredFile{stored_file_id: ^stored_file_id}} =
-      StoredFiles.promote(uuid, "secret", account)
+    {:ok, %OwnedFile{owned_file_id: ^owned_file_id}} = Storage.promote(uuid, "secret", account)
   end
 
   test "should be able to promote multiple files", %{
@@ -58,14 +57,14 @@ defmodule Ret.StoredFileTest do
   } do
     account = Ret.Repo.insert!(%Ret.Account{})
 
-    {:ok, uuid_1} = StoredFiles.store(%Plug.Upload{path: temp_file}, "text/plain", "secret")
-    {:ok, uuid_2} = StoredFiles.store(%Plug.Upload{path: temp_file_2}, "text/plain", "secret2")
+    {:ok, uuid_1} = Storage.store(%Plug.Upload{path: temp_file}, "text/plain", "secret")
+    {:ok, uuid_2} = Storage.store(%Plug.Upload{path: temp_file_2}, "text/plain", "secret2")
 
-    %{t1: {:ok, stored_file_t1}, t2: {:ok, stored_file_t2}} =
-      StoredFiles.promote(%{t1: {uuid_1, "secret"}, t2: {uuid_2, "secret2"}}, account)
+    %{t1: {:ok, owned_file_t1}, t2: {:ok, owned_file_t2}} =
+      Storage.promote(%{t1: {uuid_1, "secret"}, t2: {uuid_2, "secret2"}}, account)
 
-    r1 = StoredFiles.fetch(stored_file_t1)
-    r2 = StoredFiles.fetch(stored_file_t2)
+    r1 = Storage.fetch(owned_file_t1)
+    r2 = Storage.fetch(owned_file_t2)
 
     assert_fetch_result(r1, "text/plain", "test")
     assert_fetch_result(r2, "text/plain", "test2")
@@ -86,6 +85,6 @@ defmodule Ret.StoredFileTest do
   end
 
   defp clear_all_stored_files do
-    File.rm_rf(Application.get_env(:ret, StoredFiles)[:storage_path])
+    File.rm_rf(Application.get_env(:ret, Storage)[:storage_path])
   end
 end

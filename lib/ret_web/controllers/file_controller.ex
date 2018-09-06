@@ -1,7 +1,7 @@
 defmodule RetWeb.FileController do
   use RetWeb, :controller
 
-  alias Ret.{StoredFile, StoredFiles, Repo}
+  alias Ret.{OwnedFile, Storage, Repo}
 
   def show(conn, %{"id" => <<uuid::binary-size(36)>>, "token" => token}) do
     render_file_with_token(conn, uuid, token)
@@ -38,13 +38,13 @@ defmodule RetWeb.FileController do
     |> fetch_and_render(conn)
   end
 
-  # Given a tuple of a UUID and a (optional) user specified token, check to see if there is a StoredFile
-  # record for the given UUID. If, so, return it, since we want to pass that to Ret.StoredFiles.fetch.
+  # Given a tuple of a UUID and a (optional) user specified token, check to see if there is a OwnedFile
+  # record for the given UUID. If, so, return it, since we want to pass that to Ret.Storage.fetch.
   #
   # Otherwise return the passed in tuple, which will be used as-is.
   defp resolve_fetch_args({uuid, _token} = args) do
-    case StoredFile |> Repo.get_by(stored_file_sid: uuid) do
-      %StoredFile{} = stored_file -> stored_file
+    case OwnedFile |> Repo.get_by(owned_file_sid: uuid) do
+      %OwnedFile{} = owned_file -> owned_file
       _ -> args
     end
   end
@@ -54,11 +54,11 @@ defmodule RetWeb.FileController do
   end
 
   defp fetch_and_render({uuid, token}, conn) do
-    StoredFiles.fetch(uuid, token) |> render_fetch_result(conn)
+    Storage.fetch(uuid, token) |> render_fetch_result(conn)
   end
 
-  defp fetch_and_render(%StoredFile{} = stored_file, conn) do
-    stored_file |> StoredFiles.fetch() |> render_fetch_result(conn)
+  defp fetch_and_render(%OwnedFile{} = owned_file, conn) do
+    owned_file |> Storage.fetch() |> render_fetch_result(conn)
   end
 
   defp render_fetch_result(fetch_result, conn) do

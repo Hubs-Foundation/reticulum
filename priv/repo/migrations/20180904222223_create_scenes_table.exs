@@ -9,8 +9,8 @@ defmodule Ret.Repo.Migrations.CreateScenesTable do
       add(:name, :string, null: false)
       add(:description, :string)
       add(:account_id, :bigint, null: false)
-      add(:model_stored_file_id, :bigint, null: false)
-      add(:screenshot_stored_file_id, :bigint, null: false)
+      add(:model_owned_file_id, :bigint, null: false)
+      add(:screenshot_owned_file_id, :bigint, null: false)
       add(:state, :scene_state, null: false, default: "active")
 
       timestamps()

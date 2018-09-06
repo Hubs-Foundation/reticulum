@@ -1,7 +1,7 @@
 defmodule RetWeb.Api.V1.SceneController do
   use RetWeb, :controller
 
-  alias Ret.{Repo, Scene, StoredFiles}
+  alias Ret.{Repo, Scene, Storage}
 
   plug(RetWeb.Plugs.RateLimit when action in [:create, :update])
 
@@ -17,7 +17,7 @@ defmodule RetWeb.Api.V1.SceneController do
   def update(conn, %{"id" => id, "scene" => params}) do
     case Scene
          |> Repo.get_by(scene_sid: id)
-         |> Repo.preload([:account, :model_stored_file, :screenshot_stored_file]) do
+         |> Repo.preload([:account, :model_owned_file, :screenshot_owned_file]) do
       %Scene{} = scene -> create_or_update(conn, params, scene)
       _ -> conn |> send_resp(404, "not found")
     end
@@ -30,8 +30,8 @@ defmodule RetWeb.Api.V1.SceneController do
   defp create_or_update(conn, params, scene \\ %Scene{}) do
     account = Guardian.Plug.current_resource(conn)
 
-    stored_file_results =
-      StoredFiles.promote(
+    owned_file_results =
+      Storage.promote(
         %{
           model: {params["model_file_id"], params["model_file_token"]},
           screenshot: {params["screenshot_file_id"], params["screenshot_file_token"]}
@@ -40,11 +40,11 @@ defmodule RetWeb.Api.V1.SceneController do
       )
 
     promotion_error =
-      stored_file_results |> Map.values() |> Enum.filter(&(elem(&1, 0) == :error)) |> Enum.at(0)
+      owned_file_results |> Map.values() |> Enum.filter(&(elem(&1, 0) == :error)) |> Enum.at(0)
 
     case promotion_error do
       nil ->
-        %{model: {:ok, model_file}, screenshot: {:ok, screenshot_file}} = stored_file_results
+        %{model: {:ok, model_file}, screenshot: {:ok, screenshot_file}} = owned_file_results
 
         {result, scene} =
           scene
@@ -65,11 +65,5 @@ defmodule RetWeb.Api.V1.SceneController do
       {:error, :not_allowed} ->
         conn |> send_resp(401, "")
     end
-  end
-
-  defp first_error_result_from_promotion_results(promotion_results) do
-    promotion_results
-    |> Map.values()
-    |> Enum.find(&(elem(&1, 0) == :error))
   end
 end

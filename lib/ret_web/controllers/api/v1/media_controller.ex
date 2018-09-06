@@ -24,14 +24,9 @@ defmodule RetWeb.Api.V1.MediaController do
   defp render_upload(conn, %Plug.Upload{} = upload, content_type) do
     token = SecureRandom.hex()
 
-    case Ret.StoredFiles.store(upload, content_type, token) do
+    case Ret.Storage.store(upload, content_type, token) do
       {:ok, uuid} ->
-        uri =
-          Ret.StoredFile.url_for(%Ret.StoredFile{
-            stored_file_sid: uuid,
-            content_type: content_type
-          })
-
+        uri = Ret.Storage.uri_for(uuid, content_type)
         images = images_for_uri_and_index(uri, 0)
 
         conn

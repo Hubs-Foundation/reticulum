@@ -1,10 +1,10 @@
-defmodule Ret.StoredFiles do
+defmodule Ret.Storage do
   require Logger
 
   @expiring_file_path "expiring"
-  @stored_file_path "stored"
+  @owned_file_path "owned"
 
-  alias Ret.{StoredFile, Repo, Account}
+  alias Ret.{OwnedFile, Repo, Account}
 
   # Given a Plug.Upload, a content-type, and an optional encryption key, returns an id
   # that can be used to fetch a stream to the uploaded file after this call.
@@ -39,8 +39,8 @@ defmodule Ret.StoredFiles do
     fetch_blob(id, key, @expiring_file_path)
   end
 
-  def fetch(%StoredFile{stored_file_sid: id, key: key}) do
-    fetch_blob(id, key, @stored_file_path)
+  def fetch(%OwnedFile{owned_file_sid: id, key: key}) do
+    fetch_blob(id, key, @owned_file_path)
   end
 
   defp fetch_blob(id, key, subpath) do
@@ -79,6 +79,14 @@ defmodule Ret.StoredFiles do
     {:error, :not_allowed}
   end
 
+  # Promotes an expiring stored file to a permanently stored file in the specified Account.
+  def promote(id, key, %Account{} = account) do
+    # Check if this file has already been promoted
+    OwnedFile
+    |> Repo.get_by(owned_file_sid: id)
+    |> promote_or_return_owned_file(id, key, account)
+  end
+
   # Promotes multiple files into the given account.
   #
   # Given a map that has { id, key } tuple values, returns a similarly-keyed map
@@ -89,26 +97,18 @@ defmodule Ret.StoredFiles do
     |> Enum.into(%{})
   end
 
-  # Promotes an expiring stored file to a permanently stored file in the specified Account.
-  def promote(id, key, %Account{} = account) do
-    # Check if this file has already been promoted
-    StoredFile
-    |> Repo.get_by(stored_file_sid: id)
-    |> promote_or_return_stored_file(id, key, account)
+  defp promote_or_return_owned_file(%OwnedFile{} = owned_file, _id, _key, _account) do
+    {:ok, owned_file}
   end
 
-  defp promote_or_return_stored_file(%StoredFile{} = stored_file, _id, _key, _account) do
-    {:ok, stored_file}
-  end
-
-  defp promote_or_return_stored_file(nil, id, key, account) do
+  defp promote_or_return_owned_file(nil, id, key, account) do
     with storage_path when is_binary(storage_path) <- module_config(:storage_path) do
       case Ecto.UUID.cast(id) do
         {:ok, uuid} ->
           [_, meta_file_path, blob_file_path] = paths_for_uuid(uuid, @expiring_file_path)
 
           [dest_path, dest_meta_file_path, dest_blob_file_path] =
-            paths_for_uuid(uuid, @stored_file_path)
+            paths_for_uuid(uuid, @owned_file_path)
 
           case [File.stat(meta_file_path), File.stat(blob_file_path)] do
             [{:ok, _stat}, {:ok, _blob_stat}] ->
@@ -117,23 +117,23 @@ defmodule Ret.StoredFiles do
                   %{"content_type" => content_type, "content_length" => content_length} =
                     File.read!(meta_file_path) |> Poison.decode!()
 
-                  stored_file_params = %{
-                    stored_file_sid: id,
+                  owned_file_params = %{
+                    owned_file_sid: id,
                     key: key,
                     content_type: content_type,
                     content_length: content_length
                   }
 
-                  stored_file =
-                    %StoredFile{}
-                    |> StoredFile.changeset(account, stored_file_params)
+                  owned_file =
+                    %OwnedFile{}
+                    |> OwnedFile.changeset(account, owned_file_params)
                     |> Repo.insert!()
 
                   File.mkdir_p!(dest_path)
                   File.rename(meta_file_path, dest_meta_file_path)
                   File.rename(blob_file_path, dest_blob_file_path)
 
-                  {:ok, stored_file}
+                  {:ok, owned_file}
 
                 {:error, :invalid_key} ->
                   {:error, :not_allowed}
@@ -191,7 +191,14 @@ defmodule Ret.StoredFiles do
     Logger.info("Stored Files: Vacuum Finished.")
   end
 
-  defp check_blob_file_key(source_path, nil) do
+  def uri_for(id, content_type) do
+    file_host = Application.get_env(:ret, Ret.Storage)[:host] || RetWeb.Endpoint.url()
+    ext = MIME.extensions(content_type) |> List.first()
+    filename = [id, ext] |> Enum.reject(&is_nil/1) |> Enum.join(".")
+    "#{file_host}/files/#{filename}" |> URI.parse()
+  end
+
+  defp check_blob_file_key(_source_path, nil) do
     {:error, :invalid_key}
   end
 
