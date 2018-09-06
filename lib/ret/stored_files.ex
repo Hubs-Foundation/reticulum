@@ -71,6 +71,14 @@ defmodule Ret.StoredFiles do
     end
   end
 
+  def promote(nil, _key, _account) do
+    {:error, :not_found}
+  end
+
+  def promote(_id, nil, _account) do
+    {:error, :not_allowed}
+  end
+
   # Promotes multiple files into the given account.
   #
   # Given a map that has { id, key } tuple values, returns a similarly-keyed map
@@ -181,6 +189,10 @@ defmodule Ret.StoredFiles do
     end
 
     Logger.info("Stored Files: Vacuum Finished.")
+  end
+
+  defp check_blob_file_key(source_path, nil) do
+    {:error, :invalid_key}
   end
 
   defp check_blob_file_key(source_path, key) do
