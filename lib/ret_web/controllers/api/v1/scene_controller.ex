@@ -5,12 +5,12 @@ defmodule RetWeb.Api.V1.SceneController do
 
   plug(RetWeb.Plugs.RateLimit when action in [:create, :update])
 
-  def show(conn, %{"id" => scene_id}) do
-    scene = Repo.get(Scene, scene_id)
-
-    case scene do
-      nil -> conn |> send_resp(404, "scene not found")
-      _ -> render(conn, "show.json", scene: scene)
+  def show(conn, %{"id" => scene_sid}) do
+    case Scene
+         |> Repo.get_by(scene_sid: scene_sid)
+         |> Repo.preload([:account, :model_owned_file, :screenshot_owned_file]) do
+      %Scene{} = scene -> conn |> render("show.json", scene: scene)
+      _ -> conn |> send_resp(404, "not found")
     end
   end
 
