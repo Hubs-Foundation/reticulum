@@ -47,7 +47,7 @@ defmodule Ret.Storage do
     with storage_path when is_binary(storage_path) <- module_config(:storage_path),
          {:ok, uuid} <- Ecto.UUID.cast(id),
          [_file_path, meta_file_path, blob_file_path] <- paths_for_uuid(uuid, subpath),
-         [{:ok, _stat}, {:ok, _blob_stat}] <- [File.stat(meta_file_path), File.stat(blob_file_path)],
+         [{:ok, _}, {:ok, _}] <- [File.stat(meta_file_path), File.stat(blob_file_path)],
          meta <- File.read!(meta_file_path) |> Poison.decode!(),
          {:ok, stream} <- read_blob_file(blob_file_path, meta, key) do
       {:ok, meta, stream}
@@ -96,8 +96,7 @@ defmodule Ret.Storage do
       {:ok, uuid} <- Ecto.UUID.cast(id),
       [_, meta_file_path, blob_file_path] <- paths_for_uuid(uuid, @expiring_file_path),
       [dest_path, dest_meta_file_path, dest_blob_file_path] <- paths_for_uuid(uuid, @owned_file_path),
-      {:ok, _} <- File.stat(meta_file_path),
-      {:ok, _} <- File.stat(blob_file_path),
+      [{:ok, _}, {:ok, _}] <- [File.stat(meta_file_path), File.stat(blob_file_path)],
       {:ok} <- check_blob_file_key(blob_file_path, key),
       %{"content_type" => content_type, "content_length" => content_length} <-
         File.read!(meta_file_path) |> Poison.decode!()
