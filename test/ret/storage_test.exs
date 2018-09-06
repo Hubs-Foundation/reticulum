@@ -15,10 +15,9 @@ defmodule Ret.StorageTest do
 
   test "store a file", %{temp_file: temp_file} do
     {:ok, uuid} = Storage.store(%Plug.Upload{path: temp_file}, "text/plain", "secret")
-    {:ok, %{"content_type" => content_type}, stream} = Storage.fetch(uuid, "secret")
+    result = Storage.fetch(uuid, "secret")
 
-    assert content_type == "text/plain"
-    assert stream |> Enum.map(& &1) |> Enum.join() == "test"
+    assert_fetch_result(result, "text/plain", "test")
   end
 
   test "bad key should fail fetch", %{temp_file: temp_file} do
