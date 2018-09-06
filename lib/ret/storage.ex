@@ -101,6 +101,9 @@ defmodule Ret.Storage do
     {:ok, owned_file}
   end
 
+  # Promoting a stored file to being owned has two side effects: the file is moved
+  # into the owned files directory (which prevents it from being vacuumed) and an
+  # OwnedFile record is inserted into the database which includes the decryption key.
   defp promote_or_return_owned_file(nil, id, key, account) do
     with storage_path when is_binary(storage_path) <- module_config(:storage_path) do
       case Ecto.UUID.cast(id) do
