@@ -18,13 +18,13 @@ defmodule RetWeb.AuthChannel do
     {:ok, "{}", socket}
   end
 
-  def handle_in("auth_request", %{"email" => email}, socket) do
+  def handle_in("auth_request", %{"email" => email, "origin" => origin}, socket) do
     if !Map.get(socket.assigns, :used) do
       socket = socket |> assign(:used, true)
 
       # Create token + send email
       token = LoginToken.new_token_for_email(email)
-      signin_args = %{auth_topic: socket.topic, auth_token: token}
+      signin_args = %{auth_topic: socket.topic, auth_token: token, auth_origin: origin}
 
       RetWeb.Email.auth_email(email, signin_args) |> Ret.Mailer.deliver_now()
 
