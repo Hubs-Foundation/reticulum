@@ -98,11 +98,10 @@ defmodule Ret.Storage do
       [dest_path, dest_meta_file_path, dest_blob_file_path] <- paths_for_uuid(uuid, @owned_file_path),
       {:ok, _} <- File.stat(meta_file_path),
       {:ok, _} <- File.stat(blob_file_path),
-      {:ok} <- check_blob_file_key(blob_file_path, key)
-    ) do
-      %{"content_type" => content_type, "content_length" => content_length} =
+      {:ok} <- check_blob_file_key(blob_file_path, key),
+      %{"content_type" => content_type, "content_length" => content_length} <-
         File.read!(meta_file_path) |> Poison.decode!()
-
+    ) do
       owned_file_params = %{
         owned_file_uuid: id,
         key: key,
