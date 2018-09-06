@@ -39,34 +39,20 @@ defmodule Ret.Storage do
     fetch_blob(id, key, @expiring_file_path)
   end
 
-  def fetch(%OwnedFile{owned_file_sid: id, key: key}) do
+  def fetch(%OwnedFile{owned_file_uuid: id, key: key}) do
     fetch_blob(id, key, @owned_file_path)
   end
 
   defp fetch_blob(id, key, subpath) do
-    with storage_path when is_binary(storage_path) <- module_config(:storage_path) do
-      case Ecto.UUID.cast(id) do
-        {:ok, uuid} ->
-          [_file_path, meta_file_path, blob_file_path] = paths_for_uuid(uuid, subpath)
-
-          case [File.stat(meta_file_path), File.stat(blob_file_path)] do
-            [{:ok, _stat}, {:ok, _blob_stat}] ->
-              meta = File.read!(meta_file_path) |> Poison.decode!()
-
-              case read_blob_file(blob_file_path, meta, key) do
-                {:ok, stream} -> {:ok, meta, stream}
-                {:error, :invalid_key} -> {:error, :not_allowed}
-                _ -> {:error, :not_found}
-              end
-
-            _ ->
-              {:error, :not_found}
-          end
-
-        :error ->
-          {:error, :not_found}
-      end
+    with storage_path when is_binary(storage_path) <- module_config(:storage_path),
+         {:ok, uuid} <- Ecto.UUID.cast(id),
+         [_file_path, meta_file_path, blob_file_path] <- paths_for_uuid(uuid, subpath),
+         [{:ok, _stat}, {:ok, _blob_stat}] <- [File.stat(meta_file_path), File.stat(blob_file_path)],
+         meta <- File.read!(meta_file_path) |> Poison.decode!(),
+         {:ok, stream} <- read_blob_file(blob_file_path, meta, key) do
+      {:ok, meta, stream}
     else
+      {:error, :invalid_key} -> {:error, :not_allowed}
       _ -> {:error, :not_allowed}
     end
   end
@@ -83,7 +69,7 @@ defmodule Ret.Storage do
   def promote(id, key, %Account{} = account) do
     # Check if this file has already been promoted
     OwnedFile
-    |> Repo.get_by(owned_file_sid: id)
+    |> Repo.get_by(owned_file_uuid: id)
     |> promote_or_return_owned_file(id, key, account)
   end
 
@@ -105,55 +91,38 @@ defmodule Ret.Storage do
   # into the owned files directory (which prevents it from being vacuumed) and an
   # OwnedFile record is inserted into the database which includes the decryption key.
   defp promote_or_return_owned_file(nil, id, key, account) do
-    with storage_path when is_binary(storage_path) <- module_config(:storage_path) do
-      case Ecto.UUID.cast(id) do
-        {:ok, uuid} ->
-          [_, meta_file_path, blob_file_path] = paths_for_uuid(uuid, @expiring_file_path)
+    with(
+      storage_path when is_binary(storage_path) <- module_config(:storage_path),
+      {:ok, uuid} <- Ecto.UUID.cast(id),
+      [_, meta_file_path, blob_file_path] <- paths_for_uuid(uuid, @expiring_file_path),
+      [dest_path, dest_meta_file_path, dest_blob_file_path] <- paths_for_uuid(uuid, @owned_file_path),
+      {:ok, _} <- File.stat(meta_file_path),
+      {:ok, _} <- File.stat(blob_file_path),
+      {:ok} <- check_blob_file_key(blob_file_path, key)
+    ) do
+      %{"content_type" => content_type, "content_length" => content_length} =
+        File.read!(meta_file_path) |> Poison.decode!()
 
-          [dest_path, dest_meta_file_path, dest_blob_file_path] =
-            paths_for_uuid(uuid, @owned_file_path)
+      owned_file_params = %{
+        owned_file_uuid: id,
+        key: key,
+        content_type: content_type,
+        content_length: content_length
+      }
 
-          case [File.stat(meta_file_path), File.stat(blob_file_path)] do
-            [{:ok, _stat}, {:ok, _blob_stat}] ->
-              case check_blob_file_key(blob_file_path, key) do
-                {:ok} ->
-                  %{"content_type" => content_type, "content_length" => content_length} =
-                    File.read!(meta_file_path) |> Poison.decode!()
+      owned_file =
+        %OwnedFile{}
+        |> OwnedFile.changeset(account, owned_file_params)
+        |> Repo.insert!()
 
-                  owned_file_params = %{
-                    owned_file_sid: id,
-                    key: key,
-                    content_type: content_type,
-                    content_length: content_length
-                  }
+      File.mkdir_p!(dest_path)
+      File.rename(meta_file_path, dest_meta_file_path)
+      File.rename(blob_file_path, dest_blob_file_path)
 
-                  owned_file =
-                    %OwnedFile{}
-                    |> OwnedFile.changeset(account, owned_file_params)
-                    |> Repo.insert!()
-
-                  File.mkdir_p!(dest_path)
-                  File.rename(meta_file_path, dest_meta_file_path)
-                  File.rename(blob_file_path, dest_blob_file_path)
-
-                  {:ok, owned_file}
-
-                {:error, :invalid_key} ->
-                  {:error, :not_allowed}
-
-                _ ->
-                  {:error, :not_found}
-              end
-
-            _ ->
-              {:error, :not_found}
-          end
-
-        :error ->
-          {:error, :not_found}
-      end
+      {:ok, owned_file}
     else
-      _ -> {:error, :not_allowed}
+      {:error, :invalid_key} -> {:error, :not_allowed}
+      _ -> {:error, :not_found}
     end
   end
 
@@ -171,9 +140,7 @@ defmodule Ret.Storage do
         seconds_since_access = DateTime.diff(now, atime_datetime)
 
         if seconds_since_access > ttl do
-          Logger.info(
-            "Stored Files: Removing #{blob_file} after #{seconds_since_access}s since last access."
-          )
+          Logger.info("Stored Files: Removing #{blob_file} after #{seconds_since_access}s since last access.")
 
           File.rm!(blob_file)
           File.rm(blob_file |> String.replace_suffix(".blob", ".meta.json"))
@@ -222,10 +189,7 @@ defmodule Ret.Storage do
   end
 
   defp paths_for_uuid(uuid, subpath) do
-    path =
-      "#{module_config(:storage_path)}/#{subpath}/#{String.slice(uuid, 0, 2)}/#{
-        String.slice(uuid, 2, 2)
-      }"
+    path = "#{module_config(:storage_path)}/#{subpath}/#{String.slice(uuid, 0, 2)}/#{String.slice(uuid, 2, 2)}"
 
     blob_file_path = "#{path}/#{uuid}.blob"
     meta_file_path = "#{path}/#{uuid}.meta.json"

@@ -43,7 +43,7 @@ defmodule RetWeb.FileController do
   #
   # Otherwise return the passed in tuple, which will be used as-is.
   defp resolve_fetch_args({uuid, _token} = args) do
-    case OwnedFile |> Repo.get_by(owned_file_sid: uuid) do
+    case OwnedFile |> Repo.get_by(owned_file_uuid: uuid) do
       %OwnedFile{} = owned_file -> owned_file
       _ -> args
     end
