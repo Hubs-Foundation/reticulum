@@ -3,7 +3,7 @@ defmodule RetWeb.Api.V1.SceneController do
 
   alias Ret.{Repo, Scene, StoredFiles}
 
-  plug(RetWeb.Plugs.RateLimit when action in [:create])
+  plug(RetWeb.Plugs.RateLimit when action in [:create, :update])
 
   def show(conn, %{"id" => scene_id}) do
     scene = Repo.get(Scene, scene_id)
@@ -14,7 +14,20 @@ defmodule RetWeb.Api.V1.SceneController do
     end
   end
 
+  def update(conn, %{"id" => id, "scene" => params}) do
+    case Scene
+         |> Repo.get_by(scene_sid: id)
+         |> Repo.preload([:account, :model_stored_file, :screenshot_stored_file]) do
+      %Scene{} = scene -> create_or_update(conn, params, scene)
+      _ -> conn |> send_resp(404, "not found")
+    end
+  end
+
   def create(conn, %{"scene" => params}) do
+    create_or_update(conn, params)
+  end
+
+  defp create_or_update(conn, params, scene \\ %Scene{}) do
     account = Guardian.Plug.current_resource(conn)
 
     stored_file_results =
@@ -34,9 +47,9 @@ defmodule RetWeb.Api.V1.SceneController do
         %{model: {:ok, model_file}, screenshot: {:ok, screenshot_file}} = stored_file_results
 
         {result, scene} =
-          %Scene{}
+          scene
           |> Scene.changeset(account, model_file, screenshot_file, params)
-          |> Repo.insert()
+          |> Repo.insert_or_update()
 
         case result do
           :ok ->

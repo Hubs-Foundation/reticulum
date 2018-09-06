@@ -48,7 +48,7 @@ defmodule Ret.Scene do
     |> validate_length(:name, min: 4, max: 64)
     # TODO BP: this is repeated from hub.ex. Maybe refactor the regex out.
     |> validate_format(:name, ~r/^[A-Za-z0-9-':"!@#$%^&*(),.?~ ]+$/)
-    |> add_scene_sid_to_changeset
+    |> maybe_add_scene_sid_to_changeset
     |> unique_constraint(:scene_sid)
     |> put_assoc(:account, account)
     |> put_assoc(:model_stored_file, model_stored_file)
@@ -57,8 +57,8 @@ defmodule Ret.Scene do
     |> SceneSlug.unique_constraint()
   end
 
-  defp add_scene_sid_to_changeset(changeset) do
-    scene_sid = Ret.Sids.generate_sid()
+  defp maybe_add_scene_sid_to_changeset(changeset) do
+    scene_sid = changeset |> get_field(:scene_sid) || Ret.Sids.generate_sid()
     put_change(changeset, :scene_sid, "#{scene_sid}")
   end
 end
