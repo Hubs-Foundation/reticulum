@@ -1,13 +1,13 @@
 defmodule Ret.SupportSubscriptionTest do
   use Ret.DataCase
 
-  alias Ret.{SupportSubscription}
+  alias Ret.{Support, SupportSubscription}
 
   test "support availability" do
-    assert SupportSubscription.support_available?() == false
+    assert Support.available?() == false
 
     %SupportSubscription{} |> SupportSubscription.changeset(%{identifier: "csr"}) |> Ret.Repo.insert!()
 
-    assert SupportSubscription.support_available?() == true
+    assert Support.available?() == true
   end
 end

@@ -39,6 +39,13 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
+  def handle_in("events:request_support", _payload, socket) do
+    hub = socket |> hub_for_socket
+    Task.async(fn -> hub |> Ret.Support.request_support_for_hub() end)
+
+    {:noreply, socket}
+  end
+
   def handle_in(_message, _payload, socket) do
     {:noreply, socket}
   end

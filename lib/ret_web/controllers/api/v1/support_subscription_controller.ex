@@ -2,7 +2,7 @@ defmodule RetWeb.Api.V1.SupportSubscriptionController do
   use RetWeb, :controller
   import Ecto.Query
 
-  alias Ret.{Repo, SupportSubscription}
+  alias Ret.{Repo, Support, SupportSubscription}
   alias Ret.Repo
 
   # Limit to 1 TPS
@@ -12,7 +12,7 @@ defmodule RetWeb.Api.V1.SupportSubscriptionController do
   plug(RetWeb.Plugs.HeaderAuthorization when action in [:create, :delete])
 
   def index(conn, _params) do
-    case SupportSubscription.support_available?() do
+    case Support.available?() do
       true -> conn |> send_resp(200, "OK")
       false -> conn |> send_resp(404, "Unavailable")
     end
