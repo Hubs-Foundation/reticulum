@@ -9,5 +9,7 @@ defmodule Ret.Repo.Migrations.AddSupportSubscriptionsTable do
 
       timestamps()
     end
+
+    create(index(:support_subscriptions, [:channel, :identifier], unique: true))
   end
 end
