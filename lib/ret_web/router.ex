@@ -48,15 +48,17 @@ defmodule RetWeb.Router do
   end
 
   scope "/api", RetWeb do
-    pipe_through(
-      [:secure_headers, :api] ++
-        if(Mix.env() == :prod, do: [:ssl_only, :canonicalize_domain], else: [])
-    )
+    pipe_through([:secure_headers, :api] ++ if(Mix.env() == :prod, do: [:ssl_only, :canonicalize_domain], else: []))
 
     scope "/v1", as: :api_v1 do
       resources("/hubs", Api.V1.HubController, only: [:create, :delete])
       resources("/media", Api.V1.MediaController, only: [:create])
       resources("/scenes", Api.V1.SceneController, only: [:show])
+
+      scope "/support" do
+        resources("/subscriptions", Api.V1.SupportSubscriptionController, only: [:create, :delete])
+        resources("/availability", Api.V1.SupportSubscriptionController, only: [:index])
+      end
     end
 
     scope "/v1", as: :api_v1 do
@@ -72,10 +74,7 @@ defmodule RetWeb.Router do
   end
 
   scope "/", RetWeb do
-    pipe_through(
-      [:secure_headers, :browser] ++
-        if(Mix.env() == :prod, do: [:ssl_only, :canonicalize_domain], else: [])
-    )
+    pipe_through([:secure_headers, :browser] ++ if(Mix.env() == :prod, do: [:ssl_only, :canonicalize_domain], else: []))
 
     get("/*path", PageController, only: [:index])
   end

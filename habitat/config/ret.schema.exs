@@ -296,6 +296,13 @@
       doc: "SMTP server password for sending outgoing email",
       hidden: false,
       to: "ret.Elixir.Ret.Mailer.password"
+    ],
+    "ret.Elixir.Ret.Support.slack_webhook_url": [
+      commented: false,
+      datatype: :binary,
+      doc: "Slack Webhook URL for incoming support requests",
+      hidden: false,
+      to: "ret.Elixir.Ret.Support.slack_webhook_url"
     ]
   ],
   transforms: [],
