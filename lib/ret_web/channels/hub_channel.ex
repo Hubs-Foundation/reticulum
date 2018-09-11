@@ -55,6 +55,10 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
+  def handle_info(_message, socket) do
+    {:noreply, socket}
+  end
+
   def terminate(_reason, socket) do
     socket
     |> SessionStat.stat_query_for_socket()
