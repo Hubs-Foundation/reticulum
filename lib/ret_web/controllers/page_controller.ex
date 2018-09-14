@@ -10,6 +10,10 @@ defmodule RetWeb.PageController do
     conn |> render_page("index")
   end
 
+  def render_for_path("/scenes/" <> _scene_info, conn) do
+    conn |> render_page("index")
+  end
+
   def render_for_path("/link", conn) do
     conn |> render_page("link")
   end
