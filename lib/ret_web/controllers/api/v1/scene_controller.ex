@@ -41,8 +41,7 @@ defmodule RetWeb.Api.V1.SceneController do
         account
       )
 
-    promotion_error =
-      owned_file_results |> Map.values() |> Enum.filter(&(elem(&1, 0) == :error)) |> Enum.at(0)
+    promotion_error = owned_file_results |> Map.values() |> Enum.filter(&(elem(&1, 0) == :error)) |> Enum.at(0)
 
     case promotion_error do
       nil ->
@@ -52,6 +51,10 @@ defmodule RetWeb.Api.V1.SceneController do
           scene
           |> Scene.changeset(account, model_file, screenshot_file, params)
           |> Repo.insert_or_update()
+
+        scene =
+          scene
+          |> Repo.preload([:model_owned_file, :screenshot_owned_file])
 
         case result do
           :ok ->

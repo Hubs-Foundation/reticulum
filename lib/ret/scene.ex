@@ -51,8 +51,8 @@ defmodule Ret.Scene do
     |> maybe_add_scene_sid_to_changeset
     |> unique_constraint(:scene_sid)
     |> put_assoc(:account, account)
-    |> put_assoc(:model_owned_file, model_owned_file)
-    |> put_assoc(:screenshot_owned_file, screenshot_owned_file)
+    |> put_change(:model_owned_file_id, model_owned_file.owned_file_id)
+    |> put_change(:screenshot_owned_file_id, screenshot_owned_file.owned_file_id)
     |> SceneSlug.maybe_generate_slug()
     |> SceneSlug.unique_constraint()
   end
