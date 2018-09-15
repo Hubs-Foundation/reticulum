@@ -47,7 +47,7 @@ defmodule RetWeb.HubChannel do
   end
 
   def handle_in("naf" = event, payload, socket) do
-    broadcast!(socket, event, payload)
+    broadcast_from!(socket, event, payload)
     {:noreply, socket}
   end
 
