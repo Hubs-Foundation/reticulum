@@ -21,6 +21,7 @@ defmodule Ret.Scene do
     field(:slug, SceneSlug.Type)
     field(:name, :string)
     field(:description, :string)
+    field(:attribution, :string)
     belongs_to(:account, Ret.Account, references: :account_id)
     belongs_to(:model_owned_file, Ret.OwnedFile, references: :owned_file_id)
     belongs_to(:screenshot_owned_file, Ret.OwnedFile, references: :owned_file_id)
@@ -40,6 +41,7 @@ defmodule Ret.Scene do
     |> cast(params, [
       :name,
       :description,
+      :attribution,
       :state
     ])
     |> validate_required([
