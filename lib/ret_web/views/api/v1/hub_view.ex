@@ -1,16 +1,24 @@
 defmodule RetWeb.Api.V1.HubView do
   use RetWeb, :view
-  alias Ret.Hub
+  alias Ret.{Hub, OwnedFile, Scene}
 
-  def render("create.json", %{ hub: hub }) do
-    %{ 
-      status: :ok, 
+  def render("create.json", %{hub: hub}) do
+    %{
+      status: :ok,
       hub_id: hub.hub_sid,
-      url: "#{RetWeb.Endpoint.url}/#{hub.hub_sid}/#{hub.slug}"
+      url: "#{RetWeb.Endpoint.url()}/#{hub.hub_sid}/#{hub.slug}"
     }
   end
 
-  def render("show.json", %{ hub: hub }) do
+  def render("show.json", %{hub: %Hub{scene: %Scene{model_owned_file: model_owned_file}} = hub}) do
+    hub |> render_with_scene_asset(:glb, model_owned_file |> OwnedFile.uri_for() |> URI.to_string())
+  end
+
+  def render("show.json", %{hub: hub}) do
+    hub |> render_with_scene_asset(:gltf_bundle, hub.default_environment_gltf_bundle_url)
+  end
+
+  defp render_with_scene_asset(hub, asset_type, asset_url) do
     %{
       hubs: [
         %{
@@ -20,9 +28,7 @@ defmodule RetWeb.Api.V1.HubView do
             %{
               topic_id: "#{hub.hub_sid}/#{hub.slug}",
               janus_room_id: Hub.janus_room_id_for_hub(hub),
-              assets: [
-                %{ asset_type: :gltf_bundle, src: hub.default_environment_gltf_bundle_url }
-              ]
+              assets: [%{asset_type: asset_type, src: asset_url}]
             }
           ]
         }

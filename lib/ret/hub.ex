@@ -28,11 +28,12 @@ defmodule Ret.Hub do
     field(:max_occupant_count, :integer, default: 0)
     field(:spawned_object_types, :integer, default: 0)
     field(:entry_mode, Ret.Hub.EntryMode)
+    belongs_to(:scene, Ret.Scene, references: :scene_id)
 
     timestamps()
   end
 
-  def changeset(%Hub{} = hub, attrs) do
+  def changeset(%Hub{} = hub, scene, attrs) do
     hub
     |> cast(attrs, [:name, :default_environment_gltf_bundle_url])
     |> validate_required([:name, :default_environment_gltf_bundle_url])
@@ -40,6 +41,7 @@ defmodule Ret.Hub do
     |> validate_format(:name, ~r/^[A-Za-z0-9-':"!@#$%^&*(),.?~ ]+$/)
     |> add_hub_sid_to_changeset
     |> unique_constraint(:hub_sid)
+    |> put_assoc(:scene, scene)
     |> HubSlug.maybe_generate_slug()
     |> HubSlug.unique_constraint()
   end
