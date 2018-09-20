@@ -14,7 +14,7 @@ config :mime, :types, %{
   "application/vnd.api+json" => ["json-api"],
   "model/gltf+json" => ["gltf"],
   "model/gltf-binary" => ["glb"],
-  "model/vnd.spoke.scene" => ["spoke"]
+  "application/vnd.spoke.scene" => ["spoke"]
 }
 
 # Configures the endpoint
