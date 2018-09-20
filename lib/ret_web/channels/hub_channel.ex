@@ -2,14 +2,17 @@ defmodule RetWeb.HubChannel do
   @moduledoc "Ret Web Channel for Hubs"
 
   use RetWeb, :channel
+  import Ecto.Query
 
   alias Ret.{Hub, Repo, SessionStat, Statix}
   alias RetWeb.{Presence}
 
   def join("hub:" <> hub_sid, _payload, socket) do
     Hub
-    |> Repo.get_by(hub_sid: hub_sid)
+    |> where(hub_sid: ^hub_sid)
+    |> Repo.all()
     |> Repo.preload(scene: [:model_owned_file, :screenshot_owned_file])
+    |> Enum.at(0)
     |> join_with_hub(socket)
   end
 

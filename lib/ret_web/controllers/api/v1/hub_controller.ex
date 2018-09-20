@@ -9,17 +9,17 @@ defmodule RetWeb.Api.V1.HubController do
   # Only allow access with secret header
   plug(RetWeb.Plugs.HeaderAuthorization when action in [:delete])
 
-  def create(conn, %{"hub" => %{"scene_id" => scene_id}} = hub_params) do
+  def create(conn, %{"hub" => %{"scene_id" => scene_id}} = params) do
     scene = Scene |> Repo.get_by(scene_sid: scene_id)
 
     %Hub{}
-    |> Hub.changeset(scene, hub_params)
+    |> Hub.changeset(scene, params["hub"])
     |> exec_create(conn)
   end
 
-  def create(conn, %{"hub" => hub_params}) do
+  def create(conn, %{"hub" => hub_params} = params) do
     %Hub{}
-    |> Hub.changeset(nil, hub_params)
+    |> Hub.changeset(nil, params["hub"])
     |> exec_create(conn)
   end
 

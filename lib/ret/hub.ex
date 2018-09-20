@@ -36,7 +36,6 @@ defmodule Ret.Hub do
   def changeset(%Hub{} = hub, scene, attrs) do
     hub
     |> cast(attrs, [:name, :default_environment_gltf_bundle_url])
-    |> validate_required([:name, :default_environment_gltf_bundle_url])
     |> validate_length(:name, min: 4, max: 64)
     |> validate_format(:name, ~r/^[A-Za-z0-9-':"!@#$%^&*(),.?~ ]+$/)
     |> add_hub_sid_to_changeset

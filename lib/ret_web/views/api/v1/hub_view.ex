@@ -11,7 +11,7 @@ defmodule RetWeb.Api.V1.HubView do
   end
 
   def render("show.json", %{hub: %Hub{scene: %Scene{model_owned_file: model_owned_file}} = hub}) do
-    hub |> render_with_scene_asset(:glb, model_owned_file |> OwnedFile.uri_for() |> URI.to_string())
+    hub |> render_with_scene_asset(:glb, (model_owned_file |> OwnedFile.uri_for() |> URI.to_string()) <> ".glb")
   end
 
   def render("show.json", %{hub: hub}) do
