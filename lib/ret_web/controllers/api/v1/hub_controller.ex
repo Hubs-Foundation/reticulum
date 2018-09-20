@@ -17,7 +17,7 @@ defmodule RetWeb.Api.V1.HubController do
     |> exec_create(conn)
   end
 
-  def create(conn, %{"hub" => hub_params} = params) do
+  def create(conn, %{"hub" => _hub_params} = params) do
     %Hub{}
     |> Hub.changeset(nil, params["hub"])
     |> exec_create(conn)
