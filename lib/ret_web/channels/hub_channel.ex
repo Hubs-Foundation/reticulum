@@ -9,10 +9,8 @@ defmodule RetWeb.HubChannel do
 
   def join("hub:" <> hub_sid, _payload, socket) do
     Hub
-    |> where(hub_sid: ^hub_sid)
-    |> Repo.all()
+    |> Repo.get_by(hub_sid: hub_sid)
     |> Repo.preload(scene: [:model_owned_file, :screenshot_owned_file])
-    |> Enum.at(0)
     |> join_with_hub(socket)
   end
 
