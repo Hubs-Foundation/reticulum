@@ -13,7 +13,8 @@ config :phoenix, :format_encoders, "json-api": Poison
 config :mime, :types, %{
   "application/vnd.api+json" => ["json-api"],
   "model/gltf+json" => ["gltf"],
-  "model/gltf+binary" => ["glb"]
+  "model/gltf-binary" => ["glb"],
+  "model/vnd.spoke.scene" => ["spoke"]
 }
 
 # Configures the endpoint

@@ -1,8 +1,7 @@
 defmodule RetWeb.Api.V1.HubController do
   use RetWeb, :controller
 
-  alias Ret.Hub
-  alias Ret.Repo
+  alias Ret.{Hub, Scene, Repo}
 
   # Limit to 1 TPS
   plug(RetWeb.Plugs.RateLimit)
@@ -10,11 +9,22 @@ defmodule RetWeb.Api.V1.HubController do
   # Only allow access with secret header
   plug(RetWeb.Plugs.HeaderAuthorization when action in [:delete])
 
-  def create(conn, %{"hub" => hub_params}) do
-    {result, hub} =
-      %Hub{}
-      |> Hub.changeset(hub_params)
-      |> Repo.insert()
+  def create(conn, %{"hub" => %{"scene_id" => scene_id}} = params) do
+    scene = Scene |> Repo.get_by(scene_sid: scene_id)
+
+    %Hub{}
+    |> Hub.changeset(scene, params["hub"])
+    |> exec_create(conn)
+  end
+
+  def create(conn, %{"hub" => _hub_params} = params) do
+    %Hub{}
+    |> Hub.changeset(nil, params["hub"])
+    |> exec_create(conn)
+  end
+
+  defp exec_create(hub_changeset, conn) do
+    {result, hub} = hub_changeset |> Repo.insert()
 
     case result do
       :ok -> render(conn, "create.json", hub: hub)

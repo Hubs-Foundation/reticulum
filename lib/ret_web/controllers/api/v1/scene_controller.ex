@@ -36,7 +36,8 @@ defmodule RetWeb.Api.V1.SceneController do
       Storage.promote(
         %{
           model: {params["model_file_id"], params["model_file_token"]},
-          screenshot: {params["screenshot_file_id"], params["screenshot_file_token"]}
+          screenshot: {params["screenshot_file_id"], params["screenshot_file_token"]},
+          scene: {params["scene_file_id"], params["scene_file_token"]}
         },
         account
       )
@@ -45,16 +46,16 @@ defmodule RetWeb.Api.V1.SceneController do
 
     case promotion_error do
       nil ->
-        %{model: {:ok, model_file}, screenshot: {:ok, screenshot_file}} = owned_file_results
+        %{model: {:ok, model_file}, screenshot: {:ok, screenshot_file}, scene: {:ok, scene_file}} = owned_file_results
 
         {result, scene} =
           scene
-          |> Scene.changeset(account, model_file, screenshot_file, params)
+          |> Scene.changeset(account, model_file, screenshot_file, scene_file, params)
           |> Repo.insert_or_update()
 
         scene =
           scene
-          |> Repo.preload([:model_owned_file, :screenshot_owned_file])
+          |> Repo.preload([:model_owned_file, :screenshot_owned_file, :scene_owned_file])
 
         case result do
           :ok ->

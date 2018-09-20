@@ -28,8 +28,8 @@ defmodule RetWeb.PageController do
       |> String.split("/")
       |> Enum.at(1)
 
-    hub = Hub |> Repo.get_by(hub_sid: hub_sid)
-    hub_meta_tags = Phoenix.View.render_to_string(RetWeb.PageView, "hub-meta.html", hub: hub)
+    hub = Hub |> Repo.get_by(hub_sid: hub_sid) |> Repo.preload(scene: [:screenshot_owned_file])
+    hub_meta_tags = Phoenix.View.render_to_string(RetWeb.PageView, "hub-meta.html", hub: hub, scene: hub.scene)
 
     chunks =
       chunks_for_page("hub")

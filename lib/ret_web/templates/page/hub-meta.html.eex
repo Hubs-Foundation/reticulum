@@ -2,10 +2,18 @@
 <meta property="og:url" content="<%= RetWeb.Endpoint.url %>/<%= @hub.hub_sid %>/<%= @hub.slug %>" />
 <meta property="og:title" content="<%= @hub.name %> | Hubs by Mozilla" />
 <meta property="og:description" content="Join others in VR at <%= @hub.name %>, right in your browser." />
+<%= if @scene do %>
+<meta property="og:image" content="<%= @scene.screenshot_owned_file |> Ret.OwnedFile.uri_for |> URI.to_string %>"/>
+<% else %>
 <meta property="og:image" content="<%= RetWeb.Endpoint.url %>/hub-preview.png" />
+<% end %>
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:domain" value="<%= RetWeb.Endpoint.host %>" />
 <meta name="twitter:title" value="<%= @hub.name %> | Hubs by Mozilla" />
 <meta name="twitter:description" content="Join others in VR at <%= @hub.name %>, right in your browser." />
-<meta name="twitter:image" content="<%= RetWeb.Endpoint.url %>/hub-preview.png" />
+<%= if @scene do %>
+<meta property="twitter:image" content="<%= @scene.screenshot_owned_file |> Ret.OwnedFile.uri_for |> URI.to_string %>"/>
+<% else %>
+<meta property="twitter:image" content="<%= RetWeb.Endpoint.url %>/hub-preview.png" />
+<% end %>
 <meta name="twitter:url" value="<%= RetWeb.Endpoint.url %>/<%= @hub.hub_sid %>/<%= @hub.slug %>" />

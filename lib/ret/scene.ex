@@ -22,9 +22,12 @@ defmodule Ret.Scene do
     field(:name, :string)
     field(:description, :string)
     field(:attribution, :string)
+    field(:allow_remixing, :boolean)
+    field(:allow_promotion, :boolean)
     belongs_to(:account, Ret.Account, references: :account_id)
     belongs_to(:model_owned_file, Ret.OwnedFile, references: :owned_file_id)
     belongs_to(:screenshot_owned_file, Ret.OwnedFile, references: :owned_file_id)
+    belongs_to(:scene_owned_file, Ret.OwnedFile, references: :owned_file_id)
     field(:state, Scene.State)
 
     timestamps()
@@ -35,6 +38,7 @@ defmodule Ret.Scene do
         account,
         model_owned_file,
         screenshot_owned_file,
+        scene_owned_file,
         params \\ %{}
       ) do
     scene
@@ -42,6 +46,8 @@ defmodule Ret.Scene do
       :name,
       :description,
       :attribution,
+      :allow_remixing,
+      :allow_promotion,
       :state
     ])
     |> validate_required([
@@ -55,6 +61,7 @@ defmodule Ret.Scene do
     |> put_assoc(:account, account)
     |> put_change(:model_owned_file_id, model_owned_file.owned_file_id)
     |> put_change(:screenshot_owned_file_id, screenshot_owned_file.owned_file_id)
+    |> put_change(:scene_owned_file_id, scene_owned_file.owned_file_id)
     |> SceneSlug.maybe_generate_slug()
     |> SceneSlug.unique_constraint()
   end
