@@ -26,13 +26,27 @@ defmodule RetWeb.ConnCase do
     end
   end
 
-
   setup tags do
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Ret.Repo)
+
     unless tags[:async] do
       Ecto.Adapters.SQL.Sandbox.mode(Ret.Repo, {:shared, self()})
     end
-    {:ok, conn: Phoenix.ConnTest.build_conn()}
-  end
 
+    conn = Phoenix.ConnTest.build_conn()
+
+    conn =
+      if tags[:authenticated] do
+        {:ok, token, _claims} =
+          "test@mozilla.com"
+          |> Ret.Account.account_for_email()
+          |> Ret.Guardian.encode_and_sign()
+
+        conn |> Plug.Conn.put_req_header("authorization", "bearer: " <> token)
+      else
+        conn
+      end
+
+    {:ok, conn: conn}
+  end
 end
