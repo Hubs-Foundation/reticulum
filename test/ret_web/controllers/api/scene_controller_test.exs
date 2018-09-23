@@ -54,7 +54,6 @@ defmodule RetWeb.SceneControllerTest do
     assert updated_scene.description == "New Description"
   end
 
-  @tag :authenticated
   test "scene update disallowed for different user", %{conn: conn, owned_file: owned_file, scene: scene} do
     {:ok, token, _claims} =
       "test2@mozilla.com"
