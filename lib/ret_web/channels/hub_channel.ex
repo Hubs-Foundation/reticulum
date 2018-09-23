@@ -2,7 +2,6 @@ defmodule RetWeb.HubChannel do
   @moduledoc "Ret Web Channel for Hubs"
 
   use RetWeb, :channel
-  import Ecto.Query
 
   alias Ret.{Hub, Repo, SessionStat, Statix}
   alias RetWeb.{Presence}
