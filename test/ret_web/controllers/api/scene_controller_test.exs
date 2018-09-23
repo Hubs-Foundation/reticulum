@@ -33,7 +33,6 @@ defmodule RetWeb.SceneControllerTest do
   @tag :authenticated
   test "scene create works when logged in", %{conn: conn, owned_file: owned_file} do
     params = scene_create_or_update_params(owned_file)
-    conn |> Plug.Conn.get_req_header("authorization") |> IO.inspect()
 
     response = conn |> post(api_v1_scene_path(conn, :create), params) |> json_response(200)
     %{"scenes" => [%{"scene_id" => scene_id}]} = response
@@ -47,13 +46,25 @@ defmodule RetWeb.SceneControllerTest do
   @tag :authenticated
   test "scene update works when logged in", %{conn: conn, owned_file: owned_file, scene: scene} do
     params = scene_create_or_update_params(owned_file, "New Name", "New Description")
-    conn |> Plug.Conn.get_req_header("authorization") |> IO.inspect()
 
     conn |> patch(api_v1_scene_path(conn, :update, scene.scene_sid), params) |> json_response(200)
     updated_scene = Scene |> Repo.get_by(scene_sid: scene.scene_sid)
 
     assert updated_scene.name == "New Name"
     assert updated_scene.description == "New Description"
+  end
+
+  @tag :authenticated
+  test "scene update disallowed for different user", %{conn: conn, owned_file: owned_file, scene: scene} do
+    {:ok, token, _claims} =
+      "test2@mozilla.com"
+      |> Ret.Account.account_for_email()
+      |> Ret.Guardian.encode_and_sign()
+
+    conn = conn |> Plug.Conn.put_req_header("authorization", "bearer: " <> token)
+    params = scene_create_or_update_params(owned_file, "New Name", "New Description")
+
+    conn |> patch(api_v1_scene_path(conn, :update, scene.scene_sid), params) |> response(401)
   end
 
   defp create_account(_) do
