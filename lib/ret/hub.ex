@@ -75,8 +75,32 @@ defmodule Ret.Hub do
     |> cast(%{entry_mode: :deny}, [:entry_mode])
   end
 
-  def entry_code_expired?(hub) do
+  defp changeset_for_new_entry_code(%Hub{} = hub) do
+    hub
+    |> Ecto.Changeset.change()
+    |> add_entry_code_to_changeset
+  end
+
+  def ensure_valid_entry_code!(hub) do
+    if hub |> entry_code_expired? do
+      hub |> changeset_for_new_entry_code |> Repo.update!()
+    else
+      hub
+    end
+  end
+
+  def entry_code_expired?(%Hub{entry_code: entry_code}) when is_nil(entry_code), do: true
+
+  def entry_code_expired?(%Hub{} = hub) do
     Timex.now() |> Timex.after?(hub.entry_code_expires_at)
+  end
+
+  def vacuum_entry_codes do
+    Repo
+    |> Ecto.Adapters.SQL.query(
+      "update hubs set entry_code = null, entry_code_expires_at = null where entry_code_expires_at < $1",
+      [Timex.now()]
+    )
   end
 
   defp add_hub_sid_to_changeset(changeset) do
