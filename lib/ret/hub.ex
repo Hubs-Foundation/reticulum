@@ -96,7 +96,9 @@ defmodule Ret.Hub do
     end
   end
 
-  def entry_code_expired?(%Hub{entry_code: entry_code}) when is_nil(entry_code), do: true
+  def entry_code_expired?(%Hub{entry_code: entry_code, entry_code_expires_at: entry_code_expires_at})
+      when is_nil(entry_code) or is_nil(entry_code_expires_at),
+      do: true
 
   def entry_code_expired?(%Hub{} = hub) do
     Timex.now() |> Timex.after?(hub.entry_code_expires_at)
