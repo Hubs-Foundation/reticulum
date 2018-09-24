@@ -126,13 +126,13 @@ defmodule Ret.Hub do
     |> put_change(:entry_code_expires_at, expires_at)
   end
 
-  def generate_entry_code(attempt \\ 0)
+  defp generate_entry_code(attempt \\ 0)
 
-  def generate_entry_code(attempt) when attempt > @max_entry_code_generate_attempts do
+  defp generate_entry_code(attempt) when attempt > @max_entry_code_generate_attempts do
     raise "Unable to allocate entry code"
   end
 
-  def generate_entry_code(attempt) do
+  defp generate_entry_code(attempt) do
     candidate_entry_code = :rand.uniform(@max_entry_code)
 
     case Hub |> Repo.get_by(entry_code: candidate_entry_code) do
