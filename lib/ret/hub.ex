@@ -12,17 +12,22 @@ defmodule Ret.Hub do
 
   import Ecto.Changeset
 
-  alias Ret.Hub
+  alias Ret.{Hub, Repo}
   alias Ret.Hub.{HubSlug}
 
   use Bitwise
 
   @schema_prefix "ret0"
   @primary_key {:hub_id, :id, autogenerate: true}
+  @max_entry_code 999_999
+  @entry_code_expiration_hours 24
+  @max_entry_code_generate_attempts 25
 
   schema "hubs" do
     field(:name, :string)
     field(:hub_sid, :string)
+    field(:entry_code, :integer)
+    field(:entry_code_expires_at, :utc_datetime)
     field(:default_environment_gltf_bundle_url, :string)
     field(:slug, HubSlug.Type)
     field(:max_occupant_count, :integer, default: 0)
@@ -39,7 +44,9 @@ defmodule Ret.Hub do
     |> validate_length(:name, min: 4, max: 64)
     |> validate_format(:name, ~r/^[A-Za-z0-9-':"!@#$%^&*(),.?~ ]+$/)
     |> add_hub_sid_to_changeset
+    |> add_entry_code_to_changeset
     |> unique_constraint(:hub_sid)
+    |> unique_constraint(:entry_code)
     |> put_assoc(:scene, scene)
     |> HubSlug.maybe_generate_slug()
     |> HubSlug.unique_constraint()
@@ -68,10 +75,37 @@ defmodule Ret.Hub do
     |> cast(%{entry_mode: :deny}, [:entry_mode])
   end
 
+  def entry_code_expired?(hub) do
+    Timex.now() |> Timex.after?(hub.entry_code_expires_at)
+  end
+
   defp add_hub_sid_to_changeset(changeset) do
     hub_sid = Ret.Sids.generate_sid()
     # Prefix with 0 just to make migration off of these links easier.
-    put_change(changeset, :hub_sid, "0#{hub_sid}")
+    changeset |> put_change(:hub_sid, "0#{hub_sid}")
+  end
+
+  defp add_entry_code_to_changeset(changeset) do
+    expires_at = Timex.now() |> Timex.shift(hours: @entry_code_expiration_hours)
+
+    changeset
+    |> put_change(:entry_code, generate_entry_code())
+    |> put_change(:entry_code_expires_at, expires_at)
+  end
+
+  def generate_entry_code(attempt \\ 0)
+
+  def generate_entry_code(attempt) when attempt > @max_entry_code_generate_attempts do
+    raise "Unable to allocate entry code"
+  end
+
+  def generate_entry_code(attempt) do
+    candidate_entry_code = :rand.uniform(@max_entry_code)
+
+    case Hub |> Repo.get_by(entry_code: candidate_entry_code) do
+      nil -> candidate_entry_code
+      _ -> generate_entry_code(attempt + 1)
+    end
   end
 
   def janus_room_id_for_hub(hub) do

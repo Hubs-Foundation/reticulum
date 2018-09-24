@@ -42,8 +42,7 @@ defmodule Ret.Mixfile do
       {:gettext, "~> 0.11"},
       {:cowboy, "~> 1.0"},
       {:ja_serializer, "~> 0.12.0"},
-      {:distillery, "~> 1.5",
-       runtime: false, github: "gfodor/distillery", branch: "feature/boot_opts"},
+      {:distillery, "~> 1.5", runtime: false, github: "gfodor/distillery", branch: "feature/boot_opts"},
       {:conform, "~> 2.5"},
       {:peerage, "~> 1.0"},
       {:httpoison, "~> 1.2.0"},
@@ -65,7 +64,8 @@ defmodule Ret.Mixfile do
       {:bamboo, "~> 1.0.0"},
       {:bamboo_smtp, "~> 1.5"},
       {:guardian, "~> 1.1"},
-      {:temp, "~> 0.4"}
+      {:temp, "~> 0.4"},
+      {:timex, "~> 3.4"}
     ]
   end
 
