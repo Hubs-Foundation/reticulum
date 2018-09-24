@@ -18,6 +18,10 @@ defmodule RetWeb.PageController do
     conn |> render_page("link")
   end
 
+  def render_for_path("/link/", conn) do
+    conn |> render_page("link")
+  end
+
   def render_for_path("/avatar-selector.html", conn) do
     conn |> render_page("avatar-selector")
   end
