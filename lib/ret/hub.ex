@@ -39,9 +39,10 @@ defmodule Ret.Hub do
   end
 
   def get_by_entry_code_string(entry_code_string) when is_binary(entry_code_string) do
-    {entry_code, _} = Integer.parse(entry_code_string)
-
-    Hub |> Repo.get_by(entry_code: entry_code)
+    case Integer.parse(entry_code_string) do
+      {entry_code, _} -> Hub |> Repo.get_by(entry_code: entry_code)
+      _ -> nil
+    end
   end
 
   def changeset(%Hub{} = hub, scene, attrs) do
