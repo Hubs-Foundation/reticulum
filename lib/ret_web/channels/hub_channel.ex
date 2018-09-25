@@ -6,7 +6,16 @@ defmodule RetWeb.HubChannel do
   alias Ret.{Hub, Repo, SessionStat, Statix}
   alias RetWeb.{Presence}
 
+  def join("hub:" <> hub_sid, %{"display_name" => display_name}, socket) do
+    socket |> assign(:display_name, display_name) |> perform_join(hub_sid)
+  end
+
+  # TODO remove when client is updated to always send display name on join
   def join("hub:" <> hub_sid, _payload, socket) do
+    socket |> assign(:display_name, "Unknown") |> perform_join(hub_sid)
+  end
+
+  defp perform_join(socket, hub_sid) do
     Hub
     |> Repo.get_by(hub_sid: hub_sid)
     |> Repo.preload(scene: [:model_owned_file, :screenshot_owned_file])
@@ -14,9 +23,10 @@ defmodule RetWeb.HubChannel do
   end
 
   def handle_in("events:entered", %{"initialOccupantCount" => occupant_count} = payload, socket) do
-    socket
-    |> handle_max_occupant_update(occupant_count)
-    |> handle_entered_event(payload)
+    socket =
+      socket
+      |> handle_max_occupant_update(occupant_count)
+      |> handle_entered_event(payload)
 
     Statix.increment("ret.channels.hub.event_entered", 1)
 
@@ -24,7 +34,7 @@ defmodule RetWeb.HubChannel do
   end
 
   def handle_in("events:entered", payload, socket) do
-    handle_entered_event(socket, payload)
+    socket = socket |> handle_entered_event(payload)
 
     Statix.increment("ret.channels.hub.event_entered", 1)
 
@@ -32,8 +42,7 @@ defmodule RetWeb.HubChannel do
   end
 
   def handle_in("events:object_spawned", %{"object_type" => object_type}, socket) do
-    socket
-    |> handle_object_spawned(object_type)
+    socket = socket |> handle_object_spawned(object_type)
 
     Statix.increment("ret.channels.hub.objects_spawned", 1)
 
@@ -47,8 +56,18 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
+  def handle_in("events:profile_updated", %{"display_name" => display_name}, socket) do
+    socket = socket |> assign(:display_name, display_name) |> broadcast_presence_update
+    {:noreply, socket}
+  end
+
   def handle_in("naf" = event, payload, socket) do
     broadcast_from!(socket, event, payload)
+    {:noreply, socket}
+  end
+
+  def handle_in("message" = event, payload, socket) do
+    broadcast!(socket, event, payload)
     {:noreply, socket}
   end
 
@@ -57,7 +76,7 @@ defmodule RetWeb.HubChannel do
   end
 
   def handle_info({:begin_tracking, session_id, hub_sid}, socket) do
-    {:ok, _} = Presence.track(socket, session_id, %{hub_id: hub_sid})
+    {:ok, _} = Presence.track(socket, session_id, socket |> presence_meta_for_socket)
     {:noreply, socket}
   end
 
@@ -73,12 +92,21 @@ defmodule RetWeb.HubChannel do
     :ok
   end
 
+  defp broadcast_presence_update(socket) do
+    Presence.update(socket, socket.assigns.session_id, socket |> presence_meta_for_socket)
+    socket
+  end
+
+  defp presence_meta_for_socket(socket) do
+    socket.assigns |> Map.take([:hub_id, :entered, :display_name])
+  end
+
   defp join_with_hub(%Hub{entry_mode: :deny}, _socket) do
     {:error, %{message: "Hub no longer accessible", reason: "closed"}}
   end
 
   defp join_with_hub(%Hub{} = hub, socket) do
-    with socket <- assign(socket, :hub_sid, hub.hub_sid),
+    with socket <- socket |> assign(:hub_sid, hub.hub_sid) |> assign(:entered, false),
          response <- RetWeb.Api.V1.HubView.render("show.json", %{hub: hub}) do
       existing_stat_count =
         socket
@@ -110,14 +138,13 @@ defmodule RetWeb.HubChannel do
   end
 
   defp handle_entered_event(socket, payload) do
-    with stat_attributes <- [
-           entered_event_payload: payload,
-           entered_event_received_at: NaiveDateTime.utc_now()
-         ] do
-      socket
-      |> SessionStat.stat_query_for_socket()
-      |> Repo.update_all(set: stat_attributes)
-    end
+    stat_attributes = [entered_event_payload: payload, entered_event_received_at: NaiveDateTime.utc_now()]
+
+    socket
+    |> SessionStat.stat_query_for_socket()
+    |> Repo.update_all(set: stat_attributes)
+
+    socket |> assign(:entered, true) |> broadcast_presence_update
   end
 
   defp handle_max_occupant_update(socket, occupant_count) do
