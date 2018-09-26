@@ -33,7 +33,7 @@ defmodule Ret.PageOriginWarmer do
           res
           |> Map.get(:body)
           |> String.split("\n")
-          |> Enum.split_while(&(!Regex.match?(~r/HUB_META_TAGS/, &1)))
+          |> Enum.split_while(&(!Regex.match?(~r/META_TAGS/, &1)))
           |> Tuple.to_list()
 
         {page, chunks}
