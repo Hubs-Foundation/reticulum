@@ -14,7 +14,7 @@ defmodule RetWeb.PageController do
     scene_sid =
       path
       |> String.split("/")
-      |> Enum.at(1)
+      |> Enum.at(0)
 
     scene = Scene |> Repo.get_by(scene_sid: scene_sid) |> Repo.preload([:screenshot_owned_file])
     scene_meta_tags = Phoenix.View.render_to_string(RetWeb.PageView, "scene-meta.html", scene: scene)

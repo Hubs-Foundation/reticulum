@@ -2,7 +2,7 @@ defmodule Ret.PageOriginWarmer do
   use Cachex.Warmer
   use Retry
 
-  @pages ~w(index hub link avatar-selector)
+  @pages ~w(index hub link scene avatar-selector)
 
   def interval, do: :timer.seconds(15)
 
