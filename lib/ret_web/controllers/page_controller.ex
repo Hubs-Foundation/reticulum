@@ -1,6 +1,6 @@
 defmodule RetWeb.PageController do
   use RetWeb, :controller
-  alias Ret.{Repo, Hub}
+  alias Ret.{Repo, Hub, Scene}
 
   def call(conn, _params) do
     render_for_path(conn.request_path, conn)
@@ -10,8 +10,22 @@ defmodule RetWeb.PageController do
     conn |> render_page("index")
   end
 
-  def render_for_path("/scenes/" <> _scene_info, conn) do
-    conn |> render_page("index")
+  def render_for_path("/scenes/" <> path, conn) do
+    scene_sid =
+      path
+      |> String.split("/")
+      |> Enum.at(0)
+
+    scene = Scene |> Repo.get_by(scene_sid: scene_sid) |> Repo.preload([:screenshot_owned_file])
+    scene_meta_tags = Phoenix.View.render_to_string(RetWeb.PageView, "scene-meta.html", scene: scene)
+
+    chunks =
+      chunks_for_page("scene")
+      |> List.insert_at(1, scene_meta_tags)
+
+    conn
+    |> put_resp_header("content-type", "text/html; charset=utf-8")
+    |> send_resp(200, chunks)
   end
 
   def render_for_path("/link", conn) do

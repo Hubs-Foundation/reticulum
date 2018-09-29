@@ -17,3 +17,4 @@
 <meta property="twitter:image" content="<%= RetWeb.Endpoint.url %>/hub-preview.png" />
 <% end %>
 <meta name="twitter:url" value="<%= RetWeb.Endpoint.url %>/<%= @hub.hub_sid %>/<%= @hub.slug %>" />
+<title><%= @hub.name %> | Hubs by Mozilla</title>

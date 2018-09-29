@@ -2,7 +2,7 @@ defmodule Ret.PageOriginWarmer do
   use Cachex.Warmer
   use Retry
 
-  @pages ~w(index hub link avatar-selector)
+  @pages ~w(index hub link scene avatar-selector)
 
   def interval, do: :timer.seconds(15)
 
@@ -33,7 +33,7 @@ defmodule Ret.PageOriginWarmer do
           res
           |> Map.get(:body)
           |> String.split("\n")
-          |> Enum.split_while(&(!Regex.match?(~r/HUB_META_TAGS/, &1)))
+          |> Enum.split_while(&(!Regex.match?(~r/META_TAGS/, &1)))
           |> Tuple.to_list()
 
         {page, chunks}
