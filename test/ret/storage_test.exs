@@ -1,5 +1,6 @@
 defmodule Ret.StorageTest do
   use Ret.DataCase
+  import Ret.TestHelpers
 
   alias Ret.{OwnedFile, Storage}
 
@@ -74,16 +75,5 @@ defmodule Ret.StorageTest do
 
     assert content_type == expected_content_type
     assert stream |> Enum.map(& &1) |> Enum.join() == expected_content
-  end
-
-  defp generate_temp_file(contents) do
-    {:ok, temp_path} = Temp.mkdir("stored-file-test")
-    file_path = temp_path |> Path.join("test.txt")
-    file_path |> File.write(contents)
-    file_path
-  end
-
-  defp clear_all_stored_files do
-    File.rm_rf(Application.get_env(:ret, Storage)[:storage_path])
   end
 end

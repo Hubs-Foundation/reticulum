@@ -1,9 +1,11 @@
 defmodule RetWeb.Api.V1.SceneController do
   use RetWeb, :controller
 
-  alias Ret.{Repo, Scene, Storage}
+  alias Ret.{Account, Repo, Scene, Storage}
 
-  plug(RetWeb.Plugs.RateLimit when action in [:create, :update])
+  if Mix.env() != :test do
+    plug(RetWeb.Plugs.RateLimit when action in [:create, :update])
+  end
 
   def show(conn, %{"id" => scene_sid}) do
     case scene_sid |> get_scene() do
@@ -30,8 +32,21 @@ defmodule RetWeb.Api.V1.SceneController do
   end
 
   defp create_or_update(conn, params, scene \\ %Scene{}) do
-    account = Guardian.Plug.current_resource(conn)
+    account = conn |> Guardian.Plug.current_resource()
+    create_or_update(conn, params, scene, account)
+  end
 
+  defp create_or_update(
+         conn,
+         _params,
+         %Scene{account_id: scene_account_id},
+         %Account{account_id: account_id}
+       )
+       when not is_nil(scene_account_id) and scene_account_id != account_id do
+    conn |> send_resp(401, "")
+  end
+
+  defp create_or_update(conn, params, scene, account) do
     owned_file_results =
       Storage.promote(
         %{
