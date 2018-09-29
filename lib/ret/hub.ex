@@ -11,6 +11,7 @@ defmodule Ret.Hub do
   use Bitwise
 
   import Ecto.Changeset
+  import Ecto.Query
 
   alias Ret.{Hub, Repo}
   alias Ret.Hub.{HubSlug}
@@ -105,11 +106,8 @@ defmodule Ret.Hub do
   end
 
   def vacuum_entry_codes do
-    Repo
-    |> Ecto.Adapters.SQL.query(
-      "update hubs set entry_code = null, entry_code_expires_at = null where entry_code_expires_at < $1",
-      [Timex.now()]
-    )
+    query = from(h in Hub, where: h.entry_code_expires_at() < ^Timex.now())
+    Repo.update_all(query, set: [entry_code: nil, entry_code_expires_at: nil])
   end
 
   defp add_hub_sid_to_changeset(changeset) do
@@ -122,22 +120,22 @@ defmodule Ret.Hub do
     expires_at = Timex.now() |> Timex.shift(hours: @entry_code_expiration_hours)
 
     changeset
-    |> put_change(:entry_code, generate_entry_code())
+    |> put_change(:entry_code, generate_entry_code!())
     |> put_change(:entry_code_expires_at, expires_at)
   end
 
-  defp generate_entry_code(attempt \\ 0)
+  defp generate_entry_code!(attempt \\ 0)
 
-  defp generate_entry_code(attempt) when attempt > @max_entry_code_generate_attempts do
+  defp generate_entry_code!(attempt) when attempt > @max_entry_code_generate_attempts do
     raise "Unable to allocate entry code"
   end
 
-  defp generate_entry_code(attempt) do
+  defp generate_entry_code!(attempt) do
     candidate_entry_code = :rand.uniform(@max_entry_code)
 
     case Hub |> Repo.get_by(entry_code: candidate_entry_code) do
       nil -> candidate_entry_code
-      _ -> generate_entry_code(attempt + 1)
+      _ -> generate_entry_code!(attempt + 1)
     end
   end
 
