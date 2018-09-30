@@ -6,13 +6,13 @@ defmodule RetWeb.HubChannel do
   alias Ret.{Hub, Repo, SessionStat, Statix}
   alias RetWeb.{Presence}
 
-  def join("hub:" <> hub_sid, %{"display_name" => display_name}, socket) do
-    socket |> assign(:display_name, display_name) |> perform_join(hub_sid)
+  def join("hub:" <> hub_sid, %{"profile" => profile}, socket) do
+    socket |> assign(:profile, profile) |> perform_join(hub_sid)
   end
 
   # TODO remove when client is updated to always send display name on join
   def join("hub:" <> hub_sid, _payload, socket) do
-    socket |> assign(:display_name, "Unknown") |> perform_join(hub_sid)
+    socket |> assign(:profile, %{}) |> perform_join(hub_sid)
   end
 
   defp perform_join(socket, hub_sid) do
@@ -56,8 +56,8 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
-  def handle_in("events:profile_updated", %{"display_name" => display_name}, socket) do
-    socket = socket |> assign(:display_name, display_name) |> broadcast_presence_update
+  def handle_in("events:profile_updated", %{"profile" => profile}, socket) do
+    socket = socket |> assign(:profile, profile) |> broadcast_presence_update
     {:noreply, socket}
   end
 
@@ -98,7 +98,7 @@ defmodule RetWeb.HubChannel do
   end
 
   defp presence_meta_for_socket(socket) do
-    socket.assigns |> Map.take([:hub_id, :entered, :display_name])
+    socket.assigns |> Map.take([:hub_id, :entered, :profile])
   end
 
   defp join_with_hub(%Hub{entry_mode: :deny}, _socket) do
