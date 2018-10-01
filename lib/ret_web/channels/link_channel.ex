@@ -9,7 +9,7 @@ defmodule RetWeb.LinkChannel do
   intercept(["link_response"])
 
   def join("link:" <> link_code, _payload, socket) do
-    if Regex.match?(~r/\A[0-9]{4,6}\z/, link_code) do
+    if Regex.match?(~r/\A[0-9A-Z]{4,6}\z/, link_code) do
       # Expire channel in 5 minutes
       Process.send_after(self(), :channel_expired, 60 * 1000 * 5)
 
