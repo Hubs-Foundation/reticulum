@@ -10,6 +10,7 @@ defmodule RetWeb.HubChannel do
     Hub
     |> Repo.get_by(hub_sid: hub_sid)
     |> Repo.preload(scene: [:model_owned_file, :screenshot_owned_file])
+    |> Hub.ensure_valid_entry_code!()
     |> join_with_hub(socket)
   end
 
