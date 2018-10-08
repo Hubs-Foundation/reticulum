@@ -6,9 +6,7 @@ defmodule RetWeb.PageController do
     render_for_path(conn.request_path, conn)
   end
 
-  def render_for_path("/", conn) do
-    conn |> render_page("index")
-  end
+  def render_for_path("/", conn), do: conn |> render_page("index")
 
   def render_for_path("/scenes/" <> path, conn) do
     scene_sid =
@@ -28,13 +26,8 @@ defmodule RetWeb.PageController do
     |> send_resp(200, chunks)
   end
 
-  def render_for_path("/link", conn) do
-    conn |> render_page("link")
-  end
-
-  def render_for_path("/link/", conn) do
-    conn |> render_page("link")
-  end
+  def render_for_path("/link", conn), do: conn |> render_page("link")
+  def render_for_path("/link/", conn), do: conn |> render_page("link")
 
   def render_for_path("/link/" <> entry_code, conn) do
     # Rate limit requests for redirects.
@@ -46,13 +39,9 @@ defmodule RetWeb.PageController do
     end
   end
 
-  def render_for_path("/spoke", conn) do
-    conn |> render_page("spoke")
-  end
-
-  def render_for_path("/avatar-selector.html", conn) do
-    conn |> render_page("avatar-selector")
-  end
+  def render_for_path("/spoke", conn), do: conn |> render_page("spoke")
+  def render_for_path("/spoke/", conn), do: conn |> render_page("spoke")
+  def render_for_path("/avatar-selector.html", conn), do: conn |> render_page("avatar-selector")
 
   def render_for_path(path, conn) do
     hub_sid =
