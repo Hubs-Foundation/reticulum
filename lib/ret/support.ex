@@ -47,7 +47,7 @@ defmodule Ret.Support do
         %{
           "icon_emoji" => emoji,
           "link_names" => "1",
-          "unfurl_links" => true,
+          "unfurl_links" => "1",
           "text" => message
         }
         |> Poison.encode!()
