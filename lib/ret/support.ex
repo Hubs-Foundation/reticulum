@@ -19,7 +19,17 @@ defmodule Ret.Support do
 
   def send_notification_of_new_scene(scene) do
     scene_url = "#{RetWeb.Endpoint.url()}/scenes/#{scene.scene_sid}/#{scene.slug}"
-    notify_slack(":sunrise_over_mountains:", "New scene: #{scene_url}")
+
+    notify_slack(
+      ":sunrise_over_mountains:",
+      "New scene: #{
+        if scene.allow_promotion do
+          "Promotable"
+        else
+          "Not Promotable"
+        end
+      } #{scene_url}"
+    )
   end
 
   defp notify_slack_handles_of_hub_support(handles, hub) do
