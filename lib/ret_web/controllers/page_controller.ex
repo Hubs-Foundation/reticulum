@@ -36,6 +36,20 @@ defmodule RetWeb.PageController do
     conn |> render_page("link")
   end
 
+  def render_for_path("/link/" <> entry_code, conn) do
+    # Rate limit requests for redirects.
+    :timer.sleep(500)
+
+    case Hub.get_by_entry_code_string(entry_code) do
+      %Hub{} = hub -> conn |> redirect(to: "/#{hub.hub_sid}/#{hub.slug}")
+      _ -> conn |> send_resp(404, "")
+    end
+  end
+
+  def render_for_path("/spoke", conn) do
+    conn |> render_page("spoke")
+  end
+
   def render_for_path("/avatar-selector.html", conn) do
     conn |> render_page("avatar-selector")
   end

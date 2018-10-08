@@ -2,7 +2,7 @@ defmodule RetWeb.SceneControllerTest do
   use RetWeb.ConnCase
   import Ret.TestHelpers
 
-  alias Ret.{Account, Scene, Repo}
+  alias Ret.{Scene, Repo}
 
   setup [:create_account, :create_owned_file, :create_scene]
 
@@ -64,26 +64,6 @@ defmodule RetWeb.SceneControllerTest do
     params = scene_create_or_update_params(owned_file, "New Name", "New Description")
 
     conn |> patch(api_v1_scene_path(conn, :update, scene.scene_sid), params) |> response(401)
-  end
-
-  defp create_account(_) do
-    {:ok, account: Account.account_for_email("test@mozilla.com")}
-  end
-
-  defp create_owned_file(%{account: account}) do
-    {:ok, owned_file: generate_temp_owned_file(account)}
-  end
-
-  defp create_scene(%{account: account, owned_file: owned_file}) do
-    {:ok, scene} =
-      %Scene{}
-      |> Scene.changeset(account, owned_file, owned_file, owned_file, %{
-        name: "Test Scene",
-        description: "Test Scene Description"
-      })
-      |> Repo.insert_or_update()
-
-    {:ok, scene: scene}
   end
 
   defp scene_create_or_update_params(owned_file, name \\ "Name", description \\ "Description") do
