@@ -13,22 +13,41 @@ defmodule Ret.Support do
       |> where(channel: "slack")
       |> Repo.all()
       |> Enum.map(&Map.get(&1, :identifier))
-      |> notify_slack_handles(hub)
+      |> notify_slack_handles_of_hub_support(hub)
     end
   end
 
-  defp notify_slack_handles(handles, hub) do
-    with slack_url when is_binary(slack_url) <- module_config(:slack_webhook_url) do
-      at_handles = handles |> Enum.map(fn h -> "@#{h}" end)
+  def send_notification_of_new_scene(scene) do
+    scene_url = "#{RetWeb.Endpoint.url()}/scenes/#{scene.scene_sid}/#{scene.slug}"
 
+    notify_slack(
+      ":sunrise_over_mountains:",
+      "New scene: #{
+        if scene.allow_promotion do
+          "Promotable"
+        else
+          "Not Promotable"
+        end
+      } #{scene_url}"
+    )
+  end
+
+  defp notify_slack_handles_of_hub_support(handles, hub) do
+    at_handles = handles |> Enum.map(fn h -> "@#{h}" end)
+
+    message =
+      "*Incoming support request*\nOn call: #{at_handles |> Enum.join(" ")}\n<#{RetWeb.Endpoint.url()}/#{hub.hub_sid}|Enter Now>"
+
+    notify_slack(":quest", message)
+  end
+
+  defp notify_slack(emoji, message) do
+    with slack_url when is_binary(slack_url) <- module_config(:slack_webhook_url) do
       payload =
         %{
-          "icon_emoji" => ":quest:",
+          "icon_emoji" => emoji,
           "link_names" => "1",
-          "text" =>
-            "*Incoming support request*\nOn call: #{at_handles |> Enum.join(" ")}\n<#{RetWeb.Endpoint.url()}/#{
-              hub.hub_sid
-            }|Enter Now>"
+          "text" => message
         }
         |> Poison.encode!()
 
