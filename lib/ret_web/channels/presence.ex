@@ -6,25 +6,18 @@ defmodule RetWeb.Presence do
   alias Phoenix.Tracker.{State}
 
   def present_session_count do
-    present_sessions() |> Enum.map(& &1[:session_id]) |> Enum.uniq() |> length
+    present_sessions() |> Enum.count()
   end
 
   def present_room_count do
-    present_sessions() |> Enum.map(& &1[:hub_sid]) |> Enum.uniq() |> length
+    present_sessions()
+    |> Map.values()
+    |> Enum.map(&(&1[:metas] |> Enum.at(0) |> Map.get(:hub_id)))
+    |> Enum.uniq()
+    |> length
   end
 
   defp present_sessions do
-    __MODULE__
-    |> GenServer.call({:list, nil})
-    |> State.online_list()
-    |> Enum.filter(fn x ->
-      case x do
-        {{"hub:" <> _hub_id, _pid, _session_id}, _payload, _tag} -> true
-        _ -> false
-      end
-    end)
-    |> Enum.map(fn {{_topic, _pid, session_id}, %{hub_id: hub_id}, _tag} ->
-      %{session_id: session_id, hub_id: hub_id}
-    end)
+    list("ret")
   end
 end
