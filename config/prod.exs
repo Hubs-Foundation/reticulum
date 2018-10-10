@@ -75,7 +75,7 @@ config :ret, page_auth: [username: "", password: "", realm: "Reticulum"]
 config :ret, Ret.Scheduler,
   jobs: [
     # Send stats to StatsD every 5 seconds
-    {{:extended, "*/5 * * * *"}, {Ret.StatsJob, :send_statsd_gauges, []}}
+    {{:extended, "*/5 * * * *"}, {Ret.StatsJob, :send_statsd_gauges, []}},
 
     # Flush stats to db every 5 minutes
     {{:cron, "*/5 * * * *"}, {Ret.StatsJob, :save_node_stats, []}}
