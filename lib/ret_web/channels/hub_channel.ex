@@ -101,7 +101,7 @@ defmodule RetWeb.HubChannel do
   end
 
   defp presence_meta_for_socket(socket) do
-    socket.assigns |> Map.take([:hub_id, :entered, :profile, :context])
+    socket.assigns |> Map.take([:hub_id, :presence, :profile, :context])
   end
 
   defp join_with_hub(%Hub{entry_mode: :deny}, _socket) do
@@ -109,7 +109,7 @@ defmodule RetWeb.HubChannel do
   end
 
   defp join_with_hub(%Hub{} = hub, socket) do
-    with socket <- socket |> assign(:hub_sid, hub.hub_sid) |> assign(:entered, false),
+    with socket <- socket |> assign(:hub_sid, hub.hub_sid) |> assign(:presence, :lobby),
          response <- RetWeb.Api.V1.HubView.render("show.json", %{hub: hub}) do
       existing_stat_count =
         socket
@@ -154,7 +154,7 @@ defmodule RetWeb.HubChannel do
     |> SessionStat.stat_query_for_socket()
     |> Repo.update_all(set: stat_attributes)
 
-    socket |> assign(:entered, true) |> broadcast_presence_update
+    socket |> assign(:presence, :room) |> broadcast_presence_update
   end
 
   defp handle_max_occupant_update(socket, occupant_count) do
