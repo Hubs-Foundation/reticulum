@@ -76,8 +76,10 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
-  def handle_info({:begin_tracking, session_id, hub_sid}, socket) do
+  def handle_info({:begin_tracking, session_id, _hub_sid}, socket) do
     {:ok, _} = Presence.track(socket, session_id, socket |> presence_meta_for_socket)
+    push(socket, "presence_state", socket |> Presence.list())
+
     {:noreply, socket}
   end
 
@@ -140,6 +142,13 @@ defmodule RetWeb.HubChannel do
 
   defp handle_entered_event(socket, payload) do
     stat_attributes = [entered_event_payload: payload, entered_event_received_at: NaiveDateTime.utc_now()]
+
+    # Flip context to have HMD if entered with display type
+    socket =
+      with %{"entryDisplayType" => display} when is_binary(display) and display != "Screen" <- payload,
+           %{context: context} when is_map(context) <- socket.assigns do
+        socket |> assign(context, context |> Map.put("hmd", true))
+      end
 
     socket
     |> SessionStat.stat_query_for_socket()
