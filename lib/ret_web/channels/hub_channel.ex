@@ -148,6 +148,8 @@ defmodule RetWeb.HubChannel do
       with %{"entryDisplayType" => display} when is_binary(display) and display != "Screen" <- payload,
            %{context: context} when is_map(context) <- socket.assigns do
         socket |> assign(context, context |> Map.put("hmd", true))
+      else
+        _ -> socket
       end
 
     socket
