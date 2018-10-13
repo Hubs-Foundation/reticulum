@@ -68,7 +68,7 @@ defmodule RetWeb.HubChannel do
   end
 
   def handle_in("message" = event, payload, socket) do
-    broadcast!(socket, event, payload)
+    broadcast!(socket, event, payload |> Map.put(:session_id, socket.assigns.session_id))
     {:noreply, socket}
   end
 
