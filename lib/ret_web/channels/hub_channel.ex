@@ -101,7 +101,7 @@ defmodule RetWeb.HubChannel do
   end
 
   defp presence_meta_for_socket(socket) do
-    socket.assigns |> Map.take([:hub_id, :presence, :profile, :context])
+    socket.assigns |> Map.take([:presence, :profile, :context])
   end
 
   defp join_with_hub(%Hub{entry_mode: :deny}, _socket) do
@@ -147,7 +147,7 @@ defmodule RetWeb.HubChannel do
     socket =
       with %{"entryDisplayType" => display} when is_binary(display) and display != "Screen" <- payload,
            %{context: context} when is_map(context) <- socket.assigns do
-        socket |> assign(context, context |> Map.put("hmd", true))
+        socket |> assign(:context, context |> Map.put("hmd", true))
       else
         _ -> socket
       end
