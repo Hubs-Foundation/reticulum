@@ -5,7 +5,7 @@ defmodule Ret.Sids do
     @num_random_bits_for_sid
     |> :crypto.strong_rand_bytes()
     |> Base.url_encode64()
-    |> String.slice(0, 7)
+    |> String.slice(0, 6)
     |> String.replace(~r/[_-]/, "z")
   end
 end
