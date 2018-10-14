@@ -42,7 +42,8 @@ config :ret, Ret.SingletonScheduler,
   jobs: [
     # Vacuum stored files
     {"@daily", {Ret.Storage, :vacuum, []}},
-    {"@daily", {Ret.LoginToken, :expire_stale, []}}
+    {"@daily", {Ret.LoginToken, :expire_stale, []}},
+    {"@daily", {Ret.Hub, :vacuum_entry_codes, []}}
   ]
 
 # Import environment specific config. This must remain at the bottom

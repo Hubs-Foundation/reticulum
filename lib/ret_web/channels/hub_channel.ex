@@ -6,19 +6,20 @@ defmodule RetWeb.HubChannel do
   alias Ret.{Hub, Repo, SessionStat, Statix}
   alias RetWeb.{Presence}
 
-  def join("hub:" <> hub_sid, %{"profile" => profile}, socket) do
-    socket |> assign(:profile, profile) |> perform_join(hub_sid)
+  def join("hub:" <> hub_sid, %{"profile" => profile, "context" => context}, socket) do
+    socket |> assign(:profile, profile) |> assign(:context, context) |> perform_join(hub_sid)
   end
 
   # TODO remove when client is updated to always send display name on join
   def join("hub:" <> hub_sid, _payload, socket) do
-    socket |> assign(:profile, %{}) |> perform_join(hub_sid)
+    socket |> assign(:profile, %{}) |> assign(:context, %{}) |> perform_join(hub_sid)
   end
 
   defp perform_join(socket, hub_sid) do
     Hub
     |> Repo.get_by(hub_sid: hub_sid)
     |> Repo.preload(scene: [:model_owned_file, :screenshot_owned_file])
+    |> Hub.ensure_valid_entry_code!()
     |> join_with_hub(socket)
   end
 
@@ -67,7 +68,7 @@ defmodule RetWeb.HubChannel do
   end
 
   def handle_in("message" = event, payload, socket) do
-    broadcast!(socket, event, payload)
+    broadcast!(socket, event, payload |> Map.put(:session_id, socket.assigns.session_id))
     {:noreply, socket}
   end
 
@@ -77,6 +78,8 @@ defmodule RetWeb.HubChannel do
 
   def handle_info({:begin_tracking, session_id, _hub_sid}, socket) do
     {:ok, _} = Presence.track(socket, session_id, socket |> presence_meta_for_socket)
+    push(socket, "presence_state", socket |> Presence.list())
+
     {:noreply, socket}
   end
 
@@ -98,7 +101,7 @@ defmodule RetWeb.HubChannel do
   end
 
   defp presence_meta_for_socket(socket) do
-    socket.assigns |> Map.take([:hub_id, :entered, :profile])
+    socket.assigns |> Map.take([:hub_id, :presence, :profile, :context])
   end
 
   defp join_with_hub(%Hub{entry_mode: :deny}, _socket) do
@@ -106,7 +109,7 @@ defmodule RetWeb.HubChannel do
   end
 
   defp join_with_hub(%Hub{} = hub, socket) do
-    with socket <- socket |> assign(:hub_sid, hub.hub_sid) |> assign(:entered, false),
+    with socket <- socket |> assign(:hub_sid, hub.hub_sid) |> assign(:presence, :lobby),
          response <- RetWeb.Api.V1.HubView.render("show.json", %{hub: hub}) do
       existing_stat_count =
         socket
@@ -140,11 +143,20 @@ defmodule RetWeb.HubChannel do
   defp handle_entered_event(socket, payload) do
     stat_attributes = [entered_event_payload: payload, entered_event_received_at: NaiveDateTime.utc_now()]
 
+    # Flip context to have HMD if entered with display type
+    socket =
+      with %{"entryDisplayType" => display} when is_binary(display) and display != "Screen" <- payload,
+           %{context: context} when is_map(context) <- socket.assigns do
+        socket |> assign(context, context |> Map.put("hmd", true))
+      else
+        _ -> socket
+      end
+
     socket
     |> SessionStat.stat_query_for_socket()
     |> Repo.update_all(set: stat_attributes)
 
-    socket |> assign(:entered, true) |> broadcast_presence_update
+    socket |> assign(:presence, :room) |> broadcast_presence_update
   end
 
   defp handle_max_occupant_update(socket, occupant_count) do
