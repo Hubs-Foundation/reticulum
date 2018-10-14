@@ -34,16 +34,6 @@ defmodule RetWeb.PageController do
     conn |> redirect_to_hub_sid(hub_sid)
   end
 
-  defp redirect_to_hub_sid(conn, hub_sid) do
-    # Rate limit requests for redirects.
-    :timer.sleep(500)
-
-    case Hub.get_by(hub_sid: hub_sid) do
-      %Hub{} = hub -> conn |> redirect(to: "/#{hub.hub_sid}/#{hub.slug}")
-      _ -> conn |> send_resp(404, "")
-    end
-  end
-
   def render_for_path("/spoke", conn), do: conn |> render_page("spoke")
   def render_for_path("/spoke/", conn), do: conn |> render_page("spoke")
   def render_for_path("/avatar-selector.html", conn), do: conn |> render_page("avatar-selector")
@@ -64,6 +54,16 @@ defmodule RetWeb.PageController do
     conn
     |> put_resp_header("content-type", "text/html; charset=utf-8")
     |> send_resp(200, chunks)
+  end
+
+  defp redirect_to_hub_sid(conn, hub_sid) do
+    # Rate limit requests for redirects.
+    :timer.sleep(500)
+
+    case Hub |> Repo.get_by(hub_sid: hub_sid) do
+      %Hub{} = hub -> conn |> redirect(to: "/#{hub.hub_sid}/#{hub.slug}")
+      _ -> conn |> send_resp(404, "")
+    end
   end
 
   defp render_page(conn, page) do
