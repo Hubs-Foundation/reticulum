@@ -112,8 +112,7 @@ defmodule Ret.Hub do
 
   defp add_hub_sid_to_changeset(changeset) do
     hub_sid = Ret.Sids.generate_sid()
-    # Prefix with 0 just to make migration off of these links easier.
-    changeset |> put_change(:hub_sid, "0#{hub_sid}")
+    changeset |> put_change(:hub_sid, hub_sid)
   end
 
   defp add_entry_code_to_changeset(changeset) do
