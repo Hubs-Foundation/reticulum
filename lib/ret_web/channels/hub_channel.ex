@@ -75,7 +75,7 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
-  def handle_info({:begin_tracking, session_id, hub_sid}, socket) do
+  def handle_info({:begin_tracking, session_id, _hub_sid}, socket) do
     {:ok, _} = Presence.track(socket, session_id, socket |> presence_meta_for_socket)
     {:noreply, socket}
   end
