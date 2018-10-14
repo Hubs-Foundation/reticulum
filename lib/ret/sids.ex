@@ -6,6 +6,6 @@ defmodule Ret.Sids do
     |> :crypto.strong_rand_bytes()
     |> Base.url_encode64()
     |> String.slice(0, 7)
-    |> String.replace(~r/[_-]/, "z")
+    |> String.replace(~r/[_-]/, (:rand.uniform(9) - 1) |> Integer.to_string())
   end
 end
