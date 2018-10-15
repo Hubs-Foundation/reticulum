@@ -1,5 +1,6 @@
 defmodule RetWeb.PageController do
   use RetWeb, :controller
+  import Ecto.Query
   alias Ret.{Repo, Hub, Scene}
 
   def call(conn, _params) do
@@ -29,9 +30,9 @@ defmodule RetWeb.PageController do
   def render_for_path("/link", conn), do: conn |> render_page("link")
   def render_for_path("/link/", conn), do: conn |> render_page("link")
 
-  def render_for_path("/link/" <> hub_sid_and_slug, conn) do
-    hub_sid = hub_sid_and_slug |> String.split("/") |> List.first()
-    conn |> redirect_to_hub_sid(hub_sid)
+  def render_for_path("/link/" <> hub_identifier_and_slug, conn) do
+    hub_identifier = hub_identifier_and_slug |> String.split("/") |> List.first()
+    conn |> redirect_to_hub_identifier(hub_identifier)
   end
 
   def render_for_path("/spoke", conn), do: conn |> render_page("spoke")
@@ -56,8 +57,17 @@ defmodule RetWeb.PageController do
     |> send_resp(200, chunks)
   end
 
-  defp redirect_to_hub_sid(conn, hub_sid) do
-    case Hub |> Repo.get_by(hub_sid: hub_sid) do
+  # Redirect to the specified hub identifier, which can be a sid or an entry code
+  defp redirect_to_hub_identifier(conn, hub_identifier) do
+    # Rate limit requests for redirects.
+    :timer.sleep(500)
+
+    hub =
+      Hub
+      |> where([h], h.hub_sid == ^hub_identifier or h.entry_code == ^hub_identifier)
+      |> Repo.one()
+
+    case hub do
       %Hub{} = hub -> conn |> redirect(to: "/#{hub.hub_sid}/#{hub.slug}")
       _ -> conn |> send_resp(404, "")
     end
