@@ -8,7 +8,7 @@ defmodule Ret.WebPushSubscription do
 
   @schema_prefix "ret0"
   @primary_key {:web_push_subscription_id, :id, autogenerate: true}
-  @push_rate_limit_seconds = 5 * 60
+  @push_rate_limit_seconds 5 * 60
 
   schema "web_push_subscriptions" do
     field(:p256dh, :string)
@@ -40,7 +40,7 @@ defmodule Ret.WebPushSubscription do
     end
   end
 
-  def maybe_send(body, %WebPushSubscription{endpoint: endpoint, p256dh: p256dh, auth: auth} = web_push_subscription) do
+  def maybe_send(%WebPushSubscription{endpoint: endpoint, p256dh: p256dh, auth: auth} = web_push_subscription, body) do
     if may_send?(web_push_subscription) do
       subscription = %{
         "endpoint" => endpoint,
@@ -48,7 +48,12 @@ defmodule Ret.WebPushSubscription do
       }
 
       retry with: exp_backoff() |> randomize |> cap(5_000) |> expiry(10_000) do
-        {:ok, response} = WebPushEncryption.send_web_push(body, subscription)
+        case WebPushEncryption.send_web_push(body, subscription) do
+          {:ok, _response} -> :ok
+          _ -> :error
+        end
+      after
+        result -> result
       else
         error -> error
       end

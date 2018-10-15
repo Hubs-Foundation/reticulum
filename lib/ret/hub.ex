@@ -13,7 +13,7 @@ defmodule Ret.Hub do
   import Ecto.Changeset
   import Ecto.Query
 
-  alias Ret.{Hub, Repo}
+  alias Ret.{Hub, Repo, WebPushSubscription}
   alias Ret.Hub.{HubSlug}
 
   use Bitwise

@@ -62,6 +62,15 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
+  def handle_info({:send_join_push_notifications, hub_id}, socket) do
+    Hub
+    |> Repo.get_by(hub_id: hub_id)
+    |> Repo.preload(:web_push_subscriptions)
+    |> Hub.send_push_messages_for_join()
+
+    {:noreply, socket}
+  end
+
   def handle_info(_message, socket) do
     {:noreply, socket}
   end
@@ -97,6 +106,7 @@ defmodule RetWeb.HubChannel do
       end
 
       send(self(), {:begin_tracking, socket.assigns.session_id, hub.hub_sid})
+      send(self(), {:send_join_push_notifications, hub.hub_id})
 
       Statix.increment("ret.channels.hub.joins.ok")
 
