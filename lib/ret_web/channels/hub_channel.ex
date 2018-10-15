@@ -9,7 +9,7 @@ defmodule RetWeb.HubChannel do
   def join("hub:" <> hub_sid, _payload, socket) do
     Hub
     |> Repo.get_by(hub_sid: hub_sid)
-    |> Repo.preload(scene: [:model_owned_file, :screenshot_owned_file])
+    |> Repo.preload(scene: [:model_owned_file, :screenshot_owned_file, :web_push_subscriptions])
     |> Hub.ensure_valid_entry_code!()
     |> join_with_hub(socket)
   end
@@ -43,7 +43,7 @@ defmodule RetWeb.HubChannel do
 
   def handle_in("events:request_support", _payload, socket) do
     hub = socket |> hub_for_socket
-    Task.async(fn -> hub |> Ret.Support.request_support_for_hub() end)
+    Task.start_link(fn -> hub |> Ret.Support.request_support_for_hub() end)
 
     {:noreply, socket}
   end
@@ -59,15 +59,6 @@ defmodule RetWeb.HubChannel do
 
   def handle_info({:begin_tracking, session_id, hub_sid}, socket) do
     {:ok, _} = Presence.track(socket, session_id, %{hub_id: hub_sid})
-    {:noreply, socket}
-  end
-
-  def handle_info({:send_join_push_notifications, hub_id}, socket) do
-    Hub
-    |> Repo.get_by(hub_id: hub_id)
-    |> Repo.preload(:web_push_subscriptions)
-    |> Hub.send_push_messages_for_join()
-
     {:noreply, socket}
   end
 
@@ -106,7 +97,7 @@ defmodule RetWeb.HubChannel do
       end
 
       send(self(), {:begin_tracking, socket.assigns.session_id, hub.hub_sid})
-      send(self(), {:send_join_push_notifications, hub.hub_id})
+      Task.start_link(fn -> hub |> Hub.send_push_messages_for_join() end)
 
       Statix.increment("ret.channels.hub.joins.ok")
 

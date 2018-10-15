@@ -72,7 +72,7 @@ defmodule RetWeb.Api.V1.SceneController do
           scene
           |> Repo.preload([:model_owned_file, :screenshot_owned_file, :scene_owned_file])
 
-        Task.async(fn -> scene |> Ret.Support.send_notification_of_new_scene() end)
+        Task.start_link(fn -> scene |> Ret.Support.send_notification_of_new_scene() end)
 
         case result do
           :ok ->
