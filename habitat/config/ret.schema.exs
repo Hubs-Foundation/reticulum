@@ -5,16 +5,14 @@
     "ueberauth.Elixir.Ueberauth.Strategy.Google.OAuth.client_id": [
       commented: false,
       datatype: :atom,
-      doc:
-        "Provide documentation for ueberauth.Elixir.Ueberauth.Strategy.Google.OAuth.client_id here.",
+      doc: "Provide documentation for ueberauth.Elixir.Ueberauth.Strategy.Google.OAuth.client_id here.",
       hidden: false,
       to: "ueberauth.Elixir.Ueberauth.Strategy.Google.OAuth.client_id"
     ],
     "ueberauth.Elixir.Ueberauth.Strategy.Google.OAuth.client_secret": [
       commented: false,
       datatype: :atom,
-      doc:
-        "Provide documentation for ueberauth.Elixir.Ueberauth.Strategy.Google.OAuth.client_secret here.",
+      doc: "Provide documentation for ueberauth.Elixir.Ueberauth.Strategy.Google.OAuth.client_secret here.",
       hidden: false,
       to: "ueberauth.Elixir.Ueberauth.Strategy.Google.OAuth.client_secret"
     ],
@@ -303,6 +301,27 @@
       doc: "Slack Webhook URL for incoming support requests",
       hidden: false,
       to: "ret.Elixir.Ret.Support.slack_webhook_url"
+    ],
+    "web_push_encryption.vapid_details.subject": [
+      commented: false,
+      datatype: :binary,
+      doc: "Subject for Web Push API",
+      hidden: false,
+      to: "web_push_encryption.vapid_details.subject"
+    ],
+    "web_push_encryption.vapid_details.public_key": [
+      commented: false,
+      datatype: :binary,
+      doc: "Public Key for Web Push API",
+      hidden: false,
+      to: "web_push_encryption.vapid_details.public_key"
+    ],
+    "web_push_encryption.vapid_details.private_key": [
+      commented: false,
+      datatype: :binary,
+      doc: "Private Key for Web Push API",
+      hidden: false,
+      to: "web_push_encryption.vapid_details.private_key"
     ]
   ],
   transforms: [],

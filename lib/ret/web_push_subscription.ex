@@ -2,11 +2,13 @@ defmodule Ret.WebPushSubscription do
   use Ecto.Schema
   import Ecto.Changeset
   import Ecto.Query
+  use Retry
 
   alias Ret.{Hub, Repo, WebPushSubscription}
 
   @schema_prefix "ret0"
   @primary_key {:web_push_subscription_id, :id, autogenerate: true}
+  @push_rate_limit_seconds = 5 * 60
 
   schema "web_push_subscriptions" do
     field(:p256dh, :string)
@@ -36,6 +38,28 @@ defmodule Ret.WebPushSubscription do
     with %WebPushSubscription{} = web_push_subscription <- find_by_hub_id_and_subscription(hub_id, subscription) do
       web_push_subscription |> Repo.delete!()
     end
+  end
+
+  def maybe_send(body, %WebPushSubscription{endpoint: endpoint, p256dh: p256dh, auth: auth} = web_push_subscription) do
+    if may_send?(web_push_subscription) do
+      subscription = %{
+        "endpoint" => endpoint,
+        "keys" => %{"p256dh" => p256dh, "auth" => auth}
+      }
+
+      retry with: exp_backoff() |> randomize |> cap(5_000) |> expiry(10_000) do
+        {:ok, response} = WebPushEncryption.send_web_push(body, subscription)
+      else
+        error -> error
+      end
+
+      web_push_subscription |> changeset_for_notification_sent |> Repo.update!()
+    end
+  end
+
+  defp may_send?(%WebPushSubscription{last_notified_at: last_notified_at}) do
+    limit_ago = Timex.now() |> Timex.shift(seconds: -@push_rate_limit_seconds)
+    last_notified_at |> Timex.before?(limit_ago)
   end
 
   defp find_by_hub_id_and_subscription(hub_id, %{"endpoint" => endpoint}) do
