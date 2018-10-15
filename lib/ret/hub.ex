@@ -35,6 +35,7 @@ defmodule Ret.Hub do
     field(:spawned_object_types, :integer, default: 0)
     field(:entry_mode, Ret.Hub.EntryMode)
     belongs_to(:scene, Ret.Scene, references: :scene_id)
+    has_many(:web_push_subscriptions, Ret.WebPushSubscription, foreign_key: :hub_id)
 
     timestamps()
   end
@@ -81,6 +82,18 @@ defmodule Ret.Hub do
   def changeset_to_deny_entry(%Hub{} = hub) do
     hub
     |> cast(%{entry_mode: :deny}, [:entry_mode])
+  end
+
+  def send_push_messages_for_join(%Hub{web_push_subscriptions: subscriptions} = hub) do
+    body = hub |> push_message_for_join
+
+    for subscription <- subscriptions do
+      subscription |> WebPushSubscription.maybe_send(body)
+    end
+  end
+
+  defp push_message_for_join(%Hub{name: name}) do
+    "Someone has joined the room #{name}"
   end
 
   defp changeset_for_new_entry_code(%Hub{} = hub) do
