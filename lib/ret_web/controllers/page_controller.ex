@@ -61,7 +61,7 @@ defmodule RetWeb.PageController do
     # Rate limit requests for redirects.
     :timer.sleep(500)
 
-    hub = Repo.get_by(Hub, hub_sid: hub_sid) || Hub.get_by_entry_code_string(hub_identifier)
+    hub = Repo.get_by(Hub, hub_sid: hub_identifier) || Hub.get_by_entry_code_string(hub_identifier)
 
     case hub do
       %Hub{} = hub -> conn |> redirect(to: "/#{hub.hub_sid}/#{hub.slug}")
