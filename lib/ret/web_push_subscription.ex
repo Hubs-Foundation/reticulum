@@ -1,0 +1,59 @@
+defmodule Ret.WebPushSubscription do
+  use Ecto.Schema
+  import Ecto.Changeset
+  import Ecto.Query
+
+  alias Ret.{Hub, Repo, WebPushSubscription}
+
+  @schema_prefix "ret0"
+  @primary_key {:web_push_subscription_id, :id, autogenerate: true}
+
+  schema "web_push_subscriptions" do
+    field(:p256dh, :string)
+    field(:auth, :string)
+    field(:endpoint, :string)
+    field(:last_notified_at, :utc_datetime)
+
+    belongs_to(:hub, Hub, references: :hub_id)
+
+    timestamps()
+  end
+
+  def subscribe_to_hub(
+        %Hub{hub_id: hub_id} = hub,
+        %{"endpoint" => endpoint, "keys" => %{"p256dh" => p256dh, "auth" => auth}} = subscription
+      ) do
+    find_by_hub_id_and_subscription(hub_id, subscription) ||
+      %WebPushSubscription{}
+      |> changeset_for_new(hub, %{p256dh: p256dh, auth: auth, endpoint: endpoint})
+      |> Repo.insert!()
+  end
+
+  def unsubscribe_from_hub(
+        %Hub{hub_id: hub_id},
+        subscription
+      ) do
+    with %WebPushSubscription{} = web_push_subscription <- find_by_hub_id_and_subscription(hub_id, subscription) do
+      web_push_subscription |> Repo.delete!()
+    end
+  end
+
+  defp find_by_hub_id_and_subscription(hub_id, %{"endpoint" => endpoint}) do
+    WebPushSubscription
+    |> where([t], t.hub_id == ^hub_id and t.endpoint == ^endpoint)
+    |> Repo.one()
+  end
+
+  defp changeset_for_new(%WebPushSubscription{} = subscription, hub, params) do
+    subscription
+    |> cast(params, [:p256dh, :auth, :endpoint])
+    |> put_assoc(:hub, hub)
+    |> validate_required([:p256dh, :auth, :endpoint, :hub])
+  end
+
+  defp changeset_for_notification_sent(%WebPushSubscription{} = subscription) do
+    subscription
+    |> cast(%{}, [])
+    |> put_change(:last_notified_at, Timex.now())
+  end
+end
