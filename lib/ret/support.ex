@@ -22,13 +22,7 @@ defmodule Ret.Support do
 
     notify_slack(
       ":sunrise_over_mountains:",
-      "New scene: #{
-        if scene.allow_promotion do
-          "Promotable"
-        else
-          "Not Promotable"
-        end
-      } #{scene_url}"
+      "New scene: #{scene_url}"
     )
   end
 
