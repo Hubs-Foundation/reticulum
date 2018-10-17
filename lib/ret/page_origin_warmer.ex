@@ -2,7 +2,7 @@ defmodule Ret.PageOriginWarmer do
   use Cachex.Warmer
   use Retry
 
-  @pages ~w(index hub link scene spoke avatar-selector)
+  @pages ~w(index.html hub.html link.html scene.html spoke.html avatar-selector.html hub.service.js)
 
   def interval, do: :timer.seconds(15)
 
@@ -22,7 +22,7 @@ defmodule Ret.PageOriginWarmer do
 
   defp page_to_cache_entry(page) do
     # Split the HTML file into two parts, on the line that contains HUB_META_TAGS, so we can add meta tags
-    case "#{module_config(:page_origin)}/#{page}.html"
+    case "#{module_config(:page_origin)}/#{page}"
          |> retry_get_until_success do
       :error ->
         # Nils are rejected after tasks are joined

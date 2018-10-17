@@ -6,7 +6,7 @@ defmodule RetWeb.PageController do
     render_for_path(conn.request_path, conn)
   end
 
-  def render_for_path("/", conn), do: conn |> render_page("index")
+  def render_for_path("/", conn), do: conn |> render_page("index.html")
 
   def render_for_path("/scenes/" <> path, conn) do
     scene_sid =
@@ -18,7 +18,7 @@ defmodule RetWeb.PageController do
     scene_meta_tags = Phoenix.View.render_to_string(RetWeb.PageView, "scene-meta.html", scene: scene)
 
     chunks =
-      chunks_for_page("scene")
+      chunks_for_page("scene.html")
       |> List.insert_at(1, scene_meta_tags)
 
     conn
@@ -26,8 +26,8 @@ defmodule RetWeb.PageController do
     |> send_resp(200, chunks)
   end
 
-  def render_for_path("/link", conn), do: conn |> render_page("link")
-  def render_for_path("/link/", conn), do: conn |> render_page("link")
+  def render_for_path("/link", conn), do: conn |> render_page("link.html")
+  def render_for_path("/link/", conn), do: conn |> render_page("link.html")
 
   def render_for_path("/link/" <> entry_code, conn) do
     # Rate limit requests for redirects.
@@ -39,9 +39,10 @@ defmodule RetWeb.PageController do
     end
   end
 
-  def render_for_path("/spoke", conn), do: conn |> render_page("spoke")
-  def render_for_path("/spoke/", conn), do: conn |> render_page("spoke")
-  def render_for_path("/avatar-selector.html", conn), do: conn |> render_page("avatar-selector")
+  def render_for_path("/spoke", conn), do: conn |> render_page("spoke.html")
+  def render_for_path("/spoke/", conn), do: conn |> render_page("spoke.html")
+  def render_for_path("/avatar-selector.html", conn), do: conn |> render_page("avatar-selector.html")
+  def render_for_path("/hub.service.js", conn), do: conn |> render_page("hub.service.js")
 
   def render_for_path(path, conn) do
     hub_sid =
@@ -53,7 +54,7 @@ defmodule RetWeb.PageController do
     hub_meta_tags = Phoenix.View.render_to_string(RetWeb.PageView, "hub-meta.html", hub: hub, scene: hub.scene)
 
     chunks =
-      chunks_for_page("hub")
+      chunks_for_page("hub.html")
       |> List.insert_at(1, hub_meta_tags)
 
     conn
@@ -63,7 +64,7 @@ defmodule RetWeb.PageController do
 
   defp render_page(conn, page) do
     chunks = page |> chunks_for_page
-    conn |> render_chunks(chunks)
+    conn |> render_chunks(chunks, page |> content_type_for_page)
   end
 
   defp chunks_for_page(page) do
@@ -78,9 +79,17 @@ defmodule RetWeb.PageController do
     conn |> send_resp(404, "")
   end
 
-  defp render_chunks(conn, chunks) do
+  defp content_type_for_page("hub.service.js") do
+    "application/javascript; charset=utf-8"
+  end
+
+  defp content_type_for_page(_) do
+    "text/html; charset=utf-8"
+  end
+
+  defp render_chunks(conn, chunks, content_type) do
     conn
-    |> put_resp_header("content-type", "text/html; charset=utf-8")
+    |> put_resp_header("content-type", content_type)
     |> send_resp(200, chunks)
   end
 end

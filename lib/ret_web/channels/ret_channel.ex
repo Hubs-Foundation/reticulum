@@ -10,8 +10,10 @@ defmodule RetWeb.RetChannel do
 
   def join("ret", %{"hub_id" => hub_id} = payload, socket) do
     Statix.increment("ret.channels.ret.joins.ok")
+    vapid_public_key = Application.get_env(:web_push_encryption, :vapid_details)[:public_key]
+
     send(self(), {:begin_tracking, socket.assigns.session_id, hub_id})
-    {:ok, "{}", socket}
+    {:ok, %{vapid_public_key: vapid_public_key}, socket}
   end
 
   def handle_info({:begin_tracking, session_id, hub_id}, socket) do
