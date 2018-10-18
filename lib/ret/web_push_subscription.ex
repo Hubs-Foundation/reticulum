@@ -8,7 +8,7 @@ defmodule Ret.WebPushSubscription do
 
   @schema_prefix "ret0"
   @primary_key {:web_push_subscription_id, :id, autogenerate: true}
-  @push_rate_limit_seconds 5 * 60
+  @push_rate_limit_seconds 60
 
   schema "web_push_subscriptions" do
     field(:p256dh, :string)

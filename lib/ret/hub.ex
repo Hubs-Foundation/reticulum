@@ -92,8 +92,21 @@ defmodule Ret.Hub do
     end
   end
 
-  defp push_message_for_join(%Hub{name: name}) do
-    "Someone has joined the room #{name}"
+  defp push_message_for_join(%Hub{} = hub) do
+    %{type: "join", hub_name: hub.name, hub_id: hub.hub_sid, hub_url: hub |> url_for, image: hub |> image_url_for}
+    |> Poison.encode!()
+  end
+
+  def url_for(%Hub{} = hub) do
+    "#{RetWeb.Endpoint.url()}/#{hub.hub_sid}/#{hub.slug}"
+  end
+
+  def image_url_for(%Hub{scene: nil}) do
+    "#{RetWeb.Endpoint.url()}/hub-preview.png"
+  end
+
+  def image_url_for(%Hub{scene: scene}) do
+    scene.screenshot_owned_file |> Ret.OwnedFile.uri_for() |> URI.to_string()
   end
 
   defp changeset_for_new_entry_code(%Hub{} = hub) do
