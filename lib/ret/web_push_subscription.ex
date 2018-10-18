@@ -4,7 +4,7 @@ defmodule Ret.WebPushSubscription do
   import Ecto.Query
   use Retry
 
-  alias Ret.{Hub, Repo, WebPushSubscription}
+  alias Ret.{Hub, Repo, Statix, WebPushSubscription}
 
   @schema_prefix "ret0"
   @primary_key {:web_push_subscription_id, :id, autogenerate: true}
@@ -43,8 +43,8 @@ defmodule Ret.WebPushSubscription do
   def maybe_send(%WebPushSubscription{endpoint: endpoint, p256dh: p256dh, auth: auth} = web_push_subscription, body) do
     if may_send?(web_push_subscription) do
       subscription = %{
-        "endpoint" => endpoint,
-        "keys" => %{"p256dh" => p256dh, "auth" => auth}
+        endpoint: endpoint,
+        keys: %{p256dh: p256dh, auth: auth}
       }
 
       retry with: exp_backoff() |> randomize |> cap(5_000) |> expiry(10_000) do
@@ -58,9 +58,12 @@ defmodule Ret.WebPushSubscription do
         error -> error
       end
 
+      Statix.increment("ret.web_push.hub.sent", 1)
       web_push_subscription |> changeset_for_notification_sent |> Repo.update!()
     end
   end
+
+  defp may_send?(%WebPushSubscription{last_notified_at: nil}), do: true
 
   defp may_send?(%WebPushSubscription{last_notified_at: last_notified_at}) do
     limit_ago = Timex.now() |> Timex.shift(seconds: -@push_rate_limit_seconds)

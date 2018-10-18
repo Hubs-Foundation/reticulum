@@ -3,22 +3,17 @@ defmodule RetWeb.HubChannel do
 
   use RetWeb, :channel
 
-  alias Ret.{Hub, Repo, SessionStat, Statix}
+  alias Ret.{Hub, Repo, SessionStat, Statix, WebPushSubscription}
   alias RetWeb.{Presence}
 
   def join("hub:" <> hub_sid, %{"profile" => profile, "context" => context}, socket) do
     socket |> assign(:profile, profile) |> assign(:context, context) |> perform_join(hub_sid)
   end
 
-  # TODO remove when client is updated to always send display name on join
-  def join("hub:" <> hub_sid, _payload, socket) do
-    socket |> assign(:profile, %{}) |> assign(:context, %{}) |> perform_join(hub_sid)
-  end
-
   defp perform_join(socket, hub_sid) do
     Hub
     |> Repo.get_by(hub_sid: hub_sid)
-    |> Repo.preload(scene: [:model_owned_file, :screenshot_owned_file], web_push_subscriptions: true)
+    |> Repo.preload(scene: [:model_owned_file, :screenshot_owned_file], web_push_subscriptions: [])
     |> Hub.ensure_valid_entry_code!()
     |> join_with_hub(socket)
   end
@@ -69,6 +64,22 @@ defmodule RetWeb.HubChannel do
 
   def handle_in("message" = event, payload, socket) do
     broadcast!(socket, event, payload |> Map.put(:session_id, socket.assigns.session_id))
+    {:noreply, socket}
+  end
+
+  def handle_in("subscribe", %{"subscription" => subscription}, socket) do
+    socket
+    |> hub_for_socket
+    |> WebPushSubscription.subscribe_to_hub(subscription)
+
+    {:noreply, socket}
+  end
+
+  def handle_in("unsubscribe", %{"subscription" => subscription}, socket) do
+    socket
+    |> hub_for_socket
+    |> WebPushSubscription.unsubscribe_from_hub(subscription)
+
     {:noreply, socket}
   end
 
@@ -127,7 +138,11 @@ defmodule RetWeb.HubChannel do
       end
 
       send(self(), {:begin_tracking, socket.assigns.session_id, hub.hub_sid})
-      Task.start_link(fn -> hub |> Hub.send_push_messages_for_join() end)
+
+      # Send join event if this is the first joiner
+      if Presence.list(socket.topic) |> Enum.count() == 0 do
+        Task.start_link(fn -> hub |> Hub.send_push_messages_for_join() end)
+      end
 
       Statix.increment("ret.channels.hub.joins.ok")
 
