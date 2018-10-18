@@ -8,7 +8,7 @@ defmodule RetWeb.RetChannel do
 
   intercept(["presence_diff"])
 
-  def join("ret", %{"hub_id" => hub_id} = payload, socket) do
+  def join("ret", %{"hub_id" => hub_id}, socket) do
     Statix.increment("ret.channels.ret.joins.ok")
     vapid_public_key = Application.get_env(:web_push_encryption, :vapid_details)[:public_key]
 

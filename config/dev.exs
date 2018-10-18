@@ -110,10 +110,10 @@ config :ret, Ret.Storage,
   ttl: 60 * 60 * 24
 
 asset_hosts =
-  "https://localhost:4000 https://localhost:8080 https://hubs.local:4000 https://hubs.local:8080 https://asset-bundles-prod.reticulum.io"
+  "https://localhost:4000 https://localhost:8080 https://hubs.local:4000 https://hubs.local:8080 https://asset-bundles-dev.reticulum.io https://asset-bundles-prod.reticulum.io https://farspark-prod.reticulum.io https://farspark-dev.reticulum.io"
 
 websocket_hosts =
-  "https://localhost:4000 https://localhost:8080 wss://localhost:4000 https://hubs.local:4000 https://hubs.local:8080 wss://hubs.local:4000 wss://hubs.local:8080 wss://prod-janus.reticulum.io"
+  "https://localhost:4000 https://localhost:8080 wss://localhost:4000 https://hubs.local:4000 https://hubs.local:8080 wss://hubs.local:4000 wss://hubs.local:8080 wss://dev-janus.reticulum.io wss://prod-janus.reticulum.io"
 
 config :secure_headers, SecureHeaders,
   secure_headers: [
@@ -123,9 +123,9 @@ config :secure_headers, SecureHeaders,
           asset_hosts
         }; style-src 'self' https://fonts.googleapis.com #{asset_hosts} 'unsafe-inline'; connect-src 'self' https://sentry.prod.mozaws.net https://dpdb.webvr.rocks #{
           asset_hosts
-        } #{websocket_hosts} https://cdn.aframe.io https://www.mozilla.org data: blob:; img-src 'self' #{
+        } #{websocket_hosts} https://cdn.aframe.io https://www.mozilla.org data: blob:; img-src 'self' #{asset_hosts} https://cdn.aframe.io data: blob:; media-src 'self' #{
           asset_hosts
-        } https://cdn.aframe.io data: blob:; media-src 'self' #{asset_hosts} data: blob:; frame-src 'self'; frame-ancestors 'self'; base-uri 'none'; form-action 'self';"
+        } data: blob:; frame-src 'self'; frame-ancestors 'self'; base-uri 'none'; form-action 'self';"
     ]
   ]
 

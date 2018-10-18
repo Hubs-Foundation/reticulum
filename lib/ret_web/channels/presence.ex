@@ -3,8 +3,6 @@ defmodule RetWeb.Presence do
     otp_app: :ret,
     pubsub_server: Ret.PubSub
 
-  alias Phoenix.Tracker.{State}
-
   def present_session_count do
     present_sessions() |> Enum.count()
   end

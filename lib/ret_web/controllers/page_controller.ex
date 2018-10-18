@@ -29,14 +29,9 @@ defmodule RetWeb.PageController do
   def render_for_path("/link", conn), do: conn |> render_page("link.html")
   def render_for_path("/link/", conn), do: conn |> render_page("link.html")
 
-  def render_for_path("/link/" <> entry_code, conn) do
-    # Rate limit requests for redirects.
-    :timer.sleep(500)
-
-    case Hub.get_by_entry_code_string(entry_code) do
-      %Hub{} = hub -> conn |> redirect(to: "/#{hub.hub_sid}/#{hub.slug}")
-      _ -> conn |> send_resp(404, "")
-    end
+  def render_for_path("/link/" <> hub_identifier_and_slug, conn) do
+    hub_identifier = hub_identifier_and_slug |> String.split("/") |> List.first()
+    conn |> redirect_to_hub_identifier(hub_identifier)
   end
 
   def render_for_path("/spoke", conn), do: conn |> render_page("spoke.html")
@@ -60,6 +55,19 @@ defmodule RetWeb.PageController do
     conn
     |> put_resp_header("content-type", "text/html; charset=utf-8")
     |> send_resp(200, chunks)
+  end
+
+  # Redirect to the specified hub identifier, which can be a sid or an entry code
+  defp redirect_to_hub_identifier(conn, hub_identifier) do
+    # Rate limit requests for redirects.
+    :timer.sleep(500)
+
+    hub = Repo.get_by(Hub, hub_sid: hub_identifier) || Hub.get_by_entry_code_string(hub_identifier)
+
+    case hub do
+      %Hub{} = hub -> conn |> redirect(to: "/#{hub.hub_sid}/#{hub.slug}")
+      _ -> conn |> send_resp(404, "")
+    end
   end
 
   defp render_page(conn, page) do
