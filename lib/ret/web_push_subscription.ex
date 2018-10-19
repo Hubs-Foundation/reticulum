@@ -4,7 +4,7 @@ defmodule Ret.WebPushSubscription do
   import Ecto.Query
   use Retry
 
-  alias Ret.{Hub, Repo, Statix, WebPushSubscription}
+  alias Ret.{EncryptedField, Hub, Repo, Statix, WebPushSubscription}
 
   @schema_prefix "ret0"
   @primary_key {:web_push_subscription_id, :id, autogenerate: true}
@@ -12,8 +12,8 @@ defmodule Ret.WebPushSubscription do
 
   schema "web_push_subscriptions" do
     field(:p256dh, :string)
-    field(:auth, :string)
     field(:endpoint, :string)
+    field(:auth, EncryptedField)
     field(:last_notified_at, :utc_datetime)
 
     belongs_to(:hub, Hub, references: :hub_id)
@@ -76,7 +76,7 @@ defmodule Ret.WebPushSubscription do
     |> Repo.one()
   end
 
-  defp changeset_for_new(%WebPushSubscription{} = subscription, hub, params) do
+  def changeset_for_new(%WebPushSubscription{} = subscription, hub, params) do
     subscription
     |> cast(params, [:p256dh, :auth, :endpoint])
     |> put_assoc(:hub, hub)

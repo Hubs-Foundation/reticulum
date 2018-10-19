@@ -70,6 +70,10 @@ defmodule RetWeb.PageController do
     end
   end
 
+  defp render_page(conn, nil) do
+    conn |> send_resp(404, "")
+  end
+
   defp render_page(conn, page) do
     chunks = page |> chunks_for_page
     conn |> render_chunks(chunks, page |> content_type_for_page)
@@ -81,10 +85,6 @@ defmodule RetWeb.PageController do
     else
       _ -> nil
     end
-  end
-
-  defp render_chunks(conn, nil) do
-    conn |> send_resp(404, "")
   end
 
   defp content_type_for_page("hub.service.js") do
