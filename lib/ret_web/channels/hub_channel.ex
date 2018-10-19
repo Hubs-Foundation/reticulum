@@ -139,7 +139,7 @@ defmodule RetWeb.HubChannel do
 
       send(self(), {:begin_tracking, socket.assigns.session_id, hub.hub_sid})
 
-      # Send join event if this is the first joiner
+      # Send join push notification if this is the first joiner
       if Presence.list(socket.topic) |> Enum.count() == 0 do
         Task.start_link(fn -> hub |> Hub.send_push_messages_for_join() end)
       end
