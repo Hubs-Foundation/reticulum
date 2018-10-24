@@ -3,7 +3,7 @@ defmodule RetWeb.HubChannel do
 
   use RetWeb, :channel
 
-  alias Ret.{Hub, Repo, SessionStat, Statix}
+  alias Ret.{Hub, Repo, RoomObject, SessionStat, Statix}
   alias RetWeb.{Presence}
 
   def join("hub:" <> hub_sid, %{"profile" => profile, "context" => context}, socket) do
@@ -69,6 +69,20 @@ defmodule RetWeb.HubChannel do
 
   def handle_in("message" = event, payload, socket) do
     broadcast!(socket, event, payload |> Map.put(:session_id, socket.assigns.session_id))
+    {:noreply, socket}
+  end
+
+  def handle_in("pin" = event, %{"room_object_sid" => room_object_sid, "gltf_node" => gltf_node}, socket) do
+    hub = socket |> hub_for_socket
+    RoomObject.perform_pin!(hub, %{room_object_sid: room_object_sid, gltf_node: gltf_node})
+
+    {:noreply, socket}
+  end
+
+  def handle_in("unpin" = event, %{"room_object_sid" => room_object_sid}, socket) do
+    hub = socket |> hub_for_socket
+    RoomObject.perform_unpin(hub, room_object_sid)
+
     {:noreply, socket}
   end
 
