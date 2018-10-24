@@ -40,8 +40,8 @@ defmodule Ret.RoomObject do
       |> Enum.map(& &1.gltf_node)
       |> Enum.map(
         &put_in(
-          &1["extensions"]["HUBS_components"],
-          &1["extensions"]["HUBS_components"] |> Map.put("pinnable", %{"pinned" => true})
+          &1["extensions"]["HUBS_components"]["pinnable"],
+          %{"pinned" => true}
         )
       )
 
