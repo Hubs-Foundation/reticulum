@@ -32,6 +32,21 @@ defmodule Ret.RoomObject do
     |> Repo.delete_all()
   end
 
+  def gltf_for_hub(%Hub{hub_id: hub_id, name: hub_name}) do
+    nodes =
+      RoomObject
+      |> where([t], t.hub_id == ^hub_id)
+      |> Repo.all()
+      |> Enum.map(& &1.gltf_node)
+
+    %{
+      asset: %{version: "2.0", generator: "reticulum"},
+      scenes: [%{nodes: [0], name: "#{hub_name} Objects"}],
+      nodes: nodes,
+      extensionsUsed: ["HUBS_components"]
+    }
+  end
+
   defp changeset(%RoomObject{} = room_object, %Hub{} = hub, attrs) do
     room_object
     |> cast(attrs, [:room_object_sid, :gltf_node])

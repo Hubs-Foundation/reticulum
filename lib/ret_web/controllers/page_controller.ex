@@ -38,13 +38,15 @@ defmodule RetWeb.PageController do
   def render_for_path("/spoke/", conn), do: conn |> render_page("spoke")
   def render_for_path("/avatar-selector.html", conn), do: conn |> render_page("avatar-selector")
 
-  def render_for_path(path, conn) do
-    hub_sid =
-      path
-      |> String.split("/")
-      |> Enum.at(1)
+  def render_for_path("/" <> path, conn) do
+    [hub_sid | subresource] = path |> String.split("/")
 
-    hub = Hub |> Repo.get_by(hub_sid: hub_sid) |> Repo.preload(scene: [:screenshot_owned_file])
+    hub = Hub |> Repo.get_by(hub_sid: hub_sid)
+    render_hub_content(hub, subresource |> Enum.at(0), conn)
+  end
+
+  def render_hub_content(hub, nil, conn) do
+    hub = hub |> Repo.preload(scene: [:screenshot_owned_file])
     hub_meta_tags = Phoenix.View.render_to_string(RetWeb.PageView, "hub-meta.html", hub: hub, scene: hub.scene)
 
     chunks =
@@ -54,6 +56,12 @@ defmodule RetWeb.PageController do
     conn
     |> put_resp_header("content-type", "text/html; charset=utf-8")
     |> send_resp(200, chunks)
+  end
+
+  def render_hub_content(hub, "objects.gltf", conn) do
+    conn
+    |> put_resp_header("content-type", "model/gltf+json; charset=utf-8")
+    |> send_resp(200, Ret.RoomObject.gltf_for_hub(hub) |> Poison.encode!())
   end
 
   # Redirect to the specified hub identifier, which can be a sid or an entry code
