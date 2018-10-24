@@ -45,6 +45,10 @@ defmodule RetWeb.PageController do
     render_hub_content(conn, hub, subresource |> Enum.at(0))
   end
 
+  def render_hub_content(conn, nil, _) do
+    conn |> send_resp(404, "")
+  end
+
   def render_hub_content(conn, hub, "objects.gltf") do
     conn
     |> put_resp_header("content-type", "model/gltf+json; charset=utf-8")

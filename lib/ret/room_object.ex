@@ -38,12 +38,6 @@ defmodule Ret.RoomObject do
       |> where([t], t.hub_id == ^hub_id)
       |> Repo.all()
       |> Enum.map(& &1.gltf_node)
-      |> Enum.map(
-        &put_in(
-          &1["extensions"]["HUBS_components"]["pinnable"],
-          %{"pinned" => true}
-        )
-      )
 
     %{
       asset: %{version: "2.0", generator: "reticulum"},
