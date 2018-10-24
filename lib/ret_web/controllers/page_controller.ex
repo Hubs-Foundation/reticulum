@@ -42,10 +42,16 @@ defmodule RetWeb.PageController do
     [hub_sid | subresource] = path |> String.split("/")
 
     hub = Hub |> Repo.get_by(hub_sid: hub_sid)
-    render_hub_content(hub, subresource |> Enum.at(0), conn)
+    render_hub_content(conn, hub, subresource |> Enum.at(0))
   end
 
-  def render_hub_content(hub, nil, conn) do
+  def render_hub_content(conn, hub, "objects.gltf") do
+    conn
+    |> put_resp_header("content-type", "model/gltf+json; charset=utf-8")
+    |> send_resp(200, Ret.RoomObject.gltf_for_hub(hub) |> Poison.encode!())
+  end
+
+  def render_hub_content(conn, hub, _slug) do
     hub = hub |> Repo.preload(scene: [:screenshot_owned_file])
     hub_meta_tags = Phoenix.View.render_to_string(RetWeb.PageView, "hub-meta.html", hub: hub, scene: hub.scene)
 
@@ -56,12 +62,6 @@ defmodule RetWeb.PageController do
     conn
     |> put_resp_header("content-type", "text/html; charset=utf-8")
     |> send_resp(200, chunks)
-  end
-
-  def render_hub_content(hub, "objects.gltf", conn) do
-    conn
-    |> put_resp_header("content-type", "model/gltf+json; charset=utf-8")
-    |> send_resp(200, Ret.RoomObject.gltf_for_hub(hub) |> Poison.encode!())
   end
 
   # Redirect to the specified hub identifier, which can be a sid or an entry code
