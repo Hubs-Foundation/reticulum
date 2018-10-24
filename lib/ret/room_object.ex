@@ -16,7 +16,7 @@ defmodule Ret.RoomObject do
     timestamps()
   end
 
-  def perform_pin!(%Hub{hub_id: hub_id} = hub, %{room_object_sid: room_object_sid, gltf_node: gltf_node} = attrs) do
+  def perform_pin!(%Hub{hub_id: hub_id} = hub, %{room_object_sid: room_object_sid} = attrs) do
     room_object =
       RoomObject
       |> where([t], t.hub_id == ^hub_id and t.room_object_sid == ^room_object_sid)
