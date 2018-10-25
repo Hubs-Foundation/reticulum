@@ -37,7 +37,7 @@ defmodule Ret.Application do
         id: :media_url_cache
       ),
 
-      # Page origin chunk cache
+      # Object glTF cache
       worker(
         Cachex,
         [
