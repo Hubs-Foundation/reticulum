@@ -39,9 +39,16 @@ defmodule Ret.RoomObject do
       |> Repo.all()
       |> Enum.map(& &1.gltf_node)
 
+    node_indices =
+      if length(nodes) == 0 do
+        []
+      else
+        0..((nodes |> length) - 1) |> Enum.to_list()
+      end
+
     %{
       asset: %{version: "2.0", generator: "reticulum"},
-      scenes: [%{nodes: 0..((nodes |> length) - 1) |> Enum.to_list(), name: "#{hub_name} Objects"}],
+      scenes: [%{nodes: node_indices, name: "#{hub_name} Objects"}],
       nodes: nodes,
       extensionsUsed: ["HUBS_components"]
     }
