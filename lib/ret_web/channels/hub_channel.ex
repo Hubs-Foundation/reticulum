@@ -3,11 +3,7 @@ defmodule RetWeb.HubChannel do
 
   use RetWeb, :channel
 
-<<<<<<< HEAD
-  alias Ret.{Hub, Repo, RoomObject, SessionStat, Statix}
-=======
-  alias Ret.{Hub, Repo, SessionStat, Statix, WebPushSubscription}
->>>>>>> 6a46f21f91b0d9cbf42446d889c69ced1f730a6f
+  alias Ret.{Hub, Repo, RoomObject, SessionStat, Statix, WebPushSubscription}
   alias RetWeb.{Presence}
 
   def join("hub:" <> hub_sid, %{"profile" => profile, "context" => context}, socket) do
