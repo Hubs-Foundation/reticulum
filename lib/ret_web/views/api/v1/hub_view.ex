@@ -6,7 +6,7 @@ defmodule RetWeb.Api.V1.HubView do
     %{
       status: :ok,
       hub_id: hub.hub_sid,
-      url: "#{RetWeb.Endpoint.url()}/#{hub.hub_sid}/#{hub.slug}"
+      url: hub |> Hub.url_for()
     }
   end
 

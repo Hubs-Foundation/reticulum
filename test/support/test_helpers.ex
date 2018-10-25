@@ -1,5 +1,5 @@
 defmodule Ret.TestHelpers do
-  alias Ret.{Storage, Account, Scene, Repo}
+  alias Ret.{Storage, Account, Scene, Repo, Hub}
 
   def generate_temp_owned_file(account) do
     temp_file = generate_temp_file("test")
@@ -33,6 +33,12 @@ defmodule Ret.TestHelpers do
       |> Repo.insert_or_update()
 
     {:ok, scene: scene}
+  end
+
+  def create_hub(%{scene: scene}) do
+    {:ok, hub} = %Hub{} |> Hub.changeset(scene, %{name: "Test Hub"}) |> Repo.insert()
+
+    {:ok, hub: hub}
   end
 
   def clear_all_stored_files do
