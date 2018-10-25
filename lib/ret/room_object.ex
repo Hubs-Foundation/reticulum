@@ -41,7 +41,7 @@ defmodule Ret.RoomObject do
 
     %{
       asset: %{version: "2.0", generator: "reticulum"},
-      scenes: [%{nodes: [0], name: "#{hub_name} Objects"}],
+      scenes: [%{nodes: 0..((nodes |> length) - 1) |> Enum.to_list(), name: "#{hub_name} Objects"}],
       nodes: nodes,
       extensionsUsed: ["HUBS_components"]
     }
