@@ -53,13 +53,13 @@ defmodule Ret.WebPushSubscription do
           _ -> :error
         end
       after
-        result -> result
+        _result ->
+          Statix.increment("ret.web_push.hub.sent", 1)
+          web_push_subscription |> changeset_for_notification_sent |> Repo.update!()
       else
-        error -> error
+        _error ->
+          Statix.increment("ret.web_push.hub.send_error", 1)
       end
-
-      Statix.increment("ret.web_push.hub.sent", 1)
-      web_push_subscription |> changeset_for_notification_sent |> Repo.update!()
     end
   end
 

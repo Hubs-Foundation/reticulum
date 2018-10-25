@@ -83,16 +83,16 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
-  def handle_in("pin", %{"id" => room_object_sid, "gltf_node" => gltf_node}, socket) do
+  def handle_in("pin", %{"id" => object_id, "gltf_node" => gltf_node}, socket) do
     hub = socket |> hub_for_socket
-    RoomObject.perform_pin!(hub, %{room_object_sid: room_object_sid, gltf_node: gltf_node})
+    RoomObject.perform_pin!(hub, %{object_id: object_id, gltf_node: gltf_node})
 
     {:noreply, socket}
   end
 
-  def handle_in("unpin", %{"id" => room_object_sid}, socket) do
+  def handle_in("unpin", %{"id" => object_id}, socket) do
     hub = socket |> hub_for_socket
-    RoomObject.perform_unpin(hub, room_object_sid)
+    RoomObject.perform_unpin(hub, object_id)
 
     {:noreply, socket}
   end

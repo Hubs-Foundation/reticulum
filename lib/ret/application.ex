@@ -37,7 +37,7 @@ defmodule Ret.Application do
         id: :media_url_cache
       ),
 
-      # Object glTF cache
+      # Page origin chunk cache
       worker(
         Cachex,
         [
@@ -49,13 +49,13 @@ defmodule Ret.Application do
         id: :page_chunk_cache
       ),
 
-      # Page origin chunk cache
+      # Object glTF cache
       worker(
         Cachex,
         [
           :room_gltf,
           [
-            expiration: expiration(default: :timer.minutes(5)),
+            expiration: expiration(default: :timer.minutes(15)),
             fallback: fallback(default: &Ret.RoomObject.gltf_for_hub_id/1)
           ]
         ],

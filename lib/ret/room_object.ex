@@ -8,7 +8,7 @@ defmodule Ret.RoomObject do
   @primary_key {:room_object_id, :id, autogenerate: true}
 
   schema "room_objects" do
-    field(:room_object_sid, :string)
+    field(:object_id, :string)
     field(:gltf_node, EncryptedField)
 
     belongs_to(:hub, Hub, references: :hub_id)
@@ -16,12 +16,12 @@ defmodule Ret.RoomObject do
     timestamps()
   end
 
-  def perform_pin!(%Hub{hub_id: hub_id} = hub, %{room_object_sid: room_object_sid} = attrs) do
+  def perform_pin!(%Hub{hub_id: hub_id} = hub, %{object_id: object_id} = attrs) do
     attrs = attrs |> Map.put(:gltf_node, attrs |> Map.get(:gltf_node) |> Poison.encode!())
 
     room_object =
       RoomObject
-      |> where([t], t.hub_id == ^hub_id and t.room_object_sid == ^room_object_sid)
+      |> where([t], t.hub_id == ^hub_id and t.object_id == ^object_id)
       |> preload(:hub)
       |> Repo.one()
 
@@ -29,9 +29,9 @@ defmodule Ret.RoomObject do
     Cachex.expire(:room_gltf, hub_id, -1)
   end
 
-  def perform_unpin(%Hub{hub_id: hub_id}, room_object_sid) do
+  def perform_unpin(%Hub{hub_id: hub_id}, object_id) do
     RoomObject
-    |> where([t], t.hub_id == ^hub_id and t.room_object_sid == ^room_object_sid)
+    |> where([t], t.hub_id == ^hub_id and t.object_id == ^object_id)
     |> Repo.delete_all()
 
     Cachex.expire(:room_gltf, hub_id, -1)
@@ -65,9 +65,9 @@ defmodule Ret.RoomObject do
 
   defp changeset(%RoomObject{} = room_object, %Hub{} = hub, attrs) do
     room_object
-    |> cast(attrs, [:room_object_sid, :gltf_node])
-    |> unique_constraint(:room_object_sid)
-    |> unique_constraint(:hub_id)
+    |> cast(attrs, [:object_id, :gltf_node])
+    |> unique_constraint(:object_id, name: :room_objects_object_id_hub_id_index)
+    |> unique_constraint(:hub_id, name: :room_objects_hub_id_index)
     |> put_assoc(:hub, hub)
   end
 end
