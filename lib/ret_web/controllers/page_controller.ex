@@ -50,9 +50,11 @@ defmodule RetWeb.PageController do
   end
 
   def render_hub_content(conn, hub, "objects.gltf") do
+    {_status, room_gltf} = Cachex.fetch(:room_gltf, hub.hub_id)
+
     conn
     |> put_resp_header("content-type", "model/gltf+json; charset=utf-8")
-    |> send_resp(200, Ret.RoomObject.gltf_for_hub(hub) |> Poison.encode!())
+    |> send_resp(200, room_gltf)
   end
 
   def render_hub_content(conn, hub, _slug) do

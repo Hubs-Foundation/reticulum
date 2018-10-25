@@ -32,7 +32,7 @@ defmodule Ret.RoomObject do
     |> Repo.delete_all()
   end
 
-  def gltf_for_hub(%Hub{hub_id: hub_id, name: hub_name}) do
+  def gltf_for_hub_id(hub_id) do
     nodes =
       RoomObject
       |> where([t], t.hub_id == ^hub_id)
@@ -46,12 +46,16 @@ defmodule Ret.RoomObject do
         0..((nodes |> length) - 1) |> Enum.to_list()
       end
 
-    %{
-      asset: %{version: "2.0", generator: "reticulum"},
-      scenes: [%{nodes: node_indices, name: "#{hub_name} Objects"}],
-      nodes: nodes,
-      extensionsUsed: ["HUBS_components"]
-    }
+    gltf =
+      %{
+        asset: %{version: "2.0", generator: "reticulum"},
+        scenes: [%{nodes: node_indices, name: "Room Objects"}],
+        nodes: nodes,
+        extensionsUsed: ["HUBS_components"]
+      }
+      |> Poison.encode!()
+
+    {:commit, gltf}
   end
 
   defp changeset(%RoomObject{} = room_object, %Hub{} = hub, attrs) do

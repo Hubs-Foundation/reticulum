@@ -49,6 +49,19 @@ defmodule Ret.Application do
         id: :page_chunk_cache
       ),
 
+      # Page origin chunk cache
+      worker(
+        Cachex,
+        [
+          :room_gltf,
+          [
+            expiration: expiration(default: :timer.minutes(5)),
+            fallback: fallback(default: &Ret.RoomObject.gltf_for_hub_id/1)
+          ]
+        ],
+        id: :room_gltf_cache
+      ),
+
       # Graceful shutdown
       supervisor(TheEnd.Of.Phoenix, [[timeout: 10_000, endpoint: RetWeb.Endpoint]])
     ]
