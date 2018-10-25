@@ -13,7 +13,7 @@ defmodule Ret.Hub do
   import Ecto.Changeset
   import Ecto.Query
 
-  alias Ret.{Hub, Repo}
+  alias Ret.{Hub, Repo, WebPushSubscription}
   alias Ret.Hub.{HubSlug}
 
   use Bitwise
@@ -35,6 +35,7 @@ defmodule Ret.Hub do
     field(:spawned_object_types, :integer, default: 0)
     field(:entry_mode, Ret.Hub.EntryMode)
     belongs_to(:scene, Ret.Scene, references: :scene_id)
+    has_many(:web_push_subscriptions, Ret.WebPushSubscription, foreign_key: :hub_id)
 
     timestamps()
   end
@@ -81,6 +82,31 @@ defmodule Ret.Hub do
   def changeset_to_deny_entry(%Hub{} = hub) do
     hub
     |> cast(%{entry_mode: :deny}, [:entry_mode])
+  end
+
+  def send_push_messages_for_join(%Hub{web_push_subscriptions: subscriptions} = hub) do
+    body = hub |> push_message_for_join
+
+    for subscription <- subscriptions do
+      subscription |> WebPushSubscription.maybe_send(body)
+    end
+  end
+
+  defp push_message_for_join(%Hub{} = hub) do
+    %{type: "join", hub_name: hub.name, hub_id: hub.hub_sid, hub_url: hub |> url_for, image: hub |> image_url_for}
+    |> Poison.encode!()
+  end
+
+  def url_for(%Hub{} = hub) do
+    "#{RetWeb.Endpoint.url()}/#{hub.hub_sid}/#{hub.slug}"
+  end
+
+  def image_url_for(%Hub{scene: nil}) do
+    "#{RetWeb.Endpoint.url()}/hub-preview.png"
+  end
+
+  def image_url_for(%Hub{scene: scene}) do
+    scene.screenshot_owned_file |> Ret.OwnedFile.uri_for() |> URI.to_string()
   end
 
   defp changeset_for_new_entry_code(%Hub{} = hub) do

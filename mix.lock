@@ -91,4 +91,5 @@
   "unicode_util_compat": {:hex, :unicode_util_compat, "0.3.1", "a1f612a7b512638634a603c8f401892afbf99b8ce93a45041f8aaca99cadb85e", [:rebar3], [], "hexpm"},
   "unsafe": {:hex, :unsafe, "1.0.0", "7c21742cd05380c7875546b023481d3a26f52df8e5dfedcb9f958f322baae305", [:mix], [], "hexpm"},
   "uuid": {:hex, :uuid, "1.1.7", "007afd58273bc0bc7f849c3bdc763e2f8124e83b957e515368c498b641f7ab69", [], [], "hexpm"},
+  "web_push_encryption": {:hex, :web_push_encryption, "0.2.1", "d42cecf73420d9dc0053ba3299cc8c8d6ff2be2487d67ca2a57265868e4d9a98", [:mix], [{:httpoison, "~> 1.0", [hex: :httpoison, repo: "hexpm", optional: false]}, {:jose, "~> 1.8", [hex: :jose, repo: "hexpm", optional: false]}, {:poison, "~> 3.0", [hex: :poison, repo: "hexpm", optional: false]}], "hexpm"},
 }
