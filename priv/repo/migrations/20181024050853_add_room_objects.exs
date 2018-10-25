@@ -6,7 +6,7 @@ defmodule Ret.Repo.Migrations.CreateRoomObjectsTable do
       add(:room_object_id, :bigint, default: fragment("ret0.next_id()"), primary_key: true)
       add(:room_object_sid, :string, null: false)
       add(:hub_id, references(:hubs, column: :hub_id), null: false)
-      add(:gltf_node, :jsonb, null: false)
+      add(:gltf_node, :binary, null: false)
 
       timestamps()
     end

@@ -3,13 +3,13 @@ defmodule Ret.RoomObject do
   import Ecto.Changeset
   import Ecto.Query
 
-  alias Ret.{Hub, RoomObject, Repo}
+  alias Ret.{EncryptedField, Hub, RoomObject, Repo}
   @schema_prefix "ret0"
   @primary_key {:room_object_id, :id, autogenerate: true}
 
   schema "room_objects" do
     field(:room_object_sid, :string)
-    field(:gltf_node, :map)
+    field(:gltf_node, EncryptedField)
 
     belongs_to(:hub, Hub, references: :hub_id)
 
@@ -17,6 +17,8 @@ defmodule Ret.RoomObject do
   end
 
   def perform_pin!(%Hub{hub_id: hub_id} = hub, %{room_object_sid: room_object_sid} = attrs) do
+    attrs = attrs |> Map.put(:gltf_node, attrs |> Map.get(:gltf_node) |> Poison.encode!())
+
     room_object =
       RoomObject
       |> where([t], t.hub_id == ^hub_id and t.room_object_sid == ^room_object_sid)
@@ -37,7 +39,7 @@ defmodule Ret.RoomObject do
       RoomObject
       |> where([t], t.hub_id == ^hub_id)
       |> Repo.all()
-      |> Enum.map(& &1.gltf_node)
+      |> Enum.map(&(&1.gltf_node |> Poison.decode!()))
 
     node_indices =
       if length(nodes) == 0 do
