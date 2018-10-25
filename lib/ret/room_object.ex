@@ -26,12 +26,15 @@ defmodule Ret.RoomObject do
       |> Repo.one()
 
     changeset(room_object || %RoomObject{}, hub, attrs) |> Repo.insert_or_update!()
+    Cachex.expire(:room_gltf, hub_id, -1)
   end
 
   def perform_unpin(%Hub{hub_id: hub_id}, room_object_sid) do
     RoomObject
     |> where([t], t.hub_id == ^hub_id and t.room_object_sid == ^room_object_sid)
     |> Repo.delete_all()
+
+    Cachex.expire(:room_gltf, hub_id, -1)
   end
 
   def gltf_for_hub_id(hub_id) do

@@ -86,7 +86,6 @@ defmodule RetWeb.HubChannel do
   def handle_in("pin", %{"id" => room_object_sid, "gltf_node" => gltf_node}, socket) do
     hub = socket |> hub_for_socket
     RoomObject.perform_pin!(hub, %{room_object_sid: room_object_sid, gltf_node: gltf_node})
-    Cachex.expire(:room_gltf, hub.hub_id, -1)
 
     {:noreply, socket}
   end
@@ -94,7 +93,6 @@ defmodule RetWeb.HubChannel do
   def handle_in("unpin", %{"id" => room_object_sid}, socket) do
     hub = socket |> hub_for_socket
     RoomObject.perform_unpin(hub, room_object_sid)
-    Cachex.expire(:room_gltf, hub.hub_id, -1)
 
     {:noreply, socket}
   end
