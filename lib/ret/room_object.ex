@@ -57,7 +57,7 @@ defmodule Ret.RoomObject do
       }
       |> Poison.encode!()
 
-    {:commit, gltf}
+    gltf
   end
 
   defp changeset(%RoomObject{} = room_object, %Hub{} = hub, attrs) do
