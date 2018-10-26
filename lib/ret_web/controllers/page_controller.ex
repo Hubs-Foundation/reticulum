@@ -51,7 +51,7 @@ defmodule RetWeb.PageController do
   end
 
   def render_hub_content(conn, hub, "objects.gltf") do
-    room_gltf = Ret.RoomObject.gltf_for_hub_id(hub.hub_id)
+    room_gltf = Ret.RoomObject.gltf_for_hub_id(hub.hub_id) |> Poison.encode!
 
     conn
     |> put_resp_header("content-type", "model/gltf+json; charset=utf-8")

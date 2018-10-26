@@ -48,16 +48,12 @@ defmodule Ret.RoomObject do
         0..((nodes |> length) - 1) |> Enum.to_list()
       end
 
-    gltf =
-      %{
-        asset: %{version: "2.0", generator: "reticulum"},
-        scenes: [%{nodes: node_indices, name: "Room Objects"}],
-        nodes: nodes,
-        extensionsUsed: ["HUBS_components"]
-      }
-      |> Poison.encode!()
-
-    gltf
+    %{
+      asset: %{version: "2.0", generator: "reticulum"},
+      scenes: [%{nodes: node_indices, name: "Room Objects"}],
+      nodes: nodes,
+      extensionsUsed: ["HUBS_components"]
+    }
   end
 
   defp changeset(%RoomObject{} = room_object, %Hub{} = hub, attrs) do
