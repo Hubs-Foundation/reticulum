@@ -76,6 +76,12 @@ defmodule Ret.WebPushSubscription do
     |> Repo.one()
   end
 
+  def endpoint_has_subscriptions?(endpoint) do
+    WebPushSubscription
+    |> where([t], t.endpoint == ^endpoint)
+    |> Repo.one() != nil
+  end
+
   def changeset_for_new(%WebPushSubscription{} = subscription, hub, params) do
     subscription
     |> cast(params, [:p256dh, :auth, :endpoint])
