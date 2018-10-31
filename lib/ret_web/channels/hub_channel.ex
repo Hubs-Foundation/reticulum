@@ -180,7 +180,7 @@ defmodule RetWeb.HubChannel do
     end
   end
 
-  defp join_with_hub(nil, _socket) do
+  defp join_with_hub(nil, _socket, _endpoint) do
     Statix.increment("ret.channels.hub.joins.not_found")
 
     {:error, %{message: "No such Hub"}}
