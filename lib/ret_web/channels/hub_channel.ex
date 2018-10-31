@@ -6,16 +6,24 @@ defmodule RetWeb.HubChannel do
   alias Ret.{Hub, Repo, RoomObject, SessionStat, Statix, WebPushSubscription}
   alias RetWeb.{Presence}
 
+  def join(
+        "hub:" <> hub_sid,
+        %{"profile" => profile, "context" => context, "push_subscription_endpoint" => endpoint},
+        socket
+      ) do
+    socket |> assign(:profile, profile) |> assign(:context, context) |> perform_join(hub_sid, endpoint)
+  end
+
   def join("hub:" <> hub_sid, %{"profile" => profile, "context" => context}, socket) do
     socket |> assign(:profile, profile) |> assign(:context, context) |> perform_join(hub_sid)
   end
 
-  defp perform_join(socket, hub_sid) do
+  defp perform_join(socket, hub_sid, push_subscription_endpoint \\ nil) do
     Hub
     |> Repo.get_by(hub_sid: hub_sid)
     |> Repo.preload(scene: [:model_owned_file, :screenshot_owned_file], web_push_subscriptions: [])
     |> Hub.ensure_valid_entry_code!()
-    |> join_with_hub(socket)
+    |> join_with_hub(socket, push_subscription_endpoint)
   end
 
   def handle_in("events:entered", %{"initialOccupantCount" => occupant_count} = payload, socket) do
@@ -80,7 +88,9 @@ defmodule RetWeb.HubChannel do
     |> hub_for_socket
     |> WebPushSubscription.unsubscribe_from_hub(subscription)
 
-    {:noreply, socket}
+    has_remaining_subscriptions = WebPushSubscription.endpoint_has_subscriptions?(subscription["endpoint"])
+
+    {:reply, {:ok, %{has_remaining_subscriptions: has_remaining_subscriptions}}, socket}
   end
 
   def handle_in("pin", %{"id" => object_id, "gltf_node" => gltf_node}, socket) do
@@ -129,13 +139,19 @@ defmodule RetWeb.HubChannel do
     socket.assigns |> Map.take([:presence, :profile, :context])
   end
 
-  defp join_with_hub(%Hub{entry_mode: :deny}, _socket) do
+  defp join_with_hub(%Hub{entry_mode: :deny}, _socket, _endpoint) do
     {:error, %{message: "Hub no longer accessible", reason: "closed"}}
   end
 
-  defp join_with_hub(%Hub{} = hub, socket) do
+  defp join_with_hub(%Hub{} = hub, socket, push_subscription_endpoint) do
+    is_push_subscribed =
+      push_subscription_endpoint &&
+        hub.web_push_subscriptions |> Enum.any?(&(&1.endpoint == push_subscription_endpoint))
+
     with socket <- socket |> assign(:hub_sid, hub.hub_sid) |> assign(:presence, :lobby),
          response <- RetWeb.Api.V1.HubView.render("show.json", %{hub: hub}) do
+      response = response |> Map.put(:subscriptions, %{web_push: is_push_subscribed})
+
       existing_stat_count =
         socket
         |> SessionStat.stat_query_for_socket()
