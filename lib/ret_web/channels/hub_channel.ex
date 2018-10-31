@@ -155,7 +155,7 @@ defmodule RetWeb.HubChannel do
 
       # Send join push notification if this is the first joiner
       if Presence.list(socket.topic) |> Enum.count() == 0 do
-        Task.start_link(fn -> hub |> Hub.send_push_messages_for_join() end)
+        Task.start_link(fn -> hub |> Hub.send_push_messages_for_join(push_subscription_endpoint) end)
       end
 
       Statix.increment("ret.channels.hub.joins.ok")

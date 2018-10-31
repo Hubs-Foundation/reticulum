@@ -84,10 +84,10 @@ defmodule Ret.Hub do
     |> cast(%{entry_mode: :deny}, [:entry_mode])
   end
 
-  def send_push_messages_for_join(%Hub{web_push_subscriptions: subscriptions} = hub) do
+  def send_push_messages_for_join(%Hub{web_push_subscriptions: subscriptions} = hub, endpoint_to_skip \\ nil) do
     body = hub |> push_message_for_join
 
-    for subscription <- subscriptions do
+    for subscription <- subscriptions |> Enum.filter(&(&1.endpoint != endpoint_to_skip)) do
       subscription |> WebPushSubscription.maybe_send(body)
     end
   end
