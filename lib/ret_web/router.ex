@@ -24,6 +24,7 @@ defmodule RetWeb.Router do
 
   pipeline :browser do
     plug(:accepts, ["html"])
+    plug :put_layout, false
   end
 
   pipeline :api do
