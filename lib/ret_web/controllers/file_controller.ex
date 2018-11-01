@@ -7,6 +7,11 @@ defmodule RetWeb.FileController do
     render_file_with_token(conn, uuid, token)
   end
 
+  def show(conn, %{"id" => <<uuid::binary-size(36), ".html">>, "token" => token}) do
+    image_url = conn |> RetWeb.Router.Helpers.file_url(:show, uuid, token: token)
+    conn |> render("show.html", image_url: image_url)
+  end
+
   def show(conn, %{
         "id" => <<uuid::binary-size(36), ".", _extension::binary>>,
         "token" => token

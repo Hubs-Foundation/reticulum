@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:domain" value="<%= RetWeb.Endpoint.host %>" />
+    <meta name="twitter:title" value="Photo taken in Hubs by Mozilla" />
+    <meta property="twitter:image" content="<%= @image_url %>"/>
+    <meta name="twitter:url" value="<%= @image_url %>" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="<%= @image_url %>" />
+    <meta property="og:title" content="Photo taken in Hubs by Mozilla" />
+    <meta property="og:image" content="<%= @image_url %>"/>
+    <title>Photo taken in Hubs by Mozilla</title>
+    <style>
+      body {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-direction: column;
+          background: black;
+          margin: 0;
+          padding: 0;
+          height: 100vh;
+          width: 100vw;
+      }
+      img {
+          border-radius: 20px;
+          width: 80vw;
+      }
+    </style>
+  </head>
+  <body>
+    <a href="<%= RetWeb.Endpoint.url %>">
+        <img src="<%= @image_url %>"/>
+    </a>
+  </body>
+</html>
