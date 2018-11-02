@@ -59,6 +59,9 @@ defmodule RetWeb.Api.V1.SceneController do
 
     promotion_error = owned_file_results |> Map.values() |> Enum.filter(&(elem(&1, 0) == :error)) |> Enum.at(0)
 
+    # Legacy
+    params = params |> Map.put_new("attributions", %{"extras" => params["attribution"]})
+
     case promotion_error do
       nil ->
         %{model: {:ok, model_file}, screenshot: {:ok, screenshot_file}, scene: {:ok, scene_file}} = owned_file_results
