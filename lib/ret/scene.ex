@@ -22,6 +22,7 @@ defmodule Ret.Scene do
     field(:name, :string)
     field(:description, :string)
     field(:attribution, :string)
+    field(:attributions, :map)
     field(:allow_remixing, :boolean)
     field(:allow_promotion, :boolean)
     belongs_to(:account, Ret.Account, references: :account_id)
@@ -46,6 +47,7 @@ defmodule Ret.Scene do
       :name,
       :description,
       :attribution,
+      :attributions,
       :allow_remixing,
       :allow_promotion,
       :state
