@@ -9,7 +9,7 @@ defmodule RetWeb.FileController do
 
   def show(conn, %{"id" => <<uuid::binary-size(36), ".html">>, "token" => token}) do
     case Storage.fetch(uuid, token) do
-      {:ok, %{"content_type" => content_type, "content_length" => content_length}, stream} ->
+      {:ok, %{"content_type" => content_type, "content_length" => content_length}, _stream} ->
         image_url =
           uuid
           |> Ret.Storage.uri_for(content_type)
