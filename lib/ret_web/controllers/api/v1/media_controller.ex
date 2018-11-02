@@ -2,12 +2,8 @@ defmodule RetWeb.Api.V1.MediaController do
   use RetWeb, :controller
   use Retry
 
-  def create(conn, %{"media" => %{"url" => url, "index" => index}}) do
-    resolve_and_render(conn, url, index)
-  end
-
   def create(conn, %{"media" => %{"url" => url}}) do
-    resolve_and_render(conn, url, 0)
+    resolve_and_render(conn, url)
   end
 
   def create(conn, %{
@@ -44,7 +40,6 @@ defmodule RetWeb.Api.V1.MediaController do
           "show.json",
           file_id: uuid,
           origin: uri |> URI.to_string(),
-          raw: uri |> URI.to_string(),
           meta: %{access_token: access_token, promotion_token: promotion_token, expected_content_type: content_type}
         )
 
@@ -53,39 +48,21 @@ defmodule RetWeb.Api.V1.MediaController do
     end
   end
 
-  defp resolve_and_render(conn, url, index) do
+  defp resolve_and_render(conn, url) do
     case Cachex.fetch(:media_urls, url) do
       {_status, nil} ->
         conn |> send_resp(404, "")
 
       {_status, %Ret.ResolvedMedia{} = resolved_media} ->
-        render_resolved_media(conn, resolved_media, index)
+        render_resolved_media(conn, resolved_media)
 
       _ ->
         conn |> send_resp(404, "")
     end
   end
 
-  defp render_resolved_media(conn, %Ret.ResolvedMedia{uri: uri, meta: meta}, index) do
-    raw = gen_farspark_url(uri, index, "raw", "")
-
+  defp render_resolved_media(conn, %Ret.ResolvedMedia{uri: uri, meta: meta}) do
     conn
-    |> render("show.json", origin: uri |> URI.to_string(), raw: raw, meta: meta)
-  end
-
-  defp gen_farspark_url(uri, index, method, extension) do
-    path = "/#{method}/0/0/0/#{index}/#{uri |> URI.to_string() |> Base.url_encode64(padding: false)}#{extension}"
-
-    host = Application.get_env(:ret, :farspark_host)
-    "#{host}/#{gen_signature(path)}#{path}"
-  end
-
-  defp gen_signature(path) do
-    key = Application.get_env(:ret, :farspark_signature_key) |> Base.decode16!(case: :lower)
-    salt = Application.get_env(:ret, :farspark_signature_salt) |> Base.decode16!(case: :lower)
-
-    :sha256
-    |> :crypto.hmac(key, salt <> path)
-    |> Base.url_encode64(padding: false)
+    |> render("show.json", origin: uri |> URI.to_string(), meta: meta)
   end
 end
