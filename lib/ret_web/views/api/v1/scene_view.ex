@@ -22,6 +22,7 @@ defmodule RetWeb.Api.V1.SceneView do
           name: scene.name,
           description: scene.description,
           attribution: scene.attribution,
+          attributions: scene.attributions,
           model_url: scene.model_owned_file |> OwnedFile.uri_for() |> URI.to_string(),
           screenshot_url: scene.screenshot_owned_file |> OwnedFile.uri_for() |> URI.to_string(),
           url: url_for_scene(scene)
