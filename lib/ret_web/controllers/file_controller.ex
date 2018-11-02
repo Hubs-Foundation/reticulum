@@ -8,8 +8,22 @@ defmodule RetWeb.FileController do
   end
 
   def show(conn, %{"id" => <<uuid::binary-size(36), ".html">>, "token" => token}) do
-    image_url = conn |> RetWeb.Router.Helpers.file_url(:show, uuid, token: token)
-    conn |> render("show.html", image_url: image_url)
+    case Storage.fetch(uuid, token) do
+      {:ok, %{"content_type" => content_type, "content_length" => content_length}, _stream} ->
+        image_url =
+          uuid
+          |> Ret.Storage.uri_for(content_type)
+          |> Map.put(:query, URI.encode_query(token: token))
+          |> URI.to_string()
+
+        conn |> render("show.html", image_url: image_url)
+
+      {:error, :not_found} ->
+        conn |> send_resp(404, "")
+
+      {:error, :not_allowed} ->
+        conn |> send_resp(401, "")
+    end
   end
 
   def show(conn, %{
