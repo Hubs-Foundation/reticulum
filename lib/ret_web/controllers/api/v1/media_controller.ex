@@ -38,7 +38,6 @@ defmodule RetWeb.Api.V1.MediaController do
     case Ret.Storage.store(upload, content_type, access_token, promotion_token) do
       {:ok, uuid} ->
         uri = Ret.Storage.uri_for(uuid, content_type)
-        images = images_for_uri_and_index(uri, 0)
 
         conn
         |> render(
@@ -46,7 +45,6 @@ defmodule RetWeb.Api.V1.MediaController do
           file_id: uuid,
           origin: uri |> URI.to_string(),
           raw: uri |> URI.to_string(),
-          images: images,
           meta: %{access_token: access_token, promotion_token: promotion_token, expected_content_type: content_type}
         )
 
@@ -70,17 +68,9 @@ defmodule RetWeb.Api.V1.MediaController do
 
   defp render_resolved_media(conn, %Ret.ResolvedMedia{uri: uri, meta: meta}, index) do
     raw = gen_farspark_url(uri, index, "raw", "")
-    images = images_for_uri_and_index(uri, index)
 
     conn
-    |> render("show.json", origin: uri |> URI.to_string(), raw: raw, meta: meta, images: images)
-  end
-
-  defp images_for_uri_and_index(uri, index) do
-    %{
-      "png" => gen_farspark_url(uri, index, "extract", ".png"),
-      "jpg" => gen_farspark_url(uri, index, "extract", ".jpg")
-    }
+    |> render("show.json", origin: uri |> URI.to_string(), raw: raw, meta: meta)
   end
 
   defp gen_farspark_url(uri, index, method, extension) do
