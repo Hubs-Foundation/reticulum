@@ -45,7 +45,8 @@ defmodule Ret.MediaResolver do
 
       case ytdl_resp do
         %HTTPoison.Response{status_code: 302, headers: headers} ->
-          {:commit, headers |> media_url_from_ytdl_headers |> URI.parse() |> resolved}
+          meta = %{expected_content_type: "video/*"}
+          {:commit, headers |> media_url_from_ytdl_headers |> URI.parse() |> resolved(meta)}
 
         _ ->
           resolve_non_video(uri, root_host)
@@ -57,7 +58,7 @@ defmodule Ret.MediaResolver do
   end
 
   defp resolve_non_video(%URI{} = uri, "deviantart.com") do
-    uri =
+    [uri, meta] =
       with client_id when is_binary(client_id) <- module_config(:deviantart_client_id),
            client_secret when is_binary(client_secret) <- module_config(:deviantart_client_secret) do
         page_resp = uri |> URI.to_string() |> retry_get_until_success
@@ -72,17 +73,21 @@ defmodule Ret.MediaResolver do
           |> Poison.decode!()
           |> Map.get("access_token")
 
-        "#{api_host}/deviation/#{deviant_id}?access_token=#{token}"
-        |> retry_get_until_success
-        |> Map.get(:body)
-        |> Poison.decode!()
-        |> Kernel.get_in(["content", "src"])
-        |> URI.parse()
+        uri =
+          "#{api_host}/deviation/#{deviant_id}?access_token=#{token}"
+          |> retry_get_until_success
+          |> Map.get(:body)
+          |> Poison.decode!()
+          |> Kernel.get_in(["content", "src"])
+          |> URI.parse()
+
+        # todo: determine appropriate content type here if possible
+        [uri, nil]
       else
-        _err -> uri
+        _err -> [uri, nil]
       end
 
-    {:commit, uri |> resolved}
+    {:commit, uri |> resolved(meta)}
   end
 
   defp resolve_non_video(%URI{path: "/gifs/" <> _rest} = uri, "giphy.com") do
@@ -94,19 +99,19 @@ defmodule Ret.MediaResolver do
   end
 
   defp resolve_non_video(%URI{path: "/gallery/" <> gallery_id} = uri, "imgur.com") do
-    resolved_uri =
+    [resolved_url, meta] =
       "https://imgur-apiv3.p.mashape.com/3/gallery/#{gallery_id}"
-      |> image_uri_for_imgur_collection_api_url
+      |> image_data_for_imgur_collection_api_url
 
-    {:commit, (resolved_uri || uri) |> resolved}
+    {:commit, (resolved_url || uri) |> resolved(meta)}
   end
 
   defp resolve_non_video(%URI{path: "/a/" <> album_id} = uri, "imgur.com") do
-    resolved_url =
+    [resolved_url, meta] =
       "https://imgur-apiv3.p.mashape.com/3/album/#{album_id}"
-      |> image_uri_for_imgur_collection_api_url
+      |> image_data_for_imgur_collection_api_url
 
-    {:commit, (resolved_url || uri) |> resolved}
+    {:commit, (resolved_url || uri) |> resolved(meta)}
   end
 
   defp resolve_non_video(
@@ -176,24 +181,26 @@ defmodule Ret.MediaResolver do
 
   defp resolve_non_video(%URI{} = uri, _root_host) do
     # Fall back on og: tags
-    uri =
+    [uri, meta] =
       case uri |> URI.to_string() |> retry_get_until_success([{"Range", "bytes=0-32768"}]) do
         :error ->
-          :error
+          nil
 
+        # note that there exist og:image:type and og:video:type tags we could use,
+        # but our OpenGraph library fails to parse them out
         resp ->
           case resp.body |> OpenGraph.parse() do
-            %{video: video} when is_binary(video) -> video |> URI.parse()
-            %{image: image} when is_binary(image) -> image |> URI.parse()
-            _ -> uri
+            %{video: video} when is_binary(video) -> [URI.parse(video), %{expected_content_type: "video/*"}]
+            %{image: image} when is_binary(image) -> [URI.parse(image), %{expected_content_type: "image/*"}]
+            _ -> [uri, %{expected_content_type: content_type_from_headers(resp.headers)}]
           end
       end
 
-    {:commit, uri |> resolved}
+    {:commit, uri |> resolved(meta)}
   end
 
   defp resolve_giphy_media_uri(%URI{} = uri, preferred_type) do
-    uri =
+    [uri, meta] =
       with api_key when is_binary(api_key) <- module_config(:giphy_api_key) do
         gif_id = uri.path |> String.split("/") |> List.last() |> String.split("-") |> List.last()
 
@@ -204,39 +211,29 @@ defmodule Ret.MediaResolver do
           |> Poison.decode!()
           |> Kernel.get_in(["data", "images", "original"])
 
-        (original_image[preferred_type] || original_image["url"]) |> URI.parse()
+        # todo: determine appropriate content type here if possible
+        [(original_image[preferred_type] || original_image["url"]) |> URI.parse(), nil]
       else
-        _err -> uri
+        _err -> [uri, nil]
       end
 
-    {:commit, uri |> resolved}
+    {:commit, uri |> resolved(meta)}
   end
 
-  defp image_uri_for_imgur_collection_api_url(imgur_api_url) do
+  defp image_data_for_imgur_collection_api_url(imgur_api_url) do
     with headers when is_list(headers) <- get_imgur_headers() do
-      imgur_api_url
-      |> retry_get_until_success(headers)
-      |> Map.get(:body)
-      |> Poison.decode!()
-      |> Kernel.get_in(["data", "images"])
-      |> List.first()
-      |> Map.get("id")
-      |> image_uri_for_imgur_id
+      image_data =
+        imgur_api_url
+        |> retry_get_until_success(headers)
+        |> Map.get(:body)
+        |> Poison.decode!()
+        |> Kernel.get_in(["data", "images"])
+        |> List.first()
+      image_url = URI.parse(image_data["link"])
+      meta = %{expected_content_type: image_data["type"]}
+      [image_url, meta]
     else
-      _err -> nil
-    end
-  end
-
-  defp image_uri_for_imgur_id(image_id) do
-    with headers when is_list(headers) <- get_imgur_headers() do
-      "https://imgur-apiv3.p.mashape.com/3/image/#{image_id}"
-      |> retry_get_until_success(headers)
-      |> Map.get(:body)
-      |> Poison.decode!()
-      |> Kernel.get_in(["data", "link"])
-      |> URI.parse()
-    else
-      _err -> nil
+      _err -> [nil, nil]
     end
   end
 
@@ -301,6 +298,10 @@ defmodule Ret.MediaResolver do
 
   defp media_url_from_ytdl_headers(headers) do
     headers |> List.keyfind("Location", 0) |> elem(1)
+  end
+
+  defp content_type_from_headers(headers) do
+    headers |> List.keyfind("Content-Type", 0) |> elem(1)
   end
 
   defp get_imgur_headers() do
