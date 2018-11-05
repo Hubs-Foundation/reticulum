@@ -51,6 +51,17 @@ defmodule Ret.WebPushSubscriptionTest do
     %WebPushSubscription{hub_id: ^other_hub_id} = subscription_other
   end
 
+  test "properly checks for has subscriptions", %{scene: scene, hub: %Hub{} = hub} do
+    {:ok, hub: hub_other} = create_hub(%{scene: scene})
+    assert !WebPushSubscription.endpoint_has_subscriptions?(@stub_subscription["endpoint"])
+
+    WebPushSubscription.subscribe_to_hub(hub, @stub_subscription)
+    assert WebPushSubscription.endpoint_has_subscriptions?(@stub_subscription["endpoint"])
+
+    WebPushSubscription.subscribe_to_hub(hub_other, @stub_subscription)
+    assert WebPushSubscription.endpoint_has_subscriptions?(@stub_subscription["endpoint"])
+  end
+
   test "remove a subscription", %{hub: %Hub{hub_id: hub_id} = hub} do
     WebPushSubscription.subscribe_to_hub(hub, @stub_subscription)
     WebPushSubscription.unsubscribe_from_hub(hub, @stub_subscription)
