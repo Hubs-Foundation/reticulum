@@ -154,7 +154,7 @@ config :web_push_encryption, :vapid_details,
 config :sentry,
   environment_name: :dev,
   json_library: Poison,
-  included_environments: [:dev],
+  included_environments: [],
   tags: %{
     env: "dev"
   }
