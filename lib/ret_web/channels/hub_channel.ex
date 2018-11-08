@@ -72,6 +72,9 @@ defmodule RetWeb.HubChannel do
 
   def handle_in("message" = event, payload, socket) do
     broadcast!(socket, event, payload |> Map.put(:session_id, socket.assigns.session_id))
+
+    HubsBot.broadcast_chat_message!(socket.assigns.hub_sid, socket.assigns.profile["displayName"], payload["body"])
+
     {:noreply, socket}
   end
 

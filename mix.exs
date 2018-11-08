@@ -45,7 +45,7 @@ defmodule Ret.Mixfile do
       {:distillery, "~> 1.5", runtime: false, github: "gfodor/distillery", branch: "feature/boot_opts"},
       {:conform, "~> 2.5"},
       {:peerage, "~> 1.0"},
-      {:httpoison, "~> 1.2.0"},
+      {:httpoison, "~> 1.2.0", override: true},
       {:poison, "~> 3.1"},
       {:ecto_autoslug_field, "~> 0.3"},
       {:cors_plug, "~> 1.5"},
@@ -66,7 +66,8 @@ defmodule Ret.Mixfile do
       {:guardian, "~> 1.1"},
       {:temp, "~> 0.4"},
       {:timex, "~> 3.4"},
-      {:web_push_encryption, "~> 0.2.0"}
+      {:web_push_encryption, "~> 0.2.0"},
+      {:alchemy, "~> 0.6.0", hex: :discord_alchemy}
     ]
   end
 
