@@ -151,6 +151,7 @@ defmodule RetWeb.HubChannel do
     with socket <- socket |> assign(:hub_sid, hub.hub_sid) |> assign(:presence, :lobby),
          response <- RetWeb.Api.V1.HubView.render("show.json", %{hub: hub}) do
       response = response |> Map.put(:subscriptions, %{web_push: is_push_subscribed})
+      response = response |> Map.put(:subscriptions, %{web_push: is_push_subscribed})
 
       existing_stat_count =
         socket

@@ -27,9 +27,18 @@ defmodule RetWeb.Api.V1.HubController do
     {result, hub} = hub_changeset |> Repo.insert()
 
     case result do
-      :ok -> render(conn, "create.json", hub: hub)
+      :ok -> 
+        account = conn |> Guardian.Plug.current_resource()
+        account |> add_host_role(hub)
+        render(conn, "create.json", hub: hub)
       :error -> conn |> send_resp(422, "invalid hub")
     end
+  end
+
+  defp add_host_role(account, hub) when not is_nil(account) do
+    %HubAccountRole{}
+    |> HubAccountRole.changeset(account, hub, ${roles: })
+    |> Repo.insert()
   end
 
   def delete(conn, %{"id" => hub_sid}) do
