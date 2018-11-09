@@ -79,7 +79,7 @@ defmodule Ret.WebPushSubscription do
   def endpoint_has_subscriptions?(endpoint) do
     WebPushSubscription
     |> where([t], t.endpoint == ^endpoint)
-    |> Repo.one() != nil
+    |> Repo.aggregate(:count, :web_push_subscription_id) > 0
   end
 
   def changeset_for_new(%WebPushSubscription{} = subscription, hub, params) do

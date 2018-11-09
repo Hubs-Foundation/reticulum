@@ -150,3 +150,11 @@ config :web_push_encryption, :vapid_details,
   subject: "mailto:admin@mozilla.com",
   public_key: "BAb03820kHYuqIvtP6QuCKZRshvv_zp5eDtqkuwCUAxASBZMQbFZXzv8kjYOuLGF16A3k8qYnIN10_4asB-Aw7w",
   private_key: "w76tXh1d3RBdVQ5eINevXRwW6Ow6uRcBa8tBDOXfmxM"
+
+config :sentry,
+  environment_name: :dev,
+  json_library: Poison,
+  included_environments: [],
+  tags: %{
+    env: "dev"
+  }

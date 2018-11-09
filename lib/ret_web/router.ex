@@ -1,5 +1,7 @@
 defmodule RetWeb.Router do
   use RetWeb, :router
+  use Plug.ErrorHandler
+  use Sentry.Plug
 
   pipeline :secure_headers do
     plug(
