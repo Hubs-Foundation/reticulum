@@ -91,3 +91,11 @@ config :ret, Ret.Mailer,
   retries: 3
 
 config :ret, Ret.Guardian, issuer: "ret", ttl: {12, :weeks}, allowed_drift: 60 * 1000
+
+config :sentry,
+  environment_name: :prod,
+  json_library: Poison,
+  included_environments: [:prod],
+  tags: %{
+    env: "prod"
+  }

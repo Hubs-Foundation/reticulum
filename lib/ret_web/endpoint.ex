@@ -1,5 +1,6 @@
 defmodule RetWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :ret
+  use Sentry.Phoenix.Endpoint
 
   socket("/socket", RetWeb.SessionSocket)
 
