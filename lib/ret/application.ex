@@ -49,6 +49,8 @@ defmodule Ret.Application do
         id: :page_chunk_cache
       ),
 
+      supervisor(HubsBot, []),
+
       # Graceful shutdown
       supervisor(TheEnd.Of.Phoenix, [[timeout: 10_000, endpoint: RetWeb.Endpoint]])
     ]
