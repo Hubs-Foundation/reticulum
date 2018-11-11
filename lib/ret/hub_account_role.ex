@@ -3,7 +3,7 @@ defmodule Ret.HubAccountRole do
   import Ecto.Changeset
   import Ecto.Query
 
-  alias Ret.{EncryptedField, Hub, HubAccountRole, Repo}
+  alias Ret.{EncryptedField, Hub, Account, HubAccountRole, Repo}
   @schema_prefix "ret0"
   @primary_key {:hub_account_role_id, :id, autogenerate: true}
 
@@ -27,7 +27,7 @@ defmodule Ret.HubAccountRole do
 
   defp add_host_role(account, hub) when not is_nil(account) do
     %HubAccountRole{}
-    |> HubAccountRole.changeset(account, hub, ${roles: 1})
+    |> HubAccountRole.changeset(account, hub, %{roles: 1})
     |> Repo.insert()
   end
 end
