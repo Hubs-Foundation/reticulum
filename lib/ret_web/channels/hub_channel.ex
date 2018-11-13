@@ -3,7 +3,7 @@ defmodule RetWeb.HubChannel do
 
   use RetWeb, :channel
 
-  alias Ret.{Hub, Repo, RoomObject, SessionStat, Statix, WebPushSubscription}
+  alias Ret.{Hub, Repo, RoomObject, HubAccountRole, SessionStat, Statix, WebPushSubscription}
   alias RetWeb.{Presence}
 
   def join(
@@ -151,6 +151,13 @@ defmodule RetWeb.HubChannel do
     with socket <- socket |> assign(:hub_sid, hub.hub_sid) |> assign(:presence, :lobby),
          response <- RetWeb.Api.V1.HubView.render("show.json", %{hub: hub}) do
       response = response |> Map.put(:subscriptions, %{web_push: is_push_subscribed})
+
+      roles =
+        socket
+        |> Guardian.Phoenix.Socket.current_resource()
+        |> HubAccountRole.get_roles(hub)
+
+      response = response |> Map.put(:roles, roles)
 
       existing_stat_count =
         socket

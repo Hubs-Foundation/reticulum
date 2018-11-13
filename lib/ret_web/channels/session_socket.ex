@@ -1,4 +1,4 @@
-defmodule RetWeb.SessionSocket do
+defmodule RetWeb.AuthSessionSocket do
   use Phoenix.Socket
 
   transport(:websocket, Phoenix.Transports.WebSocket, check_origin: false)
@@ -12,12 +12,22 @@ defmodule RetWeb.SessionSocket do
     "session:#{socket.assigns.session_id}"
   end
 
-  def connect(%{"session_id" => session_id}, socket) do
-    socket =
-      socket
-      |> assign(:session_id, session_id)
-      |> assign(:started_at, NaiveDateTime.utc_now())
+  def connect(%{"token" => token, "session_id" => session_id}, socket) do
+    socket = socket |> assign_session(session_id)
 
-    {:ok, socket}
+    case Guardian.Phoenix.Socket.authenticate(socket, Ret.Guardian, token) do
+      {:ok, socket} -> {:ok, socket}
+      {:error, _} -> :error
+    end
+  end
+
+  def connect(%{"session_id" => session_id}, socket) do
+    {:ok, socket |> assign_session(session_id)}
+  end
+
+  defp assign_session(socket, session_id) do
+    socket
+    |> assign(:session_id, session_id)
+    |> assign(:started_at, NaiveDateTime.utc_now())
   end
 end

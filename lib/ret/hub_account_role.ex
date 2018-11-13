@@ -1,5 +1,6 @@
 defmodule Ret.HubAccountRole do
   use Ecto.Schema
+  use Bitwise
   import Ecto.Changeset
   import Ecto.Query
 
@@ -32,4 +33,14 @@ defmodule Ret.HubAccountRole do
   end
 
   def add_host_role(nil, _), do: nil
+
+  def get_roles(%Account{} = account, %Hub{} = hub) do
+    roles = Repo.get_by(HubAccountRole, hub_id: hub.hub_id, account_id: account.account_id).roles
+
+    %{
+      is_host: roles &&& 1
+    }
+  end
+
+  def get_roles(nil, _), do: %{}
 end
