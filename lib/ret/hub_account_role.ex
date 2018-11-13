@@ -25,9 +25,11 @@ defmodule Ret.HubAccountRole do
     |> put_assoc(:account, account)
   end
 
-  defp add_host_role(account, hub) when not is_nil(account) do
+  def add_host_role(%Account{} = account, %Hub{} = hub) do
     %HubAccountRole{}
-    |> HubAccountRole.changeset(account, hub, %{roles: 1})
+    |> changeset(hub, account, %{roles: 1})
     |> Repo.insert()
   end
+
+  def add_host_role(nil, _), do: nil
 end
