@@ -3,7 +3,7 @@ defmodule Ret.RoomObject do
   import Ecto.Changeset
   import Ecto.Query
 
-  alias Ret.{EncryptedField, Hub, RoomObject, Repo}
+  alias Ret.{EncryptedField, Account, Hub, RoomObject, Repo}
   @schema_prefix "ret0"
   @primary_key {:room_object_id, :id, autogenerate: true}
 
@@ -12,6 +12,7 @@ defmodule Ret.RoomObject do
     field(:gltf_node, EncryptedField)
 
     belongs_to(:hub, Hub, references: :hub_id)
+    belongs_to(:account, Account, references: :account_id)
 
     timestamps()
   end
