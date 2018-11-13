@@ -322,6 +322,13 @@
       doc: "Private Key for Web Push API",
       hidden: false,
       to: "web_push_encryption.vapid_details.private_key"
+    ],
+    "sentry.dsn": [
+      commented: false,
+      datatype: :binary,
+      doc: "DSN for Sentry",
+      hidden: false,
+      to: "sentry.dsn"
     ]
   ],
   transforms: [],
