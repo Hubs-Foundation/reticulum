@@ -94,8 +94,9 @@ defmodule RetWeb.HubChannel do
   end
 
   def handle_in("pin", %{"id" => object_id, "gltf_node" => gltf_node}, socket) do
+    account = socket |> Guardian.Phoenix.Socket.current_resource()
     hub = socket |> hub_for_socket
-    RoomObject.perform_pin!(hub, %{object_id: object_id, gltf_node: gltf_node})
+    RoomObject.perform_pin!(hub, account, %{object_id: object_id, gltf_node: gltf_node})
 
     {:noreply, socket}
   end

@@ -2,7 +2,7 @@ defmodule RetWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :ret
   use Sentry.Phoenix.Endpoint
 
-  socket("/socket", RetWeb.SessionSocket)
+  socket("/socket", RetWeb.AuthSessionSocket)
 
   def get_cors_origins, do: Application.get_env(:ret, RetWeb.Endpoint)[:allowed_origins]
 

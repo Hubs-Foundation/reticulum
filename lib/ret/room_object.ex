@@ -17,7 +17,7 @@ defmodule Ret.RoomObject do
     timestamps()
   end
 
-  def perform_pin!(%Hub{hub_id: hub_id} = hub, %{object_id: object_id} = attrs) do
+  def perform_pin!(%Hub{hub_id: hub_id} = hub, %Account{} = account, %{object_id: object_id} = attrs) do
     attrs = attrs |> Map.put(:gltf_node, attrs |> Map.get(:gltf_node) |> Poison.encode!())
 
     room_object =
@@ -26,7 +26,7 @@ defmodule Ret.RoomObject do
       |> preload(:hub)
       |> Repo.one()
 
-    changeset(room_object || %RoomObject{}, hub, attrs) |> Repo.insert_or_update!()
+    changeset(room_object || %RoomObject{}, hub, account, attrs) |> Repo.insert_or_update!()
   end
 
   def perform_unpin(%Hub{hub_id: hub_id}, object_id) do
@@ -57,11 +57,12 @@ defmodule Ret.RoomObject do
     }
   end
 
-  defp changeset(%RoomObject{} = room_object, %Hub{} = hub, attrs) do
+  defp changeset(%RoomObject{} = room_object, %Hub{} = hub, %Account{} = account, attrs) do
     room_object
     |> cast(attrs, [:object_id, :gltf_node])
     |> unique_constraint(:object_id, name: :room_objects_object_id_hub_id_index)
     |> unique_constraint(:hub_id, name: :room_objects_hub_id_index)
     |> put_assoc(:hub, hub)
+    |> put_assoc(:account, account)
   end
 end
