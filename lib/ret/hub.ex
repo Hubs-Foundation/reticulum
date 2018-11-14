@@ -72,7 +72,8 @@ defmodule Ret.Hub do
   def changeset_for_new_spawned_object_type(%Hub{} = hub, object_type)
       when object_type in 0..31 do
     # spawned_object_types is a bitmask of the seen object types
-    new_spawned_object_types = hub.spawned_object_types ||| 1 <<< object_type
+    <<new_spawned_object_types::integer-signed-32>> =
+      <<hub.spawned_object_types ||| 1 <<< object_type::integer-signed-32>>
 
     hub
     |> cast(%{spawned_object_types: new_spawned_object_types}, [:spawned_object_types])
