@@ -3,7 +3,7 @@ defmodule RetWeb.HubChannel do
 
   use RetWeb, :channel
 
-  alias Ret.{Hub, Repo, RoomObject, SessionStat, Statix, WebPushSubscription}
+  alias Ret.{Hub, Account, Repo, RoomObject, SessionStat, Statix, WebPushSubscription, Guardian}
   alias RetWeb.{Presence}
 
   def join(
@@ -93,8 +93,8 @@ defmodule RetWeb.HubChannel do
     {:reply, {:ok, %{has_remaining_subscriptions: has_remaining_subscriptions}}, socket}
   end
 
-  def handle_in("pin", %{"id" => object_id, "gltf_node" => gltf_node}, socket) do
-    account = socket |> Guardian.Phoenix.Socket.current_resource()
+  def handle_in("pin", %{"id" => object_id, "gltf_node" => gltf_node, "token" => token}, socket) do
+    {:ok, %Account{} = account, _claims} = Guardian.resource_from_token(token)
     hub = socket |> hub_for_socket
     RoomObject.perform_pin!(hub, account, %{object_id: object_id, gltf_node: gltf_node})
 

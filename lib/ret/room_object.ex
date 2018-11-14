@@ -24,6 +24,7 @@ defmodule Ret.RoomObject do
       RoomObject
       |> where([t], t.hub_id == ^hub_id and t.object_id == ^object_id)
       |> preload(:hub)
+      |> preload(:account)
       |> Repo.one()
 
     changeset(room_object || %RoomObject{}, hub, account, attrs) |> Repo.insert_or_update!()
