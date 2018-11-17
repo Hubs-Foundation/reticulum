@@ -50,25 +50,15 @@ defmodule HubsBot do
       Cogs.say("Quack :duck:")
     end
 
-    # Cogs.def bound do
-    #   {:ok, mappings} = HubsBot.BotState.get_channel_mapping()
+    Cogs.def bound do
+      case HubsBot.BotState.get_hubs_for_channel(message.channel_id) do
+        hub_ids = [_ | _] ->
+          Cogs.say("This channel is bound to #{Enum.join(hub_ids, ", ")}")
 
-    #   fields =
-    #     mappings
-    #     |> Enum.map(fn {hub_id, channels} ->
-    #       %Alchemy.Embed.Field{
-    #         name: hub_id,
-    #         value: Enum.map_join(channels, ",", &("#" <> &1.name))
-    #       }
-    #     end)
-
-    #   embed = %Embed{
-    #     title: "Bound channels",
-    #     fields: fields
-    #   }
-
-    #   Embed.send(embed)
-    # end
+        _ ->
+          Cogs.say("No hubs bound to this channel")
+      end
+    end
   end
 
   defmodule Events do
@@ -88,12 +78,8 @@ defmodule HubsBot do
     end
 
     def on_message(msg) do
-      unless msg.author.bot do
-        hub_ids = HubsBot.BotState.get_hubs_for_channel(msg.channel_id)
-
-        if hub_ids do
-          hub_ids |> Enum.each(&broadcast_to_hubs(&1, msg))
-        end
+      if hub_ids = !msg.author.bot && HubsBot.BotState.get_hubs_for_channel(msg.channel_id) do
+        hub_ids |> Enum.each(&broadcast_to_hubs(&1, msg))
       end
     end
 
@@ -109,14 +95,14 @@ defmodule HubsBot do
 
     ###
 
+    @hub_url_regex ~r"https?://(?:hubs.local(?:\:\d+)?|hubs.mozilla.com)/(\w+)/?\S*"
     def update_bound_channels do
       bound_channels =
         for guild <- elem(Alchemy.Client.get_current_guilds(), 1),
             channel <- elem(Alchemy.Client.get_channels(guild.id), 1),
             topic = channel.topic,
-            channel_url = URI.parse(topic),
-            channel_url.host === "hubs.local" do
-          "/" <> hub_id = channel_url.path
+            matches = Regex.scan(@hub_url_regex, channel.topic),
+            [_, hub_id] <- matches do
           {hub_id, channel.id}
         end
 
@@ -130,37 +116,70 @@ defmodule HubsBot do
     end
   end
 
-  def on_hubs_message(hub_id, username, content) do
-    channel_ids = HubsBot.BotState.get_channels_for_hub(hub_id)
-
-    if channel_ids do
-      Enum.each(channel_ids, &broadcast_message_to_discord(&1, username, content))
+  def on_hubs_event(hub_id, event, context, payload \\ %{}) do
+    if channel_ids = HubsBot.BotState.get_channels_for_hub(hub_id) do
+      do_on_hubs_event(channel_ids, hub_id, event, context, payload)
     end
   end
 
-  def on_hubs_user_event(hub_id, username, event) do
-    channel_ids = HubsBot.BotState.get_channels_for_hub(hub_id)
-
-    if channel_ids do
-      Enum.each(channel_ids, &broadcast_user_event_to_discord(&1, username, event))
-    end
+  def do_on_hubs_event(
+        channel_ids,
+        hub_id,
+        :message,
+        %{:profile => %{"displayName" => username}},
+        payload
+      ) do
+    Enum.each(
+      channel_ids,
+      &broadcast_message_to_discord(&1, username, payload |> content_for_payload(username))
+    )
   end
 
-  def broadcast_message_to_discord(channel_id, username, content) do
-    IO.puts("sending message for #{username} to #{channel_id}: #{content}")
+  def do_on_hubs_event(
+        channel_ids,
+        hub_id,
+        event,
+        %{:profile => %{"displayName" => username}},
+        payload
+      )
+      when event in [:join, :part] do
+    Enum.each(channel_ids, &broadcast_user_event_to_discord(&1, username, event))
+  end
+
+  defp content_for_payload(%{"type" => "chat"} = payload, username),
+    do: [content: payload["body"]]
+
+  defp content_for_payload(%{"type" => "spawn"} = payload, username) do
+    [
+      embeds: [
+        %Embed{}
+        |> Embed.color(0xFF3464)
+        |> Embed.author(
+          name: "#{username} took a photo",
+          icon_url: "https://blog.mozvr.com/content/images/2018/04/image--1-.png"
+        )
+        |> Embed.image(
+          "https://uploads-prod.reticulum.io/files/9f3cda3a-d445-4601-970c-6b0e4b494113.png?token=b9cf857b51565787bcace71389f1d8a2"
+        )
+        # |> Embed.image(payload["body"]["src"])
+      ]
+    ]
+  end
+
+  def broadcast_message_to_discord(channel_id, username, options \\ []) do
     {:ok, [hook | _]} = Alchemy.Webhook.in_channel(channel_id)
 
     Alchemy.Webhook.send(
       hook,
-      {:content, content},
-      username: username,
-      avatar_url: "https://blog.mozvr.com/content/images/2018/04/image--1-.png"
+      {:username, username},
+      options ++
+        [
+          avatar_url: "https://blog.mozvr.com/content/images/2018/04/image--1-.png"
+        ]
     )
   end
 
   def broadcast_user_event_to_discord(channel_id, username, event) do
-    IO.puts("sending join message for #{username} to #{channel_id}")
-
     embed =
       case event do
         :join ->
@@ -195,7 +214,6 @@ defmodule HubsBot do
       supervisor(Alchemy.Client, [module_config(:token), options]),
       BotState
     ]
-    IO.puts(module_config(:token))
 
     Supervisor.init(children, strategy: :one_for_one)
   end

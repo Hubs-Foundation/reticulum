@@ -73,7 +73,7 @@ defmodule RetWeb.HubChannel do
   def handle_in("message" = event, payload, socket) do
     broadcast!(socket, event, payload |> Map.put(:session_id, socket.assigns.session_id))
 
-    HubsBot.on_hubs_message(socket.assigns.hub_sid, socket.assigns.profile["displayName"], payload["body"])
+    HubsBot.on_hubs_event(socket.assigns.hub_sid, :message, socket.assigns, payload)
 
     {:noreply, socket}
   end
@@ -130,7 +130,7 @@ defmodule RetWeb.HubChannel do
     |> SessionStat.stat_query_for_socket()
     |> Repo.update_all(set: [ended_at: NaiveDateTime.utc_now()])
 
-    HubsBot.on_hubs_user_event(socket.assigns.hub_sid, socket.assigns.profile["displayName"], :part)
+    HubsBot.on_hubs_event(socket.assigns.hub_sid, :part, socket.assigns)
 
     :ok
   end
@@ -179,7 +179,7 @@ defmodule RetWeb.HubChannel do
         Task.start_link(fn -> hub |> Hub.send_push_messages_for_join(push_subscription_endpoint) end)
       end
 
-      HubsBot.on_hubs_user_event(hub.hub_sid, socket.assigns.profile["displayName"], :join)
+      HubsBot.on_hubs_event(socket.assigns.hub_sid, :join, socket.assigns)
 
       Statix.increment("ret.channels.hub.joins.ok")
 
