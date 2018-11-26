@@ -3,7 +3,7 @@ defmodule RetWeb.HubChannel do
 
   use RetWeb, :channel
 
-  alias Ret.{Hub, Account, Repo, RoomObject, Storage, SessionStat, Statix, WebPushSubscription, Guardian}
+  alias Ret.{Hub, Account, Repo, RoomObject, OwnedFile, Storage, SessionStat, Statix, WebPushSubscription, Guardian}
   alias RetWeb.{Presence}
 
   def join(
@@ -123,7 +123,7 @@ defmodule RetWeb.HubChannel do
     {:ok, %Account{} = account, _claims} = Guardian.resource_from_token(token)
     hub = socket |> hub_for_socket
     RoomObject.perform_unpin(hub, object_id)
-    OwnedFile.set_inactive(file_id, account)
+    OwnedFile.set_inactive(file_id, account.account_id)
 
     {:noreply, socket}
   end

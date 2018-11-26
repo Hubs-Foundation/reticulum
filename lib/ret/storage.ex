@@ -182,7 +182,7 @@ defmodule Ret.Storage do
     Logger.info("Stored Files: Vacuum Finished.")
   end
 
-  def vacuum_inactive_owned_files do
+  def demote_inactive_owned_files do
     Logger.info("logger vacuuming")
 
     inactive_owned_files =
@@ -192,15 +192,10 @@ defmodule Ret.Storage do
 
     inactive_owned_files
     |> Enum.map(& &1.owned_file_uuid)
-    |> Enum.map(&demote/1)
+    |> Enum.each(&demote/1)
 
-    inactive_owned_files |> delete_demoted_owned_files
-  end
-
-  defp delete_demoted_owned_files([]), do: nil
-
-  defp delete_demoted_owned_files(inactive_owned_files) do
-    inactive_owned_files |> Repo.delete_all()
+    inactive_owned_files
+    |> Enum.each(&Repo.delete/1)
   end
 
   def uri_for(id, content_type) do

@@ -30,10 +30,17 @@ defmodule Ret.OwnedFile do
     |> put_assoc(:account, account)
   end
 
-  def set_inactive(owned_file_uuid, account) do
+  def set_inactive(owned_file_uuid, account_id) do
     OwnedFile
-    |> where(owned_file_uuid: ^owned_file_uuid, account: ^account)
+    |> where(owned_file_uuid: ^owned_file_uuid, account_id: ^account_id)
     |> Repo.one()
+    |> set_inactive
+  end
+
+  def set_inactive(nil), do: nil
+
+  def set_inactive(%OwnedFile{} = owned_file) do
+    owned_file
     |> change(%{state: :inactive})
     |> Repo.update()
   end
