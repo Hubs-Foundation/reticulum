@@ -194,6 +194,12 @@ defmodule Ret.Storage do
     |> Enum.map(& &1.owned_file_uuid)
     |> Enum.map(&demote/1)
 
+    inactive_owned_files |> delete_demoted_owned_files
+  end
+
+  defp delete_demoted_owned_files([]), do: nil
+
+  defp delete_demoted_owned_files(inactive_owned_files) do
     inactive_owned_files |> Repo.delete_all()
   end
 
