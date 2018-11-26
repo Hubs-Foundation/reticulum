@@ -1,6 +1,6 @@
 use Mix.Config
 
-host = "10.252.28.105"
+host = "hubs.local"
 
 # For development, we disable any cache and enable
 # debugging and code reloading.
