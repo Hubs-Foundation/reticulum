@@ -3,7 +3,7 @@ defmodule RetWeb.HubChannel do
 
   use RetWeb, :channel
 
-  alias Ret.{Hub, Account, Repo, RoomObject, SessionStat, Statix, WebPushSubscription, Guardian}
+  alias Ret.{Hub, Account, Repo, RoomObject, Storage, SessionStat, Statix, WebPushSubscription, Guardian}
   alias RetWeb.{Presence}
 
   def join(
@@ -93,10 +93,37 @@ defmodule RetWeb.HubChannel do
     {:reply, {:ok, %{has_remaining_subscriptions: has_remaining_subscriptions}}, socket}
   end
 
+  def handle_in(
+        "pin",
+        %{
+          "id" => object_id,
+          "gltf_node" => gltf_node,
+          "token" => token,
+          "file_id" => file_id,
+          "file_token" => file_token,
+          "promotion_token" => promotion_token
+        },
+        socket
+      ) do
+    {:ok, %Account{} = account, _claims} = Guardian.resource_from_token(token)
+    perform_pin!(object_id, gltf_node, account, socket)
+    Storage.promote(file_id, file_token, promotion_token, account)
+
+    {:noreply, socket}
+  end
+
   def handle_in("pin", %{"id" => object_id, "gltf_node" => gltf_node, "token" => token}, socket) do
     {:ok, %Account{} = account, _claims} = Guardian.resource_from_token(token)
+    perform_pin!(object_id, gltf_node, account, socket)
+
+    {:noreply, socket}
+  end
+
+  def handle_in("unpin", %{"id" => object_id, "file_id" => file_id, "token" => token}, socket) do
+    {:ok, %Account{} = account, _claims} = Guardian.resource_from_token(token)
     hub = socket |> hub_for_socket
-    RoomObject.perform_pin!(hub, account, %{object_id: object_id, gltf_node: gltf_node})
+    RoomObject.perform_unpin(hub, object_id)
+    OwnedFile.set_inactive(file_id, account)
 
     {:noreply, socket}
   end
@@ -121,6 +148,11 @@ defmodule RetWeb.HubChannel do
 
   def handle_info(_message, socket) do
     {:noreply, socket}
+  end
+
+  defp perform_pin!(object_id, gltf_node, account, socket) do
+    hub = socket |> hub_for_socket
+    RoomObject.perform_pin!(hub, account, %{object_id: object_id, gltf_node: gltf_node})
   end
 
   def terminate(_reason, socket) do

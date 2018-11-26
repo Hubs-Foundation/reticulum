@@ -64,6 +64,6 @@ defmodule Ret.RoomObject do
     |> unique_constraint(:object_id, name: :room_objects_object_id_hub_id_index)
     |> unique_constraint(:hub_id, name: :room_objects_hub_id_index)
     |> put_assoc(:hub, hub)
-    |> put_assoc(:account, account)
+    |> put_change(:account_id, account.account_id)
   end
 end

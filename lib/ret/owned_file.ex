@@ -1,7 +1,8 @@
 defmodule Ret.OwnedFile do
   use Ecto.Schema
+  import Ecto.Query
   import Ecto.Changeset
-  alias Ret.{OwnedFile, Account}
+  alias Ret.{Repo, OwnedFile, Account}
 
   @schema_prefix "ret0"
   @primary_key {:owned_file_id, :id, autogenerate: true}
@@ -27,5 +28,13 @@ defmodule Ret.OwnedFile do
     |> validate_required([:owned_file_uuid, :key, :content_type, :content_length])
     |> unique_constraint(:owned_file_uuid)
     |> put_assoc(:account, account)
+  end
+
+  def set_inactive(owned_file_uuid, account) do
+    OwnedFile
+    |> where(owned_file_uuid: ^owned_file_uuid, account: ^account)
+    |> Repo.one()
+    |> change(%{state: :inactive})
+    |> Repo.update()
   end
 end

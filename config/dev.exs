@@ -7,8 +7,8 @@ use Mix.Config
 # watchers to your application. For example, we use it
 # with brunch.io to recompile .js and .css sources.
 config :ret, RetWeb.Endpoint,
-  url: [scheme: "https", host: "hubs.local", port: 4000],
-  static_url: [scheme: "https", host: "hubs.local", port: 4000],
+  url: [scheme: "https", host: "10.0.0.192", port: 4000],
+  static_url: [scheme: "https", host: "10.0.0.192", port: 4000],
   https: [
     port: 4000,
     otp_app: :ret,
@@ -92,7 +92,7 @@ config :ret,
   farspark_host: "https://farspark-dev.reticulum.io"
 
 config :ret, Ret.PageOriginWarmer,
-  page_origin: "https://hubs.local:8080",
+  page_origin: "https://10.0.0.192:8080",
   insecure_ssl: true
 
 config :ret, Ret.MediaResolver,
@@ -110,10 +110,10 @@ config :ret, Ret.Storage,
   ttl: 60 * 60 * 24
 
 asset_hosts =
-  "https://localhost:4000 https://localhost:8080 https://hubs.local:4000 https://hubs.local:8080 https://asset-bundles-dev.reticulum.io https://asset-bundles-prod.reticulum.io https://farspark-prod.reticulum.io https://farspark-dev.reticulum.io"
+  "https://localhost:4000 https://localhost:8080 https://10.0.0.192:4000 https://10.0.0.192:8080 https://asset-bundles-dev.reticulum.io https://asset-bundles-prod.reticulum.io https://farspark-prod.reticulum.io https://farspark-dev.reticulum.io"
 
 websocket_hosts =
-  "https://localhost:4000 https://localhost:8080 wss://localhost:4000 https://hubs.local:4000 https://hubs.local:8080 wss://hubs.local:4000 wss://hubs.local:8080 wss://dev-janus.reticulum.io wss://prod-janus.reticulum.io"
+  "https://localhost:4000 https://localhost:8080 wss://localhost:4000 https://10.0.0.192:4000 https://10.0.0.192:8080 wss://10.0.0.192:4000 wss://10.0.0.192:8080 wss://dev-janus.reticulum.io wss://prod-janus.reticulum.io"
 
 config :secure_headers, SecureHeaders,
   secure_headers: [

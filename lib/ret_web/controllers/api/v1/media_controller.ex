@@ -11,20 +11,24 @@ defmodule RetWeb.Api.V1.MediaController do
   end
 
   def create(conn, %{
-        "media" =>
-          %Plug.Upload{filename: filename, content_type: "application/octet-stream"} = upload
+        "media" => %Plug.Upload{filename: filename, content_type: "application/octet-stream"} = upload,
+        "with_promotion_token" => with_promotion_token
       }) do
-    render_upload(conn, upload, MIME.from_path(filename))
+    render_upload(conn, upload, MIME.from_path(filename), with_promotion_token)
   end
 
-  def create(conn, %{"media" => %Plug.Upload{content_type: content_type} = upload}) do
-    render_upload(conn, upload, content_type)
+  def create(conn, %{
+        "media" => %Plug.Upload{content_type: content_type} = upload,
+        "with_promotion_token" => with_promotion_token
+      }) do
+    render_upload(conn, upload, content_type, with_promotion_token)
   end
 
-  defp render_upload(conn, %Plug.Upload{} = upload, content_type) do
+  defp render_upload(conn, %Plug.Upload{} = upload, content_type, with_promotion_token) do
     token = SecureRandom.hex()
+    promotion_token = if with_promotion_token, do: SecureRandom.hex(), else: nil
 
-    case Ret.Storage.store(upload, content_type, token) do
+    case Ret.Storage.store(upload, content_type, token, promotion_token) do
       {:ok, uuid} ->
         uri = Ret.Storage.uri_for(uuid, content_type)
         images = images_for_uri_and_index(uri, 0)
@@ -36,7 +40,7 @@ defmodule RetWeb.Api.V1.MediaController do
           origin: uri |> URI.to_string(),
           raw: uri |> URI.to_string(),
           images: images,
-          meta: %{access_token: token, expected_content_type: content_type}
+          meta: %{access_token: token, promotion_token: promotion_token, expected_content_type: content_type}
         )
 
       {:error, :not_allowed} ->
@@ -73,10 +77,7 @@ defmodule RetWeb.Api.V1.MediaController do
   end
 
   defp gen_farspark_url(uri, index, method, extension) do
-    path =
-      "/#{method}/0/0/0/#{index}/#{uri |> URI.to_string() |> Base.url_encode64(padding: false)}#{
-        extension
-      }"
+    path = "/#{method}/0/0/0/#{index}/#{uri |> URI.to_string() |> Base.url_encode64(padding: false)}#{extension}"
 
     host = Application.get_env(:ret, :farspark_host)
     "#{host}/#{gen_signature(path)}#{path}"
