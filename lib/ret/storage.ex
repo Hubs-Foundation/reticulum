@@ -129,18 +129,19 @@ defmodule Ret.Storage do
     end
   end
 
+  # If an owned file does not have a promotion token associated with it, it can be promoted with any given 
+  # promotion token, including nil.
   defp check_promotion_token(nil, _promotion_token), do: {:ok}
 
   defp check_promotion_token(actual_promotion_token, promotion_token) do
     if(actual_promotion_token == promotion_token, do: {:ok}, else: {:error, :invalid_key})
   end
 
-  defp demote(uuid) do
+  defp move_file_to_expiring(uuid) do
     with(
       [_, meta_file_path, blob_file_path] <- paths_for_uuid(uuid, @owned_file_path),
       [dest_path, dest_meta_file_path, dest_blob_file_path] <- paths_for_uuid(uuid, @expiring_file_path)
     ) do
-      Logger.info("demoting #{uuid}")
       File.mkdir_p!(dest_path)
       File.rename(meta_file_path, dest_meta_file_path)
       File.rename(blob_file_path, dest_blob_file_path)
@@ -183,8 +184,6 @@ defmodule Ret.Storage do
   end
 
   def demote_inactive_owned_files do
-    Logger.info("logger vacuuming")
-
     inactive_owned_files =
       OwnedFile
       |> where(state: "inactive")
@@ -192,7 +191,7 @@ defmodule Ret.Storage do
 
     inactive_owned_files
     |> Enum.map(& &1.owned_file_uuid)
-    |> Enum.each(&demote/1)
+    |> Enum.each(&move_file_to_expiring/1)
 
     inactive_owned_files
     |> Enum.each(&Repo.delete/1)
