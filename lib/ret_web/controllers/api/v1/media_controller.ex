@@ -2,6 +2,8 @@ defmodule RetWeb.Api.V1.MediaController do
   use RetWeb, :controller
   use Retry
 
+  require Logger
+
   def create(conn, %{"media" => %{"url" => url, "index" => index}}) do
     resolve_and_render(conn, url, index)
   end
@@ -12,21 +14,28 @@ defmodule RetWeb.Api.V1.MediaController do
 
   def create(conn, %{
         "media" => %Plug.Upload{filename: filename, content_type: "application/octet-stream"} = upload,
-        "with_promotion_token" => with_promotion_token
+        "with_promotion_token" => "true"
       }) do
-    render_upload(conn, upload, MIME.from_path(filename), with_promotion_token)
+    render_upload(conn, upload, MIME.from_path(filename), SecureRandom.hex())
   end
 
   def create(conn, %{
         "media" => %Plug.Upload{content_type: content_type} = upload,
-        "with_promotion_token" => with_promotion_token
+        "with_promotion_token" => "true"
       }) do
-    render_upload(conn, upload, content_type, with_promotion_token)
+    render_upload(conn, upload, content_type, SecureRandom.hex())
   end
 
-  defp render_upload(conn, %Plug.Upload{} = upload, content_type, with_promotion_token) do
+  def create(conn, %{"media" => %Plug.Upload{filename: filename, content_type: "application/octet-stream"} = upload}) do
+    render_upload(conn, upload, MIME.from_path(filename))
+  end
+
+  def create(conn, %{"media" => %Plug.Upload{content_type: content_type} = upload}) do
+    render_upload(conn, upload, content_type)
+  end
+
+  defp render_upload(conn, %Plug.Upload{} = upload, content_type, promotion_token \\ nil) do
     token = SecureRandom.hex()
-    promotion_token = if with_promotion_token, do: SecureRandom.hex(), else: nil
 
     case Ret.Storage.store(upload, content_type, token, promotion_token) do
       {:ok, uuid} ->
