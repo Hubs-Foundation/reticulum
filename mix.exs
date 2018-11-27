@@ -67,7 +67,8 @@ defmodule Ret.Mixfile do
       {:temp, "~> 0.4"},
       {:timex, "~> 3.4"},
       {:web_push_encryption, "~> 0.2.0"},
-      {:alchemy, "~> 0.6.0", hex: :discord_alchemy}
+      {:alchemy, "~> 0.6.0", hex: :discord_alchemy},
+      {:sentry, "~> 6.0"}
     ]
   end
 

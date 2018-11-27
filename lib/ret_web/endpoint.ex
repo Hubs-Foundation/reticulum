@@ -1,5 +1,6 @@
 defmodule RetWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :ret
+  use Sentry.Phoenix.Endpoint
 
   socket("/socket", RetWeb.SessionSocket)
 
@@ -36,7 +37,7 @@ defmodule RetWeb.Endpoint do
     parsers: [:urlencoded, :multipart, :json],
     pass: ["*/*"],
     json_decoder: Poison,
-    length: 100_000_000,
+    length: 134_217_728,
     read_timeout: 300_000
   )
 
