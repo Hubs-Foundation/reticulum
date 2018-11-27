@@ -112,12 +112,15 @@ config :ret, Ret.Storage,
   ttl: 60 * 60 * 24
 
 asset_hosts =
-  "https://localhost:4000 https://localhost:8080 https://#{host}:4000 https://#{host}:8080 https://asset-bundles-dev.reticulum.io https://asset-bundles-prod.reticulum.io https://farspark-prod.reticulum.io https://farspark-dev.reticulum.io"
+  "https://localhost:4000 https://localhost:8080 " <>
+    "https://#{host}:4000 https://#{host}:8080 " <>
+    "https://asset-bundles-dev.reticulum.io https://asset-bundles-prod.reticulum.io " <>
+    "https://farspark-prod.reticulum.io https://farspark-dev.reticulum.io"
 
 websocket_hosts =
-  "https://localhost:4000 https://localhost:8080 wss://localhost:4000 https://#{host}:4000 https://#{host}:8080 wss://#{
-    host
-  }:4000 wss://#{host}:8080 wss://dev-janus.reticulum.io wss://prod-janus.reticulum.io"
+  "https://localhost:4000 https://localhost:8080 wss://localhost:4000 " <>
+    "https://#{host}:4000 https://#{host}:8080 wss://#{host}:4000 wss://#{host}:8080 " <>
+    "wss://dev-janus.reticulum.io wss://prod-janus.reticulum.io"
 
 config :secure_headers, SecureHeaders,
   secure_headers: [
