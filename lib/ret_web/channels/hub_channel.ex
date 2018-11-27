@@ -108,6 +108,7 @@ defmodule RetWeb.HubChannel do
     {:ok, %Account{} = account, _claims} = Guardian.resource_from_token(token)
     perform_pin!(object_id, gltf_node, account, socket)
     Storage.promote(file_id, file_token, promotion_token, account)
+    OwnedFile.set_active(file_id, account.account_id)
 
     {:noreply, socket}
   end
