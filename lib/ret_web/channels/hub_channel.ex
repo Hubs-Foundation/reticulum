@@ -94,9 +94,14 @@ defmodule RetWeb.HubChannel do
   end
 
   def handle_in("sign_in", %{"token" => token}, socket) do
-    {:ok, %Account{} = account, _claims} = Ret.Guardian.resource_from_token(token)
-    socket = Guardian.Phoenix.Socket.put_current_resource(socket, account)
-    {:reply, {:ok, %{}}, socket}
+    case Ret.Guardian.resource_from_token(token) do
+      {:ok, %Account{} = account, _claims} ->
+        socket = Guardian.Phoenix.Socket.put_current_resource(socket, account)
+        {:reply, {:ok, %{}}, socket}
+
+      {:error, reason} ->
+        {:reply, {:error, %{message: "Sign in failed", reason: reason}}, socket}
+    end
   end
 
   def handle_in("sign_out", _payload, socket) do
