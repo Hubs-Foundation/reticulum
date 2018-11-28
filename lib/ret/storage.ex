@@ -4,7 +4,6 @@ defmodule Ret.Storage do
   @expiring_file_path "expiring"
   @owned_file_path "owned"
 
-  import Ecto.Query
   alias Ret.{OwnedFile, Repo, Account}
 
   # Given a Plug.Upload, a content-type, and an optional encryption key, returns an id
@@ -135,17 +134,6 @@ defmodule Ret.Storage do
   defp check_promotion_token(actual_token, token) when actual_token == token, do: {:ok}
   defp check_promotion_token(actual_token, token) when actual_token != token, do: {:error, :invalid_key}
 
-  defp move_file_to_expiring(uuid) do
-    with(
-      [_, meta_file_path, blob_file_path] <- paths_for_uuid(uuid, @owned_file_path),
-      [dest_path, dest_meta_file_path, dest_blob_file_path] <- paths_for_uuid(uuid, @expiring_file_path)
-    ) do
-      File.mkdir_p!(dest_path)
-      File.rename(meta_file_path, dest_meta_file_path)
-      File.rename(blob_file_path, dest_blob_file_path)
-    end
-  end
-
   # Vacuums up TTLed out files
   def vacuum do
     Logger.info("Stored Files: Beginning Vacuum.")
@@ -182,10 +170,7 @@ defmodule Ret.Storage do
   end
 
   def demote_inactive_owned_files do
-    inactive_owned_files =
-      OwnedFile
-      |> where(state: "inactive")
-      |> Repo.all()
+    inactive_owned_files = OwnedFile.inactive()
 
     inactive_owned_files
     |> Enum.map(& &1.owned_file_uuid)
@@ -193,6 +178,17 @@ defmodule Ret.Storage do
 
     inactive_owned_files
     |> Enum.each(&Repo.delete/1)
+  end
+
+  defp move_file_to_expiring(uuid) do
+    with(
+      [_, meta_file_path, blob_file_path] <- paths_for_uuid(uuid, @owned_file_path),
+      [dest_path, dest_meta_file_path, dest_blob_file_path] <- paths_for_uuid(uuid, @expiring_file_path)
+    ) do
+      File.mkdir_p!(dest_path)
+      File.rename(meta_file_path, dest_meta_file_path)
+      File.rename(blob_file_path, dest_blob_file_path)
+    end
   end
 
   def uri_for(id, content_type) do
