@@ -174,13 +174,13 @@ defmodule Ret.Storage do
 
     inactive_owned_files
     |> Enum.map(& &1.owned_file_uuid)
-    |> Enum.each(&move_file_to_expiring/1)
+    |> Enum.each(&move_file_to_expiring_storage/1)
 
     inactive_owned_files
     |> Enum.each(&Repo.delete/1)
   end
 
-  defp move_file_to_expiring(uuid) do
+  defp move_file_to_expiring_storage(uuid) do
     with(
       [_, meta_file_path, blob_file_path] <- paths_for_uuid(uuid, @owned_file_path),
       [dest_path, dest_meta_file_path, dest_blob_file_path] <- paths_for_uuid(uuid, @expiring_file_path)
