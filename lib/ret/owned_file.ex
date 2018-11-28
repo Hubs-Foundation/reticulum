@@ -37,9 +37,9 @@ defmodule Ret.OwnedFile do
     |> set_active
   end
 
-  def set_active(nil), do: nil
+  defp set_active(nil), do: nil
 
-  def set_active(%OwnedFile{} = owned_file) do
+  defp set_active(%OwnedFile{} = owned_file) do
     owned_file
     |> change(%{state: :active})
     |> Repo.update()
@@ -52,9 +52,9 @@ defmodule Ret.OwnedFile do
     |> set_inactive
   end
 
-  def set_inactive(nil), do: nil
+  defp set_inactive(nil), do: nil
 
-  def set_inactive(%OwnedFile{} = owned_file) do
+  defp set_inactive(%OwnedFile{} = owned_file) do
     owned_file
     |> change(%{state: :inactive})
     |> Repo.update()
