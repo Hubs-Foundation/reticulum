@@ -37,32 +37,24 @@ defmodule Ret.OwnedFile do
   end
 
   def set_active(owned_file_uuid, account_id) do
-    OwnedFile
-    |> where(owned_file_uuid: ^owned_file_uuid, account_id: ^account_id)
-    |> Repo.one()
-    |> set_active
-  end
-
-  defp set_active(nil), do: nil
-
-  defp set_active(%OwnedFile{} = owned_file) do
-    owned_file
-    |> change(%{state: :active})
-    |> Repo.update()
+    get_by_uuid_and_account(owned_file_uuid, account_id) |> set_state(:active)
   end
 
   def set_inactive(owned_file_uuid, account_id) do
+    get_by_uuid_and_account(owned_file_uuid, account_id) |> set_state(:inactive)
+  end
+
+  defp get_by_uuid_and_account(owned_file_uuid, account_id) do
     OwnedFile
     |> where(owned_file_uuid: ^owned_file_uuid, account_id: ^account_id)
     |> Repo.one()
-    |> set_inactive
   end
 
-  defp set_inactive(nil), do: nil
+  defp set_state(nil, _state), do: nil
 
-  defp set_inactive(%OwnedFile{} = owned_file) do
+  defp set_state(%OwnedFile{} = owned_file, state) do
     owned_file
-    |> change(%{state: :inactive})
+    |> change(%{state: state})
     |> Repo.update()
   end
 end
