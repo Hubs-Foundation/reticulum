@@ -131,11 +131,9 @@ defmodule Ret.Storage do
 
   # If an owned file does not have a promotion token associated with it, it can be promoted with any given 
   # promotion token, including nil.
-  defp check_promotion_token(nil, _promotion_token), do: {:ok}
-
-  defp check_promotion_token(actual_promotion_token, promotion_token) do
-    if(actual_promotion_token == promotion_token, do: {:ok}, else: {:error, :invalid_key})
-  end
+  defp check_promotion_token(nil, _token), do: {:ok}
+  defp check_promotion_token(actual_token, token) when actual_token == token, do: {:ok}
+  defp check_promotion_token(actual_token, token) when actual_token != token, do: {:error, :invalid_key}
 
   defp move_file_to_expiring(uuid) do
     with(
