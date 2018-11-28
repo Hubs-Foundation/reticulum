@@ -2,8 +2,6 @@ defmodule RetWeb.Api.V1.MediaController do
   use RetWeb, :controller
   use Retry
 
-  require Logger
-
   def create(conn, %{"media" => %{"url" => url, "index" => index}}) do
     resolve_and_render(conn, url, index)
   end
