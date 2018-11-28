@@ -15,15 +15,16 @@ defmodule Ret.Guardian do
   def resource_from_claims(%{"sub" => account_id, "iat" => issued_at}) do
     issued_at_utc_datetime = Ecto.DateTime.from_unix!(issued_at, :seconds) |> Ecto.DateTime.to_iso8601()
 
-    account =
-      Account
-      |> where([a], a.account_id == ^account_id and a.min_token_issued_at <= ^issued_at_utc_datetime)
-      |> Repo.one()
-
-    {:ok, account}
+    Account
+    |> where([a], a.account_id == ^account_id and a.min_token_issued_at <= ^issued_at_utc_datetime)
+    |> Repo.one()
+    |> result_for_account
   end
 
   def resource_from_claims(_claims) do
     {:error, "No subject"}
   end
+
+  defp result_for_account(%Account{} = account), do: {:ok, account}
+  defp result_for_account(nil), do: {:error, "Not found"}
 end
