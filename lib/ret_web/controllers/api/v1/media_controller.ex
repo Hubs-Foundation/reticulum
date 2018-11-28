@@ -16,25 +16,25 @@ defmodule RetWeb.Api.V1.MediaController do
         "media" => %Plug.Upload{filename: filename, content_type: "application/octet-stream"} = upload,
         "promotion_mode" => "with_token"
       }) do
-    render_upload(conn, upload, MIME.from_path(filename), SecureRandom.hex())
+    store_and_render_upload(conn, upload, MIME.from_path(filename), SecureRandom.hex())
   end
 
   def create(conn, %{
         "media" => %Plug.Upload{content_type: content_type} = upload,
         "promotion_mode" => "with_token"
       }) do
-    render_upload(conn, upload, content_type, SecureRandom.hex())
+    store_and_render_upload(conn, upload, content_type, SecureRandom.hex())
   end
 
   def create(conn, %{"media" => %Plug.Upload{filename: filename, content_type: "application/octet-stream"} = upload}) do
-    render_upload(conn, upload, MIME.from_path(filename))
+    store_and_render_upload(conn, upload, MIME.from_path(filename))
   end
 
   def create(conn, %{"media" => %Plug.Upload{content_type: content_type} = upload}) do
-    render_upload(conn, upload, content_type)
+    store_and_render_upload(conn, upload, content_type)
   end
 
-  defp render_upload(conn, %Plug.Upload{} = upload, content_type, promotion_token \\ nil) do
+  defp store_and_render_upload(conn, %Plug.Upload{} = upload, content_type, promotion_token \\ nil) do
     access_token = SecureRandom.hex()
 
     case Ret.Storage.store(upload, content_type, access_token, promotion_token) do
