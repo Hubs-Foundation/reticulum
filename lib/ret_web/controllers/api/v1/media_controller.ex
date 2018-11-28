@@ -14,14 +14,14 @@ defmodule RetWeb.Api.V1.MediaController do
 
   def create(conn, %{
         "media" => %Plug.Upload{filename: filename, content_type: "application/octet-stream"} = upload,
-        "with_promotion_token" => "true"
+        "promotion_mode" => "with_token"
       }) do
     render_upload(conn, upload, MIME.from_path(filename), SecureRandom.hex())
   end
 
   def create(conn, %{
         "media" => %Plug.Upload{content_type: content_type} = upload,
-        "with_promotion_token" => "true"
+        "promotion_mode" => "with_token"
       }) do
     render_upload(conn, upload, content_type, SecureRandom.hex())
   end
