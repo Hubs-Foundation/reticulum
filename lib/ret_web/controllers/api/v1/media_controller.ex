@@ -35,9 +35,9 @@ defmodule RetWeb.Api.V1.MediaController do
   end
 
   defp render_upload(conn, %Plug.Upload{} = upload, content_type, promotion_token \\ nil) do
-    token = SecureRandom.hex()
+    access_token = SecureRandom.hex()
 
-    case Ret.Storage.store(upload, content_type, token, promotion_token) do
+    case Ret.Storage.store(upload, content_type, access_token, promotion_token) do
       {:ok, uuid} ->
         uri = Ret.Storage.uri_for(uuid, content_type)
         images = images_for_uri_and_index(uri, 0)
@@ -49,7 +49,7 @@ defmodule RetWeb.Api.V1.MediaController do
           origin: uri |> URI.to_string(),
           raw: uri |> URI.to_string(),
           images: images,
-          meta: %{access_token: token, promotion_token: promotion_token, expected_content_type: content_type}
+          meta: %{access_token: access_token, promotion_token: promotion_token, expected_content_type: content_type}
         )
 
       {:error, :not_allowed} ->
