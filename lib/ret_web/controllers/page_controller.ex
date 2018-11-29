@@ -14,7 +14,10 @@ defmodule RetWeb.PageController do
       |> String.split("/")
       |> Enum.at(0)
 
-    scene = Scene |> Repo.get_by(scene_sid: scene_sid) |> Repo.preload([:screenshot_owned_file])
+    Scene |> Repo.get_by(scene_sid: scene_sid) |> Repo.preload([:screenshot_owned_file]) |> render_scene_content(conn)
+  end
+
+  defp render_scene_content(%Scene{} = scene, conn) do
     scene_meta_tags = Phoenix.View.render_to_string(RetWeb.PageView, "scene-meta.html", scene: scene)
 
     chunks =
@@ -24,6 +27,10 @@ defmodule RetWeb.PageController do
     conn
     |> put_resp_header("content-type", "text/html; charset=utf-8")
     |> send_resp(200, chunks)
+  end
+
+  defp render_scene_content(nil, conn) do
+    conn |> send_resp(404, "")
   end
 
   def render_for_path("/link", conn), do: conn |> render_page("link.html")
@@ -51,7 +58,7 @@ defmodule RetWeb.PageController do
   end
 
   def render_hub_content(conn, hub, "objects.gltf") do
-    room_gltf = Ret.RoomObject.gltf_for_hub_id(hub.hub_id) |> Poison.encode!
+    room_gltf = Ret.RoomObject.gltf_for_hub_id(hub.hub_id) |> Poison.encode!()
 
     conn
     |> put_resp_header("content-type", "model/gltf+json; charset=utf-8")
