@@ -115,14 +115,14 @@ defmodule RetWeb.HubChannel do
           "id" => object_id,
           "gltf_node" => gltf_node,
           "file_id" => file_id,
-          "file_token" => file_token,
+          "file_access_token" => file_access_token,
           "promotion_token" => promotion_token
         },
         socket
       ) do
     account = Guardian.Phoenix.Socket.current_resource(socket)
     perform_pin!(object_id, gltf_node, account, socket)
-    Storage.promote(file_id, file_token, promotion_token, account)
+    Storage.promote(file_id, file_access_token, promotion_token, account)
     OwnedFile.set_active(file_id, account.account_id)
     {:noreply, socket}
   end
