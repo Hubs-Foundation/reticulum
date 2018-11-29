@@ -22,7 +22,6 @@ defmodule RetWeb.HubChannel do
     Hub
     |> Repo.get_by(hub_sid: hub_sid)
     |> Repo.preload(scene: [:model_owned_file, :screenshot_owned_file], web_push_subscriptions: [])
-    |> Hub.ensure_valid_entry_code!()
     |> join_with_hub(socket, push_subscription_endpoint)
   end
 
@@ -144,6 +143,8 @@ defmodule RetWeb.HubChannel do
   end
 
   defp join_with_hub(%Hub{} = hub, socket, push_subscription_endpoint) do
+    hub = hub |> Hub.ensure_valid_entry_code!()
+
     is_push_subscribed =
       push_subscription_endpoint &&
         hub.web_push_subscriptions |> Enum.any?(&(&1.endpoint == push_subscription_endpoint))
