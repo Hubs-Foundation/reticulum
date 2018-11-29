@@ -37,7 +37,7 @@ defmodule RetWeb.Endpoint do
     parsers: [:urlencoded, :multipart, :json],
     pass: ["*/*"],
     json_decoder: Poison,
-    length: 134_217_728,
+    length: 157_286_400,
     read_timeout: 300_000
   )
 
