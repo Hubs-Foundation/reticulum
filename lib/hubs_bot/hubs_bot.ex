@@ -42,7 +42,7 @@ defmodule HubsBot do
     end
   end
 
-  defmodule Commands do
+  defmodule HubsCommands do
     use Alchemy.Cogs
     require Alchemy.Embed, as: Embed
 
@@ -61,7 +61,7 @@ defmodule HubsBot do
     end
   end
 
-  defmodule Events do
+  defmodule HubsEvents do
     use Alchemy.Events
 
     Events.on_channel_update(:on_channel_update)
@@ -202,14 +202,16 @@ defmodule HubsBot do
     Client.send_message(channel_id, "", embed: embed)
   end
 
-  def start_link(options \\ []) do
-    pid = Supervisor.start_link(__MODULE__, options)
-    use Commands
-    use Events
-    pid
+  def start_link(args, options \\ []) do
+    result = Supervisor.start_link(__MODULE__, args, options)
+    with {:ok, _} <- result do
+      use HubsCommands
+      use HubsEvents
+    end
+    result
   end
 
-  def init(token, options \\ []) do
+  def init(options \\ []) do
     children = [
       supervisor(Alchemy.Client, [module_config(:token), options]),
       BotState
