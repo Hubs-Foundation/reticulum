@@ -49,7 +49,7 @@ defmodule Ret.Application do
       ),
 
       # Runs Discord bot
-      worker(HubsBotManager, []),
+      worker(DiscordBotManager, []),
 
       # Graceful shutdown
       supervisor(TheEnd.Of.Phoenix, [[timeout: 10_000, endpoint: RetWeb.Endpoint]])

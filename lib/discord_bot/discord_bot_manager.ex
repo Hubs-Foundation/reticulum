@@ -1,5 +1,5 @@
 # general design via https://github.com/arjan/singleton
-defmodule HubsBotManager do
+defmodule DiscordBotManager do
 
   use GenServer
 
@@ -26,7 +26,7 @@ defmodule HubsBotManager do
   end
 
   defp restart(state) do
-    result = HubsBot.start_link([], [name: {:global, HubsBot}])
+    result = DiscordBot.start_link([], [name: {:global, DiscordBot}])
     pid = case result do
             {:ok, pid} -> pid
             {:error, {:already_started, pid}} -> pid

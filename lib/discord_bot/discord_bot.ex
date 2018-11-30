@@ -1,4 +1,4 @@
-defmodule HubsBot do
+defmodule DiscordBot do
   use Supervisor
   alias Alchemy.Client
   alias Alchemy.Embed
@@ -51,7 +51,7 @@ defmodule HubsBot do
     end
 
     Cogs.def bound do
-      case HubsBot.BotState.get_hubs_for_channel(message.channel_id) do
+      case DiscordBot.BotState.get_hubs_for_channel(message.channel_id) do
         hub_ids = [_ | _] ->
           Cogs.say("This channel is bound to #{Enum.join(hub_ids, ", ")}")
 
@@ -78,7 +78,7 @@ defmodule HubsBot do
     end
 
     def on_message(msg) do
-      if hub_ids = !msg.author.bot && HubsBot.BotState.get_hubs_for_channel(msg.channel_id) do
+      if hub_ids = !msg.author.bot && DiscordBot.BotState.get_hubs_for_channel(msg.channel_id) do
         hub_ids |> Enum.each(&broadcast_to_hubs(&1, msg))
       end
     end
@@ -112,12 +112,12 @@ defmodule HubsBot do
       hubs_by_channel =
         bound_channels |> Enum.group_by(&elem(&1, 1), &elem(&1, 0)) |> IO.inspect()
 
-      HubsBot.BotState.set_channel_mappings(channels_by_hub, hubs_by_channel)
+      DiscordBot.BotState.set_channel_mappings(channels_by_hub, hubs_by_channel)
     end
   end
 
   def on_hubs_event(hub_id, event, context, payload \\ %{}) do
-    if channel_ids = HubsBot.BotState.get_channels_for_hub(hub_id) do
+    if channel_ids = DiscordBot.BotState.get_channels_for_hub(hub_id) do
       do_on_hubs_event(channel_ids, hub_id, event, context, payload)
     end
   end
