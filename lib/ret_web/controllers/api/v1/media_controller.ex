@@ -11,20 +11,31 @@ defmodule RetWeb.Api.V1.MediaController do
   end
 
   def create(conn, %{
-        "media" =>
-          %Plug.Upload{filename: filename, content_type: "application/octet-stream"} = upload
+        "media" => %Plug.Upload{filename: filename, content_type: "application/octet-stream"} = upload,
+        "promotion_mode" => "with_token"
       }) do
-    render_upload(conn, upload, MIME.from_path(filename))
+    store_and_render_upload(conn, upload, MIME.from_path(filename), SecureRandom.hex())
+  end
+
+  def create(conn, %{
+        "media" => %Plug.Upload{content_type: content_type} = upload,
+        "promotion_mode" => "with_token"
+      }) do
+    store_and_render_upload(conn, upload, content_type, SecureRandom.hex())
+  end
+
+  def create(conn, %{"media" => %Plug.Upload{filename: filename, content_type: "application/octet-stream"} = upload}) do
+    store_and_render_upload(conn, upload, MIME.from_path(filename))
   end
 
   def create(conn, %{"media" => %Plug.Upload{content_type: content_type} = upload}) do
-    render_upload(conn, upload, content_type)
+    store_and_render_upload(conn, upload, content_type)
   end
 
-  defp render_upload(conn, %Plug.Upload{} = upload, content_type) do
-    token = SecureRandom.hex()
+  defp store_and_render_upload(conn, %Plug.Upload{} = upload, content_type, promotion_token \\ nil) do
+    access_token = SecureRandom.hex()
 
-    case Ret.Storage.store(upload, content_type, token) do
+    case Ret.Storage.store(upload, content_type, access_token, promotion_token) do
       {:ok, uuid} ->
         uri = Ret.Storage.uri_for(uuid, content_type)
         images = images_for_uri_and_index(uri, 0)
@@ -36,7 +47,7 @@ defmodule RetWeb.Api.V1.MediaController do
           origin: uri |> URI.to_string(),
           raw: uri |> URI.to_string(),
           images: images,
-          meta: %{access_token: token, expected_content_type: content_type}
+          meta: %{access_token: access_token, promotion_token: promotion_token, expected_content_type: content_type}
         )
 
       {:error, :not_allowed} ->
@@ -73,10 +84,7 @@ defmodule RetWeb.Api.V1.MediaController do
   end
 
   defp gen_farspark_url(uri, index, method, extension) do
-    path =
-      "/#{method}/0/0/0/#{index}/#{uri |> URI.to_string() |> Base.url_encode64(padding: false)}#{
-        extension
-      }"
+    path = "/#{method}/0/0/0/#{index}/#{uri |> URI.to_string() |> Base.url_encode64(padding: false)}#{extension}"
 
     host = Application.get_env(:ret, :farspark_host)
     "#{host}/#{gen_signature(path)}#{path}"
