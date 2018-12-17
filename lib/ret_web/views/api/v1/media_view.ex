@@ -4,12 +4,13 @@ defmodule RetWeb.Api.V1.MediaView do
   def render("show.json", %{
         file_id: file_id,
         origin: origin,
+        raw: raw,
         meta: meta
       }) do
-    %{file_id: file_id, origin: origin, meta: meta}
+    %{file_id: file_id, origin: origin, raw: raw, meta: meta}
   end
 
-  def render("show.json", %{origin: origin, meta: meta}) do
-    %{origin: origin, meta: meta}
+  def render("show.json", %{origin: origin, raw: raw, meta: meta}) do
+    %{origin: origin, raw: raw, meta: meta}
   end
 end
