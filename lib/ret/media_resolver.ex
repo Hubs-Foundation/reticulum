@@ -187,11 +187,15 @@ defmodule Ret.MediaResolver do
           nil
 
         # note that there exist og:image:type and og:video:type tags we could use,
-        # but our OpenGraph library fails to parse them out
+        # but our OpenGraph library fails to parse them out.
+
+        # also, we could technically be correct to emit an "image/*" content type from the OG image case,
+        # but our client right now will be confused by that because some images need to turn into
+        # image-like views and some (GIFs) need to turn into video-like views.
         resp ->
           case resp.body |> OpenGraph.parse() do
             %{video: video} when is_binary(video) -> [URI.parse(video), %{expected_content_type: "video/*"}]
-            %{image: image} when is_binary(image) -> [URI.parse(image), %{expected_content_type: "image/*"}]
+            %{image: image} when is_binary(image) -> [URI.parse(image), %{}] # don't send image/*
             _ -> [uri, %{expected_content_type: content_type_from_headers(resp.headers)}]
           end
       end
