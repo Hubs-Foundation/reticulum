@@ -45,7 +45,14 @@ defmodule Ret.MediaResolver do
 
       case ytdl_resp do
         %HTTPoison.Response{status_code: 302, headers: headers} ->
-          meta = %{expected_content_type: "video/*"}
+
+          # todo: it would be really nice to return video/* content type here!
+          # but it seems that the way we're using youtube-dl will return a 302 with the
+          # direct URL for various non-video files, e.g. PDFs seem to trigger this, so until
+          # we figure out how to change that behavior or distinguish between them, we can't
+          # be confident that it's video/* in this branch
+          meta = %{}
+
           {:commit, headers |> media_url_from_ytdl_headers |> URI.parse() |> resolved(meta)}
 
         _ ->
