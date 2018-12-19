@@ -44,7 +44,6 @@ defmodule Ret.Mixfile do
       {:plug_cowboy, "~> 1.0"},
       {:ja_serializer, "~> 0.13.0"},
       {:distillery, "~> 2.0"},
-      {:conform, "~> 2.5"},
       {:peerage, "~> 1.0"},
       {:httpoison, "~> 1.4.0"},
       {:poison, "~> 3.1"},
