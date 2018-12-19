@@ -4,7 +4,7 @@ defmodule RetWeb.Endpoint do
 
   socket("/socket", RetWeb.SessionSocket)
 
-  def get_cors_origins, do: Application.get_env(:ret, RetWeb.Endpoint)[:allowed_origins]
+  def get_cors_origins, do: Application.get_env(:ret, RetWeb.Endpoint)[:allowed_origins] |> String.split(",")
 
   # Serve at "/" the static files from "priv/static" directory.
   #

@@ -56,4 +56,10 @@ release :ret do
   )
 
   set(commands: [])
+
+  set(
+    config_providers: [
+      {Toml.Provider, [path: "${RELEASE_CONFIG_DIR}/config.toml"]}
+    ]
+  )
 end
