@@ -34,8 +34,8 @@ http_port = {{ cfg.habitat.http_port }}
 secret_key = "{{ cfg.guardian.secret_key }}"
 
 [ret.basic_auth]
-username = {{ cfg.basic_auth.username }}
-password = {{ cfg.basic_auth.password }}
+username = "{{ cfg.basic_auth.username }}"
+password = "{{ cfg.basic_auth.password }}"
 
 [ret]
 farspark_signature_key = "{{ cfg.farspark.signature_key }}"
