@@ -50,7 +50,6 @@ do_build() {
 do_install() {
     mix release --env=prod
     cp -a _build/prod/rel/ret/* ${pkg_prefix}
-    cp priv/bin/conform ${pkg_prefix}/bin
 
     for f in $(find ${pkg_prefix} -name '*.sh')
     do
