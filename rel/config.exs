@@ -36,10 +36,9 @@ end
 environment :prod do
   set(include_erts: true)
   set(include_src: false)
-  set(cookie: :"!bv%`t^j]ZEXxL}x%,aHRe/N^{Wp$ipKnSh3M0WsXD[n=|c]qaTt8XfIpQvkxVKO")
   set(no_dot_erlang: true)
   set(vm_args: "rel/prod.vm_args")
-  set(post_start_hook: "rel/hooks/post_start")
+  set(post_start_hooks: "rel/hooks/post_start")
 end
 
 # You may define one or more releases in this file.
@@ -57,4 +56,10 @@ release :ret do
   )
 
   set(commands: [])
+
+  set(
+    config_providers: [
+      {Toml.Provider, [path: "${RELEASE_CONFIG_DIR}/config.toml"]}
+    ]
+  )
 end
