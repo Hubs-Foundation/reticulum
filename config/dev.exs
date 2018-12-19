@@ -136,8 +136,6 @@ config :secure_headers, SecureHeaders,
     ]
   ]
 
-config :cors_plug, origin: &RetWeb.Endpoint.get_cors_origins/0
-
 config :ret, Ret.Mailer, adapter: Bamboo.LocalAdapter
 
 config :ret, RetWeb.Email, from: "info@hubs-mail.com"

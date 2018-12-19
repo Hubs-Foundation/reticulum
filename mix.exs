@@ -43,7 +43,7 @@ defmodule Ret.Mixfile do
       {:cowboy, "~> 1.0"},
       {:plug_cowboy, "~> 1.0"},
       {:ja_serializer, "~> 0.13.0"},
-      {:distillery, "~> 1.5", runtime: false, github: "gfodor/distillery", branch: "1.5.x-no-dot-erlang"},
+      {:distillery, "~> 2.0"},
       {:conform, "~> 2.5"},
       {:peerage, "~> 1.0"},
       {:httpoison, "~> 1.4.0"},
