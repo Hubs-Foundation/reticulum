@@ -85,7 +85,7 @@ defmodule RetWeb.FileController do
       {:ok, %{"content_type" => content_type, "content_length" => content_length}, stream} ->
         conn =
           conn
-          |> put_resp_content_type(content_type)
+          |> put_resp_content_type(content_type, nil)
           |> put_resp_header("content-length", "#{content_length}")
           |> put_resp_header("transfer-encoding", "chunked")
           |> put_resp_header("cache-control", "public, max-age=31536000")
