@@ -1,0 +1,87 @@
+[ueberauth."Elixir.Ueberauth.Strategy.Google.OAuth"]
+client_id = "{{ cfg.oauth_google.client_id }}"
+client_secret = "{{ cfg.oauth_google.client_secret }}"
+
+[ret."Elixir.RetWeb.Plugs.HeaderAuthorization"]
+header_value = "{{ cfg.phx.admin_access_key }}"
+
+[ret."Elixir.RetWeb.Endpoint".http]
+port = {{ cfg.phx.port }}
+
+[ret."Elixir.RetWeb.Endpoint"]
+allowed_origins = "{{ cfg.security.cors_origins }}"
+secret_key_base = "{{ cfg.phx.secret_key }}"
+
+[ret."Elixir.RetWeb.Endpoint".url]
+host = "{{ cfg.phx.url_host_prefix }}{{ cfg.phx.url_host }}"
+
+[ret."Elixir.RetWeb.Endpoint".static_url]
+host = "{{ cfg.phx.static_url_host_prefix }}{{ cfg.phx.static_url_host }}"
+
+[ret."Elixir.Ret.Repo"]
+username = "{{ cfg.db.username }}"
+password = "{{ cfg.db.password }}"
+database = "{{ cfg.db.database }}"
+hostname = "{{ cfg.db.hostname }}"
+template = "{{ cfg.db.template }}"
+pool_size = {{ cfg.db.pool_size }}
+
+[ret."Elixir.Ret.PeerageProvider"]
+ip = "{{ cfg.habitat.ip }}"
+http_port = {{ cfg.habitat.http_port }}
+
+[ret."Elixir.Ret.Guardian"]
+secret_key = "{{ cfg.guardian.secret_key }}"
+
+[ret.basic_auth]
+username = "{{ cfg.basic_auth.username }}"
+password = "{{ cfg.basic_auth.password }}"
+
+[ret]
+farspark_signature_key = "{{ cfg.farspark.signature_key }}"
+farspark_signature_salt = "{{ cfg.farspark.signature_salt }}"
+farspark_host = "{{ cfg.farspark.host }}"
+
+[ret."Elixir.Ret.MediaResolver"]
+ytdl_host = "{{ cfg.resolver.ytdl_host }}"
+giphy_api_key = "{{ cfg.resolver.giphy_api_key }}"
+deviantart_client_id = "{{ cfg.resolver.deviantart_client_id }}"
+deviantart_client_secret = "{{ cfg.resolver.deviantart_client_secret }}"
+imgur_mashape_api_key = "{{ cfg.resolver.imgur_mashape_api_key }}"
+imgur_client_id = "{{ cfg.resolver.imgur_client_id }}"
+google_poly_api_key = "{{ cfg.resolver.google_poly_api_key }}"
+sketchfab_api_key = "{{ cfg.resolver.sketchfab_api_key }}"
+
+[ret."Elixir.Ret.PageOriginWarmer"]
+page_origin = "{{ cfg.pages.page_origin }}"
+
+[ret."Elixir.Ret.Storage"]
+storage_path = "{{ cfg.uploads.storage_path }}"
+ttl = {{ cfg.uploads.ttl }}
+host = "{{ cfg.uploads.host }}"
+
+[ret."Elixir.RetWeb.Email"]
+from = "{{ cfg.email.from }}"
+
+[ret."Elixir.Ret.Mailer"]
+server = "{{ cfg.email.server }}"
+port = {{ cfg.email.port }}
+username = "{{ cfg.email.username }}"
+password = "{{ cfg.email.password }}"
+
+[ret."Elixir.Ret.Support"]
+slack_webhook_url = "{{ cfg.support.slack_webhook_url }}"
+
+[ret."DiscordBot"]
+token = "{{ cfg.discord.bot_token }}"
+
+[secure_headers."Elixir.SecureHeaders.secure_headers".config]
+content_security_policy = "{{ cfg.security.content_security_policy }}"
+
+[web_push_encryption.vapid_details]
+subject = "{{ cfg.web_push.subject }}"
+public_key = "{{ cfg.web_push.public_key }}"
+private_key = "{{ cfg.web_push.private_key }}"
+
+[sentry]
+dsn = "{{ cfg.sentry.dsn }}"

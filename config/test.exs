@@ -4,7 +4,7 @@ use Mix.Config
 # you can enable the server option below.
 config :ret, RetWeb.Endpoint,
   http: [port: 4001],
-  allowed_origins: ["*"],
+  allowed_origins: "*",
   secret_key_base: "txlMOtlaY5x3crvOCko4uV5PM29ul3zGo1oBGNO3cDXx+4GHLKqt0gR9qzgThxa5",
   server: false
 

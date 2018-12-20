@@ -28,6 +28,7 @@ defmodule Ret.PeerageProvider do
     fetch_json("http://#{habitat_ip}:#{habitat_port}/census")
     |> get_in(["census_groups", service_name, "population"])
     |> Map.values()
+    |> Enum.filter(&(&1["alive"] == true))
     |> Enum.map(&"ret@#{hostname_to_local(&1["sys"]["hostname"])}")
     |> Enum.map(&:erlang.binary_to_atom(&1, :utf8))
   end
