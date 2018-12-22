@@ -26,7 +26,7 @@ hostname = "{{ cfg.db.hostname }}"
 template = "{{ cfg.db.template }}"
 pool_size = {{ cfg.db.pool_size }}
 
-[ret."Elixir.Ret.PeerageProvider"]
+[ret."Elixir.Ret.Habitat"]
 ip = "{{ cfg.habitat.ip }}"
 http_port = {{ cfg.habitat.http_port }}
 

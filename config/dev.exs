@@ -157,3 +157,5 @@ config :sentry,
   tags: %{
     env: "dev"
   }
+
+config :ret, Ret.JanusLoadStatus, default_janus_host: "dev.reticulum.io"

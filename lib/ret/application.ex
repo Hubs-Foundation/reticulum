@@ -49,6 +49,18 @@ defmodule Ret.Application do
         id: :page_chunk_cache
       ),
 
+      # Janus load status cache
+      worker(
+        Cachex,
+        [
+          :janus_load_status,
+          [
+            warmers: [warmer(module: Ret.JanusLoadStatus)]
+          ]
+        ],
+        id: :janus_load_status
+      ),
+
       # Graceful shutdown
       supervisor(TheEnd.Of.Phoenix, [[timeout: 10_000, endpoint: RetWeb.Endpoint]])
     ]
