@@ -20,7 +20,7 @@ defmodule Ret.JanusLoadStatus do
     {:ok, [{:entries, entries}]}
   end
 
-  # Load tuple is { host, ccu }
+  # Load tuple is { host, ccu || nil } -- if nil then host admin interface is down/unreachable
   defp janus_host_to_load(janus_host) do
     with janus_secret when is_binary(janus_secret) <- module_config(:janus_secret) do
       janus_port = module_config(:janus_admin_port)
