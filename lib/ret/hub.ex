@@ -27,6 +27,7 @@ defmodule Ret.Hub do
   schema "hubs" do
     field(:name, :string)
     field(:hub_sid, :string)
+    field(:host, :string)
     field(:entry_code, :integer)
     field(:entry_code_expires_at, :utc_datetime)
     field(:default_environment_gltf_bundle_url, :string)
@@ -84,6 +85,10 @@ defmodule Ret.Hub do
     |> cast(%{entry_mode: :deny}, [:entry_mode])
   end
 
+  def changeset_for_new_host(%Hub{} = hub, host) do
+    hub |> cast(%{host: host}, [:host])
+  end
+
   def send_push_messages_for_join(%Hub{web_push_subscriptions: subscriptions} = hub, endpoint_to_skip \\ nil) do
     body = hub |> push_message_for_join
 
@@ -118,6 +123,16 @@ defmodule Ret.Hub do
   def ensure_valid_entry_code!(hub) do
     if hub |> entry_code_expired? do
       hub |> changeset_for_new_entry_code |> Repo.update!()
+    else
+      hub
+    end
+  end
+
+  def ensure_room!(hub) do
+    host = Ret.RoomAssigner.get_available_host(hub.host)
+
+    if(host != hub.host) do
+      hub |> changeset_for_new_host(host) |> Repo.update!()
     else
       hub
     end
