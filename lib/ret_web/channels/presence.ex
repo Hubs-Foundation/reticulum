@@ -7,10 +7,14 @@ defmodule RetWeb.Presence do
     present_sessions() |> Enum.count()
   end
 
-  def present_room_count do
+  def present_hub_sids do
     present_sessions()
     |> Map.values()
     |> Enum.map(&(&1[:metas] |> Enum.at(0) |> Map.get(:hub_id)))
+  end
+
+  def present_room_count do
+    present_hub_sids()
     |> Enum.uniq()
     |> length
   end
