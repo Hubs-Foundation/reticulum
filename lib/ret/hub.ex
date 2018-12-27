@@ -128,7 +128,7 @@ defmodule Ret.Hub do
     end
   end
 
-  def ensure_room!(hub) do
+  def ensure_host!(hub) do
     if RoomAssigner.is_alive?(hub.host) do
       hub
     else

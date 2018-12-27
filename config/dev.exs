@@ -160,6 +160,6 @@ config :sentry,
 
 config :ret, Ret.Habitat, ip: "127.0.0.1", http_port: 9631
 
-config :ret, Ret.JanusLoadStatus, default_janus_host: "dev.reticulum.io"
+config :ret, Ret.JanusLoadStatus, default_janus_host: "dev-janus.reticulum.io"
 
 config :ret, Ret.RoomAssigner, balancer_weights: [{600, 1}, {300, 50}, {0, 500}]
