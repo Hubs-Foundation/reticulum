@@ -194,8 +194,7 @@ defmodule RetWeb.HubChannel do
   end
 
   defp join_with_hub(%Hub{} = hub, socket, push_subscription_endpoint) do
-    hub = hub |> Hub.ensure_valid_entry_code!()
-    hub = hub |> Hub.ensure_room!()
+    hub = hub |> Hub.ensure_valid_entry_code!() |> Hub.ensure_room!()
 
     is_push_subscribed =
       push_subscription_endpoint &&
