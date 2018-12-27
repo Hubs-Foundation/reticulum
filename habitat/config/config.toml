@@ -30,7 +30,7 @@ pool_size = {{ cfg.db.pool_size }}
 ip = "{{ cfg.habitat.ip }}"
 http_port = {{ cfg.habitat.http_port }}
 
-[ret."JanusLoadStatus"]
+[ret."Elixir.Ret.JanusLoadStatus"]
 default_janus_host = "{{ cfg.janus.default_host }}"
 janus_service_name = "{{ cfg.janus.service_name }}"
 janus_admin_secret = "{{ cfg.janus.admin_secret }}"
