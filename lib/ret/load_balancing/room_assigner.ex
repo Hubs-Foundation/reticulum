@@ -35,7 +35,13 @@ defmodule Ret.RoomAssigner do
     hosts_by_weight =
       host_to_ccu |> Enum.filter(&(elem(&1, 1) != nil)) |> Enum.map(fn {host, ccu} -> {host, ccu |> weight_for_ccu} end)
 
-    hosts_by_weight |> weighted_sample |> Atom.to_string()
+    picked_host = hosts_by_weight |> weighted_sample
+
+    if picked_host
+      picked_host |> Atom.to_string()
+    else
+      nil
+    end
   end
 
   defp module_config(key) do
