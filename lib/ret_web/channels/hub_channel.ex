@@ -153,7 +153,7 @@ defmodule RetWeb.HubChannel do
   end
 
   def handle_in("get_host", _args, socket) do
-    hub = socket |> hub_for_socket |> Hub.ensure_host!()
+    hub = socket |> hub_for_socket |> Hub.ensure_host()
     {:reply, {:ok, %{host: hub.host}}, socket}
   end
 
@@ -199,7 +199,7 @@ defmodule RetWeb.HubChannel do
   end
 
   defp join_with_hub(%Hub{} = hub, socket, push_subscription_endpoint) do
-    hub = hub |> Hub.ensure_valid_entry_code!() |> Hub.ensure_host!()
+    hub = hub |> Hub.ensure_valid_entry_code!() |> Hub.ensure_host()
 
     is_push_subscribed =
       push_subscription_endpoint &&
