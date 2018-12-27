@@ -2,18 +2,7 @@ defmodule Ret.JanusLoadStatus do
   use Cachex.Warmer
   use Retry
 
-  import Ret.Stats
-
   def interval, do: :timer.seconds(15)
-
-  def get_host_for_room do
-    {:ok, host_to_ccu} = Cachex.get(:janus_load_status, :host_to_ccu)
-
-    hosts_by_weight =
-      host_to_ccu |> Enum.filter(&(elem(&1, 1) != nil)) |> Enum.map(fn {host, ccu} -> {host, ccu |> weight_for_ccu} end)
-
-    hosts_by_weight |> weighted_sample |> Atom.to_string()
-  end
 
   def execute(_state) do
     janus_hosts =
@@ -82,11 +71,5 @@ defmodule Ret.JanusLoadStatus do
 
   defp module_config(key) do
     Application.get_env(:ret, __MODULE__)[key]
-  end
-
-  # Gets the load balancing weight for the given CCU, which is the first entry in
-  # the balancer_weights config that the CCU exceeds.
-  def weight_for_ccu(ccu) do
-    module_config(:balancer_weights) |> Enum.find(&(ccu >= elem(&1, 0))) |> elem(1) || 1
   end
 end
