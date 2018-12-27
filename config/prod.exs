@@ -102,4 +102,4 @@ config :sentry,
     env: "prod"
   }
 
-config :ret, Ret.JanusLoadStatus, balancer_weights: [{600, 1}, {300, 50}, {0, 500}]
+config :ret, Ret.RoomAssigner, balancer_weights: [{600, 1}, {300, 50}, {0, 500}]

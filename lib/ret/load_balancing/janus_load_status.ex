@@ -6,7 +6,8 @@ defmodule Ret.JanusLoadStatus do
 
   def execute(_state) do
     janus_hosts =
-      with default_janus_host when is_binary(default_janus_host) <- module_config(:default_janus_host) do
+      with default_janus_host when is_binary(default_janus_host) and default_janus_host != "" <-
+             module_config(:default_janus_host) do
         [default_janus_host] |> Enum.map(&:erlang.binary_to_atom(&1, :utf8))
       else
         _ -> module_config(:janus_service_name) |> Ret.Habitat.get_hosts_for_service()
@@ -22,7 +23,7 @@ defmodule Ret.JanusLoadStatus do
 
   # For given host return { host, ccu || nil } -- if nil then host admin interface is down/unreachable
   defp janus_host_to_ccu(janus_host) do
-    with janus_secret when is_binary(janus_secret) <- module_config(:janus_secret) do
+    with janus_secret when is_binary(janus_secret) <- module_config(:janus_admin_secret) do
       janus_port = module_config(:janus_admin_port)
 
       janus_payload = %{
