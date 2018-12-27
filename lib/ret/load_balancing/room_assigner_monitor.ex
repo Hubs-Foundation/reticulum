@@ -6,7 +6,7 @@ defmodule Ret.RoomAssignerMonitor do
   end
 
   def init(_arg) do
-    {:ok, ensure_process()}
+    {:ok, ensure_assigner_process()}
   end
 
   def handle_info({:DOWN, _, :process, _pid, :normal}, assigner_pid) do
@@ -16,10 +16,10 @@ defmodule Ret.RoomAssignerMonitor do
 
   def handle_info({:DOWN, _, :process, _pid, _reason}, _assigner_pid) do
     # Crash/disconnect, restart it
-    {:noreply, ensure_process()}
+    {:noreply, ensure_assigner_process()}
   end
 
-  defp ensure_process do
+  defp ensure_assigner_process do
     pid =
       case GenServer.start_link(Ret.RoomAssigner, [], name: {:global, Ret.RoomAssigner}) do
         {:ok, pid} -> pid
