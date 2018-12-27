@@ -9,7 +9,7 @@ defmodule Ret.Habitat do
     habitat_port = habitat_config[:http_port]
     census_url = "http://#{habitat_ip}:#{habitat_port}/census"
 
-    %{status_code: 200, body: census_body} = HTTPoison.get!(url)
+    %{status_code: 200, body: census_body} = HTTPoison.get!(census_url)
     census_json = census_body |> Poison.decode!()
 
     full_service_name =
