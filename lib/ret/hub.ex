@@ -13,7 +13,7 @@ defmodule Ret.Hub do
   import Ecto.Changeset
   import Ecto.Query
 
-  alias Ret.{Hub, Repo, WebPushSubscription}
+  alias Ret.{Hub, Repo, WebPushSubscription, RoomAssigner}
   alias Ret.Hub.{HubSlug}
 
   use Bitwise
@@ -129,12 +129,16 @@ defmodule Ret.Hub do
   end
 
   def ensure_room!(hub) do
-    host = Ret.RoomAssigner.get_available_host(hub.host)
-
-    if(host != hub.host) do
-      hub |> changeset_for_new_host(host) |> Repo.update!()
-    else
+    if RoomAssigner.is_alive?(hub.host) do
       hub
+    else
+      host = RoomAssigner.get_available_host(hub.host)
+
+      if host && host != hub.host do
+        hub |> changeset_for_new_host(host) |> Repo.update!()
+      else
+        hub
+      end
     end
   end
 

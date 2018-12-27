@@ -7,16 +7,20 @@ defmodule Ret.RoomAssigner do
     {:ok, state}
   end
 
+  def is_alive?(nil), do: false
+
+  def is_alive?(host) do
+    {:ok, host_to_ccu} = Cachex.get(:janus_load_status, :host_to_ccu)
+    host_to_ccu |> Keyword.keys() |> Enum.find(&(Atom.to_string(&1) == host)) != nil
+  end
+
   def get_available_host(existing_host \\ nil) do
     GenServer.call({:global, __MODULE__}, {:get_available_host, existing_host})
   end
 
   def handle_call({:get_available_host, existing_host}, _pid, state) do
-    {:ok, host_to_ccu} = Cachex.get(:janus_load_status, :host_to_ccu)
-    is_alive = host_to_ccu |> Keyword.keys() |> Enum.find(&(Atom.to_string(&1) == existing_host)) != nil
-
     host =
-      if is_alive do
+      if is_alive?(existing_host) do
         existing_host
       else
         pick_host()
