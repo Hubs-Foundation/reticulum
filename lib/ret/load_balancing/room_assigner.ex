@@ -11,7 +11,7 @@ defmodule Ret.RoomAssigner do
 
   def is_alive?(host) do
     {:ok, host_to_ccu} = Cachex.get(:janus_load_status, :host_to_ccu)
-    host_to_ccu |> Keyword.keys() |> Enum.find(&(Atom.to_string(&1) == host)) != nil
+    host_to_ccu |> Keyword.keys() |> Enum.find(&(&1 == host)) != nil
   end
 
   def get_available_host(existing_host \\ nil) do
