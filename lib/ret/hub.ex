@@ -132,6 +132,8 @@ defmodule Ret.Hub do
     if RoomAssigner.is_alive?(hub.host) do
       hub
     else
+      # TODO the database mutation should be centralized into the GenServer
+      # to ensure a partition doesn't cause a rogue node to re-assign the server
       host = RoomAssigner.get_available_host(hub.host)
 
       if host && host != hub.host do
