@@ -1,9 +1,10 @@
 defmodule Ret.Habitat do
-  def get_hosts_for_service(nil) do
+  def get_service_members(nil) do
     []
   end
 
-  def get_hosts_for_service(service_name, hostname_xform \\ fn x -> x end) do
+  # Returns { host, ip } tuples for the given services
+  def get_service_members(service_name) do
     habitat_config = Application.get_env(:ret, Ret.Habitat)
     habitat_ip = habitat_config[:ip]
     habitat_port = habitat_config[:http_port]
@@ -23,7 +24,6 @@ defmodule Ret.Habitat do
     |> get_in(["census_groups", full_service_name, "population"])
     |> Map.values()
     |> Enum.filter(&(&1["alive"] == true))
-    |> Enum.map(&hostname_xform.(&1["sys"]["hostname"]))
-    |> Enum.map(&:erlang.binary_to_atom(&1, :utf8))
+    |> Enum.map(&({&1["sys"]["hostname"], &1["sys"]["ip"]}))
   end
 end

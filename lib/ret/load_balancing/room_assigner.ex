@@ -32,16 +32,10 @@ defmodule Ret.RoomAssigner do
   defp pick_host do
     {:ok, host_to_ccu} = Cachex.get(:janus_load_status, :host_to_ccu)
 
-    hosts_by_weight =
-      host_to_ccu |> Enum.filter(&(elem(&1, 1) != nil)) |> Enum.map(fn {host, ccu} -> {host, ccu |> weight_for_ccu} end)
-
-    picked_host = hosts_by_weight |> weighted_sample
-
-    if picked_host
-      picked_host |> Atom.to_string()
-    else
-      nil
-    end
+    host_to_ccu
+    |> Enum.filter(&(elem(&1, 1) != nil))
+    |> Enum.map(fn {host, ccu} -> {host, ccu |> weight_for_ccu} end)
+    |> weighted_sample
   end
 
   defp module_config(key) do

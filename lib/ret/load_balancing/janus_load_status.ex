@@ -5,24 +5,23 @@ defmodule Ret.JanusLoadStatus do
   def interval, do: :timer.seconds(15)
 
   def execute(_state) do
-    janus_hosts =
-      with default_janus_host when is_binary(default_janus_host) and default_janus_host != "" <-
-             module_config(:default_janus_host) do
-        [default_janus_host] |> Enum.map(&:erlang.binary_to_atom(&1, :utf8))
-      else
-        _ -> module_config(:janus_service_name) |> Ret.Habitat.get_hosts_for_service()
-      end
+    with default_janus_host when is_binary(default_janus_host) and default_janus_host != "" <-
+           module_config(:default_janus_host) do
+      {:ok, [{:host_to_ccu, [{default_janus_host, 0}]}]}
+    else
+      _ ->
+        entries =
+          module_config(:janus_service_name)
+          |> Ret.Habitat.get_service_members()
+          |> Enum.map(fn {host, ip} -> Task.async(fn -> {host, janus_ip_to_ccu(ip)} end) end)
+          |> Enum.map(&Task.await(&1, 30_000))
 
-    entries =
-      janus_hosts
-      |> Enum.map(fn h -> Task.async(fn -> janus_host_to_ccu(h) end) end)
-      |> Enum.map(&Task.await(&1, 30_000))
-
-    {:ok, [{:host_to_ccu, entries}]}
+        {:ok, [{:host_to_ccu, entries}]}
+    end
   end
 
   # For given host return { host, ccu || nil } -- if nil then host admin interface is down/unreachable
-  defp janus_host_to_ccu(janus_host) do
+  defp janus_ip_to_ccu(janus_ip) do
     with janus_secret when is_binary(janus_secret) <- module_config(:janus_admin_secret) do
       janus_port = module_config(:janus_admin_port)
 
@@ -32,18 +31,18 @@ defmodule Ret.JanusLoadStatus do
         admin_secret: janus_secret
       }
 
-      janus_resp = retry_api_post_until_success("http://#{janus_host}:#{janus_port}/admin", janus_payload)
+      janus_resp = retry_api_post_until_success("http://#{janus_ip}:#{janus_port}/admin", janus_payload)
 
       case janus_resp do
         %HTTPoison.Response{status_code: 200, body: body} ->
-          {janus_host, body |> Poison.decode!() |> Kernel.get_in(["sessions"]) |> Enum.count()}
+          body |> Poison.decode!() |> Kernel.get_in(["sessions"]) |> Enum.count()
 
         _ ->
-          {janus_host, nil}
+          nil
       end
     else
       # No admin secret, don't perform load balancing
-      _ -> {janus_host, 0}
+      _ -> 0
     end
   end
 
