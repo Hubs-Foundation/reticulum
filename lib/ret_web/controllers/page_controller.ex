@@ -6,17 +6,6 @@ defmodule RetWeb.PageController do
     render_for_path(conn.request_path, conn)
   end
 
-  def render_for_path("/", conn), do: conn |> render_page("index.html")
-
-  def render_for_path("/scenes/" <> path, conn) do
-    scene_sid =
-      path
-      |> String.split("/")
-      |> Enum.at(0)
-
-    Scene |> Repo.get_by(scene_sid: scene_sid) |> Repo.preload([:screenshot_owned_file]) |> render_scene_content(conn)
-  end
-
   defp render_scene_content(%Scene{} = scene, conn) do
     scene_meta_tags = Phoenix.View.render_to_string(RetWeb.PageView, "scene-meta.html", scene: scene)
 
@@ -31,6 +20,17 @@ defmodule RetWeb.PageController do
 
   defp render_scene_content(nil, conn) do
     conn |> send_resp(404, "")
+  end
+
+  def render_for_path("/", conn), do: conn |> render_page("index.html")
+
+  def render_for_path("/scenes/" <> path, conn) do
+    scene_sid =
+      path
+      |> String.split("/")
+      |> Enum.at(0)
+
+    Scene |> Repo.get_by(scene_sid: scene_sid) |> Repo.preload([:screenshot_owned_file]) |> render_scene_content(conn)
   end
 
   def render_for_path("/link", conn), do: conn |> render_page("link.html")

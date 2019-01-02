@@ -101,3 +101,5 @@ config :sentry,
   tags: %{
     env: "prod"
   }
+
+config :ret, Ret.RoomAssigner, balancer_weights: [{600, 1}, {300, 50}, {0, 500}]

@@ -26,9 +26,15 @@ hostname = "{{ cfg.db.hostname }}"
 template = "{{ cfg.db.template }}"
 pool_size = {{ cfg.db.pool_size }}
 
-[ret."Elixir.Ret.PeerageProvider"]
+[ret."Elixir.Ret.Habitat"]
 ip = "{{ cfg.habitat.ip }}"
 http_port = {{ cfg.habitat.http_port }}
+
+[ret."Elixir.Ret.JanusLoadStatus"]
+default_janus_host = "{{ cfg.janus.default_host }}"
+janus_service_name = "{{ cfg.janus.service_name }}"
+janus_admin_secret = "{{ cfg.janus.admin_secret }}"
+janus_admin_port = {{ cfg.janus.admin_port }}
 
 [ret."Elixir.Ret.Guardian"]
 secret_key = "{{ cfg.guardian.secret_key }}"

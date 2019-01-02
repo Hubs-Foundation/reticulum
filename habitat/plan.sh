@@ -1,6 +1,6 @@
 pkg_name=reticulum
 pkg_origin=mozillareality
-pkg_version="0.0.1"
+pkg_version="0.0.2"
 pkg_maintainer="Mozilla Mixed Reality <mixreality@mozilla.com>"
 pkg_upstream_url="http://github.com/mozilla/reticulum"
 pkg_license=('MPL-2.0')
