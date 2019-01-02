@@ -4,7 +4,7 @@ defmodule Ret.TestHelpers do
   def generate_temp_owned_file(account) do
     temp_file = generate_temp_file("test")
     {:ok, uuid} = Storage.store(%Plug.Upload{path: temp_file}, "text/plain", "secret")
-    {:ok, owned_file} = Storage.promote(uuid, "secret", account)
+    {:ok, owned_file} = Storage.promote(uuid, "secret", nil, account)
     owned_file
   end
 

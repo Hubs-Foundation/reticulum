@@ -41,13 +41,13 @@ defmodule Ret.Mixfile do
       {:phoenix_live_reload, "~> 1.0", only: :dev},
       {:gettext, "~> 0.11"},
       {:cowboy, "~> 1.0"},
-      {:ja_serializer, "~> 0.12.0"},
-      {:distillery, "~> 1.5", runtime: false, github: "gfodor/distillery", branch: "feature/boot_opts"},
-      {:conform, "~> 2.5"},
+      {:plug_cowboy, "~> 1.0"},
+      {:ja_serializer, "~> 0.13.0"},
+      {:distillery, "~> 2.0"},
       {:peerage, "~> 1.0"},
-      {:httpoison, "~> 1.2.0"},
+      {:httpoison, "~> 1.4.0"},
       {:poison, "~> 3.1"},
-      {:ecto_autoslug_field, "~> 0.3"},
+      {:ecto_autoslug_field, "~> 0.5"},
       {:cors_plug, "~> 1.5"},
       {:basic_auth, "~> 2.2"},
       {:statix, "~> 1.1"},
@@ -61,13 +61,14 @@ defmodule Ret.Mixfile do
       {:retry, "~> 0.10.0"},
       {:open_graph, "~> 0.0.3"},
       {:secure_random, "~> 0.5.1"},
-      {:bamboo, "~> 1.0.0"},
-      {:bamboo_smtp, "~> 1.5"},
+      {:bamboo, "~> 1.1"},
+      {:bamboo_smtp, "~> 1.6"},
       {:guardian, "~> 1.1"},
       {:temp, "~> 0.4"},
       {:timex, "~> 3.4"},
       {:web_push_encryption, "~> 0.2.0"},
-      {:sentry, "~> 6.0"}
+      {:sentry, "~> 6.0"},
+      {:toml, "~> 0.5"}
     ]
   end
 

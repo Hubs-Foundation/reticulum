@@ -1,5 +1,7 @@
 use Mix.Config
 
+host = "hubs.local"
+
 # For development, we disable any cache and enable
 # debugging and code reloading.
 #
@@ -7,8 +9,8 @@ use Mix.Config
 # watchers to your application. For example, we use it
 # with brunch.io to recompile .js and .css sources.
 config :ret, RetWeb.Endpoint,
-  url: [scheme: "https", host: "hubs.local", port: 4000],
-  static_url: [scheme: "https", host: "hubs.local", port: 4000],
+  url: [scheme: "https", host: host, port: 4000],
+  static_url: [scheme: "https", host: host, port: 4000],
   https: [
     port: 4000,
     otp_app: :ret,
@@ -19,7 +21,7 @@ config :ret, RetWeb.Endpoint,
   code_reloader: true,
   check_origin: false,
   secret_key_base: "txlMOtlaY5x3crvOCko4uV5PM29ul3zGo1oBGNO3cDXx+7GHLKqt0gR9qzgThxb5",
-  allowed_origins: ["*"],
+  allowed_origins: "*",
   watchers: [
     node: [
       "node_modules/brunch/bin/brunch",
@@ -92,7 +94,7 @@ config :ret,
   farspark_host: "https://farspark-dev.reticulum.io"
 
 config :ret, Ret.PageOriginWarmer,
-  page_origin: "https://hubs.local:8080",
+  page_origin: "https://#{host}:8080",
   insecure_ssl: true
 
 config :ret, Ret.MediaResolver,
@@ -110,10 +112,15 @@ config :ret, Ret.Storage,
   ttl: 60 * 60 * 24
 
 asset_hosts =
-  "https://localhost:4000 https://localhost:8080 https://hubs.local:4000 https://hubs.local:8080 https://asset-bundles-dev.reticulum.io https://asset-bundles-prod.reticulum.io https://farspark-prod.reticulum.io https://farspark-dev.reticulum.io"
+  "https://localhost:4000 https://localhost:8080 " <>
+    "https://#{host}:4000 https://#{host}:8080 " <>
+    "https://asset-bundles-dev.reticulum.io https://asset-bundles-prod.reticulum.io " <>
+    "https://farspark-prod.reticulum.io https://farspark-dev.reticulum.io"
 
 websocket_hosts =
-  "https://localhost:4000 https://localhost:8080 wss://localhost:4000 https://hubs.local:4000 https://hubs.local:8080 wss://hubs.local:4000 wss://hubs.local:8080 wss://dev-janus.reticulum.io wss://prod-janus.reticulum.io"
+  "https://localhost:4000 https://localhost:8080 wss://localhost:4000 " <>
+    "https://#{host}:4000 https://#{host}:8080 wss://#{host}:4000 wss://#{host}:8080 " <>
+    "wss://dev-janus.reticulum.io wss://prod-janus.reticulum.io"
 
 config :secure_headers, SecureHeaders,
   secure_headers: [
@@ -128,8 +135,6 @@ config :secure_headers, SecureHeaders,
         } data: blob:; frame-src 'self'; frame-ancestors 'self'; base-uri 'none'; form-action 'self';"
     ]
   ]
-
-config :cors_plug, origin: &RetWeb.Endpoint.get_cors_origins/0
 
 config :ret, Ret.Mailer, adapter: Bamboo.LocalAdapter
 
@@ -152,3 +157,9 @@ config :sentry,
   tags: %{
     env: "dev"
   }
+
+config :ret, Ret.Habitat, ip: "127.0.0.1", http_port: 9631
+
+config :ret, Ret.JanusLoadStatus, default_janus_host: "dev-janus.reticulum.io"
+
+config :ret, Ret.RoomAssigner, balancer_weights: [{600, 1}, {300, 50}, {0, 500}]

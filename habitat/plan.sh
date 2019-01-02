@@ -1,6 +1,6 @@
 pkg_name=reticulum
 pkg_origin=mozillareality
-pkg_version="0.0.1"
+pkg_version="0.0.2"
 pkg_maintainer="Mozilla Mixed Reality <mixreality@mozilla.com>"
 pkg_upstream_url="http://github.com/mozilla/reticulum"
 pkg_license=('MPL-2.0')
@@ -9,14 +9,14 @@ pkg_deps=(
     core/coreutils
     core/bash
     core/which
-    core/erlang/20.0
+    mozillareality/erlang/21.0
 )
 
 pkg_build_deps=(
     core/coreutils
     core/git
-    core/erlang/20.0
-    core/elixir/1.5.1
+    mozillareality/erlang/21.0
+    core/elixir/1.7.4
 )
 
 pkg_exports=(
@@ -50,7 +50,6 @@ do_build() {
 do_install() {
     mix release --env=prod
     cp -a _build/prod/rel/ret/* ${pkg_prefix}
-    cp priv/bin/conform ${pkg_prefix}/bin
 
     for f in $(find ${pkg_prefix} -name '*.sh')
     do

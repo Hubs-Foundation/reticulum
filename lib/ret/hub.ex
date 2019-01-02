@@ -13,7 +13,7 @@ defmodule Ret.Hub do
   import Ecto.Changeset
   import Ecto.Query
 
-  alias Ret.{Hub, Repo, WebPushSubscription}
+  alias Ret.{Hub, Repo, WebPushSubscription, RoomAssigner}
   alias Ret.Hub.{HubSlug}
 
   use Bitwise
@@ -27,6 +27,7 @@ defmodule Ret.Hub do
   schema "hubs" do
     field(:name, :string)
     field(:hub_sid, :string)
+    field(:host, :string)
     field(:entry_code, :integer)
     field(:entry_code_expires_at, :utc_datetime)
     field(:default_environment_gltf_bundle_url, :string)
@@ -84,6 +85,10 @@ defmodule Ret.Hub do
     |> cast(%{entry_mode: :deny}, [:entry_mode])
   end
 
+  def changeset_for_new_host(%Hub{} = hub, host) do
+    hub |> cast(%{host: host}, [:host])
+  end
+
   def send_push_messages_for_join(%Hub{web_push_subscriptions: subscriptions} = hub, endpoint_to_skip \\ nil) do
     body = hub |> push_message_for_join
 
@@ -123,6 +128,22 @@ defmodule Ret.Hub do
     end
   end
 
+  def ensure_host(hub) do
+    if RoomAssigner.is_alive?(hub.host) do
+      hub
+    else
+      # TODO the database mutation should be centralized into the GenServer
+      # to ensure a partition doesn't cause a rogue node to re-assign the server
+      host = RoomAssigner.get_available_host(hub.host)
+
+      if host && host != hub.host do
+        hub |> changeset_for_new_host(host) |> Repo.update!()
+      else
+        hub
+      end
+    end
+  end
+
   def entry_code_expired?(%Hub{entry_code: entry_code, entry_code_expires_at: entry_code_expires_at})
       when is_nil(entry_code) or is_nil(entry_code_expires_at),
       do: true
@@ -134,6 +155,19 @@ defmodule Ret.Hub do
   def vacuum_entry_codes do
     query = from(h in Hub, where: h.entry_code_expires_at() < ^Timex.now())
     Repo.update_all(query, set: [entry_code: nil, entry_code_expires_at: nil])
+  end
+
+  # Remove the host entry from any rooms that are older than a day old and have no presence
+  def vacuum_hosts do
+    one_day_ago = Timex.now() |> Timex.shift(days: -1)
+
+    candidate_hub_sids =
+      from(h in Hub, where: not is_nil(h.host) and h.inserted_at < ^one_day_ago) |> Repo.all() |> Enum.map(& &1.hub_sid)
+
+    present_hub_sids = RetWeb.Presence.present_hub_sids()
+    clearable_hub_sids = candidate_hub_sids |> Enum.filter(&(!Enum.member?(present_hub_sids, &1)))
+
+    from(h in Hub, where: h.hub_sid in ^clearable_hub_sids) |> Repo.update_all(set: [host: nil])
   end
 
   defp add_hub_sid_to_changeset(changeset) do

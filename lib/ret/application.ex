@@ -22,6 +22,8 @@ defmodule Ret.Application do
       worker(Ret.Scheduler, []),
       # Quantum singleton scheduler
       worker(Ret.SingletonScheduler, []),
+      # Room assigner monitor
+      worker(Ret.RoomAssignerMonitor, []),
       # Storage for rate limiting
       worker(PlugAttack.Storage.Ets, [RetWeb.RateLimit.Storage, [clean_period: 60_000]]),
       # Media resolution cache
@@ -47,6 +49,18 @@ defmodule Ret.Application do
           ]
         ],
         id: :page_chunk_cache
+      ),
+
+      # Janus load status cache
+      worker(
+        Cachex,
+        [
+          :janus_load_status,
+          [
+            warmers: [warmer(module: Ret.JanusLoadStatus)]
+          ]
+        ],
+        id: :janus_load_status
       ),
 
       # Graceful shutdown

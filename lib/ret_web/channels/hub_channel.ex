@@ -3,7 +3,19 @@ defmodule RetWeb.HubChannel do
 
   use RetWeb, :channel
 
-  alias Ret.{Hub, Repo, RoomObject, HubAccountRole, SessionStat, Statix, WebPushSubscription}
+  alias Ret.{
+    Hub,
+    Account,
+    Repo,
+    RoomObject,
+    HubAccountRole,
+    OwnedFile,
+    Storage,
+    SessionStat,
+    Statix,
+    WebPushSubscription
+  }
+
   alias RetWeb.{Presence}
 
   def join(
@@ -22,7 +34,6 @@ defmodule RetWeb.HubChannel do
     Hub
     |> Repo.get_by(hub_sid: hub_sid)
     |> Repo.preload(scene: [:model_owned_file, :screenshot_owned_file], web_push_subscriptions: [])
-    |> Hub.ensure_valid_entry_code!()
     |> join_with_hub(socket, push_subscription_endpoint)
   end
 
@@ -93,9 +104,55 @@ defmodule RetWeb.HubChannel do
     {:reply, {:ok, %{has_remaining_subscriptions: has_remaining_subscriptions}}, socket}
   end
 
+  def handle_in("sign_in", %{"token" => token}, socket) do
+    case Ret.Guardian.resource_from_token(token) do
+      {:ok, %Account{} = account, _claims} ->
+        socket = Guardian.Phoenix.Socket.put_current_resource(socket, account)
+        {:reply, {:ok, %{}}, socket}
+
+      {:error, reason} ->
+        {:reply, {:error, %{message: "Sign in failed", reason: reason}}, socket}
+    end
+  end
+
+  def handle_in("sign_out", _payload, socket) do
+    socket = Guardian.Phoenix.Socket.put_current_resource(socket, nil)
+    {:reply, {:ok, %{}}, socket}
+  end
+
+  def handle_in(
+        "pin",
+        %{
+          "id" => object_id,
+          "gltf_node" => gltf_node,
+          "file_id" => file_id,
+          "file_access_token" => file_access_token,
+          "promotion_token" => promotion_token
+        },
+        socket
+      ) do
+    account = Guardian.Phoenix.Socket.current_resource(socket)
+    perform_pin!(object_id, gltf_node, account, socket)
+    Storage.promote(file_id, file_access_token, promotion_token, account)
+    OwnedFile.set_active(file_id, account.account_id)
+    {:noreply, socket}
+  end
+
   def handle_in("pin", %{"id" => object_id, "gltf_node" => gltf_node}, socket) do
+    account = Guardian.Phoenix.Socket.current_resource(socket)
+    perform_pin!(object_id, gltf_node, account, socket)
+
+    {:noreply, socket}
+  end
+
+  def handle_in("unpin", %{"id" => object_id, "file_id" => file_id}, socket) do
     hub = socket |> hub_for_socket
-    RoomObject.perform_pin!(hub, %{object_id: object_id, gltf_node: gltf_node})
+    RoomObject.perform_unpin(hub, object_id)
+
+    case Guardian.Phoenix.Socket.current_resource(socket) do
+      %Account{} = account -> OwnedFile.set_inactive(file_id, account.account_id)
+      _ -> nil
+    end
 
     {:noreply, socket}
   end
@@ -105,6 +162,11 @@ defmodule RetWeb.HubChannel do
     RoomObject.perform_unpin(hub, object_id)
 
     {:noreply, socket}
+  end
+
+  def handle_in("get_host", _args, socket) do
+    hub = socket |> hub_for_socket |> Hub.ensure_host()
+    {:reply, {:ok, %{host: hub.host}}, socket}
   end
 
   def handle_in(_message, _payload, socket) do
@@ -120,6 +182,11 @@ defmodule RetWeb.HubChannel do
 
   def handle_info(_message, socket) do
     {:noreply, socket}
+  end
+
+  defp perform_pin!(object_id, gltf_node, account, socket) do
+    hub = socket |> hub_for_socket
+    RoomObject.perform_pin!(hub, account, %{object_id: object_id, gltf_node: gltf_node})
   end
 
   def terminate(_reason, socket) do
@@ -144,6 +211,8 @@ defmodule RetWeb.HubChannel do
   end
 
   defp join_with_hub(%Hub{} = hub, socket, push_subscription_endpoint) do
+    hub = hub |> Hub.ensure_valid_entry_code!() |> Hub.ensure_host()
+
     is_push_subscribed =
       push_subscription_endpoint &&
         hub.web_push_subscriptions |> Enum.any?(&(&1.endpoint == push_subscription_endpoint))
