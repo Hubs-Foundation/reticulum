@@ -4,7 +4,7 @@ defmodule Ret.HubAccountRole do
   import Ecto.Changeset
   import Ecto.Query
 
-  alias Ret.{EncryptedField, Hub, Account, HubAccountRole, Repo}
+  alias Ret.{Hub, Account, HubAccountRole, Repo}
   @schema_prefix "ret0"
   @primary_key {:hub_account_role_id, :id, autogenerate: true}
 
