@@ -8,7 +8,6 @@ defmodule RetWeb.HubChannel do
     Account,
     Repo,
     RoomObject,
-    HubAccountRole,
     OwnedFile,
     Storage,
     SessionStat,
@@ -238,12 +237,12 @@ defmodule RetWeb.HubChannel do
          response <- RetWeb.Api.V1.HubView.render("show.json", %{hub: hub}) do
       response = response |> Map.put(:subscriptions, %{web_push: is_push_subscribed})
 
-      roles =
+      is_owner =
         socket
         |> Guardian.Phoenix.Socket.current_resource()
-        |> HubAccountRole.get_roles(hub)
+        |> Hub.owns?(hub)
 
-      response = response |> Map.put(:roles, roles)
+      response = response |> Map.put(:is_owner, is_owner)
 
       existing_stat_count =
         socket

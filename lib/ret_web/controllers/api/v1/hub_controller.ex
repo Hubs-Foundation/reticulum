@@ -24,13 +24,13 @@ defmodule RetWeb.Api.V1.HubController do
   end
 
   defp exec_create(hub_changeset, conn) do
-    {result, hub} = hub_changeset |> Repo.insert()
+    {result, hub} =
+      hub_changeset
+      |> Hub.add_account_to_changeset(Guardian.Plug.current_resource())
+      |> Repo.insert()
 
     case result do
-      :ok -> 
-        account = conn |> Guardian.Plug.current_resource()
-        account |> HubAccountRole.add_host_role(hub)
-        render(conn, "create.json", hub: hub)
+      :ok -> render(conn, "create.json", hub: hub)
       :error -> conn |> send_resp(422, "invalid hub")
     end
   end
