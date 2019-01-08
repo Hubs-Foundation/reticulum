@@ -78,7 +78,7 @@ password = "{{ cfg.email.password }}"
 [ret."Elixir.Ret.Support"]
 slack_webhook_url = "{{ cfg.support.slack_webhook_url }}"
 
-[ret."DiscordBot"]
+[ret."Elixir.DiscordBot"]
 token = "{{ cfg.discord.bot_token }}"
 
 [secure_headers."Elixir.SecureHeaders.secure_headers".config]
