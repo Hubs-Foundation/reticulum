@@ -1,6 +1,6 @@
 defmodule RetWeb.Api.V1.HubView do
   use RetWeb, :view
-  alias Ret.{Hub, OwnedFile, Scene}
+  alias Ret.{Hub, Scene}
 
   def render("create.json", %{hub: hub}) do
     %{
@@ -10,14 +10,26 @@ defmodule RetWeb.Api.V1.HubView do
     }
   end
 
-  def render("show.json", %{hub: %Hub{scene: %Scene{model_owned_file: model_owned_file}} = hub}) do
-    hub |> render_with_scene_asset(:glb, model_owned_file |> OwnedFile.uri_for() |> URI.to_string())
+  def render("show.json", %{hub: %Hub{scene: %Scene{}} = hub}) do
+    %{
+      hubs: [
+        %{
+          hub_id: hub.hub_sid,
+          name: hub.name,
+          entry_code: hub.entry_code,
+          host: hub.host,
+          scene: RetWeb.Api.V1.SceneView.render_scene(hub.scene)
+        }
+      ]
+    }
   end
 
+  # DEPRECATED
   def render("show.json", %{hub: hub}) do
     hub |> render_with_scene_asset(:gltf_bundle, hub.default_environment_gltf_bundle_url)
   end
 
+  # DEPRECATED
   defp render_with_scene_asset(hub, asset_type, asset_url) do
     %{
       hubs: [
