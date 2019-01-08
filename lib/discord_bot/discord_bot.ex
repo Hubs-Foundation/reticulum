@@ -101,7 +101,7 @@ defmodule DiscordBot do
         for guild <- elem(Alchemy.Client.get_current_guilds(), 1),
             channel <- elem(Alchemy.Client.get_channels(guild.id), 1),
             topic = channel.topic,
-            matches = Regex.scan(@hub_url_regex, channel.topic),
+            matches = Regex.scan(@hub_url_regex, topic),
             [_, hub_id] <- matches do
           {hub_id, channel.id}
         end
@@ -124,7 +124,7 @@ defmodule DiscordBot do
 
   def do_on_hubs_event(
         channel_ids,
-        hub_id,
+        _hub_id,
         :message,
         %{:profile => %{"displayName" => username}},
         payload
@@ -137,19 +137,19 @@ defmodule DiscordBot do
 
   def do_on_hubs_event(
         channel_ids,
-        hub_id,
+        _hub_id,
         event,
         %{:profile => %{"displayName" => username}},
-        payload
+        _payload
       )
       when event in [:join, :part] do
     Enum.each(channel_ids, &broadcast_user_event_to_discord(&1, username, event))
   end
 
-  defp content_for_payload(%{"type" => "chat"} = payload, username),
+  defp content_for_payload(%{"type" => "chat"} = payload, _username),
     do: [content: payload["body"]]
 
-  defp content_for_payload(%{"type" => "spawn"} = payload, username) do
+  defp content_for_payload(%{"type" => "spawn"} = _payload, username) do
     [
       embeds: [
         %Embed{}
