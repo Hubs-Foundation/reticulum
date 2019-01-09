@@ -14,8 +14,8 @@ defmodule Ret.Application do
       # Start the Ecto repository
       supervisor(Ret.Repo, []),
 
-      #supervisor(RetWeb.Endpoint, []),
-      #supervisor(RetWeb.Presence, []),
+      supervisor(RetWeb.Endpoint, []),
+      supervisor(RetWeb.Presence, []),
 
       # Quantum scheduler
       worker(Ret.Scheduler, []),
