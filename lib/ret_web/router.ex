@@ -75,6 +75,7 @@ defmodule RetWeb.Router do
     scope "/v1", as: :api_v1 do
       pipe_through([:auth_required])
       resources("/scenes", Api.V1.SceneController, only: [:create, :update])
+      resources("/hubs", Api.V1.HubController, only: [:update])
     end
   end
 

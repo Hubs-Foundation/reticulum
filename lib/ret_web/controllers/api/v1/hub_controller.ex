@@ -9,6 +9,24 @@ defmodule RetWeb.Api.V1.HubController do
   # Only allow access with secret header
   plug(RetWeb.Plugs.HeaderAuthorization when action in [:delete])
 
+  plug(:authorize_resource, model: Hub, only: [:update])
+
+  def update(conn, %{"id" => hub_sid, "hub" => params}) do
+    hub = Hub |> Repo.get_by(hub_sid: hub_id)
+
+    case hub do
+      %Hub{} = hub ->
+        hub
+        |> Hub.changeset_for_name(params)
+        |> Repo.update()
+
+        conn |> render("create.json", hub: hub)
+
+      _ ->
+        conn |> send_resp(404, "not found")
+    end
+  end
+
   def create(conn, %{"hub" => %{"scene_id" => scene_id}} = params) do
     scene = Scene |> Repo.get_by(scene_sid: scene_id)
 
