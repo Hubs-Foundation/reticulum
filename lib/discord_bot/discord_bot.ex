@@ -93,15 +93,15 @@ defmodule DiscordBot do
       })
     end
 
-    ###
-
-    @hub_url_regex ~r"https?://(?:hubs.local(?:\:\d+)?|hubs.mozilla.com)/(\w+)/?\S*"
     def update_bound_channels do
+      host_clauses = DiscordBot.module_config(:hostnames) |> Enum.map(&("#{&1}(?:\\:\\d+)?")) |> Enum.join("|")
+      {:ok, hub_url_regex} = Regex.compile("https?://(?:#{host_clauses})/(\\w+)/?\\S*")
+
       bound_channels =
         for guild <- elem(Alchemy.Client.get_current_guilds(), 1),
             channel <- elem(Alchemy.Client.get_channels(guild.id), 1),
             topic = channel.topic,
-            matches = Regex.scan(@hub_url_regex, topic),
+            matches = Regex.scan(hub_url_regex, topic),
             [_, hub_id] <- matches do
           {hub_id, channel.id}
         end
@@ -220,7 +220,7 @@ defmodule DiscordBot do
     Supervisor.init(children, strategy: :one_for_one)
   end
 
-  defp module_config(key) do
+  def module_config(key) do
     Application.get_env(:ret, __MODULE__)[key]
   end
 end
