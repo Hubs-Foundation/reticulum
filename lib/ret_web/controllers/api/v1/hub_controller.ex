@@ -1,7 +1,9 @@
 defmodule RetWeb.Api.V1.HubController do
   use RetWeb, :controller
 
-  alias Ret.{Hub, Scene, Repo, HubAccountRole}
+  import Canary.Plugs
+
+  alias Ret.{Hub, Scene, Repo}
 
   # Limit to 1 TPS
   plug(RetWeb.Plugs.RateLimit)
@@ -12,12 +14,12 @@ defmodule RetWeb.Api.V1.HubController do
   plug(:authorize_resource, model: Hub, only: [:update])
 
   def update(conn, %{"id" => hub_sid, "hub" => params}) do
-    hub = Hub |> Repo.get_by(hub_sid: hub_id)
+    hub = Hub |> Repo.get_by(hub_sid: hub_sid)
 
     case hub do
       %Hub{} = hub ->
         hub
-        |> Hub.changeset_for_name(params)
+        |> Hub.changeset_for_new_name(params)
         |> Repo.update()
 
         conn |> render("create.json", hub: hub)
@@ -44,7 +46,7 @@ defmodule RetWeb.Api.V1.HubController do
   defp exec_create(hub_changeset, conn) do
     {result, hub} =
       hub_changeset
-      |> Hub.add_account_to_changeset(Guardian.Plug.current_resource())
+      |> Hub.add_account_to_changeset(Guardian.Plug.current_resource(conn))
       |> Repo.insert()
 
     case result do

@@ -51,9 +51,8 @@ defmodule Ret.Hub do
 
   def changeset(%Hub{} = hub, scene, attrs) do
     hub
-    |> cast(attrs, [:name, :default_environment_gltf_bundle_url])
-    |> validate_length(:name, min: 4, max: 64)
-    |> validate_format(:name, ~r/^[A-Za-z0-9-':"!@#$%^&*(),.?~ ]+$/)
+    |> cast(attrs, [:default_environment_gltf_bundle_url])
+    |> add_name_to_changeset(attrs)
     |> add_hub_sid_to_changeset
     |> add_entry_code_to_changeset
     |> unique_constraint(:hub_sid)
@@ -61,6 +60,19 @@ defmodule Ret.Hub do
     |> put_assoc(:scene, scene)
     |> HubSlug.maybe_generate_slug()
     |> HubSlug.unique_constraint()
+  end
+
+  def changeset_for_new_name(%Hub{} = hub, attrs) do
+    hub
+    |> Ecto.Changeset.change()
+    |> add_name_to_changeset(attrs)
+  end
+
+  defp add_name_to_changeset(changeset, attrs) do
+    changeset
+    |> cast(attrs, [:name])
+    |> validate_length(:name, min: 4, max: 64)
+    |> validate_format(:name, ~r/^[A-Za-z0-9-':"!@#$%^&*(),.?~ ]+$/)
   end
 
   def changeset_for_new_seen_occupant_count(%Hub{} = hub, occupant_count) do
@@ -90,9 +102,9 @@ defmodule Ret.Hub do
     hub |> cast(%{host: host}, [:host])
   end
 
-  defp add_account_to_changeset(changeset, nil), do: changeset
+  def add_account_to_changeset(changeset, nil), do: changeset
 
-  defp add_account_to_changeset(changeset, %Account{} = account) do
+  def add_account_to_changeset(changeset, %Account{} = account) do
     changeset |> put_assoc(:account, account)
   end
 
@@ -119,6 +131,10 @@ defmodule Ret.Hub do
 
   def image_url_for(%Hub{scene: scene}) do
     scene.screenshot_owned_file |> Ret.OwnedFile.uri_for() |> URI.to_string()
+  end
+
+  def owns?(%Account{} = account, %Hub{} = hub) do
+    account.account_id == hub.account_id
   end
 
   defp changeset_for_new_entry_code(%Hub{} = hub) do
@@ -211,4 +227,10 @@ defmodule Ret.Hub do
       room_id
     end
   end
+end
+
+defimpl Canada.Can, for: Ret.Hub do
+  def can?(%Ret.Account{account_id: account_id}, :update, %Ret.Hub{account_id: account_id}), do: true
+
+  def can?(%Ret.Account{}, _, _), do: false
 end
