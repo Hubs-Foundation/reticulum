@@ -2,6 +2,7 @@ defmodule DiscordBot do
   use Supervisor
   alias Alchemy.Client
   alias Alchemy.Embed
+  require Logger
 
   defmodule HubsCommands do
     use Alchemy.Cogs
@@ -29,8 +30,7 @@ defmodule DiscordBot do
     Events.on_ready(:on_ready)
     Events.on_message(:on_message)
 
-    def on_channel_update(channel) do
-      IO.inspect("#{channel.name} was updated, topic: #{channel.topic}")
+    def on_channel_update(_channel) do
       update_bound_channels()
     end
 
@@ -40,13 +40,12 @@ defmodule DiscordBot do
 
     def on_message(msg) do
       if hub_ids = !msg.author.bot && Cachex.get!(:discord_bot_state, "hubs_for_channel")[msg.channel_id] do
+        Logger.debug "Outgoing message from Discord to Hubs: #{msg.content}"
         hub_ids |> Enum.each(&broadcast_to_hubs(&1, msg))
       end
     end
 
     def broadcast_to_hubs(hub_id, msg) do
-      IO.inspect(msg)
-
       RetWeb.Endpoint.broadcast!("hub:#{hub_id}", "message", %{
         type: "chat",
         body: msg.content,
@@ -68,12 +67,10 @@ defmodule DiscordBot do
           {hub_id, channel.id}
         end
 
-      channels_by_hub =
-        bound_channels |> Enum.group_by(&elem(&1, 0), &elem(&1, 1)) |> IO.inspect()
+      channels_by_hub = bound_channels |> Enum.group_by(&elem(&1, 0), &elem(&1, 1))
+      hubs_by_channel = bound_channels |> Enum.group_by(&elem(&1, 1), &elem(&1, 0))
 
-      hubs_by_channel =
-        bound_channels |> Enum.group_by(&elem(&1, 1), &elem(&1, 0)) |> IO.inspect()
-
+      Logger.debug "Bound Discord channels per hub: #{inspect(channels_by_hub)}"
       Cachex.transaction!(:discord_bot_state, ["hubs_for_channel", "channels_for_hub"], fn(cache) ->
         Cachex.put!(cache, "hubs_for_channel", hubs_by_channel)
         Cachex.put!(cache, "channels_for_hub", channels_by_hub)
@@ -132,6 +129,7 @@ defmodule DiscordBot do
   end
 
   def broadcast_message_to_discord(channel_id, username, options \\ []) do
+    Logger.debug "Incoming message from Hubs to Discord: #{inspect(options)}"
     {:ok, [hook | _]} = Alchemy.Webhook.in_channel(channel_id)
 
     Alchemy.Webhook.send(
@@ -145,6 +143,7 @@ defmodule DiscordBot do
   end
 
   def broadcast_user_event_to_discord(channel_id, username, event) do
+    Logger.debug "Presence update from Hubs to Discord: #{inspect(event)}"
     embed =
       case event do
         :join ->
