@@ -3,45 +3,6 @@ defmodule DiscordBot do
   alias Alchemy.Client
   alias Alchemy.Embed
 
-  defmodule BotState do
-    use GenServer
-
-    def start_link(_opts) do
-      GenServer.start_link(__MODULE__, :ok, name: BotState)
-    end
-
-    def set_channel_mappings(channels_by_hub, hubs_by_channel) do
-      GenServer.cast(BotState, {:set_channel_mapping, channels_by_hub, hubs_by_channel})
-    end
-
-    def get_channels_for_hub(hub_id) do
-      GenServer.call(BotState, {:get_channels_for_hub, hub_id})
-    end
-
-    def get_hubs_for_channel(channel_id) do
-      GenServer.call(BotState, {:get_hubs_for_channel, channel_id})
-    end
-
-    def init(:ok) do
-      {:ok, %{}}
-    end
-
-    def handle_call({:get_channels_for_hub, hub_id}, _from, state) do
-      {:reply, state |> get_in([:channels_by_hub, hub_id]), state}
-    end
-
-    def handle_call({:get_hubs_for_channel, channel_id}, _from, state) do
-      {:reply, state |> get_in([:hubs_by_channel, channel_id]), state}
-    end
-
-    def handle_cast({:set_channel_mapping, channels_by_hub, hubs_by_channel}, state) do
-      {:noreply,
-       state
-       |> Map.put(:channels_by_hub, channels_by_hub)
-       |> Map.put(:hubs_by_channel, hubs_by_channel)}
-    end
-  end
-
   defmodule HubsCommands do
     use Alchemy.Cogs
     require Alchemy.Embed, as: Embed
@@ -51,7 +12,7 @@ defmodule DiscordBot do
     end
 
     Cogs.def bound do
-      case DiscordBot.BotState.get_hubs_for_channel(message.channel_id) do
+      case Cachex.get!(:discord_bot_state, "hubs_for_channel")[message.channel_id] do
         hub_ids = [_ | _] ->
           Cogs.say("This channel is bound to #{Enum.join(hub_ids, ", ")}")
 
@@ -78,7 +39,7 @@ defmodule DiscordBot do
     end
 
     def on_message(msg) do
-      if hub_ids = !msg.author.bot && DiscordBot.BotState.get_hubs_for_channel(msg.channel_id) do
+      if hub_ids = !msg.author.bot && Cachex.get!(:discord_bot_state, "hubs_for_channel")[msg.channel_id] do
         hub_ids |> Enum.each(&broadcast_to_hubs(&1, msg))
       end
     end
@@ -112,12 +73,15 @@ defmodule DiscordBot do
       hubs_by_channel =
         bound_channels |> Enum.group_by(&elem(&1, 1), &elem(&1, 0)) |> IO.inspect()
 
-      DiscordBot.BotState.set_channel_mappings(channels_by_hub, hubs_by_channel)
+      Cachex.transaction!(:discord_bot_state, ["hubs_for_channel", "channels_for_hub"], fn(cache) ->
+        Cachex.put!(cache, "hubs_for_channel", hubs_by_channel)
+        Cachex.put!(cache, "channels_for_hub", channels_by_hub)
+      end)
     end
   end
 
   def on_hubs_event(hub_id, event, context, payload \\ %{}) do
-    if channel_ids = DiscordBot.BotState.get_channels_for_hub(hub_id) do
+    if channel_ids = Cachex.get!(:discord_bot_state, "channels_for_hub")[hub_id] do
       do_on_hubs_event(channel_ids, hub_id, event, context, payload)
     end
   end
@@ -214,7 +178,7 @@ defmodule DiscordBot do
   def init(options \\ []) do
     children = [
       supervisor(Alchemy.Client, [module_config(:token), options]),
-      BotState
+      worker(Cachex, [:discord_bot_state, []])
     ]
 
     Supervisor.init(children, strategy: :one_for_one)
