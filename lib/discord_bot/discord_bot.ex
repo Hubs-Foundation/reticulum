@@ -111,7 +111,7 @@ defmodule DiscordBot do
   defp content_for_payload(%{"type" => "chat"} = payload, _username),
     do: [content: payload["body"]]
 
-  defp content_for_payload(%{"type" => "spawn"} = _payload, username) do
+  defp content_for_payload(%{"type" => "spawn"} = payload, username) do
     [
       embeds: [
         %Embed{}
@@ -120,10 +120,7 @@ defmodule DiscordBot do
           name: "#{username} took a photo",
           icon_url: "https://blog.mozvr.com/content/images/2018/04/image--1-.png"
         )
-        |> Embed.image(
-          "https://uploads-prod.reticulum.io/files/9f3cda3a-d445-4601-970c-6b0e4b494113.png?token=b9cf857b51565787bcace71389f1d8a2"
-        )
-        # |> Embed.image(payload["body"]["src"])
+        |> Embed.image(payload["body"]["src"])
       ]
     ]
   end
