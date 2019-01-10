@@ -165,5 +165,5 @@ config :ret, Ret.JanusLoadStatus, default_janus_host: "dev-janus.reticulum.io"
 config :ret, Ret.RoomAssigner, balancer_weights: [{600, 1}, {300, 50}, {0, 500}]
 
 config :ret, DiscordBot,
-  hostnames: ["localhost", "hubs.local"]
+  hostnames: "localhost hubs.local"
   # token: "foo"

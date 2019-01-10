@@ -55,7 +55,8 @@ defmodule DiscordBot do
     end
 
     def update_bound_channels do
-      host_clauses = DiscordBot.module_config(:hostnames) |> Enum.map(&("#{&1}(?:\\:\\d+)?")) |> Enum.join("|")
+      hostnames = DiscordBot.module_config(:hostnames) |> String.split
+      host_clauses = hostnames |> Enum.map(&("#{&1}(?:\\:\\d+)?")) |> Enum.join("|")
       {:ok, hub_url_regex} = Regex.compile("https?://(?:#{host_clauses})/(\\w+)/?\\S*")
 
       bound_channels =
