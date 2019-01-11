@@ -40,6 +40,7 @@ defmodule RetWeb.Router do
 
   pipeline :auth_required do
     plug(RetWeb.Guardian.AuthPipeline)
+    plug(RetWeb.Canary.AuthorizationPipeline)
   end
 
   pipeline :canonicalize_domain do

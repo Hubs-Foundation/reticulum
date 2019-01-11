@@ -228,9 +228,3 @@ defmodule Ret.Hub do
     end
   end
 end
-
-defimpl Canada.Can, for: Ret.Hub do
-  def can?(%Ret.Account{account_id: account_id}, :update, %Ret.Hub{account_id: account_id}), do: true
-
-  def can?(%Ret.Account{}, _, _), do: false
-end

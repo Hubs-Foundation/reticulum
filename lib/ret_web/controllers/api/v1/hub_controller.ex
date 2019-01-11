@@ -11,7 +11,7 @@ defmodule RetWeb.Api.V1.HubController do
   # Only allow access with secret header
   plug(RetWeb.Plugs.HeaderAuthorization when action in [:delete])
 
-  plug(:authorize_resource, model: Hub, only: [:update])
+  plug(:authorize_resource, model: Hub, id_field: "hub_sid", only: [:update])
 
   def update(conn, %{"id" => hub_sid, "hub" => params}) do
     hub = Hub |> Repo.get_by(hub_sid: hub_sid)
@@ -63,4 +63,9 @@ defmodule RetWeb.Api.V1.HubController do
 
     conn |> send_resp(200, "OK")
   end
+end
+
+defimpl Canada.Can, for: Ret.Account do
+  def can?(%Ret.Account{account_id: account_id}, :update, %Ret.Hub{account_id: account_id}), do: true
+  def can?(_, _, _), do: false
 end
