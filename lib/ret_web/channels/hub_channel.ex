@@ -181,7 +181,7 @@ defmodule RetWeb.HubChannel do
       |> Repo.update!()
       |> Repo.preload(@hub_preloads)
 
-    response = HubView.render("show.json", %{hub: hub})
+    response = HubView.render("show.json", %{hub: hub}) |> Map.put(:session_id, socket.assigns.session_id)
     broadcast!(socket, "hub_changed", response)
 
     {:noreply, socket}
