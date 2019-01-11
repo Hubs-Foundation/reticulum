@@ -3,9 +3,7 @@ defmodule RetWeb.Api.V1.SceneController do
 
   alias Ret.{Account, Repo, Scene, Storage}
 
-  if Mix.env() != :test do
-    plug(RetWeb.Plugs.RateLimit when action in [:create, :update])
-  end
+  plug(RetWeb.Plugs.RateLimit when action in [:create, :update])
 
   def show(conn, %{"id" => scene_sid}) do
     case scene_sid |> get_scene() do
