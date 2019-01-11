@@ -137,6 +137,8 @@ defmodule Ret.Hub do
     account.account_id == hub.account_id
   end
 
+  def owns?(nil, %Hub{} = hub), do: false
+
   defp changeset_for_new_entry_code(%Hub{} = hub) do
     hub
     |> Ecto.Changeset.change()
