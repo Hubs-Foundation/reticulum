@@ -44,4 +44,13 @@ defmodule Ret.TestHelpers do
   def clear_all_stored_files do
     File.rm_rf(Application.get_env(:ret, Storage)[:storage_path])
   end
+
+  def put_auth_header_for_account(conn, email) do
+    {:ok, token, _claims} =
+      email
+      |> Ret.Account.account_for_email()
+      |> Ret.Guardian.encode_and_sign()
+
+    conn |> Plug.Conn.put_req_header("authorization", "bearer: " <> token)
+  end
 end
