@@ -3,8 +3,11 @@ defmodule RetWeb.HubChannel do
 
   use RetWeb, :channel
 
-  alias Ret.{Hub, Account, Repo, RoomObject, OwnedFile, Storage, SessionStat, Statix, WebPushSubscription}
+  alias Ret.{Hub, Account, Repo, RoomObject, OwnedFile, Scene, Storage, SessionStat, Statix, WebPushSubscription}
   alias RetWeb.{Presence}
+  alias RetWeb.Api.V1.{HubView}
+
+  @hub_preloads [scene: [:model_owned_file, :screenshot_owned_file], web_push_subscriptions: []]
 
   def join(
         "hub:" <> hub_sid,
@@ -21,7 +24,7 @@ defmodule RetWeb.HubChannel do
   defp perform_join(socket, hub_sid, push_subscription_endpoint \\ nil) do
     Hub
     |> Repo.get_by(hub_sid: hub_sid)
-    |> Repo.preload(scene: [:model_owned_file, :screenshot_owned_file], web_push_subscriptions: [])
+    |> Repo.preload(@hub_preloads)
     |> join_with_hub(socket, push_subscription_endpoint)
   end
 
@@ -160,6 +163,30 @@ defmodule RetWeb.HubChannel do
     {:reply, {:ok, %{host: hub.host}}, socket}
   end
 
+  def handle_in("update_scene", %{"url" => url}, socket) do
+    hub = socket |> hub_for_socket |> Repo.preload(:scene)
+    endpoint_host = RetWeb.Endpoint.host()
+
+    hub =
+      case url |> URI.parse() do
+        %URI{host: ^endpoint_host, path: "/scenes/" <> scene_path} ->
+          scene_sid = scene_path |> String.split("/") |> Enum.at(0)
+          scene = Scene |> Repo.get_by(scene_sid: scene_sid)
+
+          hub |> Hub.changeset_for_new_scene(scene)
+
+        _ ->
+          hub |> Hub.changeset_for_new_environment_url(url)
+      end
+      |> Repo.update!()
+      |> Repo.preload(@hub_preloads)
+
+    response = HubView.render("show.json", %{hub: hub})
+    broadcast!(socket, "hub_changed", response)
+
+    {:noreply, socket}
+  end
+
   def handle_in(_message, _payload, socket) do
     {:noreply, socket}
   end
@@ -209,7 +236,7 @@ defmodule RetWeb.HubChannel do
         hub.web_push_subscriptions |> Enum.any?(&(&1.endpoint == push_subscription_endpoint))
 
     with socket <- socket |> assign(:hub_sid, hub.hub_sid) |> assign(:presence, :lobby),
-         response <- RetWeb.Api.V1.HubView.render("show.json", %{hub: hub}) do
+         response <- HubView.render("show.json", %{hub: hub}) do
       response = response |> Map.put(:subscriptions, %{web_push: is_push_subscribed})
 
       existing_stat_count =

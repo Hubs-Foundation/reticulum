@@ -70,6 +70,19 @@ defmodule Ret.Hub do
     |> validate_required([:max_occupant_count])
   end
 
+  def changeset_for_new_scene(%Hub{} = hub, scene) do
+    hub
+    |> cast(%{}, [])
+    |> put_assoc(:scene, scene)
+    |> validate_required([:scene])
+  end
+
+  def changeset_for_new_environment_url(%Hub{} = hub, url) do
+    hub
+    |> cast(%{default_environment_gltf_bundle_url: url}, [:default_environment_gltf_bundle_url])
+    |> validate_required([:default_environment_gltf_bundle_url])
+  end
+
   def changeset_for_new_spawned_object_type(%Hub{} = hub, object_type)
       when object_type in 0..31 do
     # spawned_object_types is a bitmask of the seen object types
