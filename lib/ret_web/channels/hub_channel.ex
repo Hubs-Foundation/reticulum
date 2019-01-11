@@ -3,17 +3,7 @@ defmodule RetWeb.HubChannel do
 
   use RetWeb, :channel
 
-  alias Ret.{
-    Hub,
-    Account,
-    Repo,
-    RoomObject,
-    OwnedFile,
-    Storage,
-    SessionStat,
-    Statix,
-    WebPushSubscription
-  }
+  alias Ret.{Hub, Account, Repo, RoomObject, OwnedFile, Storage, SessionStat, Statix, WebPushSubscription}
 
   alias RetWeb.{Presence}
 
