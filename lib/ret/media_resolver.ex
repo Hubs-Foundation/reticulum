@@ -7,6 +7,8 @@ defmodule Ret.MediaResolver do
   use Retry
 
   @ytdl_valid_status_codes [200, 302, 500]
+  @ytdl_default_query "best[protocol*=http]/best[protocol*=m3u8]"
+  @ytdl_crunchyroll_query "best[format_id*=hardsub-enUS]/" <> @ytdl_default_query
 
   @non_video_root_hosts [
     "sketchfab.com",
@@ -34,9 +36,17 @@ defmodule Ret.MediaResolver do
     resolve_non_video(uri, root_host)
   end
 
+  def resolve(%URI{} = uri, "crunchyroll.com" = root_host) do
+    # Prefer a version with baked in (english) subtitles. Client locale should eventually determine this
+    resolve_with_ytdl(uri, root_host, @ytdl_crunchyroll_query)
+  end
+
   def resolve(%URI{} = uri, root_host) do
+    resolve_with_ytdl(uri, root_host)
+  end
+
+  def resolve_with_ytdl(%URI{} = uri, root_host, ytdl_format \\ @ytdl_default_query) do
     with ytdl_host when is_binary(ytdl_host) <- module_config(:ytdl_host) do
-      ytdl_format = "best[protocol*=http]"
       encoded_url = uri |> URI.to_string() |> URI.encode()
 
       ytdl_resp =
