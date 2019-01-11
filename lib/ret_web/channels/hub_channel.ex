@@ -163,26 +163,34 @@ defmodule RetWeb.HubChannel do
     {:reply, {:ok, %{host: hub.host}}, socket}
   end
 
+  def handle_in("update_hub", %{"name" => name}, socket) do
+    socket
+    |> hub_for_socket
+    |> Hub.changeset_for_new_name(name)
+    |> Repo.update!()
+    |> Repo.preload(@hub_preloads)
+    |> broadcast_hub_refresh!(socket, ["name"])
+
+    {:noreply, socket}
+  end
+
   def handle_in("update_scene", %{"url" => url}, socket) do
     hub = socket |> hub_for_socket |> Repo.preload(:scene)
     endpoint_host = RetWeb.Endpoint.host()
 
-    hub =
-      case url |> URI.parse() do
-        %URI{host: ^endpoint_host, path: "/scenes/" <> scene_path} ->
-          scene_sid = scene_path |> String.split("/") |> Enum.at(0)
-          scene = Scene |> Repo.get_by(scene_sid: scene_sid)
+    case url |> URI.parse() do
+      %URI{host: ^endpoint_host, path: "/scenes/" <> scene_path} ->
+        scene_sid = scene_path |> String.split("/") |> Enum.at(0)
+        scene = Scene |> Repo.get_by(scene_sid: scene_sid)
 
-          hub |> Hub.changeset_for_new_scene(scene)
+        hub |> Hub.changeset_for_new_scene(scene)
 
-        _ ->
-          hub |> Hub.changeset_for_new_environment_url(url)
-      end
-      |> Repo.update!()
-      |> Repo.preload(@hub_preloads)
-
-    response = HubView.render("show.json", %{hub: hub}) |> Map.put(:session_id, socket.assigns.session_id)
-    broadcast!(socket, "hub_changed", response)
+      _ ->
+        hub |> Hub.changeset_for_new_environment_url(url)
+    end
+    |> Repo.update!()
+    |> Repo.preload(@hub_preloads)
+    |> broadcast_hub_refresh!(socket, ["scene"])
 
     {:noreply, socket}
   end
@@ -218,6 +226,23 @@ defmodule RetWeb.HubChannel do
   defp broadcast_presence_update(socket) do
     Presence.update(socket, socket.assigns.session_id, socket |> presence_meta_for_socket)
     socket
+  end
+
+  # Broadcasts the full hub info as well as an (optional) list of specific fields which
+  # clients should consider stale and need to be updated in client state from the new
+  # hub info
+  #
+  # Note this doesn't necessarily mean the fields have changed.
+  #
+  # For example, if the scene needs to be refreshed, this message indicates that by including
+  # "scene" in the list of stale fields.
+  defp broadcast_hub_refresh!(hub, socket, stale_fields) do
+    response =
+      HubView.render("show.json", %{hub: hub})
+      |> Map.put(:session_id, socket.assigns.session_id)
+      |> Map.put(:stale_fields, stale_fields)
+
+    broadcast!(socket, "hub_refresh", response)
   end
 
   defp presence_meta_for_socket(socket) do

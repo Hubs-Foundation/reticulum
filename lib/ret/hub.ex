@@ -1,5 +1,5 @@
 defmodule Ret.Hub.HubSlug do
-  use EctoAutoslugField.Slug, from: :name, to: :slug
+  use EctoAutoslugField.Slug, from: :name, to: :slug, always_change: true
 
   def get_sources(_changeset, _opts) do
     [:hub_sid, :name]
@@ -59,7 +59,6 @@ defmodule Ret.Hub do
     |> unique_constraint(:entry_code)
     |> put_assoc(:scene, scene)
     |> HubSlug.maybe_generate_slug()
-    |> HubSlug.unique_constraint()
   end
 
   def changeset_for_new_seen_occupant_count(%Hub{} = hub, occupant_count) do
@@ -75,6 +74,13 @@ defmodule Ret.Hub do
     |> cast(%{}, [])
     |> put_assoc(:scene, scene)
     |> validate_required([:scene])
+  end
+
+  def changeset_for_new_name(%Hub{} = hub, name) do
+    hub
+    |> cast(%{name: name}, [:name])
+    |> validate_required([:name])
+    |> HubSlug.maybe_generate_slug()
   end
 
   def changeset_for_new_environment_url(%Hub{} = hub, url) do
