@@ -22,6 +22,11 @@ defmodule DiscordBotManager do
     {:noreply, restart(state)}
   end
 
+  def handle_cast(data, state) do
+    GenServer.cast({:global, DiscordSupervisor.DiscordBot}, data)
+    {:noreply, state}
+  end
+
   # it's incredibly unclear to me what errors in the discord bot result in what control flow, but
   # empirically, if there's a problem when starting the bot, sometimes an error will fly out of
   # DiscordBotManager.start_link, and sometimes it will fly out of DiscordBot.start_link, so
@@ -37,7 +42,7 @@ defmodule DiscordBotManager do
   end
 
   defp restart(state) do
-    result = DiscordBot.start_link([], [name: {:global, DiscordBot}])
+    result = DiscordSupervisor.start_link([], [name: {:global, DiscordSupervisor}])
     pid = case result do
       {:ok, pid} -> pid
       {:error, {:already_started, pid}} -> pid

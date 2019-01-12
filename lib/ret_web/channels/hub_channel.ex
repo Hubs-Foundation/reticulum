@@ -72,7 +72,7 @@ defmodule RetWeb.HubChannel do
   def handle_in("message" = event, payload, socket) do
     broadcast!(socket, event, payload |> Map.put(:session_id, socket.assigns.session_id))
 
-    DiscordBot.on_hubs_event(socket.assigns.hub_sid, :message, socket.assigns, payload)
+    GenServer.cast(DiscordBotManager, %{hub_sid: socket.assigns.hub_sid, event: :message, context: socket.assigns, payload: payload})
 
     {:noreply, socket}
   end
@@ -188,7 +188,7 @@ defmodule RetWeb.HubChannel do
     |> SessionStat.stat_query_for_socket()
     |> Repo.update_all(set: [ended_at: NaiveDateTime.utc_now()])
 
-    DiscordBot.on_hubs_event(socket.assigns.hub_sid, :part, socket.assigns)
+    GenServer.cast(DiscordBotManager, %{hub_sid: socket.assigns.hub_sid, event: :part, context: socket.assigns})
 
     :ok
   end
@@ -239,7 +239,7 @@ defmodule RetWeb.HubChannel do
         Task.start_link(fn -> hub |> Hub.send_push_messages_for_join(push_subscription_endpoint) end)
       end
 
-      DiscordBot.on_hubs_event(socket.assigns.hub_sid, :join, socket.assigns)
+      GenServer.cast(DiscordBotManager, %{hub_sid: socket.assigns.hub_sid, event: :join, context: socket.assigns})
 
       Statix.increment("ret.channels.hub.joins.ok")
 
