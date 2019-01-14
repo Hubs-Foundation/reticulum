@@ -13,7 +13,7 @@ defmodule Ret.Hub do
   import Ecto.Changeset
   import Ecto.Query
 
-  alias Ret.{Hub, Repo, WebPushSubscription, RoomAssigner}
+  alias Ret.{Account, Hub, Repo, WebPushSubscription, RoomAssigner}
   alias Ret.Hub.{HubSlug}
 
   use Bitwise
@@ -37,6 +37,7 @@ defmodule Ret.Hub do
     field(:entry_mode, Ret.Hub.EntryMode)
     belongs_to(:scene, Ret.Scene, references: :scene_id)
     has_many(:web_push_subscriptions, Ret.WebPushSubscription, foreign_key: :hub_id)
+    belongs_to(:created_by_account, Ret.Account, references: :account_id)
 
     timestamps()
   end
@@ -50,15 +51,27 @@ defmodule Ret.Hub do
 
   def changeset(%Hub{} = hub, scene, attrs) do
     hub
-    |> cast(attrs, [:name, :default_environment_gltf_bundle_url])
-    |> validate_length(:name, min: 4, max: 64)
-    |> validate_format(:name, ~r/^[A-Za-z0-9-':"!@#$%^&*(),.?~ ]+$/)
+    |> cast(attrs, [:default_environment_gltf_bundle_url])
+    |> add_name_to_changeset(attrs)
     |> add_hub_sid_to_changeset
     |> add_entry_code_to_changeset
     |> unique_constraint(:hub_sid)
     |> unique_constraint(:entry_code)
     |> put_assoc(:scene, scene)
     |> HubSlug.maybe_generate_slug()
+  end
+
+  def changeset_for_new_name(%Hub{} = hub, attrs) do
+    hub
+    |> Ecto.Changeset.change()
+    |> add_name_to_changeset(attrs)
+  end
+
+  defp add_name_to_changeset(changeset, attrs) do
+    changeset
+    |> cast(attrs, [:name])
+    |> validate_length(:name, min: 4, max: 64)
+    |> validate_format(:name, ~r/^[A-Za-z0-9-':"!@#$%^&*(),.?~ ]+$/)
   end
 
   def changeset_for_new_seen_occupant_count(%Hub{} = hub, occupant_count) do
@@ -108,6 +121,12 @@ defmodule Ret.Hub do
     hub |> cast(%{host: host}, [:host])
   end
 
+  def add_account_to_changeset(changeset, nil), do: changeset
+
+  def add_account_to_changeset(changeset, %Account{} = account) do
+    changeset |> put_assoc(:created_by_account, account)
+  end
+
   def send_push_messages_for_join(%Hub{web_push_subscriptions: subscriptions} = hub, endpoint_to_skip \\ nil) do
     body = hub |> push_message_for_join
 
@@ -132,6 +151,12 @@ defmodule Ret.Hub do
   def image_url_for(%Hub{scene: scene}) do
     scene.screenshot_owned_file |> Ret.OwnedFile.uri_for() |> URI.to_string()
   end
+
+  def owns?(%Account{} = account, %Hub{} = hub) do
+    account.account_id == hub.account_id
+  end
+
+  def owns?(nil, %Hub{} = hub), do: false
 
   defp changeset_for_new_entry_code(%Hub{} = hub) do
     hub

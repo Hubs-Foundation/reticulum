@@ -37,12 +37,7 @@ defmodule RetWeb.ConnCase do
 
     conn =
       if tags[:authenticated] do
-        {:ok, token, _claims} =
-          "test@mozilla.com"
-          |> Ret.Account.account_for_email()
-          |> Ret.Guardian.encode_and_sign()
-
-        conn |> Plug.Conn.put_req_header("authorization", "bearer: " <> token)
+        conn |> Ret.TestHelpers.put_auth_header_for_account("test@mozilla.com")
       else
         conn
       end

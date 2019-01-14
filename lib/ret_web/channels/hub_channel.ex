@@ -4,10 +4,24 @@ defmodule RetWeb.HubChannel do
   use RetWeb, :channel
 
   alias Ret.{Hub, Account, Repo, RoomObject, OwnedFile, Scene, Storage, SessionStat, Statix, WebPushSubscription}
+
   alias RetWeb.{Presence}
   alias RetWeb.Api.V1.{HubView}
 
   @hub_preloads [scene: [:model_owned_file, :screenshot_owned_file], web_push_subscriptions: []]
+
+  def join(
+        "hub:" <> hub_sid,
+        %{
+          "profile" => profile,
+          "context" => context,
+          "push_subscription_endpoint" => endpoint,
+          "auth_token" => auth_token
+        },
+        socket
+      ) do
+    socket |> assign(:profile, profile) |> assign(:context, context) |> perform_join(hub_sid, endpoint, auth_token)
+  end
 
   def join(
         "hub:" <> hub_sid,
@@ -21,11 +35,11 @@ defmodule RetWeb.HubChannel do
     socket |> assign(:profile, profile) |> assign(:context, context) |> perform_join(hub_sid)
   end
 
-  defp perform_join(socket, hub_sid, push_subscription_endpoint \\ nil) do
+  defp perform_join(socket, hub_sid, push_subscription_endpoint \\ nil, auth_token \\ nil) do
     Hub
     |> Repo.get_by(hub_sid: hub_sid)
     |> Repo.preload(@hub_preloads)
-    |> join_with_hub(socket, push_subscription_endpoint)
+    |> join_with_hub(socket, push_subscription_endpoint, auth_token)
   end
 
   def handle_in("events:entered", %{"initialOccupantCount" => occupant_count} = payload, socket) do
@@ -249,20 +263,33 @@ defmodule RetWeb.HubChannel do
     socket.assigns |> Map.take([:presence, :profile, :context])
   end
 
-  defp join_with_hub(%Hub{entry_mode: :deny}, _socket, _endpoint) do
+  defp join_with_hub(%Hub{entry_mode: :deny}, _socket, _endpoint, _auth_token) do
     {:error, %{message: "Hub no longer accessible", reason: "closed"}}
   end
 
-  defp join_with_hub(%Hub{} = hub, socket, push_subscription_endpoint) do
+  defp join_with_hub(%Hub{} = hub, socket, push_subscription_endpoint, auth_token) do
     hub = hub |> Hub.ensure_valid_entry_code!() |> Hub.ensure_host()
 
     is_push_subscribed =
       push_subscription_endpoint &&
         hub.web_push_subscriptions |> Enum.any?(&(&1.endpoint == push_subscription_endpoint))
 
+    socket =
+      case Ret.Guardian.resource_from_token(auth_token) do
+        {:ok, %Account{} = account, _claims} -> Guardian.Phoenix.Socket.put_current_resource(socket, account)
+        _ -> socket
+      end
+
     with socket <- socket |> assign(:hub_sid, hub.hub_sid) |> assign(:presence, :lobby),
          response <- HubView.render("show.json", %{hub: hub}) do
       response = response |> Map.put(:subscriptions, %{web_push: is_push_subscribed})
+
+      is_owner =
+        socket
+        |> Guardian.Phoenix.Socket.current_resource()
+        |> Hub.owns?(hub)
+
+      response = response |> Map.put(:is_owner, is_owner)
 
       existing_stat_count =
         socket
@@ -292,7 +319,7 @@ defmodule RetWeb.HubChannel do
     end
   end
 
-  defp join_with_hub(nil, _socket, _endpoint) do
+  defp join_with_hub(nil, _socket, _endpoint, _auth_token) do
     Statix.increment("ret.channels.hub.joins.not_found")
 
     {:error, %{message: "No such Hub"}}

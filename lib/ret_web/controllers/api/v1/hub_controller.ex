@@ -1,6 +1,8 @@
 defmodule RetWeb.Api.V1.HubController do
   use RetWeb, :controller
 
+  import Canary.Plugs
+
   alias Ret.{Hub, Scene, Repo}
 
   # Limit to 1 TPS
@@ -24,7 +26,10 @@ defmodule RetWeb.Api.V1.HubController do
   end
 
   defp exec_create(hub_changeset, conn) do
-    {result, hub} = hub_changeset |> Repo.insert()
+    {result, hub} =
+      hub_changeset
+      |> Hub.add_account_to_changeset(Guardian.Plug.current_resource(conn))
+      |> Repo.insert()
 
     case result do
       :ok -> render(conn, "create.json", hub: hub)
