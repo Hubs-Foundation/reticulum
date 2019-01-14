@@ -18,9 +18,9 @@ defmodule RetWeb.HubControllerTest do
       |> create_hub("Test Hub")
       |> json_response(200)
 
-    created_hub = Hub |> Repo.get_by(hub_sid: hub_id)
+    created_hub = Hub |> Repo.get_by(hub_sid: hub_id) |> Repo.preload(:created_by_account)
 
-    assert created_hub.account_id == Ret.Account.account_for_email("test@mozilla.com").account_id
+    assert created_hub.created_by_account.account_id == Ret.Account.account_for_email("test@mozilla.com").account_id
   end
 
   defp create_hub(conn, name) do

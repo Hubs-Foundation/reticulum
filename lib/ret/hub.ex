@@ -37,7 +37,7 @@ defmodule Ret.Hub do
     field(:entry_mode, Ret.Hub.EntryMode)
     belongs_to(:scene, Ret.Scene, references: :scene_id)
     has_many(:web_push_subscriptions, Ret.WebPushSubscription, foreign_key: :hub_id)
-    belongs_to(:account, Ret.Account, references: :account_id)
+    belongs_to(:created_by_account, Ret.Account, references: :account_id)
 
     timestamps()
   end
@@ -105,7 +105,7 @@ defmodule Ret.Hub do
   def add_account_to_changeset(changeset, nil), do: changeset
 
   def add_account_to_changeset(changeset, %Account{} = account) do
-    changeset |> put_assoc(:account, account)
+    changeset |> put_assoc(:created_by_account, account)
   end
 
   def send_push_messages_for_join(%Hub{web_push_subscriptions: subscriptions} = hub, endpoint_to_skip \\ nil) do
