@@ -1,8 +1,6 @@
 defmodule RetWeb.Api.V1.HubController do
   use RetWeb, :controller
 
-  import Canary.Plugs
-
   alias Ret.{Hub, Scene, Repo}
 
   # Limit to 1 TPS

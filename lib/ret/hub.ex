@@ -144,7 +144,7 @@ defmodule Ret.Hub do
     account.account_id == hub.account_id
   end
 
-  def owns?(nil, %Hub{} = hub), do: false
+  def owns?(nil, %Hub{} = _hub), do: false
 
   defp changeset_for_new_entry_code(%Hub{} = hub) do
     hub
