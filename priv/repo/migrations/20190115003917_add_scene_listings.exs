@@ -14,6 +14,7 @@ defmodule Ret.Repo.Migrations.AddSceneListings do
       add(:model_owned_file_id, :bigint, null: false)
       add(:scene_owned_file_id, :bigint, null: false)
       add(:screenshot_owned_file_id, :bigint, null: false)
+      add(:order, :integer)
       add(:state, :scene_state, null: false, default: "active")
 
       timestamps()

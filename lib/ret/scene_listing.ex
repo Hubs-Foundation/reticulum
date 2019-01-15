@@ -16,17 +16,18 @@ defmodule Ret.SceneListing do
   @schema_prefix "ret0"
   @primary_key {:scene_listing_id, :id, autogenerate: true}
 
-  schema "scenes" do
+  schema "scene_listings" do
     field(:scene_listing_sid, :string)
     field(:slug, SceneListingSlug.Type)
     field(:name, :string)
     field(:description, :string)
-    field(:tags, :map)
+    field(:tags, {:array, :string})
     field(:attributions, :map)
     belongs_to(:scene, Ret.Scene, references: :scene_id)
     belongs_to(:model_owned_file, Ret.OwnedFile, references: :owned_file_id)
     belongs_to(:screenshot_owned_file, Ret.OwnedFile, references: :owned_file_id)
     belongs_to(:scene_owned_file, Ret.OwnedFile, references: :owned_file_id)
+    field(:order, :integer)
     field(:state, Scene.State)
 
     timestamps()
@@ -38,12 +39,12 @@ defmodule Ret.SceneListing do
         params \\ %{}
       ) do
     listing
-    |> cast(params, [:tags])
+    |> cast(params, [:name, :description, :order, :tags])
     |> maybe_add_scene_listing_sid_to_changeset
     |> unique_constraint(:scene_sid)
     |> put_assoc(:scene, scene)
-    |> put_change(:name, scene.name)
-    |> put_change(:description, scene.description)
+    |> put_change(:name, params[:name] || scene.name)
+    |> put_change(:description, params[:description] || scene.description)
     |> put_change(:attributions, scene.attributions)
     |> put_change(:model_owned_file_id, scene.model_owned_file.owned_file_id)
     |> put_change(:screenshot_owned_file_id, scene.screenshot_owned_file.owned_file_id)

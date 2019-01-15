@@ -1,6 +1,5 @@
 defmodule RetWeb.HubControllerTest do
   use RetWeb.ConnCase
-  import Ret.TestHelpers
 
   alias Ret.{Hub, Repo}
 
