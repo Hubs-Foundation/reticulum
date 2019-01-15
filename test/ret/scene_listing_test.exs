@@ -2,7 +2,7 @@ defmodule Ret.SceneListingTest do
   use Ret.DataCase
   import Ret.TestHelpers
 
-  alias Ret.{Repo}
+  alias Ret.{Repo, MediaSearch, MediaSearchQuery}
 
   setup [:create_account, :create_owned_file, :create_scene, :create_scene_listing]
 
@@ -11,5 +11,13 @@ defmodule Ret.SceneListingTest do
     assert listing.name == scene.name
     assert listing.description == scene.description
     assert listing.tags == ["foo", "bar", "biz"]
+  end
+
+  test "should be able to look up pending scenes", %{scene: scene} do
+    query = %MediaSearchQuery{source: "pending_scenes"}
+    res = MediaSearch.search(query)
+
+    first_scene = res.entries |> Enum.at(0)
+    assert first_scene.scene_id == scene.scene_id
   end
 end

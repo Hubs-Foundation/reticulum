@@ -1,12 +1,45 @@
 defmodule Ret.MediaSearchQuery do
-  @enforce_keys [:api]
-  defstruct [:api, :user]
+  @enforce_keys [:source]
+  defstruct [:source, :user, page: 1, page_size: 20]
+end
+
+defmodule Ret.MediaSearchResult do
+  @enforce_keys [:meta, :entries]
+  defstruct [:meta, :entries]
+end
+
+defmodule Ret.MediaSearchResultMeta do
+  @enforce_keys [:page, :page_size, :total_pages, :total_entries]
+  defstruct [:page, :page_size, :total_pages, :total_entries]
 end
 
 defmodule Ret.MediaSearch do
   import Ret.HttpUtils
+  import Ecto.Query
 
-  def search(%Ret.MediaSearchQuery{api: "sketchfab", user: user}) do
+  alias Ret.{Repo, Scene}
+
+  def search(%Ret.MediaSearchQuery{source: "pending_scenes", page: page, page_size: page_size}) do
+    page =
+      Scene
+      |> where([s], is_nil(s.reviewed_at) or s.reviewed_at < s.updated_at)
+      |> order_by(:updated_at)
+      |> preload([:screenshot_owned_file, :model_owned_file, :scene_owned_file, :account])
+      |> Repo.paginate(%{page_number: page, page_size: page_size})
+
+    %Ret.MediaSearchResult{
+      meta: %Ret.MediaSearchResultMeta{
+        page: page.page_number,
+        page_size: page.page_size,
+        total_pages: page.total_pages,
+        total_entries: page.total_entries
+      },
+      entries: page.entries
+    }
+  end
+
+  def search(%Ret.MediaSearchQuery{source: "sketchfab", user: user}) do
+    # TODO sorting, paging
     with api_key when is_binary(api_key) <- resolver_config(:sketchfab_api_key) do
       res =
         "https://api.sketchfab.com/v3/search?type=models&downloadable=true&user=#{user}"
@@ -29,6 +62,7 @@ defmodule Ret.MediaSearch do
   end
 
   defp sketchfab_api_result_to_media_result(result) do
+    # TODO when missing thumbnails
     %{
       media_url: "https://sketchfab.com/models/#{result["uid"]}",
       images: %{

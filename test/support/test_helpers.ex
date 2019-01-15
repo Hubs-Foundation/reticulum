@@ -32,12 +32,11 @@ defmodule Ret.TestHelpers do
       })
       |> Repo.insert_or_update()
 
+    scene = scene |> Repo.preload([:model_owned_file, :screenshot_owned_file, :scene_owned_file, :account])
     {:ok, scene: scene}
   end
 
   def create_scene_listing(%{scene: scene}) do
-    scene = scene |> Repo.preload([:model_owned_file, :screenshot_owned_file, :scene_owned_file])
-
     {:ok, listing} =
       %SceneListing{}
       |> SceneListing.changeset_for_listing_for_scene(

@@ -69,7 +69,8 @@ defmodule Ret.Mixfile do
       {:timex, "~> 3.4"},
       {:web_push_encryption, "~> 0.2.0"},
       {:sentry, "~> 6.0"},
-      {:toml, "~> 0.5"}
+      {:toml, "~> 0.5"},
+      {:scrivener_ecto, "~> 1.0"}
     ]
   end
 
