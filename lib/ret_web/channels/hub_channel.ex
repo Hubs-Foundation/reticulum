@@ -284,12 +284,20 @@ defmodule RetWeb.HubChannel do
          response <- HubView.render("show.json", %{hub: hub}) do
       response = response |> Map.put(:subscriptions, %{web_push: is_push_subscribed})
 
-      is_owner =
-        socket
-        |> Guardian.Phoenix.Socket.current_resource()
-        |> Hub.owns?(hub)
+      account = socket |> Guardian.Phoenix.Socket.current_resource()
 
-      response = response |> Map.put(:is_owner, is_owner)
+      perms_token_claims =
+        account
+        |> Hub.perms_for_account(hub)
+        |> Map.put(:account_id, account.account_id)
+        |> Map.put(:hub_id, hub.hub_sid)
+
+      perms_token = Ret.PermsToken.encode_and_sign(nil, perms_token_claims, %{
+        secret: module_config(:perms_key),
+        allowed_algos: ["RS512"]
+      })
+
+      response = response |> Map.put(:perms_token, perms_token)
 
       existing_stat_count =
         socket

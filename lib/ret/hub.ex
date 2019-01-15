@@ -236,4 +236,18 @@ defmodule Ret.Hub do
       room_id
     end
   end
+
+  def perms_for_account(%Ret.Account{} = account, %Ret.Hub{} = hub) do
+    %{
+      update_hub: account |> can? update(hub),
+      kick_users: account |> can? kick_users(hub),
+      mute_users: account |> can? mute_users(hub),
+    }
+  end
+end
+
+defimpl Canada.Can, for: Ret.Account do
+  def can?(%Ret.Account{account_id: account_id}, action, %Ret.Hub{created_by_account_id: account_id})
+    when action in [:update_hub, :kick_users, mute_users], do: true
+  def can?(_, _, _), do: false
 end
