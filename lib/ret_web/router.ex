@@ -60,6 +60,7 @@ defmodule RetWeb.Router do
 
     scope "/v1", as: :api_v1 do
       resources("/media", Api.V1.MediaController, only: [:create])
+<<<<<<< HEAD
       resources("/scenes", Api.V1.SceneController, only: [:show])
 
       scope "/support" do
@@ -77,6 +78,7 @@ defmodule RetWeb.Router do
       pipe_through([:auth_required])
       resources("/scenes", Api.V1.SceneController, only: [:create, :update])
       resources("/hubs", Api.V1.HubController, only: [:update])
+      resources("/media/search", Api.V1.MediaSearchController, only: [:index])
     end
   end
 
