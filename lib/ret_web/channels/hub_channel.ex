@@ -177,10 +177,10 @@ defmodule RetWeb.HubChannel do
     {:reply, {:ok, %{host: hub.host}}, socket}
   end
 
-  def handle_in("update_hub", %{"name" => name}, socket) do
+  def handle_in("update_hub", payload, socket) do
     socket
     |> hub_for_socket
-    |> Hub.changeset_for_new_name(name)
+    |> Hub.add_name_to_changeset(payload)
     |> Repo.update!()
     |> Repo.preload(@hub_preloads)
     |> broadcast_hub_refresh!(socket, ["name"])

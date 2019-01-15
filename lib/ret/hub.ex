@@ -58,20 +58,15 @@ defmodule Ret.Hub do
     |> unique_constraint(:hub_sid)
     |> unique_constraint(:entry_code)
     |> put_assoc(:scene, scene)
-    |> HubSlug.maybe_generate_slug()
   end
 
-  def changeset_for_new_name(%Hub{} = hub, attrs) do
-    hub
-    |> Ecto.Changeset.change()
-    |> add_name_to_changeset(attrs)
-  end
-
-  defp add_name_to_changeset(changeset, attrs) do
+  def add_name_to_changeset(changeset, attrs) do
     changeset
     |> cast(attrs, [:name])
+    |> validate_required([:name])
     |> validate_length(:name, min: 4, max: 64)
     |> validate_format(:name, ~r/^[A-Za-z0-9-':"!@#$%^&*(),.?~ ]+$/)
+    |> HubSlug.maybe_generate_slug()
   end
 
   def changeset_for_new_seen_occupant_count(%Hub{} = hub, occupant_count) do
@@ -87,13 +82,6 @@ defmodule Ret.Hub do
     |> cast(%{}, [])
     |> put_assoc(:scene, scene)
     |> validate_required([:scene])
-  end
-
-  def changeset_for_new_name(%Hub{} = hub, name) do
-    hub
-    |> cast(%{name: name}, [:name])
-    |> validate_required([:name])
-    |> HubSlug.maybe_generate_slug()
   end
 
   def changeset_for_new_environment_url(%Hub{} = hub, url) do
