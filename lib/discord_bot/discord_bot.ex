@@ -16,7 +16,7 @@ defmodule DiscordSupervisor do
       end
 
       Cogs.def bound do
-        case Cachex.get!(:discord_bot_state, "hubs_for_channel")[message.channel_id] do
+        case Cachex.get!(:discord_bot_state, :hubs_for_channel)[message.channel_id] do
           hub_ids = [_ | _] ->
             Cogs.say("This channel is bound to #{Enum.join(hub_ids, ", ")}")
 
@@ -42,7 +42,7 @@ defmodule DiscordSupervisor do
       end
 
       def on_message(msg) do
-        if hub_ids = !msg.author.bot && Cachex.get!(:discord_bot_state, "hubs_for_channel")[msg.channel_id] do
+        if hub_ids = !msg.author.bot && Cachex.get!(:discord_bot_state, :hubs_for_channel)[msg.channel_id] do
           Logger.debug "Outgoing message from Discord to Hubs: #{msg.content}"
           hub_ids |> Enum.each(&broadcast_to_hubs(&1, msg))
         end
@@ -70,13 +70,13 @@ defmodule DiscordSupervisor do
           {hub_id, channel.id}
         end
 
-        channels_by_hub = bound_channels |> Enum.group_by(&elem(&1, 0), &elem(&1, 1))
-        hubs_by_channel = bound_channels |> Enum.group_by(&elem(&1, 1), &elem(&1, 0))
+        channels_for_hub = bound_channels |> Enum.group_by(&elem(&1, 0), &elem(&1, 1))
+        hubs_for_channel = bound_channels |> Enum.group_by(&elem(&1, 1), &elem(&1, 0))
 
-        Logger.debug "Bound Discord channels per hub: #{inspect(channels_by_hub)}"
-        Cachex.transaction!(:discord_bot_state, ["hubs_for_channel", "channels_for_hub"], fn(cache) ->
-          Cachex.put!(cache, "hubs_for_channel", hubs_by_channel)
-          Cachex.put!(cache, "channels_for_hub", channels_by_hub)
+        Logger.debug "Bound Discord channels per hub: #{inspect(channels_for_hub)}"
+        Cachex.transaction!(:discord_bot_state, [:hubs_for_channel, :channels_for_hub], fn(cache) ->
+          Cachex.put!(cache, :hubs_for_channel, hubs_for_channel)
+          Cachex.put!(cache, :channels_for_hub, channels_for_hub)
         end)
       end
     end
@@ -98,13 +98,11 @@ defmodule DiscordSupervisor do
 
     def handle_cast(data, state) do
       %{hub_sid: hub_sid} = data
-      if channel_ids = Cachex.get!(:discord_bot_state, "channels_for_hub")[hub_sid] do
+      if channel_ids = Cachex.get!(:discord_bot_state, :channels_for_hub)[hub_sid] do
         %{event: event, context: %{:profile => %{"displayName" => username}}} = data
         case event do
-          :join ->
-            Enum.each(channel_ids, &broadcast_user_event_to_discord(&1, username, event))
-          :part ->
-            Enum.each(channel_ids, &broadcast_user_event_to_discord(&1, username, event))
+          e when e == :join or e == :part ->
+            Enum.each(channel_ids, &broadcast_user_event_to_discord(&1, username, e))
           :message ->
             %{payload: payload} = data
             Enum.each(channel_ids, &broadcast_message_to_discord(&1, username, payload |> content_for_payload(username)))
