@@ -22,10 +22,10 @@ defmodule Ret.MediaSearch do
   def search(%Ret.MediaSearchQuery{source: "pending_scenes", page: page, page_size: page_size}) do
     page =
       Scene
-      |> where([s], is_nil(s.reviewed_at) or s.reviewed_at < s.updated_at)
+      |> where([s], (is_nil(s.reviewed_at) or s.reviewed_at < s.updated_at) and s.allow_promotion)
       |> order_by(:updated_at)
       |> preload([:screenshot_owned_file, :model_owned_file, :scene_owned_file, :account])
-      |> Repo.paginate(%{page_number: page, page_size: page_size})
+      |> Repo.paginate(%{page: page, page_size: page_size})
 
     %Ret.MediaSearchResult{
       meta: %Ret.MediaSearchResultMeta{
@@ -34,7 +34,7 @@ defmodule Ret.MediaSearch do
         total_pages: page.total_pages,
         total_entries: page.total_entries
       },
-      entries: page.entries
+      entries: page.entries |> Enum.map(&RetWeb.Api.V1.SceneView.render_scene/1) |> Enum.map(&scene_view_to_entry/1)
     }
   end
 
@@ -54,14 +54,27 @@ defmodule Ret.MediaSearch do
           |> Map.get(:body)
           |> Poison.decode!()
           |> Map.get("results")
-          |> Enum.map(&sketchfab_api_result_to_media_result/1)
+          |> Enum.map(&sketchfab_api_result_to_entry/1)
       end
     else
       _ -> %{}
     end
   end
 
-  defp sketchfab_api_result_to_media_result(result) do
+  defp scene_view_to_entry(scene_view) do
+    %{
+      id: scene_view[:scene_id],
+      type: "scene",
+      name: scene_view[:name],
+      description: scene_view[:description],
+      attributions: scene_view[:attributions],
+      images: %{
+        preview: scene_view[:screenshot_url]
+      }
+    }
+  end
+
+  defp sketchfab_api_result_to_entry(result) do
     # TODO when missing thumbnails
     %{
       media_url: "https://sketchfab.com/models/#{result["uid"]}",

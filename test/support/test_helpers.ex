@@ -28,7 +28,8 @@ defmodule Ret.TestHelpers do
       %Scene{}
       |> Scene.changeset(account, owned_file, owned_file, owned_file, %{
         name: "Test Scene",
-        description: "Test Scene Description"
+        description: "Test Scene Description",
+        allow_promotion: true
       })
       |> Repo.insert_or_update()
 

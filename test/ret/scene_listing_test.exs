@@ -18,6 +18,6 @@ defmodule Ret.SceneListingTest do
     res = MediaSearch.search(query)
 
     first_scene = res.entries |> Enum.at(0)
-    assert first_scene.scene_id == scene.scene_id
+    assert first_scene[:id] == scene.scene_sid
   end
 end

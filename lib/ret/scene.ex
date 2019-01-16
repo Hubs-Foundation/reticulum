@@ -68,6 +68,12 @@ defmodule Ret.Scene do
     |> SceneSlug.unique_constraint()
   end
 
+  def changeset_to_mark_as_reviewed(%Scene{} = scene) do
+    scene
+    |> Ecto.Changeset.change()
+    |> put_change(:reviewed_at, Timex.now())
+  end
+
   defp maybe_add_scene_sid_to_changeset(changeset) do
     scene_sid = changeset |> get_field(:scene_sid) || Ret.Sids.generate_sid()
     put_change(changeset, :scene_sid, "#{scene_sid}")
