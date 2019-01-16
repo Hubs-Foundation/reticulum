@@ -23,4 +23,24 @@ defmodule Ret.HubTest do
     assert hub.entry_code > 0
     assert hub |> Hub.entry_code_expired?() == false
   end
+
+  test "should deny permissions for non-creator", %{scene: scene} do
+    {:ok, hub} = %Hub{} |> Hub.changeset(scene, %{name: "Test Hub"}) |> Repo.insert()
+    %{update_hub: false} = hub |> Hub.perms_for_account(Ret.Account.account_for_email("non-creator@mozilla.com"))
+  end
+
+  test "should deny permissions for anon", %{scene: scene} do
+    {:ok, hub} = %Hub{} |> Hub.changeset(scene, %{name: "Test Hub"}) |> Repo.insert()
+    %{update_hub: false} = hub |> Hub.perms_for_account(nil)
+  end
+
+  test "should grant permssions for hub creator", %{account: account, scene: scene} do
+    {:ok, hub} =
+      %Hub{}
+      |> Hub.changeset(scene, %{name: "Test Hub"})
+      |> Hub.add_account_to_changeset(account)
+      |> Repo.insert()
+
+    %{update_hub: true} = hub |> Hub.perms_for_account(account)
+  end
 end

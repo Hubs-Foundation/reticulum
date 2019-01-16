@@ -1,7 +1,6 @@
 defmodule Ret.Account do
   use Ecto.Schema
   import Ecto.Query
-  import Canada, only: [can?: 2]
 
   alias Ret.{Repo, Account, Login, Guardian}
 

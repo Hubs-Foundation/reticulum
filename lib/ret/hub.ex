@@ -12,6 +12,7 @@ defmodule Ret.Hub do
 
   import Ecto.Changeset
   import Ecto.Query
+  import Canada, only: [can?: 2]
 
   alias Ret.{Account, Hub, Repo, WebPushSubscription, RoomAssigner}
   alias Ret.Hub.{HubSlug}
@@ -237,17 +238,23 @@ defmodule Ret.Hub do
     end
   end
 
-  def perms_for_account(%Ret.Account{} = account, %Ret.Hub{} = hub) do
+  def perms_for_account(%Ret.Hub{} = hub, account) do
     %{
-      update_hub: account |> can? update(hub),
-      kick_users: account |> can? kick_users(hub),
-      mute_users: account |> can? mute_users(hub),
+      update_hub: account |> can?(update(hub)),
+      kick_users: account |> can?(kick_users(hub)),
+      mute_users: account |> can?(mute_users(hub))
     }
   end
 end
 
 defimpl Canada.Can, for: Ret.Account do
   def can?(%Ret.Account{account_id: account_id}, action, %Ret.Hub{created_by_account_id: account_id})
-    when action in [:update_hub, :kick_users, mute_users], do: true
-  def can?(_, _, _), do: false
+      when account_id != nil and action in [:update, :kick_users, :mute_users],
+      do: true
+
+  def can?(_, _, %Ret.Hub{} = _hub), do: false
+end
+
+defimpl Canada.Can, for: Atom do
+  def can?(_, _, %Ret.Hub{} = _hub), do: false
 end

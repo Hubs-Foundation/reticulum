@@ -286,16 +286,12 @@ defmodule RetWeb.HubChannel do
 
       account = socket |> Guardian.Phoenix.Socket.current_resource()
 
-      perms_token_claims =
-        account
-        |> Hub.perms_for_account(hub)
+      perms_token =
+        hub
+        |> Hub.perms_for_account(account)
         |> Map.put(:account_id, account.account_id)
         |> Map.put(:hub_id, hub.hub_sid)
-
-      perms_token = Ret.PermsToken.encode_and_sign(nil, perms_token_claims, %{
-        secret: module_config(:perms_key),
-        allowed_algos: ["RS512"]
-      })
+        |> Ret.PermsToken.token_for_perms()
 
       response = response |> Map.put(:perms_token, perms_token)
 
