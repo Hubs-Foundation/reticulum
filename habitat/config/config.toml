@@ -90,4 +90,4 @@ private_key = "{{ cfg.web_push.private_key }}"
 dsn = "{{ cfg.sentry.dsn }}"
 
 [run]
-hostname_dns_suffix = "{{ cfg.ret.hostname_dns_suffix }}"
+hostname_dns_suffix = "{{ cfg.run.hostname_dns_suffix }}"
