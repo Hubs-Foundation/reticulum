@@ -13,7 +13,19 @@ defmodule Ret.PermsToken do
 
   def token_for_perms(perms) do
     secret = module_config(:perms_key) |> JOSE.JWK.from_pem()
-    Ret.PermsToken.encode_and_sign(nil, perms, secret: secret, allowed_algos: ["RS512"])
+
+    {:ok, token, _claims} =
+      Ret.PermsToken.encode_and_sign(
+        # PermsTokens do not have a resource associated with them
+        nil,
+        perms,
+        secret: secret,
+        allowed_algos: ["RS512"],
+        ttl: {5, :minutes},
+        allowed_drift: 60 * 1000
+      )
+
+    token
   end
 
   defp module_config(key) do

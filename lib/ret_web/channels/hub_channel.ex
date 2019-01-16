@@ -3,6 +3,8 @@ defmodule RetWeb.HubChannel do
 
   use RetWeb, :channel
 
+  import Canada, only: [can?: 2]
+
   alias Ret.{Hub, Account, Repo, RoomObject, OwnedFile, Scene, Storage, SessionStat, Statix, WebPushSubscription}
 
   alias RetWeb.{Presence}
@@ -113,7 +115,23 @@ defmodule RetWeb.HubChannel do
     case Ret.Guardian.resource_from_token(token) do
       {:ok, %Account{} = account, _claims} ->
         socket = Guardian.Phoenix.Socket.put_current_resource(socket, account)
-        {:reply, {:ok, %{}}, socket}
+
+        hub = socket |> hub_for_socket
+
+        account_id =
+          case account do
+            %Account{} -> account.account_id
+            nil -> nil
+          end
+
+        perms_token =
+          hub
+          |> Hub.perms_for_account(account)
+          |> Map.put(:account_id, account_id)
+          |> Map.put(:hub_id, hub.hub_sid)
+          |> Ret.PermsToken.token_for_perms()
+
+        {:reply, {:ok, %{perms_token: perms_token}}, socket}
 
       {:error, reason} ->
         {:reply, {:error, %{message: "Sign in failed", reason: reason}}, socket}
@@ -178,33 +196,41 @@ defmodule RetWeb.HubChannel do
   end
 
   def handle_in("update_hub", payload, socket) do
-    socket
-    |> hub_for_socket
-    |> Hub.add_name_to_changeset(payload)
-    |> Repo.update!()
-    |> Repo.preload(@hub_preloads)
-    |> broadcast_hub_refresh!(socket, ["name"])
+    hub = socket |> hub_for_socket
+    account = Guardian.Phoenix.Socket.current_resource(socket)
+
+    if account |> can?(update_hub(hub)) do
+      hub
+      |> Hub.add_name_to_changeset(payload)
+      |> Repo.update!()
+      |> Repo.preload(@hub_preloads)
+      |> broadcast_hub_refresh!(socket, ["name"])
+    end
 
     {:noreply, socket}
   end
 
   def handle_in("update_scene", %{"url" => url}, socket) do
     hub = socket |> hub_for_socket |> Repo.preload(:scene)
-    endpoint_host = RetWeb.Endpoint.host()
+    account = Guardian.Phoenix.Socket.current_resource(socket)
 
-    case url |> URI.parse() do
-      %URI{host: ^endpoint_host, path: "/scenes/" <> scene_path} ->
-        scene_sid = scene_path |> String.split("/") |> Enum.at(0)
-        scene = Scene |> Repo.get_by(scene_sid: scene_sid)
+    if account |> can?(update_hub(hub)) do
+      endpoint_host = RetWeb.Endpoint.host()
 
-        hub |> Hub.changeset_for_new_scene(scene)
+      case url |> URI.parse() do
+        %URI{host: ^endpoint_host, path: "/scenes/" <> scene_path} ->
+          scene_sid = scene_path |> String.split("/") |> Enum.at(0)
+          scene = Scene |> Repo.get_by(scene_sid: scene_sid)
 
-      _ ->
-        hub |> Hub.changeset_for_new_environment_url(url)
+          hub |> Hub.changeset_for_new_scene(scene)
+
+        _ ->
+          hub |> Hub.changeset_for_new_environment_url(url)
+      end
+      |> Repo.update!()
+      |> Repo.preload(@hub_preloads)
+      |> broadcast_hub_refresh!(socket, ["scene"])
     end
-    |> Repo.update!()
-    |> Repo.preload(@hub_preloads)
-    |> broadcast_hub_refresh!(socket, ["scene"])
 
     {:noreply, socket}
   end
@@ -286,10 +312,16 @@ defmodule RetWeb.HubChannel do
 
       account = socket |> Guardian.Phoenix.Socket.current_resource()
 
+      account_id =
+        case account do
+          %Account{} -> account.account_id
+          nil -> nil
+        end
+
       perms_token =
         hub
         |> Hub.perms_for_account(account)
-        |> Map.put(:account_id, account.account_id)
+        |> Map.put(:account_id, account_id)
         |> Map.put(:hub_id, hub.hub_sid)
         |> Ret.PermsToken.token_for_perms()
 

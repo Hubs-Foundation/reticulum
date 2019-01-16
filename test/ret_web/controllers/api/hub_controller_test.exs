@@ -12,7 +12,7 @@ defmodule RetWeb.HubControllerTest do
   end
 
   @tag :authenticated
-  test "hubs have owners when authenticated", %{conn: conn} do
+  test "hub is assigned a creator when authenticated", %{conn: conn} do
     %{"hub_id" => hub_id} =
       conn
       |> create_hub("Test Hub")

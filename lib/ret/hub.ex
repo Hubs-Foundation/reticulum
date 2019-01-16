@@ -141,12 +141,6 @@ defmodule Ret.Hub do
     scene.screenshot_owned_file |> Ret.OwnedFile.uri_for() |> URI.to_string()
   end
 
-  def owns?(%Account{} = account, %Hub{} = hub) do
-    account.account_id == hub.account_id
-  end
-
-  def owns?(nil, %Hub{} = _hub), do: false
-
   defp changeset_for_new_entry_code(%Hub{} = hub) do
     hub
     |> Ecto.Changeset.change()
@@ -240,7 +234,8 @@ defmodule Ret.Hub do
 
   def perms_for_account(%Ret.Hub{} = hub, account) do
     %{
-      update_hub: account |> can?(update(hub)),
+      join_hub: account |> can?(join_hub(hub)),
+      update_hub: account |> can?(update_hub(hub)),
       kick_users: account |> can?(kick_users(hub)),
       mute_users: account |> can?(mute_users(hub))
     }
@@ -248,13 +243,21 @@ defmodule Ret.Hub do
 end
 
 defimpl Canada.Can, for: Ret.Account do
+  # Only creators can perform these actions
   def can?(%Ret.Account{account_id: account_id}, action, %Ret.Hub{created_by_account_id: account_id})
-      when account_id != nil and action in [:update, :kick_users, :mute_users],
+      when account_id != nil and action in [:update_hub, :kick_users, :mute_users],
       do: true
+
+  # Anyone can join a hub for now
+  def can?(_, :join_hub, %Ret.Hub{} = _hub), do: true
 
   def can?(_, _, %Ret.Hub{} = _hub), do: false
 end
 
+# Permissions for un-authenticated clients
 defimpl Canada.Can, for: Atom do
+  # Anyone can join a hub for now
+  def can?(_, :join_hub, %Ret.Hub{} = _hub), do: true
+
   def can?(_, _, %Ret.Hub{} = _hub), do: false
 end
