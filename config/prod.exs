@@ -17,7 +17,6 @@ config :ret, RetWeb.Endpoint,
   http: [],
   url: [scheme: "https", host: "", port: 443],
   static_url: [scheme: "https", host: "", port: 443],
-  cache_static_manifest: "priv/static/cache_manifest.json",
   server: true,
   root: "."
 
