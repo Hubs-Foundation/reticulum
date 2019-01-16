@@ -4,22 +4,20 @@ defmodule DiscordBotManager do
   use GenServer
   require Logger
 
-  defmodule State do
-    defstruct pid: nil
-  end
-
   def init(_args) do
-    {:ok, restart(%State{})}
+    restart()
+    {:ok, %{}}
   end
 
   # managed process exited normally
-  def handle_info({:DOWN, _, :process, pid, :normal}, state = %State{pid: pid}) do
+  def handle_info({:DOWN, _, :process, pid, :normal}, state) do
     {:stop, :normal, state}
   end
 
   # managed process exited with an error
-  def handle_info({:DOWN, _, :process, pid, _reason}, state = %State{pid: pid}) do
-    {:noreply, restart(state)}
+  def handle_info({:DOWN, _, :process, pid, _reason}, state) do
+    restart()
+    {:noreply, state}
   end
 
   def handle_cast(data, state) do
@@ -41,19 +39,16 @@ defmodule DiscordBotManager do
     end
   end
 
-  defp restart(state) do
+  defp restart() do
     result = DiscordSupervisor.start_link([], [name: {:global, DiscordSupervisor}])
     pid = case result do
       {:ok, pid} -> pid
       {:error, {:already_started, pid}} -> pid
       {:error, {:shutdown, reason}} -> Logger.error "Failed to start Discord bot: #{inspect(reason)}"; nil
     end
-
     if pid != nil do
       Process.monitor(pid)
     end
-
-    %State{state | pid: pid}
   end
 
 end

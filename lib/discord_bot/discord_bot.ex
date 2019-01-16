@@ -96,8 +96,7 @@ defmodule DiscordSupervisor do
       result
     end
 
-    def handle_cast(data, state) do
-      %{hub_sid: hub_sid} = data
+    def handle_cast(%{hub_sid: hub_sid} = data, state) do
       if channel_ids = Cachex.get!(:discord_bot_state, :channels_for_hub)[hub_sid] do
         %{event: event, context: %{:profile => %{"displayName" => username}}} = data
         case event do
