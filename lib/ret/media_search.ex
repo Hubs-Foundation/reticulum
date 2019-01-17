@@ -64,6 +64,7 @@ defmodule Ret.MediaSearch do
   defp scene_view_to_entry(scene_view) do
     %{
       id: scene_view[:scene_id],
+      url: scene_view[:url],
       type: "scene",
       name: scene_view[:name],
       description: scene_view[:description],
