@@ -20,7 +20,7 @@ defmodule Ret.Mixfile do
   def application do
     [
       mod: {Ret.Application, []},
-      extra_applications: [:runtime_tools]
+      extra_applications: [:runtime_tools, :websocket_client]
     ]
   end
 
