@@ -172,7 +172,6 @@ defmodule DiscordSupervisor do
 
   def init(options \\ []) do
     token = Application.get_env(:ret, Elixir.DiscordBot)[:token]
-    Logger.info "#{inspect(token)}"
     children = [
       supervisor(Alchemy.Client, [token, options]),
       worker(DiscordBot, []),
