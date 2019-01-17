@@ -13,11 +13,10 @@ defmodule Ret.Application do
     children = [
       # Start the Ecto repository
       supervisor(Ret.Repo, []),
-      # Start the endpoint when the application starts
+
       supervisor(RetWeb.Endpoint, []),
-      # Start your own worker by calling: Ret.Worker.start_link(arg1, arg2, arg3)
-      # worker(Ret.Worker, [arg1, arg2, arg3]),
       supervisor(RetWeb.Presence, []),
+
       # Quantum scheduler
       worker(Ret.Scheduler, []),
       # Quantum singleton scheduler
@@ -63,7 +62,9 @@ defmodule Ret.Application do
         id: :janus_load_status
       ),
 
-      # Graceful shutdown
+      # Runs Discord bot
+      worker(DiscordBotManager, []),
+
       supervisor(TheEnd.Of.Phoenix, [[timeout: 10_000, endpoint: RetWeb.Endpoint]])
     ]
 
