@@ -118,7 +118,7 @@ defmodule RetWeb.HubChannel do
 
         hub = socket |> hub_for_socket
 
-        perms_token = get_perms_token(hubs, account)
+        perms_token = get_perms_token(hub, account)
 
         {:reply, {:ok, %{perms_token: perms_token}}, socket}
 
@@ -301,7 +301,7 @@ defmodule RetWeb.HubChannel do
 
       account = socket |> Guardian.Phoenix.Socket.current_resource()
 
-      perms_token = get_perms_token(hubs, account)
+      perms_token = get_perms_token(hub, account)
 
       response = response |> Map.put(:perms_token, perms_token)
 
@@ -333,21 +333,20 @@ defmodule RetWeb.HubChannel do
     end
   end
 
-  defp get_perms_token(hub, account) do
-    account_id = if account do account.account_id else nil
-
-    perms_token =
-      hub
-      |> Hub.perms_for_account(account)
-      |> Map.put(:account_id, account_id)
-      |> Map.put(:hub_id, hub.hub_sid)
-      |> Ret.PermsToken.token_for_perms()
-  end
-
   defp join_with_hub(nil, _socket, _endpoint, _auth_token) do
     Statix.increment("ret.channels.hub.joins.not_found")
 
     {:error, %{message: "No such Hub"}}
+  end
+
+  defp get_perms_token(hub, account) do
+    account_id = if account, do: account.account_id, else: nil
+
+    hub
+    |> Hub.perms_for_account(account)
+    |> Map.put(:account_id, account_id)
+    |> Map.put(:hub_id, hub.hub_sid)
+    |> Ret.PermsToken.token_for_perms()
   end
 
   defp handle_entered_event(socket, payload) do
