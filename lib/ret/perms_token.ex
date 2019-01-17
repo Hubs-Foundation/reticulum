@@ -2,7 +2,7 @@ defmodule Ret.PermsToken do
   use Guardian, otp_app: :ret
 
   def subject_for_token(_resource, %{"account_id" => account_id, "hub_id" => hub_id}) do
-    {:ok, "#{account_id |> to_string}_#{hub_id}"}
+    {:ok, "#{account_id}_#{hub_id}"}
   end
 
   def subject_for_token(_, _) do
