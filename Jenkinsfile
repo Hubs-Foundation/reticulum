@@ -33,7 +33,7 @@ pipeline {
     stage('build') {
       steps {
         sh '''
-          /usr/bin/script --return -c \\\\"sudo HAB_ORIGIN=mozillareality /usr/bin/hab-docker-studio -k mozillareality run /bin/bash scripts/build.sh\\\\" /dev/null
+          /usr/bin/script --return -c \\\\"sudo /usr/bin/hab-docker-studio -k mozillareality run /bin/bash scripts/build.sh\\\\" /dev/null
         '''
 
         sh 'sudo /usr/bin/hab-pkg-upload $(ls -rt results/*.hart | head -n 1)'
