@@ -20,7 +20,7 @@ defmodule Ret.Mixfile do
   def application do
     [
       mod: {Ret.Application, []},
-      extra_applications: [:runtime_tools]
+      extra_applications: [:runtime_tools, :websocket_client]
     ]
   end
 
@@ -45,7 +45,7 @@ defmodule Ret.Mixfile do
       {:ja_serializer, "~> 0.13.0"},
       {:distillery, "~> 2.0"},
       {:peerage, "~> 1.0"},
-      {:httpoison, "~> 1.4.0"},
+      {:httpoison, "~> 1.4.0", override: true},
       {:poison, "~> 3.1"},
       {:ecto_autoslug_field, "~> 0.5"},
       {:cors_plug, "~> 1.5"},
@@ -68,6 +68,7 @@ defmodule Ret.Mixfile do
       {:temp, "~> 0.4"},
       {:timex, "~> 3.4"},
       {:web_push_encryption, "~> 0.2.0"},
+      {:alchemy, "~> 0.6.1", hex: :discord_alchemy},
       {:sentry, "~> 6.0"},
       {:toml, "~> 0.5"}
     ]
