@@ -39,6 +39,9 @@ janus_admin_port = {{ cfg.janus.admin_port }}
 [ret."Elixir.Ret.Guardian"]
 secret_key = "{{ cfg.guardian.secret_key }}"
 
+[ret."Elixir.Ret.PermsToken"]
+perms_key = "{{ cfg.guardian.perms_key }}"
+
 [ret.basic_auth]
 username = "{{ cfg.basic_auth.username }}"
 password = "{{ cfg.basic_auth.password }}"
