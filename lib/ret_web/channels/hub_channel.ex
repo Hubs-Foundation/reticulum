@@ -232,7 +232,7 @@ defmodule RetWeb.HubChannel do
           hub |> Hub.changeset_for_new_environment_url(url)
       end
       |> Repo.update!()
-      |> Repo.preload(@hub_preloads)
+      |> Repo.preload(@hub_preloads, force: true)
       |> broadcast_hub_refresh!(socket, ["scene"])
     end
 

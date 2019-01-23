@@ -81,7 +81,7 @@ defmodule Ret.Hub do
   def changeset_for_new_scene(%Hub{} = hub, scene) do
     hub
     |> cast(%{}, [])
-    |> put_assoc(:scene, scene)
+    |> put_change(:scene_id, scene.scene_id)
     |> validate_required([:scene])
   end
 
