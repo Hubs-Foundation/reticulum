@@ -177,7 +177,14 @@ defmodule RetWeb.HubChannel do
 
   def handle_in("unpin", %{"id" => object_id}, socket) do
     hub = socket |> hub_for_socket
-    RoomObject.perform_unpin(hub, object_id)
+
+    case Guardian.Phoenix.Socket.current_resource(socket) do
+      %Account{} = account ->
+        RoomObject.perform_unpin(hub, object_id)
+
+      _ ->
+        nil
+    end
 
     {:noreply, socket}
   end
