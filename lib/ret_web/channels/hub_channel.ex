@@ -91,7 +91,12 @@ defmodule RetWeb.HubChannel do
   def handle_in("message" = event, payload, socket) do
     broadcast!(socket, event, payload |> Map.put(:session_id, socket.assigns.session_id))
 
-    GenServer.cast(DiscordBotManager, %{hub_sid: socket.assigns.hub_sid, event: :message, context: socket.assigns, payload: payload})
+    GenServer.cast(DiscordBotManager, %{
+      hub_sid: socket.assigns.hub_sid,
+      event: :message,
+      context: socket.assigns,
+      payload: payload
+    })
 
     {:noreply, socket}
   end
