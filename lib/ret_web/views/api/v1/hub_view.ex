@@ -16,6 +16,7 @@ defmodule RetWeb.Api.V1.HubView do
         %{
           hub_id: hub.hub_sid,
           name: hub.name,
+          slug: hub.slug,
           entry_code: hub.entry_code,
           host: hub.host,
           scene: RetWeb.Api.V1.SceneView.render_scene(hub.scene)
@@ -36,6 +37,7 @@ defmodule RetWeb.Api.V1.HubView do
         %{
           hub_id: hub.hub_sid,
           name: hub.name,
+          slug: hub.slug,
           entry_code: hub.entry_code,
           host: hub.host,
           topics: [

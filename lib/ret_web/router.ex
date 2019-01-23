@@ -26,7 +26,7 @@ defmodule RetWeb.Router do
 
   pipeline :browser do
     plug(:accepts, ["html"])
-    plug :put_layout, false
+    plug(:put_layout, false)
   end
 
   pipeline :api do
@@ -34,8 +34,13 @@ defmodule RetWeb.Router do
     plug(JaSerializer.Deserializer)
   end
 
-  pipeline :authenticated do
+  pipeline :auth_optional do
+    plug(RetWeb.Guardian.AuthOptionalPipeline)
+  end
+
+  pipeline :auth_required do
     plug(RetWeb.Guardian.AuthPipeline)
+    plug(RetWeb.Canary.AuthorizationPipeline)
   end
 
   pipeline :canonicalize_domain do
@@ -54,7 +59,6 @@ defmodule RetWeb.Router do
     pipe_through([:secure_headers, :api] ++ if(Mix.env() == :prod, do: [:ssl_only, :canonicalize_domain], else: []))
 
     scope "/v1", as: :api_v1 do
-      resources("/hubs", Api.V1.HubController, only: [:create, :delete])
       resources("/media", Api.V1.MediaController, only: [:create])
       resources("/scenes", Api.V1.SceneController, only: [:show])
 
@@ -65,8 +69,14 @@ defmodule RetWeb.Router do
     end
 
     scope "/v1", as: :api_v1 do
-      pipe_through([:authenticated])
+      pipe_through([:auth_optional])
+      resources("/hubs", Api.V1.HubController, only: [:create, :delete])
+    end
+
+    scope "/v1", as: :api_v1 do
+      pipe_through([:auth_required])
       resources("/scenes", Api.V1.SceneController, only: [:create, :update])
+      resources("/hubs", Api.V1.HubController, only: [:update])
     end
   end
 

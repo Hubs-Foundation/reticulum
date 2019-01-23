@@ -30,3 +30,11 @@ config :ret, Ret.Guardian,
 config :ret, Ret.Storage,
   storage_path: "storage/test",
   ttl: 60 * 60 * 24
+
+config :sentry,
+  environment_name: :test,
+  json_library: Poison,
+  included_environments: [],
+  tags: %{
+    env: "test"
+  }

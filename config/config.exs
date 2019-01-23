@@ -10,6 +10,10 @@ config :ret, ecto_repos: [Ret.Repo]
 
 config :phoenix, :format_encoders, "json-api": Poison
 
+config :canary,
+  repo: Ret.Repo,
+  unauthorized_handler: {RetWeb.Canary.AuthorizationErrorHandler, :authorization_error}
+
 config :mime, :types, %{
   "application/vnd.api+json" => ["json-api"],
   "model/gltf+json" => ["gltf"],

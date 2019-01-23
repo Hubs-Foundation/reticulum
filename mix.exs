@@ -64,6 +64,7 @@ defmodule Ret.Mixfile do
       {:bamboo, "~> 1.1"},
       {:bamboo_smtp, "~> 1.6"},
       {:guardian, "~> 1.1"},
+      {:canary, "~> 1.1.1"},
       {:temp, "~> 0.4"},
       {:timex, "~> 3.4"},
       {:web_push_encryption, "~> 0.2.0"},
