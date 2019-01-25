@@ -151,18 +151,31 @@ defmodule RetWeb.HubChannel do
         },
         socket
       ) do
-    account = Guardian.Phoenix.Socket.current_resource(socket)
-    perform_pin!(object_id, gltf_node, account, socket)
-    Storage.promote(file_id, file_access_token, promotion_token, account)
-    OwnedFile.set_active(file_id, account.account_id)
-    {:noreply, socket}
+    case Guardian.Phoenix.Socket.current_resource(socket) do
+      %Account{} = account ->
+        perform_pin!(object_id, gltf_node, account, socket)
+        Storage.promote(file_id, file_access_token, promotion_token, account)
+        OwnedFile.set_active(file_id, account.account_id)
+        {:reply, {:ok, %{}}, socket}
+
+      _ ->
+        # client should have signed-in at this point,
+        # so if we still don't have an account, it must have been an invalid token
+        {:reply, {:error, %{reason: :invalid_token}}, socket}
+    end
   end
 
   def handle_in("pin", %{"id" => object_id, "gltf_node" => gltf_node}, socket) do
-    account = Guardian.Phoenix.Socket.current_resource(socket)
-    perform_pin!(object_id, gltf_node, account, socket)
+    case Guardian.Phoenix.Socket.current_resource(socket) do
+      %Account{} = account ->
+        perform_pin!(object_id, gltf_node, account, socket)
+        {:reply, {:ok, %{}}, socket}
 
-    {:noreply, socket}
+      _ ->
+        # client should have signed-in at this point,
+        # so if we still don't have an account, it must have been an invalid token
+        {:reply, {:error, %{reason: :invalid_token}}, socket}
+    end
   end
 
   def handle_in("unpin", %{"id" => object_id, "file_id" => file_id}, socket) do
