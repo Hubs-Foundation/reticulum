@@ -151,18 +151,17 @@ defmodule RetWeb.HubChannel do
         },
         socket
       ) do
-    account = Guardian.Phoenix.Socket.current_resource(socket)
-    perform_pin!(object_id, gltf_node, account, socket)
-    Storage.promote(file_id, file_access_token, promotion_token, account)
-    OwnedFile.set_active(file_id, account.account_id)
-    {:noreply, socket}
+    with_account(socket, fn account ->
+      perform_pin!(object_id, gltf_node, account, socket)
+      Storage.promote(file_id, file_access_token, promotion_token, account)
+      OwnedFile.set_active(file_id, account.account_id)
+    end)
   end
 
   def handle_in("pin", %{"id" => object_id, "gltf_node" => gltf_node}, socket) do
-    account = Guardian.Phoenix.Socket.current_resource(socket)
-    perform_pin!(object_id, gltf_node, account, socket)
-
-    {:noreply, socket}
+    with_account(socket, fn account ->
+      perform_pin!(object_id, gltf_node, account, socket)
+    end)
   end
 
   def handle_in("unpin", %{"id" => object_id, "file_id" => file_id}, socket) do
@@ -184,7 +183,7 @@ defmodule RetWeb.HubChannel do
     hub = socket |> hub_for_socket
 
     case Guardian.Phoenix.Socket.current_resource(socket) do
-      %Account{} = account ->
+      %Account{} = _account ->
         RoomObject.perform_unpin(hub, object_id)
 
       _ ->
@@ -241,6 +240,19 @@ defmodule RetWeb.HubChannel do
 
   def handle_in(_message, _payload, socket) do
     {:noreply, socket}
+  end
+
+  defp with_account(socket, handler) do
+    case Guardian.Phoenix.Socket.current_resource(socket) do
+      %Account{} = account ->
+        handler.(account)
+        {:reply, {:ok, %{}}, socket}
+
+      _ ->
+        # client should have signed-in at this point,
+        # so if we still don't have an account, it must have been an invalid token
+        {:reply, {:error, %{reason: :invalid_token}}, socket}
+    end
   end
 
   def handle_info({:begin_tracking, session_id, _hub_sid}, socket) do
