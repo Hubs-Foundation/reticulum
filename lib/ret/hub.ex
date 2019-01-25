@@ -1,5 +1,5 @@
 defmodule Ret.Hub.HubSlug do
-  use EctoAutoslugField.Slug, from: :name, to: :slug
+  use EctoAutoslugField.Slug, from: :name, to: :slug, always_change: true
 
   def get_sources(_changeset, _opts) do
     [:hub_sid, :name]
@@ -12,6 +12,7 @@ defmodule Ret.Hub do
 
   import Ecto.Changeset
   import Ecto.Query
+  import Canada, only: [can?: 2]
 
   alias Ret.{Account, Hub, Repo, WebPushSubscription, RoomAssigner}
   alias Ret.Hub.{HubSlug}
@@ -37,7 +38,7 @@ defmodule Ret.Hub do
     field(:entry_mode, Ret.Hub.EntryMode)
     belongs_to(:scene, Ret.Scene, references: :scene_id)
     has_many(:web_push_subscriptions, Ret.WebPushSubscription, foreign_key: :hub_id)
-    belongs_to(:account, Ret.Account, references: :account_id)
+    belongs_to(:created_by_account, Ret.Account, references: :account_id)
 
     timestamps()
   end
@@ -58,21 +59,15 @@ defmodule Ret.Hub do
     |> unique_constraint(:hub_sid)
     |> unique_constraint(:entry_code)
     |> put_assoc(:scene, scene)
-    |> HubSlug.maybe_generate_slug()
-    |> HubSlug.unique_constraint()
   end
 
-  def changeset_for_new_name(%Hub{} = hub, attrs) do
-    hub
-    |> Ecto.Changeset.change()
-    |> add_name_to_changeset(attrs)
-  end
-
-  defp add_name_to_changeset(changeset, attrs) do
+  def add_name_to_changeset(changeset, attrs) do
     changeset
     |> cast(attrs, [:name])
+    |> validate_required([:name])
     |> validate_length(:name, min: 4, max: 64)
     |> validate_format(:name, ~r/^[A-Za-z0-9-':"!@#$%^&*(),.?~ ]+$/)
+    |> HubSlug.maybe_generate_slug()
   end
 
   def changeset_for_new_seen_occupant_count(%Hub{} = hub, occupant_count) do
@@ -81,6 +76,19 @@ defmodule Ret.Hub do
     hub
     |> cast(%{max_occupant_count: new_max_occupant_count}, [:max_occupant_count])
     |> validate_required([:max_occupant_count])
+  end
+
+  def changeset_for_new_scene(%Hub{} = hub, scene) do
+    hub
+    |> cast(%{}, [])
+    |> put_change(:scene_id, scene.scene_id)
+    |> validate_required([:scene])
+  end
+
+  def changeset_for_new_environment_url(%Hub{} = hub, url) do
+    hub
+    |> cast(%{default_environment_gltf_bundle_url: url}, [:default_environment_gltf_bundle_url])
+    |> validate_required([:default_environment_gltf_bundle_url])
   end
 
   def changeset_for_new_spawned_object_type(%Hub{} = hub, object_type)
@@ -105,7 +113,7 @@ defmodule Ret.Hub do
   def add_account_to_changeset(changeset, nil), do: changeset
 
   def add_account_to_changeset(changeset, %Account{} = account) do
-    changeset |> put_assoc(:account, account)
+    changeset |> put_assoc(:created_by_account, account)
   end
 
   def send_push_messages_for_join(%Hub{web_push_subscriptions: subscriptions} = hub, endpoint_to_skip \\ nil) do
@@ -132,12 +140,6 @@ defmodule Ret.Hub do
   def image_url_for(%Hub{scene: scene}) do
     scene.screenshot_owned_file |> Ret.OwnedFile.uri_for() |> URI.to_string()
   end
-
-  def owns?(%Account{} = account, %Hub{} = hub) do
-    account.account_id == hub.account_id
-  end
-
-  def owns?(nil, %Hub{}), do: false
 
   defp changeset_for_new_entry_code(%Hub{} = hub) do
     hub
@@ -229,4 +231,33 @@ defmodule Ret.Hub do
       room_id
     end
   end
+
+  def perms_for_account(%Ret.Hub{} = hub, account) do
+    %{
+      join_hub: account |> can?(join_hub(hub)),
+      update_hub: account |> can?(update_hub(hub)),
+      kick_users: account |> can?(kick_users(hub)),
+      mute_users: account |> can?(mute_users(hub))
+    }
+  end
+end
+
+defimpl Canada.Can, for: Ret.Account do
+  # Only creators can perform these actions
+  def can?(%Ret.Account{account_id: account_id}, action, %Ret.Hub{created_by_account_id: account_id})
+      when account_id != nil and action in [:update_hub, :kick_users, :mute_users],
+      do: true
+
+  # Anyone can join a hub for now
+  def can?(_, :join_hub, %Ret.Hub{} = _hub), do: true
+
+  def can?(_, _, %Ret.Hub{} = _hub), do: false
+end
+
+# Permissions for un-authenticated clients
+defimpl Canada.Can, for: Atom do
+  # Anyone can join a hub for now
+  def can?(_, :join_hub, %Ret.Hub{} = _hub), do: true
+
+  def can?(_, _, %Ret.Hub{} = _hub), do: false
 end

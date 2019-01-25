@@ -11,15 +11,15 @@ defmodule RetWeb.HubControllerTest do
   end
 
   @tag :authenticated
-  test "hubs have owners when authenticated", %{conn: conn} do
+  test "hub is assigned a creator when authenticated", %{conn: conn} do
     %{"hub_id" => hub_id} =
       conn
       |> create_hub("Test Hub")
       |> json_response(200)
 
-    created_hub = Hub |> Repo.get_by(hub_sid: hub_id)
+    created_hub = Hub |> Repo.get_by(hub_sid: hub_id) |> Repo.preload(:created_by_account)
 
-    assert created_hub.account_id == Ret.Account.account_for_email("test@mozilla.com").account_id
+    assert created_hub.created_by_account.account_id == Ret.Account.account_for_email("test@mozilla.com").account_id
   end
 
   defp create_hub(conn, name) do
