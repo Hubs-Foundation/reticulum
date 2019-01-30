@@ -9,6 +9,7 @@ defmodule Ret.Account do
 
   schema "accounts" do
     field(:min_token_issued_at, :utc_datetime)
+    field(:is_admin, :boolean)
     has_one(:login, Ret.Login, foreign_key: :account_id)
     has_many(:owned_files, Ret.OwnedFile, foreign_key: :account_id)
     has_many(:created_hubs, Ret.Hub, foreign_key: :created_by_account_id)
@@ -46,4 +47,10 @@ defmodule Ret.Account do
   def identifier_hash_for_email(email) do
     email |> String.downcase() |> Ret.Crypto.hash()
   end
+
+  def add_global_perms_for_account(perms, %Ret.Account{is_admin: true}) do
+    perms |> Map.put(:postgrest_role, :ret_admin)
+  end
+
+  def add_global_perms_for_account(perms, _), do: perms
 end

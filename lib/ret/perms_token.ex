@@ -18,7 +18,7 @@ defmodule Ret.PermsToken do
       Ret.PermsToken.encode_and_sign(
         # PermsTokens do not have a resource associated with them
         nil,
-        perms,
+        perms |> Map.put(:aud, :ret_perms),
         secret: secret,
         allowed_algos: ["RS512"],
         ttl: {5, :minutes},
