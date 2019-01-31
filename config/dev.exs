@@ -121,7 +121,7 @@ asset_hosts =
 websocket_hosts =
   "https://localhost:4000 https://localhost:8080 wss://localhost:4000 " <>
     "https://#{host}:4000 https://#{host}:8080 wss://#{host}:4000 wss://#{host}:8080 " <>
-    "wss://#{dev_janus_host} wss://dev-janus.reticulum.io wss://prod-janus.reticulum.io"
+    "wss://#{dev_janus_host} wss://prod-janus.reticulum.io"
 
 config :secure_headers, SecureHeaders,
   secure_headers: [
