@@ -27,13 +27,19 @@ defmodule RetWeb.RetChannel do
   def handle_in("refresh_perms_token", _params, socket) do
     account = Guardian.Phoenix.Socket.current_resource(socket)
 
-    perms_token =
-      %{}
-      |> Account.add_global_perms_for_account(account)
-      |> Map.put(:account_id, account.account_id)
-      |> Ret.PermsToken.token_for_perms()
+    case account do
+      %Account{} ->
+        perms_token =
+          %{}
+          |> Account.add_global_perms_for_account(account)
+          |> Map.put(:account_id, account.account_id)
+          |> Ret.PermsToken.token_for_perms()
 
-    {:reply, {:ok, %{perms_token: perms_token}}, socket}
+        {:reply, {:ok, %{perms_token: perms_token}}, socket}
+
+      _ ->
+        {:reply, {:error, %{message: "Not logged in"}}, socket}
+    end
   end
 
   def handle_info({:begin_tracking, session_id, hub_id}, socket) do
