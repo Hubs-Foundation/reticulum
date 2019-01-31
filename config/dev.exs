@@ -1,6 +1,6 @@
 use Mix.Config
 
-host = "10.252.26.69"
+host = "hubs.local"
 dev_janus_host = "dev-janus.reticulum.io"
 
 # For development, we disable any cache and enable
