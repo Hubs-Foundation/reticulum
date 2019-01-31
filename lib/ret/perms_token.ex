@@ -5,6 +5,10 @@ defmodule Ret.PermsToken do
     {:ok, "#{account_id}_#{hub_id}"}
   end
 
+  def subject_for_token(_resource, %{"account_id" => account_id}) do
+    {:ok, "#{account_id}_global"}
+  end
+
   def subject_for_token(_, _) do
     {:error, "Not found"}
   end
