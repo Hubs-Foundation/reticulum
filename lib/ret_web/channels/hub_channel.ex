@@ -238,7 +238,7 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
-  def handle_in("get_perms_token", _args, socket) do
+  def handle_in("refresh_perms_token", _args, socket) do
     account = Guardian.Phoenix.Socket.current_resource(socket)
     perms_token = socket |> hub_for_socket |> get_perms_token(account)
     {:reply, {:ok, %{perms_token: perms_token}}, socket}
