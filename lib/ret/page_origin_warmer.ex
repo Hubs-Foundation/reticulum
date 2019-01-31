@@ -2,9 +2,9 @@ defmodule Ret.PageOriginWarmer do
   use Cachex.Warmer
   use Retry
 
-  @pages ~w(index.html whats-new.html hub.html link.html scene.html spoke.html avatar-selector.html hub.service.js)
+  @pages ~w(index.html whats-new.html hub.html link.html scene.html spoke.html admin.html avatar-selector.html hub.service.js)
 
-  def interval, do: :timer.seconds(15)
+  def interval, do: :timer.seconds(5)
 
   def execute(_state) do
     with page_origin when is_binary(page_origin) <- module_config(:page_origin) do
