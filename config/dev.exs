@@ -1,6 +1,7 @@
 use Mix.Config
 
 host = "hubs.local"
+dev_janus_host = "dev-janus.reticulum.io"
 
 # For development, we disable any cache and enable
 # debugging and code reloading.
@@ -120,7 +121,7 @@ asset_hosts =
 websocket_hosts =
   "https://localhost:4000 https://localhost:8080 wss://localhost:4000 " <>
     "https://#{host}:4000 https://#{host}:8080 wss://#{host}:4000 wss://#{host}:8080 " <>
-    "wss://dev-janus.reticulum.io wss://prod-janus.reticulum.io"
+    "wss://#{dev_janus_host} wss://prod-janus.reticulum.io"
 
 config :secure_headers, SecureHeaders,
   secure_headers: [
@@ -164,10 +165,9 @@ config :sentry,
 
 config :ret, Ret.Habitat, ip: "127.0.0.1", http_port: 9631
 
-config :ret, Ret.JanusLoadStatus, default_janus_host: "dev-janus.reticulum.io"
+config :ret, Ret.JanusLoadStatus, default_janus_host: dev_janus_host
 
 config :ret, Ret.RoomAssigner, balancer_weights: [{600, 1}, {300, 50}, {0, 500}]
 
-config :ret, DiscordBot,
-  hostnames: "localhost hubs.local"
-  # token: "foo"
+config :ret, DiscordBot, hostnames: "localhost hubs.local"
+# token: "foo"
