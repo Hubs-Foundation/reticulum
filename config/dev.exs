@@ -114,7 +114,7 @@ config :ret, Ret.Storage,
 
 asset_hosts =
   "https://localhost:4000 https://localhost:8080 " <>
-    "https://#{host}:4000 https://#{host}:8080 " <>
+    "https://#{host}:4000 https://#{host}:8080 https://#{host}:3000 " <>
     "https://asset-bundles-dev.reticulum.io https://asset-bundles-prod.reticulum.io " <>
     "https://farspark-prod.reticulum.io https://farspark-dev.reticulum.io " <> "https://hubs-proxy.com"
 
