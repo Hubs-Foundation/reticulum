@@ -238,6 +238,23 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
+  def handle_in("refresh_perms_token", _args, socket) do
+    account = Guardian.Phoenix.Socket.current_resource(socket)
+    perms_token = socket |> hub_for_socket |> get_perms_token(account)
+    {:reply, {:ok, %{perms_token: perms_token}}, socket}
+  end
+
+  def handle_in("kick", %{"session_id" => session_id}, socket) do
+    account = Guardian.Phoenix.Socket.current_resource(socket)
+    hub = socket |> hub_for_socket
+
+    if account |> can?(kick_users(hub)) do
+      RetWeb.Endpoint.broadcast("session:#{session_id}", "disconnect", %{})
+    end
+
+    {:noreply, socket}
+  end
+
   def handle_in(_message, _payload, socket) do
     {:noreply, socket}
   end
@@ -375,6 +392,7 @@ defmodule RetWeb.HubChannel do
 
     hub
     |> Hub.perms_for_account(account)
+    |> Account.add_global_perms_for_account(account)
     |> Map.put(:account_id, account_id)
     |> Map.put(:hub_id, hub.hub_sid)
     |> Ret.PermsToken.token_for_perms()
