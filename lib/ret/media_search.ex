@@ -1,6 +1,6 @@
 defmodule Ret.MediaSearchQuery do
   @enforce_keys [:source]
-  defstruct [:source, :user, :filter, page: 1]
+  defstruct [:source, :user, :filter, :q, page: 1]
 end
 
 defmodule Ret.MediaSearchResult do
@@ -21,29 +21,15 @@ defmodule Ret.MediaSearch do
 
   @page_size 24
 
-  def search(%Ret.MediaSearchQuery{source: "scene_listings", page: page, filter: "all"}) do
-    SceneListing
-    |> join(:inner, [l], s in assoc(l, :scene))
-    |> where([l, s], l.state == ^"active" and s.state == ^"active" and s.allow_promotion == ^true)
-    |> preload([:screenshot_owned_file, :model_owned_file, :scene_owned_file])
-    |> order_by(desc: :updated_at)
-    |> Repo.paginate(%{page: page, page_size: @page_size})
-    |> result_for_scene_listing_page
+  def search(%Ret.MediaSearchQuery{source: "scene_listings", page: page, filter: "featured", q: query}) do
+    scene_listing_search(page, query, "featured", asc: :order)
   end
 
-  def search(%Ret.MediaSearchQuery{source: "scene_listings", page: page, filter: "featured"}) do
-    SceneListing
-    |> join(:inner, [l], s in assoc(l, :scene))
-    |> where([l, s], l.state == ^"active" and s.state == ^"active" and s.allow_promotion == ^true)
-    |> where(fragment("tags->'tags' \\? 'featured'"))
-    |> preload([:screenshot_owned_file, :model_owned_file, :scene_owned_file])
-    |> order_by(asc: :order)
-    |> Repo.paginate(%{page: page, page_size: @page_size})
-    |> result_for_scene_listing_page
+  def search(%Ret.MediaSearchQuery{source: "scene_listings", page: page, filter: filter, q: query}) do
+    scene_listing_search(page, query, filter)
   end
 
   def search(%Ret.MediaSearchQuery{source: "sketchfab", user: user}) do
-    # TODO sorting, paging
     with api_key when is_binary(api_key) <- resolver_config(:sketchfab_api_key) do
       res =
         "https://api.sketchfab.com/v3/search?type=models&downloadable=true&user=#{user}"
@@ -64,6 +50,24 @@ defmodule Ret.MediaSearch do
       _ -> %{}
     end
   end
+
+  defp scene_listing_search(page, query, filter, order \\ [desc: :updated_at]) do
+    SceneListing
+    |> join(:inner, [l], s in assoc(l, :scene))
+    |> where([l, s], l.state == ^"active" and s.state == ^"active" and s.allow_promotion == ^true)
+    |> add_query_to_listing_search_query(query)
+    |> add_tag_to_listing_search_query(filter)
+    |> preload([:screenshot_owned_file, :model_owned_file, :scene_owned_file])
+    |> order_by(^order)
+    |> Repo.paginate(%{page: page, page_size: @page_size})
+    |> result_for_scene_listing_page
+  end
+
+  def add_query_to_listing_search_query(query, nil), do: query
+  def add_query_to_listing_search_query(query, q), do: query |> where([l, s], ilike(l.name, ^"%#{q}%"))
+
+  def add_tag_to_listing_search_query(query, nil), do: query
+  def add_tag_to_listing_search_query(query, tag), do: query |> where(fragment("tags->'tags' \\? ?", ^tag))
 
   defp result_for_scene_listing_page(page) do
     %Ret.MediaSearchResult{
