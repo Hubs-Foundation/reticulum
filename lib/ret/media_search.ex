@@ -1,6 +1,6 @@
 defmodule Ret.MediaSearchQuery do
   @enforce_keys [:source]
-  defstruct [:source, :user, page: 1, page_size: 20]
+  defstruct [:source, :user, :filter, page: 1]
 end
 
 defmodule Ret.MediaSearchResult do
@@ -17,25 +17,29 @@ defmodule Ret.MediaSearch do
   import Ret.HttpUtils
   import Ecto.Query
 
-  alias Ret.{Repo, Scene}
+  alias Ret.{Repo, OwnedFile, SceneListing}
 
-  def search(%Ret.MediaSearchQuery{source: "pending_scenes", page: page, page_size: page_size}) do
-    page =
-      Scene
-      |> where([s], (is_nil(s.reviewed_at) or s.reviewed_at < s.updated_at) and s.allow_promotion)
-      |> order_by(:updated_at)
-      |> preload([:screenshot_owned_file, :model_owned_file, :scene_owned_file, :account])
-      |> Repo.paginate(%{page: page, page_size: page_size})
+  @page_size 24
 
-    %Ret.MediaSearchResult{
-      meta: %Ret.MediaSearchResultMeta{
-        page: page.page_number,
-        page_size: page.page_size,
-        total_pages: page.total_pages,
-        total_entries: page.total_entries
-      },
-      entries: page.entries |> Enum.map(&RetWeb.Api.V1.SceneView.render_scene/1) |> Enum.map(&scene_view_to_entry/1)
-    }
+  def search(%Ret.MediaSearchQuery{source: "scene_listings", page: page, filter: "all"}) do
+    SceneListing
+    |> join(:inner, [l], s in assoc(l, :scene))
+    |> where([l, s], l.state == ^"active" and s.state == ^"active" and s.allow_promotion == ^true)
+    |> preload([:screenshot_owned_file, :model_owned_file, :scene_owned_file])
+    |> order_by(desc: :updated_at)
+    |> Repo.paginate(%{page: page, page_size: @page_size})
+    |> result_for_scene_listing_page
+  end
+
+  def search(%Ret.MediaSearchQuery{source: "scene_listings", page: page, filter: "featured"}) do
+    SceneListing
+    |> join(:inner, [l], s in assoc(l, :scene))
+    |> where([l, s], l.state == ^"active" and s.state == ^"active" and s.allow_promotion == ^true)
+    |> where(fragment("tags->'tags' \\? 'featured'"))
+    |> preload([:screenshot_owned_file, :model_owned_file, :scene_owned_file])
+    |> order_by(asc: :order)
+    |> Repo.paginate(%{page: page, page_size: @page_size})
+    |> result_for_scene_listing_page
   end
 
   def search(%Ret.MediaSearchQuery{source: "sketchfab", user: user}) do
@@ -61,16 +65,30 @@ defmodule Ret.MediaSearch do
     end
   end
 
-  defp scene_view_to_entry(scene_view) do
+  defp result_for_scene_listing_page(page) do
+    %Ret.MediaSearchResult{
+      meta: %Ret.MediaSearchResultMeta{
+        page: page.page_number,
+        page_size: page.page_size,
+        total_pages: page.total_pages,
+        total_entries: page.total_entries
+      },
+      entries:
+        page.entries
+        |> Enum.map(&scene_listing_to_entry/1)
+    }
+  end
+
+  defp scene_listing_to_entry(scene_listing) do
     %{
-      id: scene_view[:scene_id],
-      url: scene_view[:url],
-      type: "scene",
-      name: scene_view[:name],
-      description: scene_view[:description],
-      attributions: scene_view[:attributions],
+      id: scene_listing.scene_listing_sid,
+      url: "#{RetWeb.Endpoint.url()}/scenes/#{scene_listing.scene_listing_sid}/#{scene_listing.slug}",
+      type: "scene_listing",
+      name: scene_listing.name,
+      description: scene_listing.description,
+      attributions: scene_listing.attributions,
       images: %{
-        preview: scene_view[:screenshot_url]
+        preview: scene_listing.screenshot_owned_file |> OwnedFile.uri_for() |> URI.to_string()
       }
     }
   end

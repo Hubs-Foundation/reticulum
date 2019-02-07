@@ -2,6 +2,8 @@ defmodule Ret.Repo.Migrations.AddSceneListings do
   use Ecto.Migration
 
   def change do
+    Ret.SceneListing.State.create_type()
+
     create table(:scene_listings, prefix: "ret0", primary_key: false) do
       add(:scene_listing_id, :bigint, default: fragment("ret0.next_id()"), primary_key: true)
       add(:scene_listing_sid, :string)
@@ -15,7 +17,7 @@ defmodule Ret.Repo.Migrations.AddSceneListings do
       add(:scene_owned_file_id, :bigint, null: false)
       add(:screenshot_owned_file_id, :bigint, null: false)
       add(:order, :integer)
-      add(:state, :scene_state, null: false, default: "active")
+      add(:state, :scene_listing_state, null: false, default: "active")
 
       timestamps()
     end

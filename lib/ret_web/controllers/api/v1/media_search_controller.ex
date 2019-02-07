@@ -7,11 +7,12 @@ defmodule RetWeb.Api.V1.MediaSearchController do
     conn |> render("index.json", results: results)
   end
 
-  def index(conn, %{"source" => "pending_scenes"} = params) do
-    # TODO gate on admins
+  def index(conn, %{"source" => "scene_listings"} = params) do
     page = params["page"] || 1
+    filter = params["filter"] || "all"
 
-    results = %Ret.MediaSearchQuery{source: "pending_scenes", page: page} |> Ret.MediaSearch.search()
+    results = %Ret.MediaSearchQuery{source: "scene_listings", page: page, filter: filter} |> Ret.MediaSearch.search()
+
     conn |> render("index.json", results: results)
   end
 

@@ -10,7 +10,7 @@ defmodule Ret.SceneListing do
   use Ecto.Schema
   import Ecto.Changeset
 
-  alias Ret.{Scene, SceneListing}
+  alias Ret.{SceneListing}
   alias Ret.SceneListing.{SceneListingSlug}
 
   @schema_prefix "ret0"
@@ -21,14 +21,14 @@ defmodule Ret.SceneListing do
     field(:slug, SceneListingSlug.Type)
     field(:name, :string)
     field(:description, :string)
-    field(:tags, {:array, :string})
+    field(:tags, :map)
     field(:attributions, :map)
     belongs_to(:scene, Ret.Scene, references: :scene_id)
     belongs_to(:model_owned_file, Ret.OwnedFile, references: :owned_file_id)
     belongs_to(:screenshot_owned_file, Ret.OwnedFile, references: :owned_file_id)
     belongs_to(:scene_owned_file, Ret.OwnedFile, references: :owned_file_id)
     field(:order, :integer)
-    field(:state, Scene.State)
+    field(:state, SceneListing.State)
 
     timestamps()
   end
