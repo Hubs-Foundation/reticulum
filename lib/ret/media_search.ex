@@ -9,8 +9,8 @@ defmodule Ret.MediaSearchResult do
 end
 
 defmodule Ret.MediaSearchResultMeta do
-  @enforce_keys [:page, :page_size, :total_pages, :total_entries]
-  defstruct [:page, :page_size, :total_pages, :total_entries]
+  @enforce_keys [:source, :page, :page_size, :total_pages, :total_entries]
+  defstruct [:source, :page, :page_size, :total_pages, :total_entries]
 end
 
 defmodule Ret.MediaSearch do
@@ -60,7 +60,7 @@ defmodule Ret.MediaSearch do
     |> preload([:screenshot_owned_file, :model_owned_file, :scene_owned_file])
     |> order_by(^order)
     |> Repo.paginate(%{page: page, page_size: @page_size})
-    |> result_for_scene_listing_page
+    |> result_for_scene_listing_page()
   end
 
   def add_query_to_listing_search_query(query, nil), do: query
@@ -75,7 +75,8 @@ defmodule Ret.MediaSearch do
         page: page.page_number,
         page_size: page.page_size,
         total_pages: page.total_pages,
-        total_entries: page.total_entries
+        total_entries: page.total_entries,
+        source: :scene_listings
       },
       entries:
         page.entries
