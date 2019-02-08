@@ -17,7 +17,7 @@ defmodule Ret.MediaSearch do
   import Ret.HttpUtils
   import Ecto.Query
 
-  alias Ret.{Repo, OwnedFile, SceneListing}
+  alias Ret.{Repo, OwnedFile, Scene, SceneListing}
 
   @page_size 24
 
@@ -63,11 +63,11 @@ defmodule Ret.MediaSearch do
     |> result_for_scene_listing_page()
   end
 
-  def add_query_to_listing_search_query(query, nil), do: query
-  def add_query_to_listing_search_query(query, q), do: query |> where([l, s], ilike(l.name, ^"%#{q}%"))
+  defp add_query_to_listing_search_query(query, nil), do: query
+  defp add_query_to_listing_search_query(query, q), do: query |> where([l, s], ilike(l.name, ^"%#{q}%"))
 
-  def add_tag_to_listing_search_query(query, nil), do: query
-  def add_tag_to_listing_search_query(query, tag), do: query |> where(fragment("tags->'tags' \\? ?", ^tag))
+  defp add_tag_to_listing_search_query(query, nil), do: query
+  defp add_tag_to_listing_search_query(query, tag), do: query |> where(fragment("tags->'tags' \\? ?", ^tag))
 
   defp result_for_scene_listing_page(page) do
     %Ret.MediaSearchResult{
@@ -87,7 +87,7 @@ defmodule Ret.MediaSearch do
   defp scene_listing_to_entry(scene_listing) do
     %{
       id: scene_listing.scene_listing_sid,
-      url: "#{RetWeb.Endpoint.url()}/scenes/#{scene_listing.scene_listing_sid}/#{scene_listing.slug}",
+      url: scene_listing |> Scene.to_url(),
       type: "scene_listing",
       name: scene_listing.name,
       description: scene_listing.description,
