@@ -42,7 +42,7 @@ defmodule Ret.TestHelpers do
       %SceneListing{}
       |> SceneListing.changeset_for_listing_for_scene(
         scene,
-        %{tags: ["foo", "bar", "biz"]}
+        %{tags: %{tags: ["foo", "bar", "biz"]}}
       )
       |> Repo.insert()
 

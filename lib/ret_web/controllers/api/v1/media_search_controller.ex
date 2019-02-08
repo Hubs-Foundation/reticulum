@@ -16,7 +16,7 @@ defmodule RetWeb.Api.V1.MediaSearchController do
     conn |> render("index.json", results: results)
   end
 
-  def index(conn, %{"source" => "scene_listings", "q" => query} = params) do
+  def index(conn, %{"source" => "scene_listings", "q" => q} = params) do
     page = params["page"] || 1
     results = %Ret.MediaSearchQuery{source: "scene_listings", page: page, q: q} |> Ret.MediaSearch.search()
 

@@ -27,6 +27,7 @@ defmodule Ret.SceneListing do
     belongs_to(:model_owned_file, Ret.OwnedFile, references: :owned_file_id)
     belongs_to(:screenshot_owned_file, Ret.OwnedFile, references: :owned_file_id)
     belongs_to(:scene_owned_file, Ret.OwnedFile, references: :owned_file_id)
+    has_one(:account, through: [:scene, :account])
     field(:order, :integer)
     field(:state, SceneListing.State)
 
@@ -41,7 +42,7 @@ defmodule Ret.SceneListing do
     listing
     |> cast(params, [:name, :description, :order, :tags])
     |> maybe_add_scene_listing_sid_to_changeset
-    |> unique_constraint(:scene_sid)
+    |> unique_constraint(:scene_listing_sid)
     |> put_assoc(:scene, scene)
     |> put_change(:name, params[:name] || scene.name)
     |> put_change(:description, params[:description] || scene.description)
