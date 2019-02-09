@@ -10,7 +10,7 @@ defmodule RetWeb.Api.V1.HubController do
   plug(RetWeb.Plugs.HeaderAuthorization when action in [:delete])
 
   def create(conn, %{"hub" => %{"scene_id" => scene_id}} = params) do
-    scene = Scene |> Repo.get_by(scene_sid: scene_id)
+    scene = Scene.scene_or_scene_listing_by_sid(scene_id)
 
     %Hub{}
     |> Hub.changeset(scene, params["hub"])

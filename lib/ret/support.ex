@@ -18,7 +18,7 @@ defmodule Ret.Support do
   end
 
   def send_notification_of_new_scene(scene) do
-    scene_url = "#{RetWeb.Endpoint.url()}/scenes/#{scene.scene_sid}/#{scene.slug}"
+    scene_url = scene |> Ret.Scene.to_url()
 
     notify_slack(
       ":sunrise_over_mountains:",

@@ -10,7 +10,7 @@ defmodule Ret.Scene do
   use Ecto.Schema
   import Ecto.Changeset
 
-  alias Ret.{Scene}
+  alias Ret.{Repo, Scene, SceneListing}
   alias Ret.Scene.{SceneSlug}
 
   @schema_prefix "ret0"
@@ -33,6 +33,14 @@ defmodule Ret.Scene do
 
     timestamps()
   end
+
+  def scene_or_scene_listing_by_sid(sid) do
+    Scene |> Repo.get_by(scene_sid: sid) || SceneListing |> Repo.get_by(scene_listing_sid: sid) |> Repo.preload(:scene)
+  end
+
+  def to_sid(%Scene{} = scene), do: scene.scene_sid
+  def to_sid(%SceneListing{} = scene_listing), do: scene_listing.scene_listing_sid
+  def to_url(%t{} = s) when t in [Scene, SceneListing], do: "#{RetWeb.Endpoint.url()}/scenes/#{s |> to_sid}/#{s.slug}"
 
   def changeset(
         %Scene{} = scene,
@@ -66,6 +74,12 @@ defmodule Ret.Scene do
     |> put_change(:scene_owned_file_id, scene_owned_file.owned_file_id)
     |> SceneSlug.maybe_generate_slug()
     |> SceneSlug.unique_constraint()
+  end
+
+  def changeset_to_mark_as_reviewed(%Scene{} = scene) do
+    scene
+    |> Ecto.Changeset.change()
+    |> put_change(:reviewed_at, Timex.now())
   end
 
   defp maybe_add_scene_sid_to_changeset(changeset) do

@@ -1,5 +1,5 @@
 defmodule Ret.TestHelpers do
-  alias Ret.{Storage, Account, Scene, Repo, Hub}
+  alias Ret.{Storage, Account, Scene, SceneListing, Repo, Hub}
 
   def generate_temp_owned_file(account) do
     temp_file = generate_temp_file("test")
@@ -28,11 +28,25 @@ defmodule Ret.TestHelpers do
       %Scene{}
       |> Scene.changeset(account, owned_file, owned_file, owned_file, %{
         name: "Test Scene",
-        description: "Test Scene Description"
+        description: "Test Scene Description",
+        allow_promotion: true
       })
       |> Repo.insert_or_update()
 
+    scene = scene |> Repo.preload([:model_owned_file, :screenshot_owned_file, :scene_owned_file, :account])
     {:ok, scene: scene}
+  end
+
+  def create_scene_listing(%{scene: scene}) do
+    {:ok, listing} =
+      %SceneListing{}
+      |> SceneListing.changeset_for_listing_for_scene(
+        scene,
+        %{tags: %{tags: ["foo", "bar", "biz"]}}
+      )
+      |> Repo.insert()
+
+    {:ok, scene_listing: listing}
   end
 
   def create_hub(%{scene: scene}) do

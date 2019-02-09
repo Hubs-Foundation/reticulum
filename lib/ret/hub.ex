@@ -14,7 +14,7 @@ defmodule Ret.Hub do
   import Ecto.Query
   import Canada, only: [can?: 2]
 
-  alias Ret.{Account, Hub, Repo, WebPushSubscription, RoomAssigner}
+  alias Ret.{Account, Hub, Repo, Scene, SceneListing, WebPushSubscription, RoomAssigner}
   alias Ret.Hub.{HubSlug}
 
   use Bitwise
@@ -37,6 +37,7 @@ defmodule Ret.Hub do
     field(:spawned_object_types, :integer, default: 0)
     field(:entry_mode, Ret.Hub.EntryMode)
     belongs_to(:scene, Ret.Scene, references: :scene_id)
+    belongs_to(:scene_listing, Ret.SceneListing, references: :scene_listing_id)
     has_many(:web_push_subscriptions, Ret.WebPushSubscription, foreign_key: :hub_id)
     belongs_to(:created_by_account, Ret.Account, references: :account_id)
 
@@ -50,7 +51,19 @@ defmodule Ret.Hub do
     end
   end
 
-  def changeset(%Hub{} = hub, scene, attrs) do
+  def changeset(%Hub{} = hub, %Scene{} = scene, attrs) do
+    hub
+    |> changeset(nil, attrs)
+    |> put_assoc(:scene, scene)
+  end
+
+  def changeset(%Hub{} = hub, %SceneListing{} = scene_listing, attrs) do
+    hub
+    |> changeset(nil, attrs)
+    |> put_assoc(:scene_listing, scene_listing)
+  end
+
+  def changeset(%Hub{} = hub, nil, attrs) do
     hub
     |> cast(attrs, [:default_environment_gltf_bundle_url])
     |> add_name_to_changeset(attrs)
@@ -58,7 +71,6 @@ defmodule Ret.Hub do
     |> add_entry_code_to_changeset
     |> unique_constraint(:hub_sid)
     |> unique_constraint(:entry_code)
-    |> put_assoc(:scene, scene)
   end
 
   def add_name_to_changeset(changeset, attrs) do
@@ -78,11 +90,18 @@ defmodule Ret.Hub do
     |> validate_required([:max_occupant_count])
   end
 
-  def changeset_for_new_scene(%Hub{} = hub, scene) do
+  def changeset_for_new_scene(%Hub{} = hub, %Scene{} = scene) do
     hub
     |> cast(%{}, [])
     |> put_change(:scene_id, scene.scene_id)
-    |> validate_required([:scene])
+    |> put_change(:scene_listing_id, nil)
+  end
+
+  def changeset_for_new_scene(%Hub{} = hub, %SceneListing{} = scene_listing) do
+    hub
+    |> cast(%{}, [])
+    |> put_change(:scene_listing_id, scene_listing.scene_listing_id)
+    |> put_change(:scene_id, nil)
   end
 
   def changeset_for_new_environment_url(%Hub{} = hub, url) do

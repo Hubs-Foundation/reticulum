@@ -1,5 +1,5 @@
 <meta property="og:type" content="website" />
-<meta property="og:url" content="<%= RetWeb.Endpoint.url %>/scenes/<%= @scene.scene_sid %>/<%= @scene.slug %>" />
+<meta property="og:url" content="<%= @scene |> Ret.Scene.to_url %>" />
 <meta property="og:title" content="<%= @scene.name %> | Hubs by Mozilla" />
 <meta property="og:description" content="Join others in <%= @scene.name %>, right in your browser." />
 <meta property="og:image" content="<%= @scene.screenshot_owned_file |> Ret.OwnedFile.uri_for |> URI.to_string %>"/>
@@ -8,5 +8,5 @@
 <meta name="twitter:title" value="<%= @scene.name %> | Hubs by Mozilla" />
 <meta name="twitter:description" content="Join others in <%= @scene.name %>, right in your browser." />
 <meta property="twitter:image" content="<%= @scene.screenshot_owned_file |> Ret.OwnedFile.uri_for |> URI.to_string %>"/>
-<meta name="twitter:url" value="<%= RetWeb.Endpoint.url %>/scenes/<%= @scene.scene_sid %>/<%= @scene.slug %>" />
+<meta name="twitter:url" value="<%= @scene |> Ret.Scene.to_url %>" />
 <title><%= @scene.name %> | Hubs by Mozilla</title>

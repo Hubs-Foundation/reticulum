@@ -70,7 +70,8 @@ defmodule Ret.Mixfile do
       {:web_push_encryption, "~> 0.2.0"},
       {:alchemy, "~> 0.6.1", hex: :discord_alchemy},
       {:sentry, "~> 6.0"},
-      {:toml, "~> 0.5"}
+      {:toml, "~> 0.5"},
+      {:scrivener_ecto, "~> 1.0"}
     ]
   end
 

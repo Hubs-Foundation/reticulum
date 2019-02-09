@@ -1,13 +1,13 @@
 defmodule RetWeb.Api.V1.SceneController do
   use RetWeb, :controller
 
-  alias Ret.{Account, Repo, Scene, Storage}
+  alias Ret.{Account, Repo, Scene, SceneListing, Storage}
 
   plug(RetWeb.Plugs.RateLimit when action in [:create, :update])
 
   def show(conn, %{"id" => scene_sid}) do
     case scene_sid |> get_scene() do
-      %Scene{} = scene -> conn |> render("show.json", scene: scene)
+      %t{} = s when t in [Scene, SceneListing] -> conn |> render("show.json", scene: s)
       _ -> conn |> send_resp(404, "not found")
     end
   end
@@ -24,8 +24,8 @@ defmodule RetWeb.Api.V1.SceneController do
   end
 
   defp get_scene(scene_sid) do
-    Scene
-    |> Repo.get_by(scene_sid: scene_sid)
+    scene_sid
+    |> Scene.scene_or_scene_listing_by_sid()
     |> Repo.preload([:account, :model_owned_file, :screenshot_owned_file])
   end
 

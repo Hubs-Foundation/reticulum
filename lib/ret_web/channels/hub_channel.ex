@@ -5,12 +5,27 @@ defmodule RetWeb.HubChannel do
 
   import Canada, only: [can?: 2]
 
-  alias Ret.{Hub, Account, Repo, RoomObject, OwnedFile, Scene, Storage, SessionStat, Statix, WebPushSubscription}
+  alias Ret.{
+    Hub,
+    Account,
+    Repo,
+    RoomObject,
+    OwnedFile,
+    Scene,
+    Storage,
+    SessionStat,
+    Statix,
+    WebPushSubscription
+  }
 
   alias RetWeb.{Presence}
   alias RetWeb.Api.V1.{HubView}
 
-  @hub_preloads [scene: [:model_owned_file, :screenshot_owned_file], web_push_subscriptions: []]
+  @hub_preloads [
+    scene: [:model_owned_file, :screenshot_owned_file],
+    scene_listing: [:model_owned_file, :screenshot_owned_file, :scene],
+    web_push_subscriptions: []
+  ]
 
   def join(
         "hub:" <> hub_sid,
@@ -214,7 +229,7 @@ defmodule RetWeb.HubChannel do
   end
 
   def handle_in("update_scene", %{"url" => url}, socket) do
-    hub = socket |> hub_for_socket |> Repo.preload(:scene)
+    hub = socket |> hub_for_socket |> Repo.preload([:scene, :scene_listing])
     account = Guardian.Phoenix.Socket.current_resource(socket)
 
     if account |> can?(update_hub(hub)) do
@@ -222,10 +237,8 @@ defmodule RetWeb.HubChannel do
 
       case url |> URI.parse() do
         %URI{host: ^endpoint_host, path: "/scenes/" <> scene_path} ->
-          scene_sid = scene_path |> String.split("/") |> Enum.at(0)
-          scene = Scene |> Repo.get_by(scene_sid: scene_sid)
-
-          hub |> Hub.changeset_for_new_scene(scene)
+          scene_or_listing = scene_path |> String.split("/") |> Enum.at(0) |> Scene.scene_or_scene_listing_by_sid()
+          hub |> Hub.changeset_for_new_scene(scene_or_listing)
 
         _ ->
           hub |> Hub.changeset_for_new_environment_url(url)
