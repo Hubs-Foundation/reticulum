@@ -10,7 +10,7 @@ end
 
 defmodule Ret.MediaSearchResultMeta do
   @enforce_keys [:source]
-  defstruct [:source, :page, :page_size, :total_pages, :total_entries, :next_cursor, :previous_cursor]
+  defstruct [:source, :page, :page_size, :total_pages, :total_entries, :next_cursor]
 end
 
 defmodule Ret.MediaSearch do
@@ -30,7 +30,7 @@ defmodule Ret.MediaSearch do
     scene_listing_search(page, query, filter)
   end
 
-  def search(%Ret.MediaSearchQuery{source: "sketchfab", cursor: cursor, filter: filter, q: query}) do
+  def search(%Ret.MediaSearchQuery{source: "sketchfab", cursor: cursor, filter: filter, q: q}) do
     with api_key when is_binary(api_key) <- resolver_config(:sketchfab_api_key) do
       query =
         URI.encode_query(
@@ -41,7 +41,7 @@ defmodule Ret.MediaSearch do
           processing_status: :succeeded,
           cursor: cursor,
           categories: filter,
-          q: query
+          q: q
         )
 
       res =
@@ -64,13 +64,61 @@ defmodule Ret.MediaSearch do
           result = %Ret.MediaSearchResult{
             meta: %Ret.MediaSearchResultMeta{
               next_cursor: cursors["next"],
-              previous_cursor: cursors["previous"],
               source: :sketchfab
             },
             entries: entries
           }
 
-          { :commit, result }
+          {:commit, result}
+      end
+    else
+      _ -> nil
+    end
+  end
+
+  def search(%Ret.MediaSearchQuery{source: "poly", cursor: cursor, filter: filter, q: q}) do
+    IO.puts("HI")
+
+    with api_key when is_binary(api_key) <- resolver_config(:google_poly_api_key) do
+      query =
+        URI.encode_query(
+          pageSize: @page_size,
+          maxComplexity: :MEDIUM,
+          format: :GLTF2,
+          pageToken: cursor,
+          category: filter,
+          keywords: q,
+          key: api_key
+        )
+
+      IO.puts("https://poly.googleapis.com/v1/assets?#{query}")
+
+      res =
+        "https://poly.googleapis.com/v1/assets?#{query}"
+        |> retry_get_until_success()
+
+      case res do
+        :error ->
+          :error
+
+        res ->
+          decoded_res =
+            res
+            |> Map.get(:body)
+            |> Poison.decode!()
+
+          entries = decoded_res |> Map.get("assets") |> Enum.map(&poly_api_result_to_entry/1)
+          next_cursor = decoded_res |> Map.get("nextPageToken")
+
+          result = %Ret.MediaSearchResult{
+            meta: %Ret.MediaSearchResultMeta{
+              next_cursor: next_cursor,
+              source: :poly
+            },
+            entries: entries
+          }
+
+          {:commit, result}
       end
     else
       _ -> nil
@@ -78,17 +126,18 @@ defmodule Ret.MediaSearch do
   end
 
   defp scene_listing_search(page, query, filter, order \\ [desc: :updated_at]) do
-    results = SceneListing
-    |> join(:inner, [l], s in assoc(l, :scene))
-    |> where([l, s], l.state == ^"active" and s.state == ^"active" and s.allow_promotion == ^true)
-    |> add_query_to_listing_search_query(query)
-    |> add_tag_to_listing_search_query(filter)
-    |> preload([:screenshot_owned_file, :model_owned_file, :scene_owned_file])
-    |> order_by(^order)
-    |> Repo.paginate(%{page: page, page_size: @page_size})
-    |> result_for_scene_listing_page()
+    results =
+      SceneListing
+      |> join(:inner, [l], s in assoc(l, :scene))
+      |> where([l, s], l.state == ^"active" and s.state == ^"active" and s.allow_promotion == ^true)
+      |> add_query_to_listing_search_query(query)
+      |> add_tag_to_listing_search_query(filter)
+      |> preload([:screenshot_owned_file, :model_owned_file, :scene_owned_file])
+      |> order_by(^order)
+      |> Repo.paginate(%{page: page, page_size: @page_size})
+      |> result_for_scene_listing_page()
 
-    { :commit, results }
+    {:commit, results}
   end
 
   defp add_query_to_listing_search_query(query, nil), do: query
@@ -150,6 +199,17 @@ defmodule Ret.MediaSearch do
       attributions: %{creator: %{name: result["user"]["username"], url: result["user"]["profileUrl"]}},
       url: "https://sketchfab.com/models/#{result["uid"]}",
       images: images
+    }
+  end
+
+  defp poly_api_result_to_entry(result) do
+    %{
+      id: result["name"],
+      type: "poly_model",
+      name: result["displayName"],
+      attributions: %{creator: %{name: result["authorName"]}},
+      url: "https://poly.google.com/view/#{result["name"] |> String.replace("assets/", "")}",
+      images: result["thumbnail"]["url"]
     }
   end
 

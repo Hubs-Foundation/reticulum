@@ -30,9 +30,9 @@ defmodule RetWeb.Api.V1.MediaSearchController do
     conn |> render("index.json", results: results)
   end
 
-  def index(conn, %{"source" => "sketchfab"} = params) do
+  def index(conn, %{"source" => source} = params) when source in ["sketchfab", "poly"] do
     query = %Ret.MediaSearchQuery{
-      source: "sketchfab",
+      source: source,
       cursor: params["cursor"],
       q: params["q"],
       filter: params["filter"]
