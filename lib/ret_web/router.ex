@@ -62,6 +62,7 @@ defmodule RetWeb.Router do
       resources("/media", Api.V1.MediaController, only: [:create])
       resources("/media/search", Api.V1.MediaSearchController, only: [:index])
       resources("/scenes", Api.V1.SceneController, only: [:show])
+      get "/avatars/:id/avatar.gltf", Api.V1.AvatarController, :show
 
       scope "/support" do
         resources("/subscriptions", Api.V1.SupportSubscriptionController, only: [:create, :delete])
@@ -77,6 +78,7 @@ defmodule RetWeb.Router do
     scope "/v1", as: :api_v1 do
       pipe_through([:auth_required])
       resources("/scenes", Api.V1.SceneController, only: [:create, :update])
+      resources("/avatars", Api.V1.AvatarController, only: [:create])
       resources("/hubs", Api.V1.HubController, only: [:update])
     end
   end

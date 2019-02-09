@@ -80,7 +80,10 @@ defmodule Ret.Storage do
   # that has the return values of promote as values.
   def promote(map, %Account{} = account) when is_map(map) do
     map
-    |> Enum.map(fn {k, {id, key}} -> {k, promote(id, key, nil, account)} end)
+    |> Enum.map(fn
+      {k, {id, key}} -> {k, promote(id, key, nil, account)}
+      {k, {id, key, promotion_token}} -> {k, promote(id, key, promotion_token, account)}
+    end)
     |> Enum.into(%{})
   end
 
