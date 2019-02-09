@@ -31,12 +31,22 @@ defmodule RetWeb.Api.V1.MediaSearchController do
   end
 
   def index(conn, %{"source" => source} = params) when source in ["sketchfab", "poly", "youtube"] do
-    query = %Ret.MediaSearchQuery{
-      source: source,
-      cursor: params["cursor"],
-      q: params["q"],
-      filter: params["filter"]
-    }
+    query = %Ret.MediaSearchQuery{source: source, cursor: params["cursor"], q: params["q"], filter: params["filter"]}
+
+    case Cachex.fetch(:media_search_results, query) do
+      {_status, nil} ->
+        conn |> send_resp(404, "")
+
+      {_status, %Ret.MediaSearchResult{} = results} ->
+        conn |> render("index.json", results: results)
+
+      _ ->
+        conn |> send_resp(404, "")
+    end
+  end
+
+  def index(conn, %{"source" => source} = params) when source in ["imgur"] do
+    query = %Ret.MediaSearchQuery{source: source, page: params["page"], q: params["q"], filter: params["filter"]}
 
     case Cachex.fetch(:media_search_results, query) do
       {_status, nil} ->

@@ -149,6 +149,36 @@ defmodule Ret.MediaSearch do
     end
   end
 
+  def search(%Ret.MediaSearchQuery{source: "imgur", page: page, filter: _filter, q: q}) do
+    with client_id when is_binary(client_id) <- resolver_config(:imgur_client_id),
+         api_key when is_binary(api_key) <- resolver_config(:imgur_mashape_api_key) do
+      query = URI.encode_query(q: q)
+
+      res =
+        "https://imgur-apiv3.p.mashape.com/3/gallery/search/viral//#{page}?#{query}"
+        |> retry_get_until_success([{"Authorization", "Client-Id #{client_id}"}, {"X-Mashape-Key", api_key}])
+
+      case res do
+        :error ->
+          :error
+
+          IO.inspect(res)
+
+        res ->
+          decoded_res = res |> Map.get(:body) |> Poison.decode!()
+          entries = decoded_res |> Map.get("data") |> Enum.map(&imgur_api_result_to_entry/1)
+
+          {:commit,
+           %Ret.MediaSearchResult{
+             meta: %Ret.MediaSearchResultMeta{source: :imgur},
+             entries: entries
+           }}
+      end
+    else
+      _ -> nil
+    end
+  end
+
   defp scene_listing_search(page, query, filter, order \\ [desc: :updated_at]) do
     results =
       SceneListing
@@ -245,6 +275,17 @@ defmodule Ret.MediaSearch do
       attributions: %{creator: %{name: result["snippet"]["channelTitle"]}},
       url: "https://www.youtube.com/watch?v=#{result["id"]["videoId"]}",
       images: %{preview: result["snippet"]["thumbnails"]["medium"]["url"]}
+    }
+  end
+
+  defp imgur_api_result_to_entry(result) do
+    %{
+      id: result["id"],
+      type: "imgur_image",
+      name: result["title"],
+      attributions: %{},
+      url: "https://www.imgur.com/gallery/#{result["id"]}",
+      images: %{preview: result["images"][0]["link"]}
     }
   end
 
