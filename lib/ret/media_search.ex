@@ -53,23 +53,15 @@ defmodule Ret.MediaSearch do
           :error
 
         res ->
-          decoded_res =
-            res
-            |> Map.get(:body)
-            |> Poison.decode!()
-
+          decoded_res = res |> Map.get(:body) |> Poison.decode!()
           entries = decoded_res |> Map.get("results") |> Enum.map(&sketchfab_api_result_to_entry/1)
           cursors = decoded_res |> Map.get("cursors")
 
-          result = %Ret.MediaSearchResult{
-            meta: %Ret.MediaSearchResultMeta{
-              next_cursor: cursors["next"],
-              source: :sketchfab
-            },
-            entries: entries
-          }
-
-          {:commit, result}
+          {:commit,
+           %Ret.MediaSearchResult{
+             meta: %Ret.MediaSearchResultMeta{next_cursor: cursors["next"], source: :sketchfab},
+             entries: entries
+           }}
       end
     else
       _ -> nil
@@ -77,8 +69,6 @@ defmodule Ret.MediaSearch do
   end
 
   def search(%Ret.MediaSearchQuery{source: "poly", cursor: cursor, filter: filter, q: q}) do
-    IO.puts("HI")
-
     with api_key when is_binary(api_key) <- resolver_config(:google_poly_api_key) do
       query =
         URI.encode_query(
@@ -91,8 +81,6 @@ defmodule Ret.MediaSearch do
           key: api_key
         )
 
-      IO.puts("https://poly.googleapis.com/v1/assets?#{query}")
-
       res =
         "https://poly.googleapis.com/v1/assets?#{query}"
         |> retry_get_until_success()
@@ -102,23 +90,59 @@ defmodule Ret.MediaSearch do
           :error
 
         res ->
-          decoded_res =
-            res
-            |> Map.get(:body)
-            |> Poison.decode!()
-
+          decoded_res = res |> Map.get(:body) |> Poison.decode!()
           entries = decoded_res |> Map.get("assets") |> Enum.map(&poly_api_result_to_entry/1)
           next_cursor = decoded_res |> Map.get("nextPageToken")
 
-          result = %Ret.MediaSearchResult{
-            meta: %Ret.MediaSearchResultMeta{
-              next_cursor: next_cursor,
-              source: :poly
-            },
-            entries: entries
-          }
+          {:commit,
+           %Ret.MediaSearchResult{
+             meta: %Ret.MediaSearchResultMeta{
+               next_cursor: next_cursor,
+               source: :poly
+             },
+             entries: entries
+           }}
+      end
+    else
+      _ -> nil
+    end
+  end
 
-          {:commit, result}
+  def search(%Ret.MediaSearchQuery{source: "youtube", cursor: cursor, filter: filter, q: q}) do
+    with api_key when is_binary(api_key) <- resolver_config(:youtube_api_key) do
+      query =
+        URI.encode_query(
+          part: :snippet,
+          maxResults: @page_size,
+          type: :video,
+          pageToken: cursor,
+          topicId: filter,
+          q: q,
+          key: api_key
+        )
+
+      res =
+        "https://www.googleapis.com/youtube/v3/search?#{query}"
+        |> retry_get_until_success()
+
+      case res do
+        :error ->
+          :error
+
+        res ->
+          IO.inspect(res)
+          decoded_res = res |> Map.get(:body) |> Poison.decode!()
+          entries = decoded_res |> Map.get("items") |> Enum.map(&youtube_api_result_to_entry/1)
+          next_cursor = decoded_res |> Map.get("nextPageToken")
+
+          {:commit,
+           %Ret.MediaSearchResult{
+             meta: %Ret.MediaSearchResultMeta{
+               next_cursor: next_cursor,
+               source: :youtube
+             },
+             entries: entries
+           }}
       end
     else
       _ -> nil
@@ -170,14 +194,14 @@ defmodule Ret.MediaSearch do
       description: scene_listing.description,
       attributions: scene_listing.attributions,
       images: %{
-        preview: scene_listing.screenshot_owned_file |> OwnedFile.uri_for() |> URI.to_string()
+        thumbnail: scene_listing.screenshot_owned_file |> OwnedFile.uri_for() |> URI.to_string()
       }
     }
   end
 
   defp sketchfab_api_result_to_entry(%{"thumbnails" => thumbnails} = result) do
     images = %{
-      preview:
+      thumbnail:
         thumbnails["images"]
         |> Enum.sort_by(fn x -> -x["size"] end)
         |> Enum.at(0)
@@ -209,7 +233,18 @@ defmodule Ret.MediaSearch do
       name: result["displayName"],
       attributions: %{creator: %{name: result["authorName"]}},
       url: "https://poly.google.com/view/#{result["name"] |> String.replace("assets/", "")}",
-      images: result["thumbnail"]["url"]
+      images: %{thumbnail: result["thumbnail"]["url"]}
+    }
+  end
+
+  defp youtube_api_result_to_entry(result) do
+    %{
+      id: result["id"]["videoId"],
+      type: "youtube_video",
+      name: result["snippet"]["title"],
+      attributions: %{creator: %{name: result["snippet"]["channelTitle"]}},
+      url: "https://www.youtube.com/watch?v=#{result["id"]["videoId"]}",
+      images: %{thumbnail: result["snippet"]["thumbnails"]["medium"]["url"]}
     }
   end
 
