@@ -194,14 +194,14 @@ defmodule Ret.MediaSearch do
       description: scene_listing.description,
       attributions: scene_listing.attributions,
       images: %{
-        thumbnail: scene_listing.screenshot_owned_file |> OwnedFile.uri_for() |> URI.to_string()
+        preview: scene_listing.screenshot_owned_file |> OwnedFile.uri_for() |> URI.to_string()
       }
     }
   end
 
   defp sketchfab_api_result_to_entry(%{"thumbnails" => thumbnails} = result) do
     images = %{
-      thumbnail:
+      preview:
         thumbnails["images"]
         |> Enum.sort_by(fn x -> -x["size"] end)
         |> Enum.at(0)
@@ -233,7 +233,7 @@ defmodule Ret.MediaSearch do
       name: result["displayName"],
       attributions: %{creator: %{name: result["authorName"]}},
       url: "https://poly.google.com/view/#{result["name"] |> String.replace("assets/", "")}",
-      images: %{thumbnail: result["thumbnail"]["url"]}
+      images: %{preview: result["thumbnail"]["url"]}
     }
   end
 
@@ -244,7 +244,7 @@ defmodule Ret.MediaSearch do
       name: result["snippet"]["title"],
       attributions: %{creator: %{name: result["snippet"]["channelTitle"]}},
       url: "https://www.youtube.com/watch?v=#{result["id"]["videoId"]}",
-      images: %{thumbnail: result["snippet"]["thumbnails"]["medium"]["url"]}
+      images: %{preview: result["snippet"]["thumbnails"]["medium"]["url"]}
     }
   end
 
