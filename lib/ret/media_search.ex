@@ -1,6 +1,6 @@
 defmodule Ret.MediaSearchQuery do
   @enforce_keys [:source]
-  defstruct [:source, :user, :filter, :q, page: 1]
+  defstruct [:source, :user, :filter, :q, :cursor, page: 1]
 end
 
 defmodule Ret.MediaSearchResult do
@@ -9,8 +9,8 @@ defmodule Ret.MediaSearchResult do
 end
 
 defmodule Ret.MediaSearchResultMeta do
-  @enforce_keys [:source, :page, :page_size, :total_pages, :total_entries]
-  defstruct [:source, :page, :page_size, :total_pages, :total_entries]
+  @enforce_keys [:source]
+  defstruct [:source, :page, :page_size, :total_pages, :total_entries, :next_cursor, :previous_cursor]
 end
 
 defmodule Ret.MediaSearch do
@@ -20,6 +20,7 @@ defmodule Ret.MediaSearch do
   alias Ret.{Repo, OwnedFile, Scene, SceneListing}
 
   @page_size 24
+  @max_face_count 60000
 
   def search(%Ret.MediaSearchQuery{source: "scene_listings", page: page, filter: "featured", q: query}) do
     scene_listing_search(page, query, "featured", asc: :order)
@@ -29,22 +30,47 @@ defmodule Ret.MediaSearch do
     scene_listing_search(page, query, filter)
   end
 
-  def search(%Ret.MediaSearchQuery{source: "sketchfab", user: user}) do
+  def search(%Ret.MediaSearchQuery{source: "sketchfab", cursor: cursor, filter: filter, q: query}) do
     with api_key when is_binary(api_key) <- resolver_config(:sketchfab_api_key) do
+      query =
+        URI.encode_query(
+          type: :models,
+          downloadable: true,
+          count: @page_size,
+          face_count: @max_face_count,
+          processing_status: :succeeded,
+          cursor: cursor,
+          categories: filter,
+          q: query
+        )
+
       res =
-        "https://api.sketchfab.com/v3/search?type=models&downloadable=true&user=#{user}"
+        "https://api.sketchfab.com/v3/search?#{query}"
         |> retry_get_until_success([{"Authorization", "Token #{api_key}"}])
+
+      IO.inspect(res)
 
       case res do
         :error ->
           :error
 
         res ->
-          res
-          |> Map.get(:body)
-          |> Poison.decode!()
-          |> Map.get("results")
-          |> Enum.map(&sketchfab_api_result_to_entry/1)
+          decoded_res =
+            res
+            |> Map.get(:body)
+            |> Poison.decode!()
+
+          entries = decoded_res |> Map.get("results") |> Enum.map(&sketchfab_api_result_to_entry/1)
+          cursors = decoded_res |> Map.get("cursors")
+
+          %Ret.MediaSearchResult{
+            meta: %Ret.MediaSearchResultMeta{
+              next_cursor: cursors["next"],
+              previous_cursor: cursors["previous"],
+              source: :sketchfab
+            },
+            entries: entries
+          }
       end
     else
       _ -> %{}
@@ -98,17 +124,30 @@ defmodule Ret.MediaSearch do
     }
   end
 
+  defp sketchfab_api_result_to_entry(%{"thumbnails" => thumbnails} = result) do
+    images = %{
+      preview:
+        thumbnails["images"]
+        |> Enum.sort_by(fn x -> -x["size"] end)
+        |> Enum.at(0)
+        |> Kernel.get_in(["url"])
+    }
+
+    sketchfab_api_result_to_entry(result, images)
+  end
+
   defp sketchfab_api_result_to_entry(result) do
-    # TODO when missing thumbnails
+    sketchfab_api_result_to_entry(result, %{})
+  end
+
+  defp sketchfab_api_result_to_entry(result, images) do
     %{
-      media_url: "https://sketchfab.com/models/#{result["uid"]}",
-      images: %{
-        preview:
-          result["thumbnails"]["images"]
-          |> Enum.sort_by(fn x -> -x["size"] end)
-          |> Enum.at(0)
-          |> Kernel.get_in(["url"])
-      }
+      id: result["uid"],
+      type: "sketchfab_model",
+      name: result["name"],
+      attributions: %{creator: %{name: result["user"]["username"], url: result["user"]["profileUrl"]}},
+      url: "https://sketchfab.com/models/#{result["uid"]}",
+      images: images
     }
   end
 

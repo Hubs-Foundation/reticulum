@@ -30,6 +30,21 @@ defmodule RetWeb.Api.V1.MediaSearchController do
     conn |> render("index.json", results: results)
   end
 
+  def index(conn, %{"source" => "sketchfab"} = params) do
+    IO.puts("IN")
+
+    results =
+      %Ret.MediaSearchQuery{
+        source: "sketchfab",
+        cursor: params["cursor"],
+        q: params["q"],
+        filter: params["filter"]
+      }
+      |> Ret.MediaSearch.search()
+
+    conn |> render("index.json", results: results)
+  end
+
   def index(conn) do
     conn |> send_resp(422, "")
   end
