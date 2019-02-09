@@ -48,8 +48,6 @@ defmodule Ret.MediaSearch do
         "https://api.sketchfab.com/v3/search?#{query}"
         |> retry_get_until_success([{"Authorization", "Token #{api_key}"}])
 
-      IO.inspect(res)
-
       case res do
         :error ->
           :error
@@ -63,7 +61,7 @@ defmodule Ret.MediaSearch do
           entries = decoded_res |> Map.get("results") |> Enum.map(&sketchfab_api_result_to_entry/1)
           cursors = decoded_res |> Map.get("cursors")
 
-          %Ret.MediaSearchResult{
+          result = %Ret.MediaSearchResult{
             meta: %Ret.MediaSearchResultMeta{
               next_cursor: cursors["next"],
               previous_cursor: cursors["previous"],
@@ -71,14 +69,16 @@ defmodule Ret.MediaSearch do
             },
             entries: entries
           }
+
+          { :commit, result }
       end
     else
-      _ -> %{}
+      _ -> nil
     end
   end
 
   defp scene_listing_search(page, query, filter, order \\ [desc: :updated_at]) do
-    SceneListing
+    results = SceneListing
     |> join(:inner, [l], s in assoc(l, :scene))
     |> where([l, s], l.state == ^"active" and s.state == ^"active" and s.allow_promotion == ^true)
     |> add_query_to_listing_search_query(query)
@@ -87,6 +87,8 @@ defmodule Ret.MediaSearch do
     |> order_by(^order)
     |> Repo.paginate(%{page: page, page_size: @page_size})
     |> result_for_scene_listing_page()
+
+    { :commit, results }
   end
 
   defp add_query_to_listing_search_query(query, nil), do: query

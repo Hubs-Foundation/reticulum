@@ -13,7 +13,6 @@ defmodule Ret.Application do
     children = [
       # Start the Ecto repository
       supervisor(Ret.Repo, []),
-
       supervisor(RetWeb.Endpoint, []),
       supervisor(RetWeb.Presence, []),
 
@@ -36,6 +35,19 @@ defmodule Ret.Application do
           ]
         ],
         id: :media_url_cache
+      ),
+
+      # Media search cache
+      worker(
+        Cachex,
+        [
+          :media_search_results,
+          [
+            expiration: expiration(default: :timer.minutes(5)),
+            fallback: fallback(default: &Ret.MediaSearch.search/1)
+          ]
+        ],
+        id: :media_search_cache
       ),
 
       # Page origin chunk cache
@@ -64,7 +76,6 @@ defmodule Ret.Application do
 
       # Runs Discord bot
       worker(DiscordBotManager, []),
-
       supervisor(TheEnd.Of.Phoenix, [[timeout: 10_000, endpoint: RetWeb.Endpoint]])
     ]
 

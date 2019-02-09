@@ -3,14 +3,14 @@ defmodule RetWeb.Api.V1.MediaSearchController do
   use Retry
 
   def index(conn, %{"source" => "sketchfab", "user" => user}) do
-    results = %Ret.MediaSearchQuery{source: "sketchfab", user: user} |> Ret.MediaSearch.search()
+    {:commit, results} = %Ret.MediaSearchQuery{source: "sketchfab", user: user} |> Ret.MediaSearch.search()
     conn |> render("index.json", results: results)
   end
 
   def index(conn, %{"source" => "scene_listings", "filter" => "featured"} = params) do
     page = params["page"] || 1
 
-    results =
+    {:commit, results} =
       %Ret.MediaSearchQuery{source: "scene_listings", page: page, filter: "featured"} |> Ret.MediaSearch.search()
 
     conn |> render("index.json", results: results)
@@ -18,31 +18,36 @@ defmodule RetWeb.Api.V1.MediaSearchController do
 
   def index(conn, %{"source" => "scene_listings", "q" => q} = params) do
     page = params["page"] || 1
-    results = %Ret.MediaSearchQuery{source: "scene_listings", page: page, q: q} |> Ret.MediaSearch.search()
+    {:commit, results} = %Ret.MediaSearchQuery{source: "scene_listings", page: page, q: q} |> Ret.MediaSearch.search()
 
     conn |> render("index.json", results: results)
   end
 
   def index(conn, %{"source" => "scene_listings"} = params) do
     page = params["page"] || 1
-    results = %Ret.MediaSearchQuery{source: "scene_listings", page: page} |> Ret.MediaSearch.search()
+    {:commit, results} = %Ret.MediaSearchQuery{source: "scene_listings", page: page} |> Ret.MediaSearch.search()
 
     conn |> render("index.json", results: results)
   end
 
   def index(conn, %{"source" => "sketchfab"} = params) do
-    IO.puts("IN")
+    query = %Ret.MediaSearchQuery{
+      source: "sketchfab",
+      cursor: params["cursor"],
+      q: params["q"],
+      filter: params["filter"]
+    }
 
-    results =
-      %Ret.MediaSearchQuery{
-        source: "sketchfab",
-        cursor: params["cursor"],
-        q: params["q"],
-        filter: params["filter"]
-      }
-      |> Ret.MediaSearch.search()
+    case Cachex.fetch(:media_search_results, query) do
+      {_status, nil} ->
+        conn |> send_resp(404, "")
 
-    conn |> render("index.json", results: results)
+      {_status, %Ret.MediaSearchResult{} = results} ->
+        conn |> render("index.json", results: results)
+
+      _ ->
+        conn |> send_resp(404, "")
+    end
   end
 
   def index(conn) do
