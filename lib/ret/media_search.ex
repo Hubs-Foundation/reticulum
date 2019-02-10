@@ -130,7 +130,6 @@ defmodule Ret.MediaSearch do
           :error
 
         res ->
-          IO.inspect(res)
           decoded_res = res |> Map.get(:body) |> Poison.decode!()
           entries = decoded_res |> Map.get("items") |> Enum.map(&youtube_api_result_to_entry/1)
           next_cursor = decoded_res |> Map.get("nextPageToken")
@@ -162,8 +161,6 @@ defmodule Ret.MediaSearch do
         :error ->
           :error
 
-          IO.inspect(res)
-
         res ->
           decoded_res = res |> Map.get(:body) |> Poison.decode!()
           entries = decoded_res |> Map.get("data") |> Enum.map(&imgur_api_result_to_entry/1)
@@ -171,6 +168,40 @@ defmodule Ret.MediaSearch do
           {:commit,
            %Ret.MediaSearchResult{
              meta: %Ret.MediaSearchResultMeta{source: :imgur},
+             entries: entries
+           }}
+      end
+    else
+      _ -> nil
+    end
+  end
+
+  def search(%Ret.MediaSearchQuery{source: "tenor", cursor: cursor, filter: _filter, q: q}) do
+    with api_key when is_binary(api_key) <- resolver_config(:tenor_api_key) do
+      query =
+        URI.encode_query(
+          q: q,
+          contentfilter: :low,
+          media_filter: :minimal,
+          limit: @page_size,
+          pos: cursor,
+          key: api_key
+        )
+
+      res = "https://api.tenor.com/v1/search?#{query}" |> retry_get_until_success()
+
+      case res do
+        :error ->
+          :error
+
+        res ->
+          decoded_res = res |> Map.get(:body) |> Poison.decode!()
+          next_cursor = decoded_res |> Map.get("next")
+          entries = decoded_res |> Map.get("results") |> Enum.map(&tenor_api_result_to_entry/1)
+
+          {:commit,
+           %Ret.MediaSearchResult{
+             meta: %Ret.MediaSearchResultMeta{source: :tenor, next_cursor: next_cursor},
              entries: entries
            }}
       end
@@ -285,7 +316,20 @@ defmodule Ret.MediaSearch do
       name: result["title"],
       attributions: %{},
       url: "https://www.imgur.com/gallery/#{result["id"]}",
-      images: %{preview: result["images"][0]["link"]}
+      images: %{preview: result["link"]}
+    }
+  end
+
+  defp tenor_api_result_to_entry(result) do
+    media_entry = result["media"] |> Enum.at(0)
+
+    %{
+      id: result["id"],
+      type: "tenor_image",
+      name: result["title"],
+      attributions: %{},
+      url: media_entry["mp4"]["url"],
+      images: %{preview: media_entry["tinygif"]["url"]}
     }
   end
 
