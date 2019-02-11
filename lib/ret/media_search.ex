@@ -150,6 +150,40 @@ defmodule Ret.MediaSearch do
     bing_search(query)
   end
 
+  def search(%Ret.MediaSearchQuery{source: "twitch", cursor: cursor, filter: _filter, q: q}) do
+    with client_id when is_binary(client_id) <- resolver_config(:twitch_client_id) do
+      query =
+        URI.encode_query(
+          query: q,
+          limit: @page_size,
+          offset: cursor || 0
+        )
+
+      res =
+        "https://api.twitch.tv/kraken/search/streams?#{query}" |> retry_get_until_success([{"Client-ID", client_id}])
+
+      case res do
+        :error ->
+          :error
+
+        res ->
+          decoded_res = res |> Map.get(:body) |> Poison.decode!()
+          next_uri = decoded_res |> Map.get("_links") |> Map.get("next") |> URI.parse()
+          next_cursor = next_uri.query |> URI.decode_query() |> Map.get("offset")
+
+          entries = decoded_res |> Map.get("streams") |> Enum.map(&twitch_api_result_to_entry/1)
+
+          {:commit,
+           %Ret.MediaSearchResult{
+             meta: %Ret.MediaSearchResultMeta{source: :twitch, next_cursor: next_cursor},
+             entries: entries
+           }}
+      end
+    else
+      _ -> nil
+    end
+  end
+
   def bing_search(%Ret.MediaSearchQuery{source: source, cursor: cursor, filter: _filter, q: q, locale: locale}) do
     with api_key when is_binary(api_key) <- resolver_config(:bing_search_api_key) do
       query =
@@ -174,7 +208,6 @@ defmodule Ret.MediaSearch do
 
         res ->
           decoded_res = res |> Map.get(:body) |> Poison.decode!()
-          IO.inspect(decoded_res)
           next_cursor = decoded_res |> Map.get("nextOffset")
           entries = decoded_res |> Map.get("value") |> Enum.map(&bing_api_result_to_entry(type, &1))
           suggestions = decoded_res |> Map.get("relatedSearches") |> Enum.map(& &1["text"])
@@ -302,6 +335,20 @@ defmodule Ret.MediaSearch do
         end,
       url: result["contentUrl"],
       images: %{preview: result["thumbnailUrl"]}
+    }
+  end
+
+  defp twitch_api_result_to_entry(result) do
+    %{
+      id: result["_id"],
+      type: "twitch_stream",
+      name: result["channel"]["status"],
+      attributions: %{
+        game: %{name: result["game"]},
+        creator: %{name: result["channel"]["name"], url: result["channel"]["url"]}
+      },
+      url: result["channel"]["url"],
+      images: %{preview: result["preview"]["large"]}
     }
   end
 
