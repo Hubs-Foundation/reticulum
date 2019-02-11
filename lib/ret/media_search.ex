@@ -1,16 +1,16 @@
 defmodule Ret.MediaSearchQuery do
   @enforce_keys [:source]
-  defstruct [:source, :user, :filter, :q, :cursor, page: 1]
+  defstruct [:source, :user, :filter, :q, :cursor, :locale]
 end
 
 defmodule Ret.MediaSearchResult do
   @enforce_keys [:meta, :entries]
-  defstruct [:meta, :entries]
+  defstruct [:meta, :entries, :suggestions]
 end
 
 defmodule Ret.MediaSearchResultMeta do
   @enforce_keys [:source]
-  defstruct [:source, :page, :page_size, :total_pages, :total_entries, :next_cursor]
+  defstruct [:source, :next_cursor]
 end
 
 defmodule Ret.MediaSearch do
@@ -22,12 +22,12 @@ defmodule Ret.MediaSearch do
   @page_size 24
   @max_face_count 60000
 
-  def search(%Ret.MediaSearchQuery{source: "scene_listings", page: page, filter: "featured", q: query}) do
-    scene_listing_search(page, query, "featured", asc: :order)
+  def search(%Ret.MediaSearchQuery{source: "scene_listings", cursor: cursor, filter: "featured", q: query}) do
+    scene_listing_search(cursor, query, "featured", asc: :order)
   end
 
-  def search(%Ret.MediaSearchQuery{source: "scene_listings", page: page, filter: filter, q: query}) do
-    scene_listing_search(page, query, filter)
+  def search(%Ret.MediaSearchQuery{source: "scene_listings", cursor: cursor, filter: filter, q: query}) do
+    scene_listing_search(cursor, query, filter)
   end
 
   def search(%Ret.MediaSearchQuery{source: "sketchfab", cursor: cursor, filter: filter, q: q}) do
@@ -108,74 +108,6 @@ defmodule Ret.MediaSearch do
     end
   end
 
-  def search(%Ret.MediaSearchQuery{source: "youtube", cursor: cursor, filter: filter, q: q}) do
-    with api_key when is_binary(api_key) <- resolver_config(:youtube_api_key) do
-      query =
-        URI.encode_query(
-          part: :snippet,
-          maxResults: @page_size,
-          type: :video,
-          pageToken: cursor,
-          topicId: filter,
-          q: q,
-          key: api_key
-        )
-
-      res =
-        "https://www.googleapis.com/youtube/v3/search?#{query}"
-        |> retry_get_until_success()
-
-      case res do
-        :error ->
-          :error
-
-        res ->
-          decoded_res = res |> Map.get(:body) |> Poison.decode!()
-          entries = decoded_res |> Map.get("items") |> Enum.map(&youtube_api_result_to_entry/1)
-          next_cursor = decoded_res |> Map.get("nextPageToken")
-
-          {:commit,
-           %Ret.MediaSearchResult{
-             meta: %Ret.MediaSearchResultMeta{
-               next_cursor: next_cursor,
-               source: :youtube
-             },
-             entries: entries
-           }}
-      end
-    else
-      _ -> nil
-    end
-  end
-
-  def search(%Ret.MediaSearchQuery{source: "imgur", page: page, filter: _filter, q: q}) do
-    with client_id when is_binary(client_id) <- resolver_config(:imgur_client_id),
-         api_key when is_binary(api_key) <- resolver_config(:imgur_mashape_api_key) do
-      query = URI.encode_query(q: q)
-
-      res =
-        "https://imgur-apiv3.p.mashape.com/3/gallery/search/viral//#{page}?#{query}"
-        |> retry_get_until_success([{"Authorization", "Client-Id #{client_id}"}, {"X-Mashape-Key", api_key}])
-
-      case res do
-        :error ->
-          :error
-
-        res ->
-          decoded_res = res |> Map.get(:body) |> Poison.decode!()
-          entries = decoded_res |> Map.get("data") |> Enum.map(&imgur_api_result_to_entry/1)
-
-          {:commit,
-           %Ret.MediaSearchResult{
-             meta: %Ret.MediaSearchResultMeta{source: :imgur},
-             entries: entries
-           }}
-      end
-    else
-      _ -> nil
-    end
-  end
-
   def search(%Ret.MediaSearchQuery{source: "tenor", cursor: cursor, filter: _filter, q: q}) do
     with api_key when is_binary(api_key) <- resolver_config(:tenor_api_key) do
       query =
@@ -210,7 +142,56 @@ defmodule Ret.MediaSearch do
     end
   end
 
-  defp scene_listing_search(page, query, filter, order \\ [desc: :updated_at]) do
+  def search(%Ret.MediaSearchQuery{source: "bing_videos"} = query) do
+    bing_search(query)
+  end
+
+  def search(%Ret.MediaSearchQuery{source: "bing_images"} = query) do
+    bing_search(query)
+  end
+
+  def bing_search(%Ret.MediaSearchQuery{source: source, cursor: cursor, filter: _filter, q: q, locale: locale}) do
+    with api_key when is_binary(api_key) <- resolver_config(:bing_search_api_key) do
+      query =
+        URI.encode_query(
+          count: @page_size,
+          offset: cursor || 0,
+          mkt: locale || "en-US",
+          q: q,
+          safeSearch: :Strict,
+          pricing: :Free
+        )
+
+      type = source |> String.replace("bing_", "")
+
+      res =
+        "https://api.cognitive.microsoft.com/bing/v7.0/#{type}/search?#{query}"
+        |> retry_get_until_success([{"Ocp-Apim-Subscription-Key", api_key}])
+
+      case res do
+        :error ->
+          :error
+
+        res ->
+          decoded_res = res |> Map.get(:body) |> Poison.decode!()
+          IO.inspect(decoded_res)
+          next_cursor = decoded_res |> Map.get("nextOffset")
+          entries = decoded_res |> Map.get("value") |> Enum.map(&bing_api_result_to_entry(type, &1))
+          suggestions = decoded_res |> Map.get("relatedSearches") |> Enum.map(& &1["text"])
+
+          {:commit,
+           %Ret.MediaSearchResult{
+             meta: %Ret.MediaSearchResultMeta{source: :bing_videos, next_cursor: next_cursor},
+             entries: entries,
+             suggestions: suggestions
+           }}
+      end
+    else
+      _ -> nil
+    end
+  end
+
+  defp scene_listing_search(cursor, query, filter, order \\ [desc: :updated_at]) do
     results =
       SceneListing
       |> join(:inner, [l], s in assoc(l, :scene))
@@ -219,7 +200,7 @@ defmodule Ret.MediaSearch do
       |> add_tag_to_listing_search_query(filter)
       |> preload([:screenshot_owned_file, :model_owned_file, :scene_owned_file])
       |> order_by(^order)
-      |> Repo.paginate(%{page: page, page_size: @page_size})
+      |> Repo.paginate(%{page: cursor, page_size: @page_size})
       |> result_for_scene_listing_page()
 
     {:commit, results}
@@ -234,10 +215,7 @@ defmodule Ret.MediaSearch do
   defp result_for_scene_listing_page(page) do
     %Ret.MediaSearchResult{
       meta: %Ret.MediaSearchResultMeta{
-        page: page.page_number,
-        page_size: page.page_size,
-        total_pages: page.total_pages,
-        total_entries: page.total_entries,
+        next_cursor: (page || 1) + 1,
         source: :scene_listings
       },
       entries:
@@ -298,28 +276,6 @@ defmodule Ret.MediaSearch do
     }
   end
 
-  defp youtube_api_result_to_entry(result) do
-    %{
-      id: result["id"]["videoId"],
-      type: "youtube_video",
-      name: result["snippet"]["title"],
-      attributions: %{creator: %{name: result["snippet"]["channelTitle"]}},
-      url: "https://www.youtube.com/watch?v=#{result["id"]["videoId"]}",
-      images: %{preview: result["snippet"]["thumbnails"]["medium"]["url"]}
-    }
-  end
-
-  defp imgur_api_result_to_entry(result) do
-    %{
-      id: result["id"],
-      type: "imgur_image",
-      name: result["title"],
-      attributions: %{},
-      url: "https://www.imgur.com/gallery/#{result["id"]}",
-      images: %{preview: result["link"]}
-    }
-  end
-
   defp tenor_api_result_to_entry(result) do
     media_entry = result["media"] |> Enum.at(0)
 
@@ -330,6 +286,22 @@ defmodule Ret.MediaSearch do
       attributions: %{},
       url: media_entry["mp4"]["url"],
       images: %{preview: media_entry["tinygif"]["url"]}
+    }
+  end
+
+  defp bing_api_result_to_entry(type, result) do
+    %{
+      id: result["#{type |> String.replace(~r/s$/, "")}Id"],
+      type: "bing_#{type}",
+      name: result["name"],
+      attributions:
+        if result["publisher"] do
+          %{publisher: result["publisher"] |> Enum.at(0), creator: result["creator"]}
+        else
+          %{}
+        end,
+      url: result["contentUrl"],
+      images: %{preview: result["thumbnailUrl"]}
     }
   end
 
