@@ -323,9 +323,11 @@ defmodule Ret.MediaSearch do
   end
 
   defp bing_api_result_to_entry(type, result) do
+    object_type = type |> String.replace(~r/s$/, "")
+
     %{
-      id: result["#{type |> String.replace(~r/s$/, "")}Id"],
-      type: "bing_#{type}",
+      id: result["#{object_type}Id"],
+      type: "bing_#{object_type}",
       name: result["name"],
       attributions:
         if result["publisher"] do
