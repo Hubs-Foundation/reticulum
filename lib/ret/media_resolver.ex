@@ -56,7 +56,6 @@ defmodule Ret.MediaResolver do
 
       case ytdl_resp do
         %HTTPoison.Response{status_code: 302, headers: headers} ->
-
           # todo: it would be really nice to return video/* content type here!
           # but it seems that the way we're using youtube-dl will return a 302 with the
           # direct URL for various non-video files, e.g. PDFs seem to trigger this, so until
@@ -167,34 +166,49 @@ defmodule Ret.MediaResolver do
   end
 
   defp resolve_non_video(
+         %URI{path: "/models/" <> model_id} = uri,
+         "sketchfab.com"
+       ) do
+    resolve_sketchfab_model(model_id, uri)
+  end
+
+  defp resolve_non_video(
          %URI{path: "/3d-models/" <> model_id} = uri,
          "sketchfab.com"
        ) do
+    resolve_sketchfab_model(model_id, uri)
+  end
+
+  defp resolve_sketchfab_model(model_id, %URI{} = uri) do
     [uri, meta] =
       with api_key when is_binary(api_key) <- module_config(:sketchfab_api_key) do
-        res =
-          "https://api.sketchfab.com/v3/models/#{model_id}/download"
-          |> retry_get_until_success([{"Authorization", "Token #{api_key}"}])
-
-        uri =
-          case res do
-            :error ->
-              :error
-
-            res ->
-              res
-              |> Map.get(:body)
-              |> Poison.decode!()
-              |> Kernel.get_in(["gltf", "url"])
-              |> URI.parse()
-          end
-
-        [uri, %{expected_content_type: "model/gltf+zip"}]
+        resolve_sketchfab_model(model_id, api_key)
       else
         _err -> [uri, nil]
       end
 
     {:commit, uri |> resolved(meta)}
+  end
+
+  defp resolve_sketchfab_model(model_id, api_key) do
+    res =
+      "https://api.sketchfab.com/v3/models/#{model_id}/download"
+      |> retry_get_until_success([{"Authorization", "Token #{api_key}"}])
+
+    uri =
+      case res do
+        :error ->
+          :error
+
+        res ->
+          res
+          |> Map.get(:body)
+          |> Poison.decode!()
+          |> Kernel.get_in(["gltf", "url"])
+          |> URI.parse()
+      end
+
+    [uri, %{expected_content_type: "model/gltf+zip"}]
   end
 
   defp resolve_non_video(%URI{} = uri, _root_host) do
@@ -212,9 +226,15 @@ defmodule Ret.MediaResolver do
         # image-like views and some (GIFs) need to turn into video-like views.
         resp ->
           case resp.body |> OpenGraph.parse() do
-            %{video: video} when is_binary(video) -> [URI.parse(video), %{expected_content_type: "video/*"}]
-            %{image: image} when is_binary(image) -> [URI.parse(image), %{}] # don't send image/*
-            _ -> [uri, %{expected_content_type: content_type_from_headers(resp.headers)}]
+            %{video: video} when is_binary(video) ->
+              [URI.parse(video), %{expected_content_type: "video/*"}]
+
+            # don't send image/*
+            %{image: image} when is_binary(image) ->
+              [URI.parse(image), %{}]
+
+            _ ->
+              [uri, %{expected_content_type: content_type_from_headers(resp.headers)}]
           end
       end
 
@@ -251,6 +271,7 @@ defmodule Ret.MediaResolver do
         |> Poison.decode!()
         |> Kernel.get_in(["data", "images"])
         |> List.first()
+
       image_url = URI.parse(image_data["link"])
       meta = %{expected_content_type: image_data["type"]}
       [image_url, meta]
