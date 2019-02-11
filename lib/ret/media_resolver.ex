@@ -180,6 +180,36 @@ defmodule Ret.MediaResolver do
     resolve_sketchfab_model(model_id, uri)
   end
 
+  defp resolve_non_video(%URI{} = uri, _root_host) do
+    # Fall back on og: tags
+    [uri, meta] =
+      case uri |> URI.to_string() |> retry_get_until_success([{"Range", "bytes=0-32768"}]) do
+        :error ->
+          nil
+
+        # note that there exist og:image:type and og:video:type tags we could use,
+        # but our OpenGraph library fails to parse them out.
+
+        # also, we could technically be correct to emit an "image/*" content type from the OG image case,
+        # but our client right now will be confused by that because some images need to turn into
+        # image-like views and some (GIFs) need to turn into video-like views.
+        resp ->
+          case resp.body |> OpenGraph.parse() do
+            %{video: video} when is_binary(video) ->
+              [URI.parse(video), %{expected_content_type: "video/*"}]
+
+            # don't send image/*
+            %{image: image} when is_binary(image) ->
+              [URI.parse(image), %{}]
+
+            _ ->
+              [uri, %{expected_content_type: content_type_from_headers(resp.headers)}]
+          end
+      end
+
+    {:commit, uri |> resolved(meta)}
+  end
+
   defp resolve_sketchfab_model(model_id, %URI{} = uri) do
     [uri, meta] =
       with api_key when is_binary(api_key) <- module_config(:sketchfab_api_key) do
@@ -210,36 +240,6 @@ defmodule Ret.MediaResolver do
       end
 
     [uri, %{expected_content_type: "model/gltf+zip"}]
-  end
-
-  defp resolve_non_video(%URI{} = uri, _root_host) do
-    # Fall back on og: tags
-    [uri, meta] =
-      case uri |> URI.to_string() |> retry_get_until_success([{"Range", "bytes=0-32768"}]) do
-        :error ->
-          nil
-
-        # note that there exist og:image:type and og:video:type tags we could use,
-        # but our OpenGraph library fails to parse them out.
-
-        # also, we could technically be correct to emit an "image/*" content type from the OG image case,
-        # but our client right now will be confused by that because some images need to turn into
-        # image-like views and some (GIFs) need to turn into video-like views.
-        resp ->
-          case resp.body |> OpenGraph.parse() do
-            %{video: video} when is_binary(video) ->
-              [URI.parse(video), %{expected_content_type: "video/*"}]
-
-            # don't send image/*
-            %{image: image} when is_binary(image) ->
-              [URI.parse(image), %{}]
-
-            _ ->
-              [uri, %{expected_content_type: content_type_from_headers(resp.headers)}]
-          end
-      end
-
-    {:commit, uri |> resolved(meta)}
   end
 
   defp resolve_giphy_media_uri(%URI{} = uri, preferred_type) do
