@@ -176,6 +176,7 @@ defmodule Ret.MediaResolver do
          %URI{path: "/3d-models/" <> model_id} = uri,
          "sketchfab.com"
        ) do
+    model_id = model_id |> String.split("-") |> Enum.at(-1)
     resolve_sketchfab_model(model_id, uri)
   end
 
