@@ -167,7 +167,7 @@ defmodule Ret.MediaResolver do
   end
 
   defp resolve_non_video(
-         %URI{path: "/models/" <> model_id} = uri,
+         %URI{path: "/3d-models/" <> model_id} = uri,
          "sketchfab.com"
        ) do
     [uri, meta] =
