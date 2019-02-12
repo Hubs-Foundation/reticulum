@@ -20,9 +20,8 @@ defmodule RetWeb.Api.V1.AvatarView do
       name: avatar.name,
       description: avatar.description,
       attributions: avatar.attributions,
-      gltf_url: avatar.gltf_owned_file |> OwnedFile.uri_for() |> URI.to_string(),
-      bin_url: avatar.bin_owned_file |> OwnedFile.uri_for() |> URI.to_string(),
-      url: avatar |> url_for_avatar()
+      url: avatar |> url_for_avatar(),
+      parent_avatar_id: avatar.parent_avatar.avatar_sid
     }
   end
 end

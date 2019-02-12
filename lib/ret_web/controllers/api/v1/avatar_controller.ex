@@ -24,22 +24,27 @@ defmodule RetWeb.Api.V1.AvatarController do
 
     case promotion_error do
       nil ->
-        %{
-          gltf: {:ok, gltf_file},
-          bin: {:ok, bin_file},
-          base_map: {:ok, base_map}
-        } = owned_file_results
-
         owned_files =
           owned_file_results |> Enum.map(fn {k, {:ok, file}} -> {k, file} end) |> Enum.into(%{})
 
+        IO.inspect(params["parent_avatar_id"])
+
+        parent_avatar =
+          if params["parent_avatar_id"] do
+            Repo.get_by(Avatar, avatar_sid: params["parent_avatar_id"])
+          end
+
+        IO.inspect(parent_avatar)
+
         {result, avatar} =
           avatar
-          |> Avatar.changeset(account, owned_files, params)
+          |> Avatar.changeset(account, owned_files, parent_avatar, params)
           |> IO.inspect()
           |> Repo.insert_or_update()
 
-        avatar = avatar |> Repo.preload([:gltf_owned_file, :bin_owned_file])
+        IO.inspect(avatar)
+
+        # avatar = avatar |> Repo.preload([:gltf_owned_file, :bin_owned_file])
 
         case result do
           :ok ->
@@ -66,13 +71,25 @@ defmodule RetWeb.Api.V1.AvatarController do
   }
 
   @image_columns Map.keys(@image_names)
+  @file_columns [:gltf_owned_file, :bin_owned_file] ++ @image_columns
+
+  defp collapse_avatar_files(%{parent_avatar: nil} = avatar), do: avatar |> Map.take(@file_columns)
+
+  defp collapse_avatar_files(%{parent_avatar: parent} = avatar) do
+    Map.merge(collapse_avatar_files(parent), avatar |> Map.take(@file_columns), fn _k, v1, v2 ->
+      if is_nil(v2), do: v1, else: v2
+    end)
+  end
 
   def show(conn, %{"id" => avatar_sid}) do
     avatar =
       Avatar
       |> Repo.get_by(avatar_sid: avatar_sid)
-      |> Repo.preload([:account, :gltf_owned_file, :bin_owned_file])
-      |> Repo.preload(@image_columns)
+      # TODO we ideally don't need to be featching the OwnedFiles until after we collapse them
+      |> Avatar.load_parents(@file_columns)
+      |> Map.from_struct()
+      |> collapse_avatar_files()
+      |> IO.inspect()
 
     case Storage.fetch(avatar.gltf_owned_file) do
       {:ok, %{"content_type" => content_type, "content_length" => content_length}, stream} ->
