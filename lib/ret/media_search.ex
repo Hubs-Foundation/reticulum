@@ -214,7 +214,7 @@ defmodule Ret.MediaSearch do
 
           {:commit,
            %Ret.MediaSearchResult{
-             meta: %Ret.MediaSearchResultMeta{source: :bing_videos, next_cursor: next_cursor},
+             meta: %Ret.MediaSearchResultMeta{source: source, next_cursor: next_cursor},
              entries: entries,
              suggestions: suggestions
            }}
@@ -234,7 +234,7 @@ defmodule Ret.MediaSearch do
       |> preload([:screenshot_owned_file, :model_owned_file, :scene_owned_file])
       |> order_by(^order)
       |> Repo.paginate(%{page: cursor, page_size: @page_size})
-      |> result_for_scene_listing_page()
+      |> result_for_scene_listing_page(cursor)
 
     {:commit, results}
   end
@@ -245,10 +245,10 @@ defmodule Ret.MediaSearch do
   defp add_tag_to_listing_search_query(query, nil), do: query
   defp add_tag_to_listing_search_query(query, tag), do: query |> where(fragment("tags->'tags' \\? ?", ^tag))
 
-  defp result_for_scene_listing_page(page) do
+  defp result_for_scene_listing_page(page, cursor) do
     %Ret.MediaSearchResult{
       meta: %Ret.MediaSearchResultMeta{
-        next_cursor: (page || 1) + 1,
+        next_cursor: (cursor || 1) + 1,
         source: :scene_listings
       },
       entries:
@@ -266,18 +266,20 @@ defmodule Ret.MediaSearch do
       description: scene_listing.description,
       attributions: scene_listing.attributions,
       images: %{
-        preview: scene_listing.screenshot_owned_file |> OwnedFile.uri_for() |> URI.to_string()
+        preview: %{url: scene_listing.screenshot_owned_file |> OwnedFile.uri_for() |> URI.to_string()}
       }
     }
   end
 
   defp sketchfab_api_result_to_entry(%{"thumbnails" => thumbnails} = result) do
     images = %{
-      preview:
-        thumbnails["images"]
-        |> Enum.sort_by(fn x -> -x["size"] end)
-        |> Enum.at(0)
-        |> Kernel.get_in(["url"])
+      preview: %{
+        url:
+          thumbnails["images"]
+          |> Enum.sort_by(fn x -> -x["size"] end)
+          |> Enum.at(0)
+          |> Kernel.get_in(["url"])
+      }
     }
 
     sketchfab_api_result_to_entry(result, images)
@@ -305,7 +307,7 @@ defmodule Ret.MediaSearch do
       name: result["displayName"],
       attributions: %{creator: %{name: result["authorName"]}},
       url: "https://poly.google.com/view/#{result["name"] |> String.replace("assets/", "")}",
-      images: %{preview: result["thumbnail"]["url"]}
+      images: %{preview: %{url: result["thumbnail"]["url"]}}
     }
   end
 
@@ -318,7 +320,7 @@ defmodule Ret.MediaSearch do
       name: result["title"],
       attributions: %{},
       url: media_entry["mp4"]["url"],
-      images: %{preview: media_entry["tinygif"]["url"]}
+      images: %{preview: %{url: media_entry["tinygif"]["url"]}}
     }
   end
 
@@ -336,7 +338,13 @@ defmodule Ret.MediaSearch do
           %{}
         end,
       url: result["contentUrl"],
-      images: %{preview: result["thumbnailUrl"]}
+      images: %{
+        preview: %{
+          url: result["thumbnailUrl"],
+          width: result["thumbnail"]["width"],
+          height: result["thumbnail"]["height"]
+        }
+      }
     }
   end
 
@@ -350,7 +358,7 @@ defmodule Ret.MediaSearch do
         creator: %{name: result["channel"]["name"], url: result["channel"]["url"]}
       },
       url: result["channel"]["url"],
-      images: %{preview: result["preview"]["large"]}
+      images: %{preview: %{url: result["preview"]["large"]}}
     }
   end
 
