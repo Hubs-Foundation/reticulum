@@ -5,17 +5,40 @@ defmodule RetWeb.Api.V1.AvatarController do
 
   plug(RetWeb.Plugs.RateLimit when action in [:create, :update])
 
-  def create(conn, params) do
+  def create(conn, %{"avatar" => params}) do
     create_or_update(conn, params, %Avatar{})
+  end
+
+  def update(conn, %{"id" => avatar_sid, "avatar" => params}) do
+    case avatar_sid |> get_avatar() do
+      %Avatar{} = avatar -> create_or_update(conn, params, avatar)
+      _ -> conn |> send_resp(404, "not found")
+    end
+  end
+
+  defp create_or_update(
+         conn,
+         _params,
+         %Avatar{account_id: avatar_account_id},
+         %Account{account_id: account_id}
+       )
+       when not is_nil(avatar_account_id) and avatar_account_id != account_id do
+    conn |> send_resp(401, "")
   end
 
   defp create_or_update(conn, params, avatar) do
     account = conn |> Guardian.Plug.current_resource()
 
     files_to_promotoe =
-      params["files"]
-      |> Enum.map(fn {k, v} -> {String.to_atom(k), List.to_tuple(v)} end)
-      |> Enum.into(%{})
+      case params["files"] do
+        nil ->
+          %{}
+
+        files ->
+          files
+          |> Enum.map(fn {k, v} -> {String.to_atom(k), List.to_tuple(v)} end)
+          |> Enum.into(%{})
+      end
 
     owned_file_results = Storage.promote(files_to_promotoe, account)
 
@@ -73,7 +96,8 @@ defmodule RetWeb.Api.V1.AvatarController do
   @image_columns Map.keys(@image_names)
   @file_columns [:gltf_owned_file, :bin_owned_file] ++ @image_columns
 
-  defp collapse_avatar_files(%{parent_avatar: nil} = avatar), do: avatar |> Map.take(@file_columns)
+  defp collapse_avatar_files(%{parent_avatar: nil} = avatar),
+    do: avatar |> Map.take(@file_columns)
 
   defp collapse_avatar_files(%{parent_avatar: parent} = avatar) do
     Map.merge(collapse_avatar_files(parent), avatar |> Map.take(@file_columns), fn _k, v1, v2 ->
@@ -81,7 +105,20 @@ defmodule RetWeb.Api.V1.AvatarController do
     end)
   end
 
+  defp get_avatar(avatar_sid) do
+    avatar =
+      Avatar
+      |> Repo.get_by(avatar_sid: avatar_sid)
+      |> Repo.preload([@file_columns ++ [:parent_avatar, :account]])
+      |> IO.inspect()
+  end
+
   def show(conn, %{"id" => avatar_sid}) do
+    avatar = avatar_sid |> get_avatar()
+    conn |> render("show.json", avatar: avatar)
+  end
+
+  def show_gltf(conn, %{"id" => avatar_sid}) do
     avatar =
       Avatar
       |> Repo.get_by(avatar_sid: avatar_sid)
