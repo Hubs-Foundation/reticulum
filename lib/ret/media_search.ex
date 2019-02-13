@@ -108,7 +108,7 @@ defmodule Ret.MediaSearch do
     end
   end
 
-  def search(%Ret.MediaSearchQuery{source: "tenor", cursor: cursor, filter: _filter, q: q}) do
+  def search(%Ret.MediaSearchQuery{source: "tenor", cursor: cursor, filter: filter, q: q}) do
     with api_key when is_binary(api_key) <- resolver_config(:tenor_api_key) do
       query =
         URI.encode_query(
@@ -120,7 +120,13 @@ defmodule Ret.MediaSearch do
           key: api_key
         )
 
-      res = "https://api.tenor.com/v1/search?#{query}" |> retry_get_until_success()
+      res =
+        if filter == "trending" do
+          "https://api.tenor.com/v1/trending?#{query}"
+        else
+          "https://api.tenor.com/v1/search?#{query}"
+        end
+        |> retry_get_until_success()
 
       case res do
         :error ->
@@ -320,7 +326,13 @@ defmodule Ret.MediaSearch do
       name: result["title"],
       attributions: %{},
       url: media_entry["mp4"]["url"],
-      images: %{preview: %{url: media_entry["tinygif"]["url"]}}
+      images: %{
+        preview: %{
+          url: media_entry["tinygif"]["url"],
+          width: media_entry["tinygif"]["dims"] |> Enum.at(0),
+          height: media_entry["tinygif"]["dims"] |> Enum.at(1)
+        }
+      }
     }
   end
 
