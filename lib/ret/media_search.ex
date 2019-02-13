@@ -30,42 +30,36 @@ defmodule Ret.MediaSearch do
     scene_listing_search(cursor, query, filter)
   end
 
+  def search(%Ret.MediaSearchQuery{source: "sketchfab", cursor: cursor, filter: "featured", q: q}) do
+    query =
+      URI.encode_query(
+        type: :models,
+        downloadable: true,
+        count: @page_size,
+        face_count: @max_face_count,
+        processing_status: :succeeded,
+        cursor: cursor,
+        collection: "ec06ae45eba24bfdb1278b223f8e289c",
+        q: q
+      )
+
+    sketchfab_search(query)
+  end
+
   def search(%Ret.MediaSearchQuery{source: "sketchfab", cursor: cursor, filter: filter, q: q}) do
-    with api_key when is_binary(api_key) <- resolver_config(:sketchfab_api_key) do
-      query =
-        URI.encode_query(
-          type: :models,
-          downloadable: true,
-          count: @page_size,
-          face_count: @max_face_count,
-          processing_status: :succeeded,
-          cursor: cursor,
-          categories: filter,
-          q: q
-        )
+    query =
+      URI.encode_query(
+        type: :models,
+        downloadable: true,
+        count: @page_size,
+        face_count: @max_face_count,
+        processing_status: :succeeded,
+        cursor: cursor,
+        categories: filter,
+        q: q
+      )
 
-      res =
-        "https://api.sketchfab.com/v3/search?#{query}"
-        |> retry_get_until_success([{"Authorization", "Token #{api_key}"}])
-
-      case res do
-        :error ->
-          :error
-
-        res ->
-          decoded_res = res |> Map.get(:body) |> Poison.decode!()
-          entries = decoded_res |> Map.get("results") |> Enum.map(&sketchfab_api_result_to_entry/1)
-          cursors = decoded_res |> Map.get("cursors")
-
-          {:commit,
-           %Ret.MediaSearchResult{
-             meta: %Ret.MediaSearchResultMeta{next_cursor: cursors["next"], source: :sketchfab},
-             entries: entries
-           }}
-      end
-    else
-      _ -> nil
-    end
+    sketchfab_search(query)
   end
 
   def search(%Ret.MediaSearchQuery{source: "poly", cursor: cursor, filter: filter, q: q}) do
@@ -182,6 +176,32 @@ defmodule Ret.MediaSearch do
           {:commit,
            %Ret.MediaSearchResult{
              meta: %Ret.MediaSearchResultMeta{source: :twitch, next_cursor: next_cursor},
+             entries: entries
+           }}
+      end
+    else
+      _ -> nil
+    end
+  end
+
+  defp sketchfab_search(query) do
+    with api_key when is_binary(api_key) <- resolver_config(:sketchfab_api_key) do
+      res =
+        "https://api.sketchfab.com/v3/search?#{query}"
+        |> retry_get_until_success([{"Authorization", "Token #{api_key}"}])
+
+      case res do
+        :error ->
+          :error
+
+        res ->
+          decoded_res = res |> Map.get(:body) |> Poison.decode!()
+          entries = decoded_res |> Map.get("results") |> Enum.map(&sketchfab_api_result_to_entry/1)
+          cursors = decoded_res |> Map.get("cursors")
+
+          {:commit,
+           %Ret.MediaSearchResult{
+             meta: %Ret.MediaSearchResultMeta{next_cursor: cursors["next"], source: :sketchfab},
              entries: entries
            }}
       end
