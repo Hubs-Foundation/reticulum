@@ -13,7 +13,8 @@ defmodule Ret.MediaResolver do
 
   @non_video_root_hosts [
     "sketchfab.com",
-    "giphy.com"
+    "giphy.com",
+    "tenor.com"
   ]
 
   @deviant_id_regex ~r/\"DeviantArt:\/\/deviation\/([^"]+)/
@@ -56,7 +57,6 @@ defmodule Ret.MediaResolver do
 
       case ytdl_resp do
         %HTTPoison.Response{status_code: 302, headers: headers} ->
-
           # todo: it would be really nice to return video/* content type here!
           # but it seems that the way we're using youtube-dl will return a 302 with the
           # direct URL for various non-video files, e.g. PDFs seem to trigger this, so until
@@ -116,6 +116,10 @@ defmodule Ret.MediaResolver do
     resolve_giphy_media_uri(uri, "url")
   end
 
+  defp resolve_non_video(%URI{path: "/videos/" <> _rest} = uri, "tenor.com") do
+    {:commit, uri |> resolved(%{expected_content_type: "video/mp4"})}
+  end
+
   defp resolve_non_video(%URI{path: "/gallery/" <> gallery_id} = uri, "imgur.com") do
     [resolved_url, meta] =
       "https://imgur-apiv3.p.mashape.com/3/gallery/#{gallery_id}"
@@ -153,8 +157,7 @@ defmodule Ret.MediaResolver do
         formats = payload |> Map.get("formats")
 
         uri =
-          (Enum.find(formats, &(&1["formatType"] == "GLTF2")) ||
-             Enum.find(formats, &(&1["formatType"] == "GLTF")))
+          (Enum.find(formats, &(&1["formatType"] == "GLTF2")) || Enum.find(formats, &(&1["formatType"] == "GLTF")))
           |> Kernel.get_in(["root", "url"])
           |> URI.parse()
 
@@ -213,7 +216,8 @@ defmodule Ret.MediaResolver do
         resp ->
           case resp.body |> OpenGraph.parse() do
             %{video: video} when is_binary(video) -> [URI.parse(video), %{expected_content_type: "video/*"}]
-            %{image: image} when is_binary(image) -> [URI.parse(image), %{}] # don't send image/*
+            # don't send image/*
+            %{image: image} when is_binary(image) -> [URI.parse(image), %{}]
             _ -> [uri, %{expected_content_type: content_type_from_headers(resp.headers)}]
           end
       end
@@ -251,6 +255,7 @@ defmodule Ret.MediaResolver do
         |> Poison.decode!()
         |> Kernel.get_in(["data", "images"])
         |> List.first()
+
       image_url = URI.parse(image_data["link"])
       meta = %{expected_content_type: image_data["type"]}
       [image_url, meta]
