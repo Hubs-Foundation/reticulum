@@ -35,7 +35,7 @@ defmodule Ret.Avatar do
     belongs_to(:base_map_owned_file, OwnedFile, references: :owned_file_id)
     belongs_to(:emissive_map_owned_file, OwnedFile, references: :owned_file_id)
     belongs_to(:normal_map_owned_file, OwnedFile, references: :owned_file_id)
-    belongs_to(:ao_metalic_roughness_map_owned_file, OwnedFile, references: :owned_file_id)
+    belongs_to(:orm_map_owned_file, OwnedFile, references: :owned_file_id)
 
     field(:state, Avatar.State)
 

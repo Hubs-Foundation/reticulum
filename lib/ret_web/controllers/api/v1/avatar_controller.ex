@@ -90,7 +90,7 @@ defmodule RetWeb.Api.V1.AvatarController do
     base_map_owned_file: "Bot_PBS_BaseColor.jpg",
     emissive_map_owned_file: "Bot_PBS_Emmissive.jpg",
     normal_map_owned_file: "Bot_PBS_Normal.png",
-    ao_metalic_roughness_map_owned_file: "Bot_PBS_Metallic.jpg"
+    orm_map_owned_file: "Bot_PBS_Metallic.jpg"
   }
 
   @image_columns Map.keys(@image_names)

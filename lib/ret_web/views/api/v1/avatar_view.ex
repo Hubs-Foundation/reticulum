@@ -36,7 +36,7 @@ defmodule RetWeb.Api.V1.AvatarView do
         base_map: avatar |> file_url_or_nil(:base_map_owned_file),
         emissive_map: avatar |> file_url_or_nil(:emissive_map_owned_file),
         normal_map: avatar |> file_url_or_nil(:normal_map_owned_file),
-        ao_metalic_roughness_map: avatar |> file_url_or_nil(:ao_metalic_roughness_map),
+        orm_map: avatar |> file_url_or_nil(:orm_map),
       }
     }
   end
