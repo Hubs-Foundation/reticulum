@@ -114,15 +114,28 @@ defmodule RetWeb.Api.V1.AvatarController do
   end
 
   def show(conn, %{"id" => avatar_sid}) do
-    avatar = avatar_sid |> get_avatar()
+    conn |> show(avatar_sid |> get_avatar())
+  end
+
+  def show(conn, nil = _avatar) do
+    conn |> send_resp(404, "")
+  end
+
+  def show(conn, %Avatar{} = avatar) do
     conn |> render("show.json", avatar: avatar)
   end
 
   def show_gltf(conn, %{"id" => avatar_sid}) do
-    avatar =
-      Avatar
-      |> Repo.get_by(avatar_sid: avatar_sid)
-      # TODO we ideally don't need to be featching the OwnedFiles until after we collapse them
+      conn |> show_gltf(Avaatar |> Repo.get_by(avatar_sid: avatar_sid))
+  end
+
+  def show_gltf(conn, nil = _avatar) do
+    conn |> send_resp(404, "")
+  end
+
+  def show_gltf(conn, %Avatar{} = avatar) do
+    # TODO we ideally don't need to be featching the OwnedFiles until after we collapse them
+    avatar = avatar
       |> Avatar.load_parents(@file_columns)
       |> Map.from_struct()
       |> collapse_avatar_files()
