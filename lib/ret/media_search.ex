@@ -274,7 +274,12 @@ defmodule Ret.MediaSearch do
   defp result_for_scene_listing_page(page, cursor) do
     %Ret.MediaSearchResult{
       meta: %Ret.MediaSearchResultMeta{
-        next_cursor: (cursor || 1) + 1,
+        next_cursor:
+          if page.total_pages > cursor do
+            (cursor || 1) + 1
+          else
+            nil
+          end,
         source: :scene_listings
       },
       entries:
