@@ -5,6 +5,18 @@ defmodule RetWeb.Api.V1.AvatarController do
 
   plug(RetWeb.Plugs.RateLimit when action in [:create, :update])
 
+  @texture_paths %{
+    base_map_owned_file: [["pbrMetallicRoughness", "baseColorTexture"]],
+    emissive_map_owned_file: [["emissiveTexture"]],
+    normal_map_owned_file: [["normalTexture"]],
+    orm_map_owned_file: [
+      ["pbrMetallicRoughness", "metallicRoughnessTexture"],
+      ["occlusionTexture"]
+    ]
+  }
+  @image_columns Map.keys(@texture_paths)
+  @file_columns [:gltf_owned_file, :bin_owned_file] ++ @image_columns
+
   def create(conn, %{"avatar" => params}) do
     create_or_update(conn, params, %Avatar{})
   end
@@ -67,7 +79,7 @@ defmodule RetWeb.Api.V1.AvatarController do
 
         IO.inspect(avatar)
 
-        # avatar = avatar |> Repo.preload([:gltf_owned_file, :bin_owned_file])
+        avatar = avatar |> Repo.preload(@file_columns)
 
         case result do
           :ok ->
@@ -84,17 +96,6 @@ defmodule RetWeb.Api.V1.AvatarController do
         conn |> send_resp(401, "")
     end
   end
-
-  # TODO rename the refference images to something more reasonable
-  @image_names %{
-    base_map_owned_file: "Bot_PBS_BaseColor.jpg",
-    emissive_map_owned_file: "Bot_PBS_Emmissive.jpg",
-    normal_map_owned_file: "Bot_PBS_Normal.png",
-    orm_map_owned_file: "Bot_PBS_Metallic.jpg"
-  }
-
-  @image_columns Map.keys(@image_names)
-  @file_columns [:gltf_owned_file, :bin_owned_file] ++ @image_columns
 
   defp collapse_avatar_files(%{parent_avatar: nil} = avatar),
     do: avatar |> Map.take(@file_columns)
@@ -126,7 +127,7 @@ defmodule RetWeb.Api.V1.AvatarController do
   end
 
   def show_gltf(conn, %{"id" => avatar_sid}) do
-      conn |> show_gltf(Avaatar |> Repo.get_by(avatar_sid: avatar_sid))
+    conn |> show_gltf(Avatar |> Repo.get_by(avatar_sid: avatar_sid))
   end
 
   def show_gltf(conn, nil = _avatar) do
@@ -135,37 +136,20 @@ defmodule RetWeb.Api.V1.AvatarController do
 
   def show_gltf(conn, %Avatar{} = avatar) do
     # TODO we ideally don't need to be featching the OwnedFiles until after we collapse them
-    avatar = avatar
+    avatar =
+      avatar
       |> Avatar.load_parents(@file_columns)
       |> Map.from_struct()
       |> collapse_avatar_files()
-      |> IO.inspect()
 
     case Storage.fetch(avatar.gltf_owned_file) do
       {:ok, %{"content_type" => content_type, "content_length" => content_length}, stream} ->
-        image_customizations =
-          @image_columns
-          |> Enum.map(fn col -> customization_for_image(col, Map.get(avatar, col)) end)
-          |> Enum.reject(&is_nil/1)
-
-        IO.inspect(image_customizations)
-
-        customizations = [
-          {["images"], image_customizations},
-          # This currently works because the input is known to have been a glb, which always has a single buffer which we exttract as part of upload
-          {["buffers"],
-           [
-             %{
-               uri: avatar.bin_owned_file |> OwnedFile.uri_for() |> URI.to_string()
-             }
-           ]}
-        ]
-
         gltf =
           stream
           |> Enum.join("")
           |> Poison.decode!()
-          |> apply_customizations(customizations)
+          |> with_material("Bot_PBS", avatar)
+          |> with_buffer(avatar.bin_owned_file)
 
         conn
         # |> put_resp_content_type("model/gltf", nil)
@@ -179,33 +163,41 @@ defmodule RetWeb.Api.V1.AvatarController do
     end
   end
 
-  defp customization_for_image(_col, _owned_file = nil) do
-    nil
+  defp with_buffer(gltf, bin_file) do
+    gltf
+    |> Map.replace("buffers", [
+      %{
+        uri: bin_file |> OwnedFile.uri_for() |> URI.to_string()
+      }
+    ])
   end
 
-  defp customization_for_image(col, owned_file) do
-    %{
-      name: @image_names[col],
-      uri: owned_file |> OwnedFile.uri_for() |> URI.to_string()
-    }
-  end
+  defp with_material(gltf, name, avatar) do
+    case gltf["materials"] |> Enum.find(&(&1["name"] == name)) do
+      nil ->
+        gltf
 
-  defp apply_customizations(gltf, customization_set) do
-    Enum.reduce(customization_set, gltf, &apply_customization/2)
-  end
+      material ->
+        image_files =
+          avatar
+          |> Map.take(@image_columns)
+          |> Enum.filter(fn {_, v} -> v end)
 
-  # defp apply_customization({path = ["buffers"], replacements}, gltf) do
-  #   gltf |> Kernel.put_in(path, replacements)
-  # end
-
-  defp apply_customization({path, replacements}, gltf) do
-    gltf |> Kernel.update_in(path, &apply_replacement(&1, replacements))
-  end
-
-  # TODO this is currently hardcoded to match on name and always replaces the whole node. We likely will want to expand the format of a "customization" to include more details about how to match and what to do with matches
-  defp apply_replacement(old_data, replacements) do
-    Enum.map(old_data, fn old_value ->
-      Enum.find(replacements, old_value, &(&1[:name] == old_value["name"]))
-    end)
+        image_files
+        |> Enum.flat_map(fn {col, file} ->
+          Enum.map(@texture_paths[col], fn path ->
+            texture_index = material |> Kernel.get_in(path ++ ["index"])
+            image_index = gltf |> Kernel.get_in(["textures", Access.at(texture_index), "source"])
+            {image_index, file}
+          end)
+        end)
+        |> Enum.reduce(gltf, fn {index, file}, gltf ->
+          gltf
+          |> Kernel.put_in(["images", Access.at(index)], %{
+            uri: file |> OwnedFile.uri_for() |> URI.to_string(),
+            mimeType: file.content_type
+          })
+        end)
+    end
   end
 end
