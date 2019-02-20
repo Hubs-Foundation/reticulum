@@ -13,7 +13,8 @@ defmodule Ret.MediaResolver do
 
   @non_video_root_hosts [
     "sketchfab.com",
-    "giphy.com"
+    "giphy.com",
+    "tenor.com"
   ]
 
   @deviant_id_regex ~r/\"DeviantArt:\/\/deviation\/([^"]+)/
@@ -115,6 +116,10 @@ defmodule Ret.MediaResolver do
     resolve_giphy_media_uri(uri, "url")
   end
 
+  defp resolve_non_video(%URI{path: "/videos/" <> _rest} = uri, "tenor.com") do
+    {:commit, uri |> resolved(%{expected_content_type: "video/mp4"})}
+  end
+
   defp resolve_non_video(%URI{path: "/gallery/" <> gallery_id} = uri, "imgur.com") do
     [resolved_url, meta] =
       "https://imgur-apiv3.p.mashape.com/3/gallery/#{gallery_id}"
@@ -152,8 +157,7 @@ defmodule Ret.MediaResolver do
         formats = payload |> Map.get("formats")
 
         uri =
-          (Enum.find(formats, &(&1["formatType"] == "GLTF2")) ||
-             Enum.find(formats, &(&1["formatType"] == "GLTF")))
+          (Enum.find(formats, &(&1["formatType"] == "GLTF2")) || Enum.find(formats, &(&1["formatType"] == "GLTF")))
           |> Kernel.get_in(["root", "url"])
           |> URI.parse()
 
