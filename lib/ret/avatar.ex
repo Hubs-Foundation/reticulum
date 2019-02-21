@@ -44,7 +44,8 @@ defmodule Ret.Avatar do
 
   def load_parents(avatar, preload_fields \\ [])
 
-  def load_parents(%Avatar{parent_avatar: nil} = avatar, preload_fields), do: avatar |> Repo.preload(preload_fields)
+  def load_parents(%Avatar{parent_avatar: nil} = avatar, preload_fields),
+    do: avatar |> Repo.preload(preload_fields)
 
   def load_parents(%Avatar{parent_avatar: %Ecto.Association.NotLoaded{}} = avatar, preload_fields) do
     avatar
