@@ -2,10 +2,6 @@ defmodule RetWeb.Api.V1.AvatarView do
   use RetWeb, :view
   alias Ret.{Avatar, OwnedFile}
 
-  defp url_for_avatar(avatar) do
-    "#{RetWeb.Endpoint.url()}/avatars/#{avatar.avatar_sid}/#{avatar.slug}"
-  end
-
   def render("create.json", %{avatar: avatar}) do
     %{avatars: [render_avatar(avatar)]}
   end

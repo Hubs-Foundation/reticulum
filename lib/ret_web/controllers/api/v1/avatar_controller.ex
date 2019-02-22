@@ -1,17 +1,16 @@
 defmodule RetWeb.Api.V1.AvatarController do
   use RetWeb, :controller
 
-  alias Ret.{Account, Repo, Avatar, Storage, OwnedFile, GLTFUtils}
+  alias Ret.{Account, Repo, Avatar, Storage, GLTFUtils}
 
   plug(RetWeb.Plugs.RateLimit when action in [:create, :update])
 
   @primary_material_name "Bot_PBS"
 
   defp get_avatar(avatar_sid) do
-    avatar =
-      Avatar
-      |> Repo.get_by(avatar_sid: avatar_sid)
-      |> Repo.preload([Avatar.file_columns() ++ [:parent_avatar, :account]])
+    Avatar
+    |> Repo.get_by(avatar_sid: avatar_sid)
+    |> Repo.preload([Avatar.file_columns() ++ [:parent_avatar, :account]])
   end
 
   def create(conn, %{"avatar" => params}) do
@@ -107,7 +106,7 @@ defmodule RetWeb.Api.V1.AvatarController do
     avatar_files = avatar |> Avatar.collapsed_files()
 
     case Storage.fetch(avatar_files.gltf_owned_file) do
-      {:ok, %{"content_type" => content_type, "content_length" => content_length}, stream} ->
+      {:ok, _meta, stream} ->
         gltf =
           stream
           |> Enum.join("")

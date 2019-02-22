@@ -13,7 +13,7 @@ defmodule Ret.GLTFUtils do
 
   def with_buffer(gltf, bin_file) do
     gltf
-    |> Map.replace("buffers", [
+    |> Map.put("buffers", [
       %{
         uri: bin_file |> OwnedFile.uri_for() |> URI.to_string()
       }
@@ -21,7 +21,6 @@ defmodule Ret.GLTFUtils do
   end
 
   def with_material(gltf, name, image_files) do
-    IO.inspect name
     case gltf["materials"] |> Enum.find(&(&1["name"] == name)) do
       nil ->
         gltf
