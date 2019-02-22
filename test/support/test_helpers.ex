@@ -15,8 +15,12 @@ defmodule Ret.TestHelpers do
     file_path
   end
 
+  def create_account() do
+    Account.account_for_email("test@mozilla.com")
+  end
+
   def create_account(_) do
-    {:ok, account: Account.account_for_email("test@mozilla.com")}
+    {:ok, account: create_account()}
   end
 
   def create_owned_file(%{account: account}) do
