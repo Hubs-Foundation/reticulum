@@ -1,22 +1,18 @@
 defmodule RetWeb.Api.V1.AvatarController do
   use RetWeb, :controller
 
-  alias Ret.{Account, Repo, Avatar, Storage, OwnedFile}
+  alias Ret.{Account, Repo, Avatar, Storage, OwnedFile, GLTFUtils}
 
   plug(RetWeb.Plugs.RateLimit when action in [:create, :update])
 
   @primary_material_name "Bot_PBS"
-  @texture_paths %{
-    base_map_owned_file: [["pbrMetallicRoughness", "baseColorTexture"]],
-    emissive_map_owned_file: [["emissiveTexture"]],
-    normal_map_owned_file: [["normalTexture"]],
-    orm_map_owned_file: [
-      ["pbrMetallicRoughness", "metallicRoughnessTexture"],
-      ["occlusionTexture"]
-    ]
-  }
-  @image_columns Map.keys(@texture_paths)
-  @file_columns [:gltf_owned_file, :bin_owned_file] ++ @image_columns
+
+  defp get_avatar(avatar_sid) do
+    avatar =
+      Avatar
+      |> Repo.get_by(avatar_sid: avatar_sid)
+      |> Repo.preload([Avatar.file_columns() ++ [:parent_avatar, :account]])
+  end
 
   def create(conn, %{"avatar" => params}) do
     create_or_update(conn, params, %Avatar{})
@@ -29,6 +25,11 @@ defmodule RetWeb.Api.V1.AvatarController do
     end
   end
 
+  defp create_or_update(conn, params, avatar) do
+    account = conn |> Guardian.Plug.current_resource()
+    create_or_update(conn, params, avatar, account)
+  end
+
   defp create_or_update(
          conn,
          _params,
@@ -39,21 +40,13 @@ defmodule RetWeb.Api.V1.AvatarController do
     conn |> send_resp(401, "")
   end
 
-  defp create_or_update(conn, params, avatar) do
-    account = conn |> Guardian.Plug.current_resource()
+  defp create_or_update(conn, params, avatar, account) do
+    files_to_promote =
+      (params["files"] || %{})
+      |> Enum.map(fn {k, v} -> {String.to_atom(k), List.to_tuple(v)} end)
+      |> Enum.into(%{})
 
-    files_to_promotoe =
-      case params["files"] do
-        nil ->
-          %{}
-
-        files ->
-          files
-          |> Enum.map(fn {k, v} -> {String.to_atom(k), List.to_tuple(v)} end)
-          |> Enum.into(%{})
-      end
-
-    owned_file_results = Storage.promote(files_to_promotoe, account)
+    owned_file_results = Storage.promote(files_to_promote, account)
 
     promotion_error =
       owned_file_results |> Map.values() |> Enum.filter(&(elem(&1, 0) == :error)) |> Enum.at(0)
@@ -64,16 +57,15 @@ defmodule RetWeb.Api.V1.AvatarController do
           owned_file_results |> Enum.map(fn {k, {:ok, file}} -> {k, file} end) |> Enum.into(%{})
 
         parent_avatar =
-          if params["parent_avatar_id"] do
+          params["parent_avatar_id"] &&
             Repo.get_by(Avatar, avatar_sid: params["parent_avatar_id"])
-          end
 
         {result, avatar} =
           avatar
           |> Avatar.changeset(account, owned_files, parent_avatar, params)
           |> Repo.insert_or_update()
 
-        avatar = avatar |> Repo.preload(@file_columns)
+        avatar = avatar |> Repo.preload(Avatar.file_columns())
 
         case result do
           :ok ->
@@ -89,22 +81,6 @@ defmodule RetWeb.Api.V1.AvatarController do
       {:error, :not_allowed} ->
         conn |> send_resp(401, "")
     end
-  end
-
-  defp collapse_avatar_files(%{parent_avatar: nil} = avatar),
-    do: avatar |> Map.take(@file_columns)
-
-  defp collapse_avatar_files(%{parent_avatar: parent} = avatar) do
-    Map.merge(collapse_avatar_files(parent), avatar |> Map.take(@file_columns), fn _k, v1, v2 ->
-      if is_nil(v2), do: v1, else: v2
-    end)
-  end
-
-  defp get_avatar(avatar_sid) do
-    avatar =
-      Avatar
-      |> Repo.get_by(avatar_sid: avatar_sid)
-      |> Repo.preload([@file_columns ++ [:parent_avatar, :account]])
   end
 
   def show(conn, %{"id" => avatar_sid}) do
@@ -128,12 +104,7 @@ defmodule RetWeb.Api.V1.AvatarController do
   end
 
   def show_gltf(conn, %Avatar{} = avatar) do
-    # TODO we ideally don't need to be featching the OwnedFiles until after we collapse them
-    avatar_files =
-      avatar
-      |> Avatar.load_parents(@file_columns)
-      |> Map.from_struct()
-      |> collapse_avatar_files()
+    avatar_files = avatar |> Avatar.collapsed_files()
 
     case Storage.fetch(avatar_files.gltf_owned_file) do
       {:ok, %{"content_type" => content_type, "content_length" => content_length}, stream} ->
@@ -141,8 +112,11 @@ defmodule RetWeb.Api.V1.AvatarController do
           stream
           |> Enum.join("")
           |> Poison.decode!()
-          |> with_material(@primary_material_name, avatar_files |> Map.take(@image_columns))
-          |> with_buffer(avatar_files.bin_owned_file)
+          |> GLTFUtils.with_material(
+            @primary_material_name,
+            avatar_files |> Map.take(Avatar.image_columns())
+          )
+          |> GLTFUtils.with_buffer(avatar_files.bin_owned_file)
 
         conn
         # |> put_resp_content_type("model/gltf", nil)
@@ -153,40 +127,6 @@ defmodule RetWeb.Api.V1.AvatarController do
 
       {:error, :not_allowed} ->
         conn |> send_resp(401, "")
-    end
-  end
-
-  defp with_buffer(gltf, bin_file) do
-    gltf
-    |> Map.replace("buffers", [
-      %{
-        uri: bin_file |> OwnedFile.uri_for() |> URI.to_string()
-      }
-    ])
-  end
-
-  defp with_material(gltf, name, image_files) do
-    case gltf["materials"] |> Enum.find(&(&1["name"] == name)) do
-      nil ->
-        gltf
-
-      material ->
-        image_files
-        |> Enum.filter(fn {_, v} -> v end)
-        |> Enum.flat_map(fn {col, file} ->
-          Enum.map(@texture_paths[col], fn path ->
-            texture_index = material |> get_in(path ++ ["index"])
-            image_index = gltf |> get_in(["textures", Access.at(texture_index), "source"])
-            {image_index, file}
-          end)
-        end)
-        |> Enum.reduce(gltf, fn {index, file}, gltf ->
-          gltf
-          |> put_in(["images", Access.at(index)], %{
-            uri: file |> OwnedFile.uri_for() |> URI.to_string(),
-            mimeType: file.content_type
-          })
-        end)
     end
   end
 end

@@ -1,6 +1,6 @@
 defmodule RetWeb.Api.V1.AvatarView do
   use RetWeb, :view
-  alias Ret.OwnedFile
+  alias Ret.{Avatar, OwnedFile}
 
   defp url_for_avatar(avatar) do
     "#{RetWeb.Endpoint.url()}/avatars/#{avatar.avatar_sid}/#{avatar.slug}"
@@ -30,14 +30,11 @@ defmodule RetWeb.Api.V1.AvatarView do
       attributions: if(is_nil(avatar.attributions), do: [], else: avatar.attributions),
       allow_remixing: avatar.allow_remixing,
       allow_promotion: avatar.allow_promotion,
-      files: %{
-        gltf: avatar |> file_url_or_nil(:gltf_owned_file),
-        bin: avatar |> file_url_or_nil(:bin_owned_file),
-        base_map: avatar |> file_url_or_nil(:base_map_owned_file),
-        emissive_map: avatar |> file_url_or_nil(:emissive_map_owned_file),
-        normal_map: avatar |> file_url_or_nil(:normal_map_owned_file),
-        orm_map: avatar |> file_url_or_nil(:orm_map_owned_file),
-      }
+      files:
+        for col <- Avatar.file_columns(), into: %{} do
+          key = col |> Atom.to_string() |> String.replace_suffix("_owned_file", "")
+          {key, avatar |> file_url_or_nil(col)}
+        end
     }
   end
 end

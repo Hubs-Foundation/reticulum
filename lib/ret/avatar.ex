@@ -16,6 +16,17 @@ defmodule Ret.Avatar do
   @schema_prefix "ret0"
   @primary_key {:avatar_id, :id, autogenerate: true}
 
+  @image_columns [
+    :base_map_owned_file,
+    :emissive_map_owned_file,
+    :normal_map_owned_file,
+    :orm_map_owned_file
+  ]
+  @file_columns [:gltf_owned_file, :bin_owned_file] ++ @image_columns
+
+  def image_columns, do: @image_columns
+  def file_columns, do: @file_columns
+
   schema "avatars" do
     field(:avatar_sid, :string)
     field(:slug, AvatarSlug.Type)
@@ -47,7 +58,7 @@ defmodule Ret.Avatar do
   def load_parents(%Avatar{parent_avatar: nil} = avatar, preload_fields),
     do: avatar |> Repo.preload(preload_fields)
 
-  def load_parents(%Avatar{parent_avatar: %Ecto.Association.NotLoaded{}} = avatar, preload_fields) do
+  def load_parents(%Avatar{} = avatar, preload_fields) do
     avatar
     |> Repo.preload([:parent_avatar] ++ preload_fields)
     |> Map.update!(
@@ -57,6 +68,25 @@ defmodule Ret.Avatar do
   end
 
   def load_parents(nil, _preload_fields), do: nil
+
+  defp avatar_to_collapsed_files(%{parent_avatar: nil} = avatar),
+    do: avatar |> Map.take(@file_columns)
+
+  defp avatar_to_collapsed_files(%{parent_avatar: parent} = avatar) do
+    parent
+    |> avatar_to_collapsed_files
+    |> Map.merge(avatar |> Map.take(@file_columns), fn
+      _k, v1, nil -> v1
+      _k, _v1, v2 -> v2
+    end)
+  end
+
+  def collapsed_files(%Avatar{} = avatar) do
+    # TODO we ideally don't need to be featching the OwnedFiles until after we collapse them
+    avatar
+    |> Avatar.load_parents(@file_columns)
+    |> avatar_to_collapsed_files()
+  end
 
   @doc false
   def changeset(
@@ -80,16 +110,12 @@ defmodule Ret.Avatar do
 
   defp put_owned_files(changeset, owned_files) do
     Enum.reduce(owned_files, changeset, fn {key, file}, changes ->
-      put_owned_file(changes, key, file)
+      changes |> put_change(:"#{key}_owned_file_id", file.owned_file_id)
     end)
-  end
-
-  defp put_owned_file(changeset, key, owned_file) do
-    changeset |> put_change("#{key}_owned_file_id" |> String.to_atom(), owned_file.owned_file_id)
   end
 
   defp maybe_add_avatar_sid_to_changeset(changeset) do
     avatar_sid = changeset |> get_field(:avatar_sid) || Sids.generate_sid()
-    put_change(changeset, :avatar_sid, "#{avatar_sid}")
+    put_change(changeset, :avatar_sid, avatar_sid)
   end
 end
