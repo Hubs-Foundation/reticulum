@@ -15,7 +15,7 @@ defmodule Ret.GLTFUtils do
     gltf
     |> Map.put("buffers", [
       %{
-        uri: bin_file |> OwnedFile.uri_for() |> URI.to_string()
+        "uri" => bin_file |> OwnedFile.uri_for() |> URI.to_string()
       }
     ])
   end
@@ -38,8 +38,8 @@ defmodule Ret.GLTFUtils do
         |> Enum.reduce(gltf, fn {index, file}, gltf ->
           gltf
           |> put_in(["images", Access.at(index)], %{
-            uri: file |> OwnedFile.uri_for() |> URI.to_string(),
-            mimeType: file.content_type
+            "uri" => file |> OwnedFile.uri_for() |> URI.to_string(),
+            "mimeType" => file.content_type
           })
         end)
     end
