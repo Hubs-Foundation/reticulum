@@ -65,6 +65,8 @@ config :logger, level: :info
 # which should be versioned separately.
 import_config "prod.secret.exs"
 
+# Filter out media search API params
+config :phoenix, :filter_parameters, ["q", "filter", "cursor"]
 config :ret, Ret.Repo, adapter: Ecto.Adapters.Postgres
 
 config :peerage, via: Ret.PeerageProvider
