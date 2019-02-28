@@ -26,7 +26,7 @@ defmodule RetWeb.Api.V1.SceneController do
   defp get_scene(scene_sid) do
     scene_sid
     |> Scene.scene_or_scene_listing_by_sid()
-    |> Repo.preload([:account, :model_owned_file, :screenshot_owned_file])
+    |> Repo.preload([:account, :model_owned_file, :screenshot_owned_file, :scene_owned_file])
   end
 
   defp create_or_update(conn, params, scene \\ %Scene{}) do

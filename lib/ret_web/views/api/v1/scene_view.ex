@@ -34,6 +34,13 @@ defmodule RetWeb.Api.V1.SceneView do
       allow_promotion: scene.allow_promotion
     }
 
-    map |> Map.merge(fields)
+    remix_fields =
+      if scene.allow_remixing && scene.scene_owned_file do
+        %{scene_project_url: scene.scene_owned_file |> OwnedFile.uri_for() |> URI.to_string()}
+      else
+        %{}
+      end
+
+    map |> Map.merge(fields) |> Map.merge(remix_fields)
   end
 end
