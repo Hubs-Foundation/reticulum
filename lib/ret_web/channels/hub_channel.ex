@@ -23,7 +23,7 @@ defmodule RetWeb.HubChannel do
 
   @hub_preloads [
     scene: [:model_owned_file, :screenshot_owned_file, :scene_owned_file],
-    scene_listing: [:model_owned_file, :screenshot_owned_file, :scene],
+    scene_listing: [:model_owned_file, :screenshot_owned_file, :scene_owned_file],
     web_push_subscriptions: []
   ]
 
