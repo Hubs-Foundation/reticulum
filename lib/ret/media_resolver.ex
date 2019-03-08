@@ -3,12 +3,20 @@ defmodule Ret.ResolvedMedia do
   defstruct [:uri, :meta]
 end
 
+defmodule Ret.MediaResolverQuery do
+  @enforce_keys [:url]
+  defstruct [:url, supports_webm: true]
+end
+
 defmodule Ret.MediaResolver do
   use Retry
   import Ret.HttpUtils
 
+  alias Ret.MediaResolverQuery
+
   @ytdl_valid_status_codes [200, 302, 500]
   @ytdl_default_query "best[protocol*=http]/best[protocol*=m3u8]"
+  @ytdl_non_webm_query "best[ext=mp4][protocol*=http]/best[ext=mp4][protocol*=m3u8]"
   @ytdl_crunchyroll_query "best[format_id*=hardsub-enUS]/" <> @ytdl_default_query
 
   @non_video_root_hosts [
@@ -19,35 +27,39 @@ defmodule Ret.MediaResolver do
 
   @deviant_id_regex ~r/\"DeviantArt:\/\/deviation\/([^"]+)/
 
-  def resolve(url) when is_binary(url) do
+  def resolve(%MediaResolverQuery{url: url} = query) when is_binary(url) do
     uri = url |> URI.parse()
     root_host = get_root_host(uri.host)
-    resolve(uri, root_host)
+    resolve(query |> Map.put(:url, uri), root_host)
   end
 
-  def resolve(%URI{host: nil}, _root_host) do
+  def resolve(%MediaResolverQuery{url: %URI{host: nil}}, _root_host) do
     {:commit, nil}
   end
 
   # Necessary short circuit around google.com root_host to skip YT-DL check for Poly
-  def resolve(%URI{host: "poly.google.com"} = uri, root_host) do
+  def resolve(%MediaResolverQuery{url: %URI{host: "poly.google.com"} = uri}, root_host) do
     resolve_non_video(uri, root_host)
   end
 
-  def resolve(%URI{} = uri, root_host) when root_host in @non_video_root_hosts do
+  def resolve(%MediaResolverQuery{url: %URI{} = uri}, root_host) when root_host in @non_video_root_hosts do
     resolve_non_video(uri, root_host)
   end
 
-  def resolve(%URI{} = uri, "crunchyroll.com" = root_host) do
+  def resolve(%MediaResolverQuery{url: %URI{} = uri}, "crunchyroll.com" = root_host) do
     # Prefer a version with baked in (english) subtitles. Client locale should eventually determine this
     resolve_with_ytdl(uri, root_host, @ytdl_crunchyroll_query)
   end
 
-  def resolve(%URI{} = uri, root_host) do
-    resolve_with_ytdl(uri, root_host)
+  def resolve(%MediaResolverQuery{url: %URI{} = uri, supports_webm: true}, root_host) do
+    resolve_with_ytdl(uri, root_host, @ytdl_default_query)
   end
 
-  def resolve_with_ytdl(%URI{} = uri, root_host, ytdl_format \\ @ytdl_default_query) do
+  def resolve(%MediaResolverQuery{url: %URI{} = uri, supports_webm: false}, root_host) do
+    resolve_with_ytdl(uri, root_host, @ytdl_non_webm_query)
+  end
+
+  def resolve_with_ytdl(%URI{} = uri, root_host, ytdl_format) do
     with ytdl_host when is_binary(ytdl_host) <- module_config(:ytdl_host) do
       encoded_url = uri |> URI.to_string() |> URI.encode()
 
