@@ -71,7 +71,8 @@ defmodule Ret.Mixfile do
       {:alchemy, "~> 0.6.1", hex: :discord_alchemy},
       {:sentry, "~> 6.0"},
       {:toml, "~> 0.5"},
-      {:scrivener_ecto, "~> 1.0"}
+      {:scrivener_ecto, "~> 1.0"},
+      {:ua_parser, "~> 1.5.0"}
     ]
   end
 

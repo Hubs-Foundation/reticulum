@@ -54,7 +54,15 @@ defmodule RetWeb.Api.V1.MediaController do
   end
 
   defp resolve_and_render(conn, url, index) do
-    case Cachex.fetch(:media_urls, url) do
+    ua =
+      conn
+      |> Plug.Conn.get_req_header("user-agent")
+      |> List.first()
+      |> UAParser.parse()
+
+    supports_webm = ua.family != "Safari" && ua.family != "Mobile Safari"
+
+    case Cachex.fetch(:media_urls, %Ret.MediaResolverQuery{url: url, supports_webm: supports_webm}) do
       {_status, nil} ->
         conn |> send_resp(404, "")
 
