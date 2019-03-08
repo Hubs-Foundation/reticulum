@@ -43,6 +43,10 @@ defmodule RetWeb.Router do
     plug(RetWeb.Canary.AuthorizationPipeline)
   end
 
+  pipeline :bot_header_auth do
+    plug(RetWeb.Plugs.BotHeaderAuthorization)
+  end
+
   pipeline :canonicalize_domain do
     plug(RetWeb.Plugs.RedirectToMainDomain)
   end
@@ -63,12 +67,18 @@ defmodule RetWeb.Router do
       resources("/media/search", Api.V1.MediaSearchController, only: [:index])
       resources("/scenes", Api.V1.SceneController, only: [:show])
       resources("/avatars", Api.V1.AvatarController, only: [:show])
-      get "/avatars/:id/avatar.gltf", Api.V1.AvatarController, :show_gltf
+      get("/avatars/:id/avatar.gltf", Api.V1.AvatarController, :show_gltf)
 
       scope "/support" do
         resources("/subscriptions", Api.V1.SupportSubscriptionController, only: [:create, :delete])
         resources("/availability", Api.V1.SupportSubscriptionController, only: [:index])
       end
+    end
+
+    scope "/v1", as: :api_v1 do
+      pipe_through([:bot_header_auth])
+      post("/hub_bindings", Api.V1.HubBindingController, :create)
+      delete("/hub_bindings", Api.V1.HubBindingController, :delete)
     end
 
     scope "/v1", as: :api_v1 do

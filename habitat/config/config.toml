@@ -5,6 +5,9 @@ client_secret = "{{ cfg.oauth_google.client_secret }}"
 [ret."Elixir.RetWeb.Plugs.HeaderAuthorization"]
 header_value = "{{ cfg.phx.admin_access_key }}"
 
+[ret."Elixir.RetWeb.Plugs.BotHeaderAuthorization"]
+bot_access_key = "{{ cfg.phx.bot_access_key }}"
+
 [ret."Elixir.RetWeb.Endpoint".http]
 port = {{ cfg.phx.port }}
 

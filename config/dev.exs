@@ -83,6 +83,8 @@ config :ret, RetWeb.Plugs.HeaderAuthorization,
   header_name: "x-ret-admin-access-key",
   header_value: "admin-only"
 
+config :ret, RetWeb.Plugs.BotHeaderAuthorization, bot_access_key: "i-am-a-bot"
+
 # Allow any origin for API access in dev
 config :cors_plug, origin: ["*"]
 

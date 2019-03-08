@@ -17,8 +17,6 @@ defmodule Ret.Hub do
   alias Ret.{Account, Hub, Repo, Scene, SceneListing, WebPushSubscription, RoomAssigner}
   alias Ret.Hub.{HubSlug}
 
-  use Bitwise
-
   @schema_prefix "ret0"
   @primary_key {:hub_id, :id, autogenerate: true}
   @max_entry_code 999_999
@@ -40,6 +38,7 @@ defmodule Ret.Hub do
     belongs_to(:scene_listing, Ret.SceneListing, references: :scene_listing_id)
     has_many(:web_push_subscriptions, Ret.WebPushSubscription, foreign_key: :hub_id)
     belongs_to(:created_by_account, Ret.Account, references: :account_id)
+    has_many(:hub_bindings, Ret.HubBinding, foreign_key: :hub_id)
 
     timestamps()
   end

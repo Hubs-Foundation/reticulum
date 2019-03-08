@@ -13,6 +13,7 @@ defmodule Ret.Account do
     has_one(:login, Ret.Login, foreign_key: :account_id)
     has_many(:owned_files, Ret.OwnedFile, foreign_key: :account_id)
     has_many(:created_hubs, Ret.Hub, foreign_key: :created_by_account_id)
+    has_many(:oauth_providers, Ret.OAuthProvider, foreign_key: :account_id)
     timestamps()
   end
 

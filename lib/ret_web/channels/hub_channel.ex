@@ -24,7 +24,8 @@ defmodule RetWeb.HubChannel do
   @hub_preloads [
     scene: [:model_owned_file, :screenshot_owned_file, :scene_owned_file],
     scene_listing: [:model_owned_file, :screenshot_owned_file, :scene_owned_file, :scene],
-    web_push_subscriptions: []
+    web_push_subscriptions: [],
+    hub_bindings: []
   ]
 
   def join(
