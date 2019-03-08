@@ -17,10 +17,6 @@ defmodule Ret.Project do
     timestamps()
   end
 
-  def project_by_sid(sid) do
-    Project |> Repo.get_by(project_sid: sid)
-  end
-
   def to_sid(%Project{} = project), do: project.project_sid
   def to_url(%Project{} = project), do: "#{RetWeb.Endpoint.url()}/projects/#{project |> to_sid}"
 

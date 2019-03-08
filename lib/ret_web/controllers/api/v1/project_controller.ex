@@ -56,8 +56,8 @@ defmodule RetWeb.Api.V1.ProjectController do
   end
 
   defp get_project(project_sid) do
-    project_sid
-    |> Project.project_by_sid()
+    Project
+    |> Repo.get_by(project_sid: project_sid)
     |> Repo.preload([:created_by_account, :project_owned_file, :thumbnail_owned_file])
   end
 
