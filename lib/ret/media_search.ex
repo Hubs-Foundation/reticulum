@@ -225,7 +225,7 @@ defmodule Ret.MediaSearch do
       type = source |> String.replace("bing_", "")
 
       res =
-        "https://api.cognitive.microsoft.com/bing/v7.0/#{type}/search?#{query}"
+        "https://westus.api.cognitive.microsoft.com/bing/v7.0/#{type}/search?#{query}"
         |> retry_get_until_success([{"Ocp-Apim-Subscription-Key", api_key}])
 
       case res do
