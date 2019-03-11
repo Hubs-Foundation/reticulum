@@ -48,7 +48,6 @@ defmodule RetWeb.Api.V1.HubView do
           slug: hub.slug,
           entry_code: hub.entry_code,
           host: hub.host,
-          hub_bindings: hub.hub_bindings |> Enum.map(&Map.take(&1, [:type, :community_id, :channel_id])),
           topics: [
             %{
               topic_id: "#{hub.hub_sid}/#{hub.slug}",

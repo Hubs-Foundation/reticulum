@@ -8,6 +8,9 @@ header_value = "{{ cfg.phx.admin_access_key }}"
 [ret."Elixir.RetWeb.Plugs.BotHeaderAuthorization"]
 bot_access_key = "{{ cfg.phx.bot_access_key }}"
 
+[ret."Elixir.Ret.DiscordClient"]
+client_id = "{{ cfg.phx.discord_client_id }}"
+
 [ret."Elixir.RetWeb.Endpoint".http]
 port = {{ cfg.phx.port }}
 
