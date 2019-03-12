@@ -10,8 +10,8 @@ defmodule RetWeb.Api.V1.SceneView do
     %{scenes: [render_scene(scene)]}
   end
 
-  def render_scene(%Scene{state: :removed}), do: %{}
-  def render_scene(%SceneListing{state: :delisted}), do: %{}
+  def render_scene(%Scene{state: :removed}), do: nil
+  def render_scene(%SceneListing{state: :delisted}), do: nil
 
   # scene var passed in can be either a Ret.Scene or Ret.SceneListing
   def render_scene(scene) do
