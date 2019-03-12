@@ -1,3 +1,4 @@
+<%= if @scene.state == :active do %>
 <meta property="og:type" content="website" />
 <meta property="og:url" content="<%= @scene |> Ret.Scene.to_url %>" />
 <meta property="og:title" content="<%= @scene.name %> | Hubs by Mozilla" />
@@ -10,3 +11,4 @@
 <meta property="twitter:image" content="<%= @scene.screenshot_owned_file |> Ret.OwnedFile.uri_for |> URI.to_string %>"/>
 <meta name="twitter:url" value="<%= @scene |> Ret.Scene.to_url %>" />
 <title><%= @scene.name %> | Hubs by Mozilla</title>
+<% end %>
