@@ -1,20 +1,14 @@
 defmodule Ret.DiscordClient do
-  def get_oauth_info() do
-    nonce = :crypto.strong_rand_bytes(16) |> Base.encode16()
-
+  def get_oauth_url(hub_sid) do
     authorize_params = %{
       response_type: "code",
       client_id: module_config(:client_id),
       scope: "identify email",
-      state: nonce,
+      state: Ret.OAuthToken.token_for_hub(hub_sid),
       redirect_uri: RetWeb.Endpoint.url() <> "/api/v1/oauth/discord"
     }
 
-    %{
-      type: :discord,
-      nonce: nonce,
-      url: "https://discordapp.com/api/oauth2/authorize?" <> URI.encode_query(authorize_params)
-    }
+    "https://discordapp.com/api/oauth2/authorize?" <> URI.encode_query(authorize_params)
   end
 
   defp module_config(key) do

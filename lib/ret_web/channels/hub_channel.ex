@@ -365,7 +365,7 @@ defmodule RetWeb.HubChannel do
 
       response = response |> Map.put(:perms_token, perms_token)
 
-      response = response |> Map.put(:oauth_info, hub.hub_bindings |> get_oauth_info)
+      response = response |> Map.put(:oauth_info, hub.hub_bindings |> get_oauth_info(hub.hub_sid))
 
       existing_stat_count =
         socket
@@ -403,11 +403,11 @@ defmodule RetWeb.HubChannel do
     {:error, %{message: "No such Hub"}}
   end
 
-  defp get_oauth_info(hub_bindings) do
+  defp get_oauth_info(hub_bindings, hub_sid) do
     hub_bindings
     |> Enum.map(
       &case &1 do
-        %{type: :discord} -> Ret.DiscordClient.get_oauth_info()
+        %{type: :discord} -> %{type: :discord, url: Ret.DiscordClient.get_oauth_url(hub_sid)}
       end
     )
   end
