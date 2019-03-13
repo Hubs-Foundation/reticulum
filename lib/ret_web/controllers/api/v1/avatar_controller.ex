@@ -42,10 +42,19 @@ defmodule RetWeb.Api.V1.AvatarController do
   defp create_or_update(conn, params, avatar, account) do
     files_to_promote =
       (params["files"] || %{})
-      |> Enum.map(fn {k, v} -> {String.to_atom(k), List.to_tuple(v)} end)
+      |> Enum.map(fn
+        {k, nil} -> {String.to_atom(k), :remove}
+        {k, v} -> {String.to_atom(k), List.to_tuple(v)}
+      end)
       |> Enum.into(%{})
 
-    owned_file_results = Storage.promote(files_to_promote, account)
+    owned_file_results =
+      files_to_promote
+      |> Enum.map(fn
+        {k, {id, key, promotion_token}} -> {k, Storage.promote(id, key, promotion_token, account)}
+        {k, :remove} -> {k, {:ok, :remove}}
+      end)
+      |> Enum.into(%{})
 
     promotion_error =
       owned_file_results |> Map.values() |> Enum.filter(&(elem(&1, 0) == :error)) |> Enum.at(0)

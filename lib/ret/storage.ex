@@ -76,7 +76,7 @@ defmodule Ret.Storage do
 
   # Promotes multiple files into the given account.
   #
-  # Given a map that has { id, key } tuple values, returns a similarly-keyed map
+  # Given a map that has { id, key } or { id, key, promotion_token} tuple values, returns a similarly-keyed map
   # that has the return values of promote as values.
   def promote(map, %Account{} = account) when is_map(map) do
     map
