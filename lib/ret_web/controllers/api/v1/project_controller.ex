@@ -6,7 +6,7 @@ defmodule RetWeb.Api.V1.ProjectController do
   alias Ret.{Account, Project, Repo, Storage}
 
   # Limit to 1 TPS
-  plug(RetWeb.Plugs.RateLimit when action in [:create, :update])
+  plug(RetWeb.Plugs.RateLimit when action in [:create])
 
   def index(conn, %{} = params) do
     account = Guardian.Plug.current_resource(conn)
