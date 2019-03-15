@@ -40,7 +40,7 @@ defmodule Ret.Account do
     |> credentials_for_account
   end
 
-  defp credentials_for_account(account) do
+  def credentials_for_account(account) do
     {:ok, token, _claims} = account |> Guardian.encode_and_sign()
     token
   end

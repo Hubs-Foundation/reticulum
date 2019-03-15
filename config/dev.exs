@@ -85,7 +85,10 @@ config :ret, RetWeb.Plugs.HeaderAuthorization,
 
 config :ret, RetWeb.Plugs.BotHeaderAuthorization, bot_access_key: "i-am-a-bot"
 
-config :ret, Ret.DiscordClient, client_id: ""
+config :ret, Ret.DiscordClient,
+  client_id: "",
+  client_secret: "",
+  bot_token: ""
 
 # Allow any origin for API access in dev
 config :cors_plug, origin: ["*"]

@@ -10,7 +10,7 @@ defmodule Ret.PermsToken do
   end
 
   def subject_for_token(_, _) do
-    {:error, "Not found"}
+    {:ok, "anon"}
   end
 
   def resource_from_claims(_), do: nil

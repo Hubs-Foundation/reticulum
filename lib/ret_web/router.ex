@@ -68,6 +68,7 @@ defmodule RetWeb.Router do
       resources("/scenes", Api.V1.SceneController, only: [:show])
       resources("/avatars", Api.V1.AvatarController, only: [:show])
       get("/avatars/:id/avatar.gltf", Api.V1.AvatarController, :show_gltf)
+      get("/oauth/:type", Api.V1.OAuthController, :show)
 
       scope "/support" do
         resources("/subscriptions", Api.V1.SupportSubscriptionController, only: [:create, :delete])
