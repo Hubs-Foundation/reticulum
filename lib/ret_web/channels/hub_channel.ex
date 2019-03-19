@@ -299,6 +299,7 @@ defmodule RetWeb.HubChannel do
   defp perform_pin!(object_id, gltf_node, account, socket) do
     hub = socket |> hub_for_socket
     RoomObject.perform_pin!(hub, account, %{object_id: object_id, gltf_node: gltf_node})
+    broadcast_pinned_media(socket, object_id, gltf_node)
   end
 
   def terminate(_reason, socket) do
@@ -314,6 +315,10 @@ defmodule RetWeb.HubChannel do
   defp broadcast_presence_update(socket) do
     Presence.update(socket, socket.assigns.session_id, socket |> presence_meta_for_socket)
     socket
+  end
+
+  defp broadcast_pinned_media(socket, object_id, gltf_node) do
+    broadcast!(socket, "pin", %{object_id: object_id, gltf_node: gltf_node, pinner: socket.assigns.session_id})
   end
 
   # Broadcasts the full hub info as well as an (optional) list of specific fields which
