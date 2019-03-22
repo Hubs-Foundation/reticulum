@@ -318,7 +318,7 @@ defmodule RetWeb.HubChannel do
   end
 
   defp broadcast_pinned_media(socket, object_id, gltf_node) do
-    broadcast!(socket, "pin", %{object_id: object_id, gltf_node: gltf_node, pinner: socket.assigns.session_id})
+    broadcast!(socket, "pin", %{object_id: object_id, gltf_node: gltf_node, pinned_by: socket.assigns.session_id})
   end
 
   # Broadcasts the full hub info as well as an (optional) list of specific fields which
