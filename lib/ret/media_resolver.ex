@@ -12,7 +12,7 @@ defmodule Ret.MediaResolver do
   use Retry
   import Ret.HttpUtils
 
-  alias Ret.MediaResolverQuery
+  alias Ret.{MediaResolverQuery, Statix}
 
   @ytdl_valid_status_codes [200, 302, 500]
   @ytdl_default_query "best[protocol*=http]/best[protocol*=m3u8]"
@@ -88,6 +88,8 @@ defmodule Ret.MediaResolver do
   end
 
   defp resolve_non_video(%URI{} = uri, "deviantart.com") do
+    Statix.increment("ret.media_resolver.deviant.requests")
+
     [uri, meta] =
       with client_id when is_binary(client_id) <- module_config(:deviantart_client_id),
            client_secret when is_binary(client_secret) <- module_config(:deviantart_client_secret) do
@@ -111,6 +113,7 @@ defmodule Ret.MediaResolver do
           |> Kernel.get_in(["content", "src"])
           |> URI.parse()
 
+        Statix.increment("ret.media_resolver.deviant.ok")
         # todo: determine appropriate content type here if possible
         [uri, nil]
       else
@@ -154,6 +157,8 @@ defmodule Ret.MediaResolver do
        ) do
     [uri, meta] =
       with api_key when is_binary(api_key) <- module_config(:google_poly_api_key) do
+        Statix.increment("ret.media_resolver.poly.requests")
+
         payload =
           "https://poly.googleapis.com/v1/assets/#{asset_id}?key=#{api_key}"
           |> retry_get_until_success
@@ -172,6 +177,8 @@ defmodule Ret.MediaResolver do
           (Enum.find(formats, &(&1["formatType"] == "GLTF2")) || Enum.find(formats, &(&1["formatType"] == "GLTF")))
           |> Kernel.get_in(["root", "url"])
           |> URI.parse()
+
+        Statix.increment("ret.media_resolver.poly.ok")
 
         [uri, meta]
       else
@@ -238,6 +245,8 @@ defmodule Ret.MediaResolver do
   end
 
   defp resolve_sketchfab_model(model_id, api_key) do
+    Statix.increment("ret.media_resolver.sketchfab.requests")
+
     res =
       "https://api.sketchfab.com/v3/models/#{model_id}/download"
       |> retry_get_until_success([{"Authorization", "Token #{api_key}"}])
@@ -245,9 +254,13 @@ defmodule Ret.MediaResolver do
     uri =
       case res do
         :error ->
+          Statix.increment("ret.media_resolver.sketchfab.errors")
+
           :error
 
         res ->
+          Statix.increment("ret.media_resolver.sketchfab.ok")
+
           res
           |> Map.get(:body)
           |> Poison.decode!()
@@ -259,6 +272,8 @@ defmodule Ret.MediaResolver do
   end
 
   defp resolve_giphy_media_uri(%URI{} = uri, preferred_type) do
+    Statix.increment("ret.media_resolver.giphy.requests")
+
     [uri, meta] =
       with api_key when is_binary(api_key) <- module_config(:giphy_api_key) do
         gif_id = uri.path |> String.split("/") |> List.last() |> String.split("-") |> List.last()
@@ -307,12 +322,16 @@ defmodule Ret.MediaResolver do
   # https://youtube-dl-api-server.readthedocs.io/en/latest/api.html#api-methods
   defp retry_get_until_valid_ytdl_response(url) do
     retry with: exp_backoff() |> randomize |> cap(1_000) |> expiry(10_000) do
+      Statix.increment("ret.media_resolver.ytdl.requests")
+
       case HTTPoison.get(url) do
         {:ok, %HTTPoison.Response{status_code: status_code} = resp}
         when status_code in @ytdl_valid_status_codes ->
+          Statix.increment("ret.media_resolver.ytdl.ok")
           resp
 
         _ ->
+          Statix.increment("ret.media_resolver.ytdl.errors")
           :error
       end
     after
