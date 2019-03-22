@@ -113,13 +113,13 @@ defmodule Ret.Avatar do
     |> AvatarSlug.unique_constraint()
   end
 
-  defp put_owned_files(changeset, owned_files_map) do
-    Enum.reduce(owned_files_map, changeset, fn
+  defp put_owned_files(in_changeset, owned_files_map) do
+    Enum.reduce(owned_files_map, in_changeset, fn
       {key, :remove}, changes ->
         changes |> put_assoc(:"#{key}_owned_file", nil)
 
       {key, file}, changes ->
-        changeset |> put_assoc(:"#{key}_owned_file", file)
+        changes |> put_assoc(:"#{key}_owned_file", file)
     end)
   end
 
