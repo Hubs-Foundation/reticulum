@@ -49,7 +49,8 @@ config :ret, Ret.SingletonScheduler,
     {"@daily", {Ret.Storage, :demote_inactive_owned_files, []}},
     {"@daily", {Ret.LoginToken, :expire_stale, []}},
     {"@daily", {Ret.Hub, :vacuum_entry_codes, []}},
-    {"@daily", {Ret.Hub, :vacuum_hosts, []}}
+    {"@daily", {Ret.Hub, :vacuum_hosts, []}},
+    {"@daily", {Ret.ResolvedMediaAsset, :vacuum, []}}
   ]
 
 # Import environment specific config. This must remain at the bottom
