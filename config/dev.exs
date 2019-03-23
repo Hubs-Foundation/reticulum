@@ -1,7 +1,7 @@
 use Mix.Config
 
 host = "hubs.local"
-dev_janus_host = "hubs.local:8989"
+dev_janus_host = "dev-janus.reticulum.io"
 
 # For development, we disable any cache and enable
 # debugging and code reloading.
@@ -83,12 +83,12 @@ config :ret, RetWeb.Plugs.HeaderAuthorization,
   header_name: "x-ret-admin-access-key",
   header_value: "admin-only"
 
-config :ret, RetWeb.Plugs.BotHeaderAuthorization, bot_access_key: "i-am-a-bot"
+config :ret, RetWeb.Plugs.BotHeaderAuthorization, bot_access_key: ""
 
 config :ret, Ret.DiscordClient,
   client_id: "545020343077830656",
-  client_secret: "qm-slGyB9BizgPb5wYFP22gOKKGUDH0C",
-  bot_token: "NTQ1MDIwMzQzMDc3ODMwNjU2.D2sgzw.J_2APJuG9UFnxCdhS12-enNHNEc"
+  client_secret: "",
+  bot_token: ""
 
 # Allow any origin for API access in dev
 config :cors_plug, origin: ["*"]
@@ -152,9 +152,7 @@ config :ret, Ret.PermsToken,
   perms_key:
     "-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEAq7o6egtZRhWyUYt9U/hUdxWRi2bO8yG4ZVm/CDqk+IJMFh3/\nXl88X5iQwxQxQrIv94Po/H5dnB8Bbw0toSw58HSk8L6BVBsOkIDic1Bfa82WxLWq\nWhhgkKWBOXctbUFoSCUWFQ/YGMH4Ur66pEhsqqodkPj3lJdFt3in0nu6w1duepnQ\nj3en9YUW3m387Oj1oCaLQtmLAPZ0VlBnLnwT9Y4Nr76Dww2FKoqBZH+Cb6ku12jM\naAwoZpRhIX6LVr/GPsHbuIdd+vOyQxD6EwBbtue6KQimkITwxnPxStdwPbhGIO63\ndPdv+rgw6u1iFIjMGEGCQmo0MoH9i5rvg42ThQIDAQABAoIBAQCMn9SxCkgRx0Sd\n2C9KKunoFoZ39Dl2Cd/5RtPThkp/ohtyZSAwhKZo1gN9bDSmnEoBU0jgMw6vAQjo\nio8aE6BikvJannZDjGCR3qkRqvhozBMxhF46pwm0iYNXrotJk600nwIFP1NDetvB\nzqQCUbiCzQmnJOmBCZsykiBDkcSvnrqw3kQocWu2vZ0vsuTqNwJT1gCW12hzeFu7\n/OYy5DgQkG7fjaxWyv1+OJSw2zg7jQmEG43C/W95C0uZ1aiVARM+dl6YYLdSGIxi\nioP9FwrqGuZGPQm1d6LBkoo/KgFdvQWl6poXT7oQJ4WS/kTGrWX9I29wsfC4gi6I\nVtqwoBEFAoGBANgY/OInP5pwa2YlVxGHEdko56yuXEcRDxwnDrIA8UPC2k/Emaye\nXDNVdH6olQ8yU9dy2UbitDy01yKV5r+u0Y+B4YCp6I6wsM5QUCQtpgmaPJKb90tL\njM9ZJLtR74Ch+IcOs8wG0sSYVNxWElhuWQg/eKgXq80fpStjepeWvTMjAoGBAMtv\n2Ozn6JTNAQ69xgAb+/tfBqMGfv7cbs03/1IQiG2r55dlEj8xSgBgTEHf4OK0dkPC\nFrkFi5RLDtWzjluxRan2kFEkIxU1CONGdd/wYGIzdhWubv18WChUEumCEhZaUw+v\n6Uh8o/9anVipii4LtEgVITsdcVfyBAgK75eiCv03AoGAFsgDmN/kX6asW9dh53Ii\n2o7qZZT4G3Hb8u7XKMLarHcVRsWGIeGL/Mlsf5HMLQ70MclkyIlL0P6Lk5TT/68x\nXnylxkejQa+04/sph7bcQzTkX9xbZK+xR4axTaIkqp3osmxFXiP2Ak3A3H2ib3oq\nnqj6UlY0gWptojZZjTOR/JsCgYAZPWg5hFBL3d9qt8rQCqjJuDF3mn+5GRo6Jd9s\njBaRHMnf868+3dujjk8HwUICfodJwtPU4sY9gM53Xw6je6v7+VZQat5bbDgNEpnf\nTdB3fpEBAaJNmtbJMh0ikXuzAEPb52RXFPe338Mz090L93HHm6+CyRVd5u3vHYQ6\nWOVqIwKBgGrPEPHO8a1/pa4+K/w/OkY6JSdZPtkJQs/PWULqI8QriTpJH290hMAD\nfnplvB2eaTLWopchYcMVxJJW5nJX48yPiNwuwWfajnvLlGMguKxWGseqpxbMgCPP\nBnnWTFVMfeX0s7sNgmF7OmpZU87V4NiQRk/mmr+7a/zr7hXvp0t1\n-----END RSA PRIVATE KEY-----"
 
-config :ret, Ret.OAuthToken,
-  oauth_token_key:
-    "9d61561c1df80166144cb844a43a05a1b5dc508cf3b2a3fec26471fe4cbbbf0da7dfb879054ca9c789ead9ece09d9aaedc52433d30bca975176cfcf73c5048c6"
+config :ret, Ret.OAuthToken, oauth_token_key: ""
 
 config :ret, Ret.Guardian,
   issuer: "ret",
