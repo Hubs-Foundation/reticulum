@@ -7,12 +7,20 @@ defmodule RetWeb.Api.V1.OAuthController do
     {:ok, claims} = Ret.OAuthToken.decode_and_verify(state)
     %{"hub_sid" => hub_sid} = claims
 
-    %{"email" => email, "verified" => verified} =
+    %{"id" => discord_user_id, "email" => email, "verified" => verified} =
       code |> Ret.DiscordClient.get_access_token() |> Ret.DiscordClient.get_user_info()
 
-    url = Ret.Hub |> Ret.Repo.get_by(hub_sid: hub_sid) |> Ret.Hub.url_for()
+    hub = Ret.Hub |> Ret.Repo.get_by(hub_sid: hub_sid) |> Ret.Repo.preload(:hub_bindings)
+    url = hub |> Ret.Hub.url_for()
 
     if verified do
+      account = email |> Ret.Account.account_for_email()
+
+      Ret.Repo.insert!(
+        %Ret.OAuthProvider{source: :discord, account: account, provider_account_id: discord_user_id},
+        on_conflict: :replace_all
+      )
+
       credentials = %{
         email: email,
         token: email |> Ret.Account.account_for_email() |> Ret.Account.credentials_for_account()
@@ -23,7 +31,15 @@ defmodule RetWeb.Api.V1.OAuthController do
       |> put_resp_header("location", url)
       |> send_resp(307, "")
     else
-      perms_token = %{join_hub: true, kick_users: false} |> Ret.PermsToken.token_for_perms()
+      hub_binding = hub.hub_bindings |> Enum.find(&(&1.type == :discord))
+
+      perms_token =
+        %{
+          join_hub:
+            Ret.DiscordClient.member_of_channel?(discord_user_id, hub_binding.community_id, hub_binding.channel_id),
+          kick_users: false
+        }
+        |> Ret.PermsToken.token_for_perms()
 
       conn
       |> put_short_lived_cookie("ret-oauth-flow-perms-token", perms_token)

@@ -12,5 +12,7 @@ defmodule Ret.Repo.Migrations.AddOauthProvidersTable do
 
       timestamps()
     end
+
+    create(index(:oauth_providers, [:source, :account_id], unique: true))
   end
 end

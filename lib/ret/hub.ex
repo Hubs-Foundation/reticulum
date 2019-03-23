@@ -266,16 +266,34 @@ defimpl Canada.Can, for: Ret.Account do
       when account_id != nil and action in [:update_hub, :kick_users, :mute_users],
       do: true
 
-  # Anyone can join a hub for now
-  def can?(_, :join_hub, %Ret.Hub{} = _hub), do: true
+  # Anyone can join an unbound hub
+  def can?(_, :join_hub, %Ret.Hub{hub_bindings: hub_bindings}) when length(hub_bindings) == 0, do: true
 
-  def can?(_, _, %Ret.Hub{} = _hub), do: false
+  # Bound hubs require accounts to have an oauth provider
+  def can?(%Ret.Account{oauth_providers: oauth_providers}, :join_hub, hub) when length(oauth_providers) == 0, do: false
+
+  def can?(account, :join_hub, hub) do
+    hub.hub_bindings
+    |> Enum.any?(fn binding ->
+      provider = account.oauth_providers |> Enum.find(&(&1.source == binding.type))
+
+      if provider do
+        case provider.source do
+          :discord ->
+            provider.provider_account_id
+            |> Ret.DiscordClient.member_of_channel?(binding.community_id, binding.channel_id)
+        end
+      end
+    end)
+  end
+
+  def can?(_, _, _), do: false
 end
 
 # Permissions for un-authenticated clients
 defimpl Canada.Can, for: Atom do
-  # Anyone can join a hub for now
-  def can?(_, :join_hub, %Ret.Hub{} = _hub), do: true
+  # Anyone can join an unbound hub
+  def can?(_, :join_hub, %Ret.Hub{hub_bindings: hub_bindings}) when length(hub_bindings) == 0, do: true
 
-  def can?(_, _, %Ret.Hub{} = _hub), do: false
+  def can?(_, _, _), do: false
 end

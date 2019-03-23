@@ -1,7 +1,7 @@
 use Mix.Config
 
 host = "hubs.local"
-dev_janus_host = "dev-janus.reticulum.io"
+dev_janus_host = "hubs.local:8989"
 
 # For development, we disable any cache and enable
 # debugging and code reloading.
@@ -86,9 +86,9 @@ config :ret, RetWeb.Plugs.HeaderAuthorization,
 config :ret, RetWeb.Plugs.BotHeaderAuthorization, bot_access_key: "i-am-a-bot"
 
 config :ret, Ret.DiscordClient,
-  client_id: "",
-  client_secret: "",
-  bot_token: ""
+  client_id: "545020343077830656",
+  client_secret: "qm-slGyB9BizgPb5wYFP22gOKKGUDH0C",
+  bot_token: "NTQ1MDIwMzQzMDc3ODMwNjU2.D2sgzw.J_2APJuG9UFnxCdhS12-enNHNEc"
 
 # Allow any origin for API access in dev
 config :cors_plug, origin: ["*"]
@@ -154,7 +154,7 @@ config :ret, Ret.PermsToken,
 
 config :ret, Ret.OAuthToken,
   oauth_token_key:
-    ""
+    "9d61561c1df80166144cb844a43a05a1b5dc508cf3b2a3fec26471fe4cbbbf0da7dfb879054ca9c789ead9ece09d9aaedc52433d30bca975176cfcf73c5048c6"
 
 config :ret, Ret.Guardian,
   issuer: "ret",
