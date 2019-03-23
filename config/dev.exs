@@ -77,8 +77,6 @@ config :ret, Ret.Repo,
   database: "ret_dev",
   hostname: if(env_db_host == "", do: "localhost", else: env_db_host),
   template: "template0",
-  # Downloads from Sketchfab to file cache hold connections open
-  ownership_timeout: 60_000,
   pool_size: 10
 
 config :ret, RetWeb.Plugs.HeaderAuthorization,
