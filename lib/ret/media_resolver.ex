@@ -12,7 +12,7 @@ defmodule Ret.MediaResolver do
   use Retry
   import Ret.HttpUtils
 
-  alias Ret.{MediaResolverQuery, Statix}
+  alias Ret.{CachedFile, MediaResolverQuery, Statix}
 
   @ytdl_valid_status_codes [200, 302, 500]
   @ytdl_default_query "best[protocol*=http]/best[protocol*=m3u8]"
@@ -261,11 +261,19 @@ defmodule Ret.MediaResolver do
         res ->
           Statix.increment("ret.media_resolver.sketchfab.ok")
 
-          res
-          |> Map.get(:body)
-          |> Poison.decode!()
-          |> Kernel.get_in(["gltf", "url"])
-          |> URI.parse()
+          zip_url =
+            res
+            |> Map.get(:body)
+            |> Poison.decode!()
+            |> Kernel.get_in(["gltf", "url"])
+
+          {:ok, file_uri} =
+            CachedFile.fetch("sketchfab-#{model_id}", fn path ->
+              Download.from(zip_url, path: path)
+              %{content_type: "model/gltf+zip"}
+            end)
+
+          file_uri
       end
 
     [uri, %{expected_content_type: "model/gltf+zip"}]

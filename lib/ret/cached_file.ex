@@ -16,8 +16,9 @@ defmodule Ret.CachedFile do
   end
 
   # Returns the URI to the file with the given cache key. If file is not
-  # cached, expects loader to be a function that returns a %{ path, content_type } map
-  # that points to the temporary file whose contents to cache and the content type.
+  # cached, expects loader to be a function that will receive a path to a temp file to
+  # write the data to cache to, and is expected to return a { :ok, %{ content_type: } } tuple
+  # with the content type.
   def fetch(cache_key, loader) do
     Repo.transaction(fn ->
       # Use a PostgreSQL advisory lock on the cache key as a mutex across all
@@ -33,21 +34,27 @@ defmodule Ret.CachedFile do
           Storage.uri_for(file_uuid, file_content_type, file_key)
 
         nil ->
-          %{path: path, content_type: content_type} = loader.()
+          {:ok, path} = Temp.path()
 
-          file_key = SecureRandom.hex()
-          {:ok, file_uuid} = Storage.store(path, content_type, file_key)
+          try do
+            %{content_type: content_type} = loader.(path)
 
-          %CachedFile{}
-          |> changeset(%{
-            cache_key: cache_key,
-            file_uuid: file_uuid,
-            file_key: file_key,
-            file_content_type: content_type
-          })
-          |> Repo.insert!()
+            file_key = SecureRandom.hex()
+            {:ok, file_uuid} = Storage.store(path, content_type, file_key)
 
-          Storage.uri_for(file_uuid, content_type, file_key)
+            %CachedFile{}
+            |> changeset(%{
+              cache_key: cache_key,
+              file_uuid: file_uuid,
+              file_key: file_key,
+              file_content_type: content_type
+            })
+            |> Repo.insert!()
+
+            Storage.uri_for(file_uuid, content_type, file_key)
+          after
+            File.rm_rf(path)
+          end
       end
     end)
   end

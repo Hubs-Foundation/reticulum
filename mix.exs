@@ -72,7 +72,8 @@ defmodule Ret.Mixfile do
       {:sentry, "~> 6.0"},
       {:toml, "~> 0.5"},
       {:scrivener_ecto, "~> 1.0"},
-      {:ua_parser, "~> 1.5.0"}
+      {:ua_parser, "~> 1.5.0"},
+      {:download, "~> 0.0.4"}
     ]
   end
 
