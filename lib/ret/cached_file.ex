@@ -37,21 +37,27 @@ defmodule Ret.CachedFile do
           {:ok, path} = Temp.path()
 
           try do
-            %{content_type: content_type} = loader.(path)
+            loader_result = loader.(path)
 
-            file_key = SecureRandom.hex()
-            {:ok, file_uuid} = Storage.store(path, content_type, file_key)
+            case loader_result do
+              %{content_type: content_type} ->
+                file_key = SecureRandom.hex()
+                {:ok, file_uuid} = Storage.store(path, content_type, file_key)
 
-            %CachedFile{}
-            |> changeset(%{
-              cache_key: cache_key,
-              file_uuid: file_uuid,
-              file_key: file_key,
-              file_content_type: content_type
-            })
-            |> Repo.insert!()
+                %CachedFile{}
+                |> changeset(%{
+                  cache_key: cache_key,
+                  file_uuid: file_uuid,
+                  file_key: file_key,
+                  file_content_type: content_type
+                })
+                |> Repo.insert!()
 
-            Storage.uri_for(file_uuid, content_type, file_key)
+                Storage.uri_for(file_uuid, content_type, file_key)
+
+              :error ->
+                {:error, "error running loader"}
+            end
           after
             File.rm_rf(path)
           end

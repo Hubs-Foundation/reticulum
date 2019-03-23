@@ -245,38 +245,39 @@ defmodule Ret.MediaResolver do
   end
 
   defp resolve_sketchfab_model(model_id, api_key) do
-    Statix.increment("ret.media_resolver.sketchfab.requests")
+    cached_file_result =
+      CachedFile.fetch("sketchfab-#{model_id}", fn path ->
+        Statix.increment("ret.media_resolver.sketchfab.requests")
 
-    res =
-      "https://api.sketchfab.com/v3/models/#{model_id}/download"
-      |> retry_get_until_success([{"Authorization", "Token #{api_key}"}])
+        res =
+          "https://api.sketchfab.com/v3/models/#{model_id}/download"
+          |> retry_get_until_success([{"Authorization", "Token #{api_key}"}])
 
-    uri =
-      case res do
-        :error ->
-          Statix.increment("ret.media_resolver.sketchfab.errors")
+        case res do
+          :error ->
+            Statix.increment("ret.media_resolver.sketchfab.errors")
 
-          :error
+            :error
 
-        res ->
-          Statix.increment("ret.media_resolver.sketchfab.ok")
+          res ->
+            Statix.increment("ret.media_resolver.sketchfab.ok")
 
-          zip_url =
-            res
-            |> Map.get(:body)
-            |> Poison.decode!()
-            |> Kernel.get_in(["gltf", "url"])
+            zip_url =
+              res
+              |> Map.get(:body)
+              |> Poison.decode!()
+              |> Kernel.get_in(["gltf", "url"])
 
-          {:ok, file_uri} =
-            CachedFile.fetch("sketchfab-#{model_id}", fn path ->
-              Download.from(zip_url, path: path)
-              %{content_type: "model/gltf+zip"}
-            end)
+            Download.from(zip_url, path: path)
 
-          file_uri
-      end
+            %{content_type: "model/gltf+zip"}
+        end
+      end)
 
-    [uri, %{expected_content_type: "model/gltf+zip"}]
+    case cached_file_result do
+      {:ok, uri} -> [uri, %{expected_content_type: "model/gltf+zip"}]
+      {:error, _reason} -> :error
+    end
   end
 
   defp resolve_giphy_media_uri(%URI{} = uri, preferred_type) do
