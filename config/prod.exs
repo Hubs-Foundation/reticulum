@@ -67,7 +67,7 @@ import_config "prod.secret.exs"
 
 # Filter out media search API params
 config :phoenix, :filter_parameters, ["q", "filter", "cursor"]
-config :ret, Ret.Repo, adapter: Ecto.Adapters.Postgres
+config :ret, Ret.Repo, adapter: Ecto.Adapters.Postgres, ownership_timeout: 60_000
 
 config :peerage, via: Ret.PeerageProvider
 
