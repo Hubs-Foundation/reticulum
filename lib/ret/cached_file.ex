@@ -40,7 +40,7 @@ defmodule Ret.CachedFile do
             loader_result = loader.(path)
 
             case loader_result do
-              %{content_type: content_type} ->
+              { :ok, %{content_type: content_type} } ->
                 file_key = SecureRandom.hex()
                 {:ok, file_uuid} = Storage.store(path, content_type, file_key)
 

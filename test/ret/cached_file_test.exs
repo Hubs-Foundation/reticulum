@@ -14,13 +14,13 @@ defmodule Ret.CachedFileTest do
     uri_cold =
       CachedFile.fetch("foo", fn path ->
         File.write(path, "test")
-        %{content_type: "application/json"}
+        {:ok, %{content_type: "application/json"}}
       end)
 
     uri_hot =
       CachedFile.fetch("foo", fn path ->
         File.write(path, "test2")
-        %{content_type: "application/json"}
+        {:ok, %{content_type: "application/json"}}
       end)
 
     assert uri_hot != nil

@@ -270,7 +270,7 @@ defmodule Ret.MediaResolver do
 
             Download.from(zip_url, path: path)
 
-            %{content_type: "model/gltf+zip"}
+            {:ok, %{content_type: "model/gltf+zip"}}
         end
       end)
 
