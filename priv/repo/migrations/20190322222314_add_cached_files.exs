@@ -1,4 +1,4 @@
-defmodule Ret.Repo.Migrations.AddResolvedMediaAssets do
+defmodule Ret.Repo.Migrations.AddCachedFiles do
   use Ecto.Migration
 
   def change do
