@@ -18,18 +18,14 @@ defmodule Ret.OAuthToken do
 
     token
   end
-
-  defp module_config(key) do
-    Application.get_env(:ret, __MODULE__)[key]
-  end
 end
 
 defmodule Ret.OAuthTokenSecretFetcher do
-  def fetch_signing_secret(mod, opts) do
+  def fetch_signing_secret(mod, _opts) do
     {:ok, Application.get_env(:ret, mod)[:oauth_token_key] |> JOSE.JWK.from_oct()}
   end
 
-  def fetch_verifying_secret(mod, token_headers, opts) do
+  def fetch_verifying_secret(mod, _token_headers, _opts) do
     {:ok, Application.get_env(:ret, mod)[:oauth_token_key] |> JOSE.JWK.from_oct()}
   end
 end

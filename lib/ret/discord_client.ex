@@ -10,7 +10,7 @@ defmodule Ret.DiscordClient do
       client_id: module_config(:client_id),
       scope: @oauth_scope,
       state: Ret.OAuthToken.token_for_hub(hub_sid),
-      redirect_uri: get_redirect_uri
+      redirect_uri: get_redirect_uri()
     }
 
     "#{@discord_api_base}/oauth2/authorize?" <> URI.encode_query(authorize_params)
@@ -24,7 +24,7 @@ defmodule Ret.DiscordClient do
         client_secret: module_config(:client_secret),
         grant_type: "authorization_code",
         code: oauth_code,
-        redirect_uri: get_redirect_uri,
+        redirect_uri: get_redirect_uri(),
         scope: @oauth_scope
       ]
     }
