@@ -86,7 +86,7 @@ config :ret, RetWeb.Plugs.HeaderAuthorization,
 config :ret, RetWeb.Plugs.BotHeaderAuthorization, bot_access_key: ""
 
 config :ret, Ret.DiscordClient,
-  client_id: "545020343077830656",
+  client_id: "",
   client_secret: "",
   bot_token: ""
 
