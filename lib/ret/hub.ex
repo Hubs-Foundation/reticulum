@@ -269,10 +269,10 @@ defimpl Canada.Can, for: Ret.Account do
   def can?(_, :join_hub, %Ret.Hub{hub_bindings: hub_bindings}) when length(hub_bindings) == 0, do: true
 
   # Bound hubs require accounts to have an oauth provider
-  def can?(%Ret.Account{oauth_providers: oauth_providers}, :join_hub, hub) when length(oauth_providers) == 0, do: false
+  def can?(%Ret.Account{oauth_providers: oauth_providers}, :join_hub, _hub) when length(oauth_providers) == 0, do: false
 
-  def can?(account, :join_hub, hub) do
-    hub.hub_bindings
+  def can?(account, :join_hub, %Ret.Hub{hub_bindings: hub_bindings}) when is_list(hub_bindings) do
+    hub_bindings
     |> Enum.any?(fn binding ->
       provider = account.oauth_providers |> Enum.find(&(&1.source == binding.type))
 
