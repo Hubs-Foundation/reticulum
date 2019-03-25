@@ -43,6 +43,11 @@ defmodule Ret.DiscordClient do
     |> Poison.decode!()
   end
 
+  def member_of_channel?(account_id, community_id, channel_id) do
+    permissions = compute_permissions(account_id, community_id, channel_id) |> permissions_to_map
+    permissions[:view_channel]
+  end
+
   def api_request(path) do
     HTTPoison.get!("#{@discord_api_base}#{path}", %{"authorization" => "Bot #{module_config(:bot_token)}"})
     |> Map.get(:body)
@@ -86,7 +91,7 @@ defmodule Ret.DiscordClient do
     0x8000_0000 => :unused
   }
 
-  def permissions_to_map(permissions) do
+  defp permissions_to_map(permissions) do
     0..31
     |> Enum.map(&bsl(1, &1))
     |> Enum.map(&{@permissions[&1], (permissions &&& &1) == &1})
@@ -95,13 +100,20 @@ defmodule Ret.DiscordClient do
 
   # compute_base_permissions and compute_overwrites based on pseudo-code at 
   # https://discordapp.com/developers/docs/topics/permissions#permission-overwrites
-  def compute_base_permissions(account_id, community_id, user_roles) do
-    owner_id = api_request("/guilds/#{community_id}") |> Map.get("owner_id")
+  defp compute_base_permissions(account_id, community_id, user_roles) do
+    owner_id =
+      case Cachex.fetch(:discord_api, "/guilds/#{community_id}") do
+        {_status, result} -> result |> Map.get("owner_id")
+      end
 
     if owner_id == account_id do
       @all
     else
-      guild_roles = api_request("/guilds/#{community_id}/roles") |> Map.new(&{&1["id"], &1})
+      guild_roles =
+        case Cachex.fetch(:discord_api, "/guilds/#{community_id}/roles") do
+          {_status, result} -> result |> Map.new(&{&1["id"], &1})
+        end
+
       role_everyone = guild_roles[community_id]
       permissions = role_everyone["permissions"]
 
@@ -117,14 +129,19 @@ defmodule Ret.DiscordClient do
     end
   end
 
-  def compute_overwrites(base_permissions, account_id, community_id, channel_id, user_roles) do
+  defp compute_overwrites(base_permissions, account_id, community_id, channel_id, user_roles) do
     if (base_permissions &&& @administrator) == @administrator do
       @all
     else
       permissions = base_permissions
 
       channel_overwrites =
-        api_request("/channels/#{channel_id}") |> Map.get("permission_overwrites") |> Map.new(&{&1["id"], &1})
+        case Cachex.fetch(:discord_api, "/channels/#{channel_id}") do
+          {_status, result} ->
+            result
+            |> Map.get("permission_overwrites")
+            |> Map.new(&{&1["id"], &1})
+        end
 
       overwrite_everyone = channel_overwrites[community_id]
 
@@ -154,16 +171,14 @@ defmodule Ret.DiscordClient do
     end
   end
 
-  def compute_permissions(account_id, community_id, channel_id) do
-    user_roles = api_request("/guilds/#{community_id}/members/#{account_id}") |> Map.get("roles")
+  defp compute_permissions(account_id, community_id, channel_id) do
+    user_roles =
+      case Cachex.fetch(:discord_api, "/guilds/#{community_id}/members/#{account_id}") do
+        {_status, result} -> result |> Map.get("roles")
+      end
 
     compute_base_permissions(account_id, community_id, user_roles)
     |> compute_overwrites(account_id, community_id, channel_id, user_roles)
-  end
-
-  def member_of_channel?(account_id, community_id, channel_id) do
-    permissions = compute_permissions(account_id, community_id, channel_id) |> permissions_to_map
-    permissions[:view_channel]
   end
 
   defp get_redirect_uri(), do: RetWeb.Endpoint.url() <> "/api/v1/oauth/discord"

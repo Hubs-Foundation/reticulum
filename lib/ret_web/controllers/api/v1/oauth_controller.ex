@@ -18,7 +18,7 @@ defmodule RetWeb.Api.V1.OAuthController do
 
       Ret.Repo.insert!(
         %Ret.OAuthProvider{source: :discord, account: account, provider_account_id: discord_user_id},
-        on_conflict: :replace_all
+        on_conflict: :nothing
       )
 
       credentials = %{

@@ -50,6 +50,19 @@ defmodule Ret.Application do
         id: :media_search_cache
       ),
 
+      # Discord API cache
+      worker(
+        Cachex,
+        [
+          :discord_api,
+          [
+            expiration: expiration(default: :timer.minutes(1)),
+            fallback: fallback(default: &Ret.DiscordClient.api_request/1)
+          ]
+        ],
+        id: :discord_api_cache
+      ),
+
       # Page origin chunk cache
       worker(
         Cachex,
