@@ -82,6 +82,7 @@ defmodule RetWeb.Router do
       resources("/avatars", Api.V1.AvatarController, only: [:create, :update])
       resources("/hubs", Api.V1.HubController, only: [:update])
       resources("/projects", Api.V1.ProjectController, only: [:index, :show, :create, :update])
+      resources("/projects/:id/files", Api.V1.ProjectFileController, only: [:create])
     end
   end
 

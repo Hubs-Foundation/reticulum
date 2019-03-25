@@ -8,7 +8,7 @@ defmodule RetWeb.Api.V1.ProjectController do
   # Limit to 1 TPS
   plug(RetWeb.Plugs.RateLimit when action in [:create])
 
-  def index(conn, %{} = params) do
+  def index(conn, %{} = _params) do
     account = Guardian.Plug.current_resource(conn)
     projects = get_projects(account)
     render(conn, "index.json", projects: projects)

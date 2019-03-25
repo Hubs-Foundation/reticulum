@@ -2,7 +2,7 @@ defmodule Ret.Project do
   use Ecto.Schema
   import Ecto.Changeset
 
-  alias Ret.{Repo, Project, OwnedFile}
+  alias Ret.{Project, OwnedFile}
 
   @schema_prefix "ret0"
   @primary_key {:project_id, :id, autogenerate: true}
@@ -13,6 +13,7 @@ defmodule Ret.Project do
     belongs_to(:created_by_account, Ret.Account, references: :account_id)
     belongs_to(:project_owned_file, Ret.OwnedFile, references: :owned_file_id)
     belongs_to(:thumbnail_owned_file, Ret.OwnedFile, references: :owned_file_id)
+    has_many(:project_files, Ret.ProjectFile, foreign_key: :project_id)
 
     timestamps()
   end
@@ -31,7 +32,7 @@ defmodule Ret.Project do
     ])
     |> validate_length(:name, min: 4, max: 64)
     # TODO BP: this is repeated from hub.ex. Maybe refactor the regex out.
-    |> validate_format(:name, ~r/^[A-Za-z0-9-':"!@#$%^&*(),.?~ ]+$/)
+    |> validate_format(:name, ~r/^[A-Za-z0-9-':"_!@#$%^&*(),.?~ ]+$/)
     |> maybe_add_project_sid_to_changeset
     |> unique_constraint(:project_sid)
     |> put_assoc(:created_by_account, account)
