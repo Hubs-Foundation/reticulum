@@ -76,8 +76,7 @@ defmodule Ret.Hub do
     changeset
     |> cast(attrs, [:name])
     |> validate_required([:name])
-    |> validate_length(:name, min: 4, max: 64)
-    |> validate_format(:name, ~r/^[A-Za-z0-9-':"!@#$%^&*(),.?~ ]+$/)
+    |> validate_length(:name, max: 64)
     |> HubSlug.maybe_generate_slug()
   end
 

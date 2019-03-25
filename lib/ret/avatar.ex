@@ -40,13 +40,18 @@ defmodule Ret.Avatar do
     field(:allow_promotion, :boolean)
     belongs_to(:account, Account, references: :account_id)
 
-    belongs_to(:gltf_owned_file, OwnedFile, references: :owned_file_id)
-    belongs_to(:bin_owned_file, OwnedFile, references: :owned_file_id)
+    belongs_to(:gltf_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
+    belongs_to(:bin_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
 
-    belongs_to(:base_map_owned_file, OwnedFile, references: :owned_file_id)
-    belongs_to(:emissive_map_owned_file, OwnedFile, references: :owned_file_id)
-    belongs_to(:normal_map_owned_file, OwnedFile, references: :owned_file_id)
-    belongs_to(:orm_map_owned_file, OwnedFile, references: :owned_file_id)
+    belongs_to(:base_map_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
+
+    belongs_to(:emissive_map_owned_file, OwnedFile,
+      references: :owned_file_id,
+      on_replace: :nilify
+    )
+
+    belongs_to(:normal_map_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
+    belongs_to(:orm_map_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
 
     field(:state, Avatar.State)
 
@@ -92,7 +97,7 @@ defmodule Ret.Avatar do
   def changeset(
         %Avatar{} = avatar,
         account,
-        owned_files,
+        owned_files_map,
         parent_avatar,
         attrs \\ %{}
       ) do
@@ -103,14 +108,18 @@ defmodule Ret.Avatar do
     |> unique_constraint(:avatar_sid)
     |> put_assoc(:account, account)
     |> put_assoc(:parent_avatar, parent_avatar)
-    |> put_owned_files(owned_files)
+    |> put_owned_files(owned_files_map)
     |> AvatarSlug.maybe_generate_slug()
     |> AvatarSlug.unique_constraint()
   end
 
-  defp put_owned_files(changeset, owned_files) do
-    Enum.reduce(owned_files, changeset, fn {key, file}, changes ->
-      changes |> put_change(:"#{key}_owned_file_id", file.owned_file_id)
+  defp put_owned_files(in_changeset, owned_files_map) do
+    Enum.reduce(owned_files_map, in_changeset, fn
+      {key, :remove}, changes ->
+        changes |> put_assoc(:"#{key}_owned_file", nil)
+
+      {key, file}, changes ->
+        changes |> put_assoc(:"#{key}_owned_file", file)
     end)
   end
 
