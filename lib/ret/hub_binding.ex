@@ -18,10 +18,10 @@ defmodule Ret.HubBinding do
   end
 
   def changeset(%HubBinding{} = hub_binding, params) do
-    hub = Hub |> Repo.get_by(hub_sid: params["hub_id"])
+    %Hub{hub_id: hub_id} = Hub |> Repo.get_by(hub_sid: params["hub_id"])
 
     hub_binding
     |> cast(params, [:type, :community_id, :channel_id])
-    |> put_assoc(:hub, hub)
+    |> put_change(:hub_id, hub_id)
   end
 end

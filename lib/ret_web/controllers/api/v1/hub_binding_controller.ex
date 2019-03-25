@@ -3,11 +3,16 @@ defmodule RetWeb.Api.V1.HubBindingController do
 
   alias Ret.{HubBinding, Repo}
 
-  def create(conn, %{"hub_binding" => %{"hub_id" => _, "type" => _, "community_id" => _, "channel_id" => _}} = params) do
+  def create(
+        conn,
+        %{"hub_binding" => %{"hub_id" => _, "type" => _, "community_id" => community_id, "channel_id" => channel_id}} =
+          params
+      ) do
     {result, _} =
-      %HubBinding{}
+      HubBinding
+      |> Repo.get_by(community_id: community_id, channel_id: channel_id)
       |> HubBinding.changeset(params["hub_binding"])
-      |> Repo.insert(on_conflict: :nothing)
+      |> Repo.insert_or_update()
 
     case result do
       :ok -> conn |> send_resp(201, "created binding")

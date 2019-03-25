@@ -145,10 +145,12 @@ defmodule Ret.DiscordClient do
 
       overwrite_everyone = channel_overwrites[community_id]
 
-      if overwrite_everyone do
-        permissions = permissions &&& ~~~overwrite_everyone["deny"]
-        permissions = permissions ||| overwrite_everyone["allow"]
-      end
+      permissions =
+        if overwrite_everyone do
+          (permissions &&& ~~~overwrite_everyone["deny"]) ||| overwrite_everyone["allow"]
+        else
+          permissions
+        end
 
       # Apply role specific overwrites.
       user_permissions = user_roles |> Enum.map(&channel_overwrites[&1]) |> Enum.filter(&(&1 != nil))
@@ -156,16 +158,17 @@ defmodule Ret.DiscordClient do
       allow = user_permissions |> Enum.reduce(0, &(&1["allow"] ||| &2))
       deny = user_permissions |> Enum.reduce(0, &(&1["deny"] ||| &2))
 
-      permissions = permissions &&& ~~~deny
-      permissions = permissions ||| allow
+      permissions = (permissions &&& ~~~deny) ||| allow
 
       # Apply member specific overwrite if it exists.
       overwrite_member = channel_overwrites[account_id]
 
-      if overwrite_member do
-        permissions = permissions &&& ~~~overwrite_member.deny
-        permissions = permissions ||| overwrite_member.allow
-      end
+      permissions =
+        if overwrite_member do
+          (permissions &&& ~~~overwrite_member.deny) ||| overwrite_member.allow
+        else
+          permissions
+        end
 
       permissions
     end
