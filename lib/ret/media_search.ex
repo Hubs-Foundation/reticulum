@@ -259,7 +259,7 @@ defmodule Ret.MediaSearch do
       |> add_tag_to_listing_search_query(filter)
       |> preload([:screenshot_owned_file, :model_owned_file, :scene_owned_file])
       |> order_by(^order)
-      |> Repo.paginate(%{page: cursor, page_size: @page_size})
+      |> Repo.paginate(%{page: cursor |> Integer.parse() |> elem(0), page_size: @page_size})
       |> result_for_scene_listing_page(cursor)
 
     {:commit, results}
