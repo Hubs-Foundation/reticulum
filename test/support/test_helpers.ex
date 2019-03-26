@@ -1,9 +1,15 @@
 defmodule Ret.TestHelpers do
-  alias Ret.{Storage, Account, Scene, SceneListing, Repo, Hub}
+  alias Ret.{Storage, Project, Account, Asset, ProjectAsset, Scene, SceneListing, Repo, Hub}
 
   def generate_temp_owned_file(account) do
     temp_file = generate_temp_file("test")
     {:ok, uuid} = Storage.store(%Plug.Upload{path: temp_file}, "text/plain", "secret")
+    {:ok, owned_file} = Storage.promote(uuid, "secret", nil, account)
+    owned_file
+  end
+
+  def generate_fixture_owned_file(account, path, content_type) do
+    {:ok, uuid} = Storage.store(%Plug.Upload{path: path}, content_type, "secret")
     {:ok, owned_file} = Storage.promote(uuid, "secret", nil, account)
     owned_file
   end
@@ -57,6 +63,45 @@ defmodule Ret.TestHelpers do
     {:ok, hub} = %Hub{} |> Hub.changeset(scene, %{name: "Test Hub"}) |> Repo.insert()
 
     {:ok, hub: hub}
+  end
+
+  def create_project_owned_file(%{account: account}) do
+    project_file = Path.expand("../fixtures/spoke-project.json", __DIR__)
+    {:ok, project_owned_file: generate_fixture_owned_file(account, project_file, "application/json")}
+  end
+
+  def create_thumbnail_owned_file(%{account: account}) do
+    thumbnail_file = Path.expand("../fixtures/spoke-thumbnail.jpg", __DIR__)
+    {:ok, thumbnail_owned_file: generate_fixture_owned_file(account, thumbnail_file, "image/png")}
+  end
+
+  def create_project(%{account: account, project_owned_file: project_owned_file, thumbnail_owned_file: thumbnail_owned_file}) do
+    {:ok, project} =
+      %Project{}
+      |> Project.changeset(account, project_owned_file, thumbnail_owned_file, %{
+        name: "Test Scene"
+      })
+      |> Repo.insert_or_update()
+
+    project = project |> Repo.preload([:project_owned_file, :thumbnail_owned_file, :created_by_account])
+    {:ok, project: project}
+  end
+
+  def create_project_asset(%{account: account, project: project, thumbnail_owned_file: owned_file}) do
+    {:ok, asset} =
+      %Asset{}
+      |> Asset.changeset(account, owned_file, %{
+        name: "Test Asset"
+      })
+      |> Repo.insert_or_update()
+
+    {:ok, project_asset} =
+      %ProjectAsset{}
+      |> ProjectAsset.changeset(project, asset)
+      |> Repo.insert_or_update()
+
+    project_asset = project_asset |> Repo.preload([:project, :asset])
+    {:ok, project_asset: project_asset}
   end
 
   def clear_all_stored_files do

@@ -13,23 +13,18 @@ defmodule Ret.Project do
     belongs_to(:created_by_account, Ret.Account, references: :account_id)
     belongs_to(:project_owned_file, Ret.OwnedFile, references: :owned_file_id)
     belongs_to(:thumbnail_owned_file, Ret.OwnedFile, references: :owned_file_id)
-    has_many(:project_files, Ret.ProjectFile, foreign_key: :project_id)
+    many_to_many(:assets, Ret.Asset, join_through: Ret.ProjectAsset, join_keys: [project_id: :project_id, asset_id: :asset_id], on_replace: :delete)
 
     timestamps()
   end
 
-  def to_sid(%Project{} = project), do: project.project_sid
-  def to_url(%Project{} = project), do: "#{RetWeb.Endpoint.url()}/projects/#{project |> to_sid}"
+  def to_url(%Project{} = project), do: "#{RetWeb.Endpoint.url()}/projects/#{project.project_sid}"
 
   # Create a Project
   def changeset(%Project{} = project, account, params \\ %{}) do
     project
-    |> cast(params, [
-      :name
-    ])
-    |> validate_required([
-      :name
-    ])
+    |> cast(params, [:name])
+    |> validate_required([:name])
     |> validate_length(:name, min: 4, max: 64)
     # TODO BP: this is repeated from hub.ex. Maybe refactor the regex out.
     |> validate_format(:name, ~r/^[A-Za-z0-9-':"_!@#$%^&*(),.?~ ]+$/)

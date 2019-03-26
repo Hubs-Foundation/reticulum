@@ -2,32 +2,30 @@ defmodule Ret.Repo.Migrations.CreateProjectFilesTable do
   use Ecto.Migration
 
   def change do
-    create table(:project_files, prefix: "ret0", primary_key: false) do
-      add(:project_file_id, :bigint, default: fragment("ret0.next_id()"), primary_key: true)
-      add(:project_file_sid, :string)
+    create table(:assets, prefix: "ret0", primary_key: false) do
+      add(:asset_id, :bigint, default: fragment("ret0.next_id()"), primary_key: true)
+      add(:asset_sid, :string, null: false)
       add(:name, :string, null: false)
+      add(:type, :string, null: false)
       add(:account_id, references(:accounts, column: :account_id), null: false)
-      add(:project_id, references(:projects, column: :project_id), null: false)
-      add(:project_file_owned_file_id, :bigint, null: false)
+      add(:asset_owned_file_id, :bigint, null: false)
 
       timestamps()
     end
 
-    create(index(:project_files, [:project_file_sid], unique: true))
-    create(index(:project_files, [:account_id]))
-    create(index(:project_files, [:project_id]))
+    create(index(:assets, [:asset_sid], unique: true))
+    create(index(:assets, [:account_id]))
 
-    create table(:account_files, prefix: "ret0", primary_key: false) do
-      add(:account_file_id, :bigint, default: fragment("ret0.next_id()"), primary_key: true)
-      add(:account_file_sid, :string)
-      add(:name, :string, null: false)
-      add(:account_id, references(:accounts, column: :account_id), null: false)
-      add(:account_file_owned_file_id, :bigint, null: false)
+    create table(:project_assets, prefix: "ret0", primary_key: false) do
+      add(:project_asset_id, :bigint, default: fragment("ret0.next_id()"), primary_key: true)
+      add(:project_id, references(:projects, column: :project_id, on_delete: :delete_all), primary_key: true)
+      add(:asset_id, references(:assets, column: :asset_id, on_delete: :delete_all), primary_key: true)
 
       timestamps()
     end
 
-    create(index(:account_files, [:account_file_sid], unique: true))
-    create(index(:account_files, [:account_id]))
+    create(index(:project_assets, [:project_id]))
+    create(index(:project_assets, [:asset_id]))
+    create(unique_index(:project_assets, [:project_id, :asset_id], name: :project_id_asset_id_unique_index))
   end
 end
