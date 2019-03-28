@@ -88,7 +88,7 @@ defmodule RetWeb.Api.V1.MediaSearchController do
 
   defp user_assets_index(conn, account, %{"source" => "assets"} = params) do
     {:commit, results} =
-      %Ret.MediaSearchQuery{source: "assets", user: account.account_id, type: "all", q: params["q"], cursor: params["cursor"] || 1} |> Ret.MediaSearch.search()
+      %Ret.MediaSearchQuery{source: "assets", user: account.account_id, type: nil, q: params["q"], cursor: params["cursor"] || 1} |> Ret.MediaSearch.search()
 
     conn |> render("index.json", results: results)
   end

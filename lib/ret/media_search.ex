@@ -269,7 +269,6 @@ defmodule Ret.MediaSearch do
   end
 
   defp add_type_to_asset_search_query(query, nil), do: query
-  defp add_type_to_asset_search_query(query, "all"), do: query
   defp add_type_to_asset_search_query(query, type), do: query |> where([a], a.type == ^type)
   defp add_query_to_asset_search_query(query, nil), do: query
   defp add_query_to_asset_search_query(query, q), do: query |> where([a], ilike(a.name, ^"%#{q}%"))
