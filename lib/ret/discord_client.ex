@@ -54,8 +54,9 @@ defmodule Ret.DiscordClient do
     |> Poison.decode!()
   end
 
-  @administrator 0x0000_0008
+  @none 0x0000_0000
   @all 0xFFFF_FFFF
+  @administrator 0x0000_0008
   @permissions %{
     0x0000_0001 => :create_instant_invite,
     0x0000_0002 => :kick_members,
@@ -155,8 +156,8 @@ defmodule Ret.DiscordClient do
       # Apply role specific overwrites.
       user_permissions = user_roles |> Enum.map(&channel_overwrites[&1]) |> Enum.filter(&(&1 != nil))
 
-      allow = user_permissions |> Enum.reduce(0, &(&1["allow"] ||| &2))
-      deny = user_permissions |> Enum.reduce(0, &(&1["deny"] ||| &2))
+      allow = user_permissions |> Enum.reduce(@none, &(&1["allow"] ||| &2))
+      deny = user_permissions |> Enum.reduce(@none, &(&1["deny"] ||| &2))
 
       permissions = (permissions &&& ~~~deny) ||| allow
 
@@ -180,8 +181,12 @@ defmodule Ret.DiscordClient do
         {_status, result} -> result |> Map.get("roles")
       end
 
-    compute_base_permissions(account_id, community_id, user_roles)
-    |> compute_overwrites(account_id, community_id, channel_id, user_roles)
+    if user_roles == nil do
+      @none
+    else
+      compute_base_permissions(account_id, community_id, user_roles)
+      |> compute_overwrites(account_id, community_id, channel_id, user_roles)
+    end
   end
 
   defp get_redirect_uri(), do: RetWeb.Endpoint.url() <> "/api/v1/oauth/discord"

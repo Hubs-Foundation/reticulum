@@ -5,8 +5,7 @@ defmodule RetWeb.Plugs.BotHeaderAuthorization do
   def init(default), do: default
 
   def call(conn, _default) do
-    env = Application.get_env(:ret, __MODULE__)
-    expected_value = env[:bot_access_key]
+    expected_value = Application.get_env(:ret, :bot_access_key)
 
     case conn |> get_req_header(@header_name) do
       [^expected_value] -> conn

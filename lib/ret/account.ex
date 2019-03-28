@@ -54,4 +54,14 @@ defmodule Ret.Account do
   end
 
   def add_global_perms_for_account(perms, _), do: perms
+
+  def matching_oauth_providers(nil, _), do: []
+  def matching_oauth_providers(_, nil), do: []
+
+  def matching_oauth_providers(%Ret.Account{} = account, %Ret.Hub{} = hub) do
+    account.oauth_providers
+    |> Enum.filter(fn provider ->
+      hub.hub_bindings |> Enum.any?(&(&1.type == provider.source))
+    end)
+  end
 end

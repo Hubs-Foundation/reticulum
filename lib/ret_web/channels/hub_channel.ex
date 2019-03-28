@@ -28,36 +28,58 @@ defmodule RetWeb.HubChannel do
     hub_bindings: []
   ]
 
-  def join(
-        "hub:" <> hub_sid,
-        %{
-          "profile" => profile,
-          "context" => context,
-          "push_subscription_endpoint" => endpoint,
-          "auth_token" => auth_token
-        },
-        socket
-      ) do
-    socket |> assign(:profile, profile) |> assign(:context, context) |> perform_join(hub_sid, endpoint, auth_token)
+  def join("hub:" <> hub_sid, %{"profile" => profile, "context" => context} = params, socket) do
+    socket
+    |> assign(:profile, profile)
+    |> assign(:context, context)
+    |> perform_join(
+      hub_sid,
+      params |> Map.take(["push_subscription_endpoint", "auth_token", "perms_token", "bot_access_key"])
+    )
   end
 
-  def join(
-        "hub:" <> hub_sid,
-        %{"profile" => profile, "context" => context, "push_subscription_endpoint" => endpoint},
-        socket
-      ) do
-    socket |> assign(:profile, profile) |> assign(:context, context) |> perform_join(hub_sid, endpoint)
-  end
+  defp perform_join(socket, hub_sid, params) do
+    account =
+      case Ret.Guardian.resource_from_token(params["auth_token"]) do
+        {:ok, %Account{} = account, _claims} -> account
+        _ -> nil
+      end
 
-  def join("hub:" <> hub_sid, %{"profile" => profile, "context" => context}, socket) do
-    socket |> assign(:profile, profile) |> assign(:context, context) |> perform_join(hub_sid)
-  end
+    hub =
+      Hub
+      |> Repo.get_by(hub_sid: hub_sid)
+      |> Repo.preload(@hub_preloads)
 
-  defp perform_join(socket, hub_sid, push_subscription_endpoint \\ nil, auth_token \\ nil) do
-    Hub
-    |> Repo.get_by(hub_sid: hub_sid)
-    |> Repo.preload(@hub_preloads)
-    |> join_with_hub(socket, push_subscription_endpoint, auth_token)
+    hub_requires_oauth = hub.hub_bindings |> Enum.empty?() |> Kernel.not()
+
+    has_valid_bot_access_key = params["bot_access_key"] == Application.get_env(:ret, :bot_access_key)
+
+    account_has_provider_for_hub = account |> Ret.Account.matching_oauth_providers(hub) |> Enum.empty?() |> Kernel.not()
+
+    account_can_join = account |> can?(join_hub(hub))
+
+    perms_token = params["perms_token"]
+
+    has_perms_token = perms_token != nil
+
+    perms_token_can_join =
+      case perms_token |> Ret.PermsToken.decode_and_verify() do
+        {:ok, %{"join_hub" => true}} -> true
+        _ -> false
+      end
+
+    params =
+      params
+      |> Map.merge(%{
+        hub_requires_oauth: hub_requires_oauth,
+        has_valid_bot_access_key: has_valid_bot_access_key,
+        account_has_provider_for_hub: account_has_provider_for_hub,
+        account_can_join: account_can_join,
+        has_perms_token: has_perms_token,
+        perms_token_can_join: perms_token_can_join
+      })
+
+    hub |> join_with_hub(account, socket, params)
   end
 
   def handle_in("events:entered", %{"initialOccupantCount" => occupant_count} = payload, socket) do
@@ -343,34 +365,56 @@ defmodule RetWeb.HubChannel do
     socket.assigns |> Map.take([:presence, :profile, :context])
   end
 
-  defp join_with_hub(%Hub{entry_mode: :deny}, _socket, _endpoint, _auth_token) do
+  defp join_with_hub(%Hub{entry_mode: :deny}, _account, _socket, _params) do
     {:error, %{message: "Hub no longer accessible", reason: "closed"}}
   end
 
-  defp join_with_hub(%Hub{} = hub, socket, push_subscription_endpoint, auth_token) do
+  defp join_with_hub(%Hub{} = hub, %Account{}, _socket, %{
+         hub_requires_oauth: true,
+         account_has_provider_for_hub: false
+       }),
+       do: require_oauth(hub)
+
+  defp join_with_hub(%Hub{}, %Account{}, _socket, %{
+         hub_requires_oauth: true,
+         account_has_provider_for_hub: true,
+         account_can_join: false
+       }),
+       do: deny_join()
+
+  defp join_with_hub(%Hub{} = hub, nil = _account, _socket, %{
+         hub_requires_oauth: true,
+         has_valid_bot_access_key: false,
+         has_perms_token: false
+       }),
+       do: require_oauth(hub)
+
+  defp join_with_hub(%Hub{}, nil = _account, _socket, %{
+         hub_requires_oauth: true,
+         has_valid_bot_access_key: false,
+         has_perms_token: true,
+         perms_token_can_join: false
+       }),
+       do: deny_join()
+
+  defp join_with_hub(%Hub{} = hub, account, socket, params) do
     hub = hub |> Hub.ensure_valid_entry_code!() |> Hub.ensure_host()
+
+    push_subscription_endpoint = params["push_subscription_endpoint"]
 
     is_push_subscribed =
       push_subscription_endpoint &&
         hub.web_push_subscriptions |> Enum.any?(&(&1.endpoint == push_subscription_endpoint))
 
-    socket =
-      case Ret.Guardian.resource_from_token(auth_token) do
-        {:ok, %Account{} = account, _claims} -> Guardian.Phoenix.Socket.put_current_resource(socket, account)
-        _ -> socket
-      end
+    socket = Guardian.Phoenix.Socket.put_current_resource(socket, account)
 
     with socket <- socket |> assign(:hub_sid, hub.hub_sid) |> assign(:presence, :lobby),
          response <- HubView.render("show.json", %{hub: hub}) do
       response = response |> Map.put(:subscriptions, %{web_push: is_push_subscribed})
 
-      account = socket |> Guardian.Phoenix.Socket.current_resource()
-
-      perms_token = get_perms_token(hub, account)
+      perms_token = params["perms_token"] || get_perms_token(hub, account)
 
       response = response |> Map.put(:perms_token, perms_token)
-
-      response = response |> Map.put(:oauth_info, hub.hub_bindings |> get_oauth_info(hub.hub_sid))
 
       existing_stat_count =
         socket
@@ -402,10 +446,19 @@ defmodule RetWeb.HubChannel do
     end
   end
 
-  defp join_with_hub(nil, _socket, _endpoint, _auth_token) do
+  defp join_with_hub(nil, _account, _socket, _params) do
     Statix.increment("ret.channels.hub.joins.not_found")
 
     {:error, %{message: "No such Hub"}}
+  end
+
+  defp require_oauth(hub) do
+    oauth_info = hub.hub_bindings |> get_oauth_info(hub.hub_sid)
+    {:error, %{message: "OAuth required", reason: "oauth_required", oauth_info: oauth_info}}
+  end
+
+  defp deny_join do
+    {:error, %{message: "Join denied", reason: "join_denied"}}
   end
 
   defp get_oauth_info(hub_bindings, hub_sid) do
