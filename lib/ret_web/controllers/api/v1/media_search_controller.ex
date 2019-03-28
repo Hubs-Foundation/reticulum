@@ -65,30 +65,30 @@ defmodule RetWeb.Api.V1.MediaSearchController do
     conn |> send_resp(422, "")
   end
 
-  defp user_assets_index(conn, account, %{"source" => "assets"} = params) do
-    {:commit, results} =
-      %Ret.MediaSearchQuery{source: "assets", user: account.account_id, type: "all", cursor: params["cursor"] || 1} |> Ret.MediaSearch.search()
-
-    conn |> render("index.json", results: results)
-  end
-
   defp user_assets_index(conn, account, %{"source" => "assets", "type" => "video"} = params) do
     {:commit, results} =
-      %Ret.MediaSearchQuery{source: "assets", user: account.account_id, type: "videos", cursor: params["cursor"] || 1} |> Ret.MediaSearch.search()
+      %Ret.MediaSearchQuery{source: "assets", user: account.account_id, type: "video", q: params["q"], cursor: params["cursor"] || 1} |> Ret.MediaSearch.search()
 
     conn |> render("index.json", results: results)
   end
 
   defp user_assets_index(conn, account, %{"source" => "assets", "type" => "image"} = params) do
     {:commit, results} =
-      %Ret.MediaSearchQuery{source: "assets", user: account.account_id, type: "images", cursor: params["cursor"] || 1} |> Ret.MediaSearch.search()
+      %Ret.MediaSearchQuery{source: "assets", user: account.account_id, type: "image", q: params["q"], cursor: params["cursor"] || 1} |> Ret.MediaSearch.search()
 
     conn |> render("index.json", results: results)
   end
 
   defp user_assets_index(conn, account, %{"source" => "assets", "type" => "model"} = params) do
     {:commit, results} =
-      %Ret.MediaSearchQuery{source: "assets", user: account.account_id, type: "models", cursor: params["cursor"] || 1} |> Ret.MediaSearch.search()
+      %Ret.MediaSearchQuery{source: "assets", user: account.account_id, type: "model", q: params["q"], cursor: params["cursor"] || 1} |> Ret.MediaSearch.search()
+
+    conn |> render("index.json", results: results)
+  end
+
+  defp user_assets_index(conn, account, %{"source" => "assets"} = params) do
+    {:commit, results} =
+      %Ret.MediaSearchQuery{source: "assets", user: account.account_id, type: "all", q: params["q"], cursor: params["cursor"] || 1} |> Ret.MediaSearch.search()
 
     conn |> render("index.json", results: results)
   end

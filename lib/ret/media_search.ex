@@ -257,7 +257,8 @@ defmodule Ret.MediaSearch do
   defp assets_search(cursor, type, account_id, query, order \\ [desc: :updated_at]) do
     results =
       Asset
-      |> where([a], a.account_id == ^account_id and a.type == ^type)
+      |> where([a], a.account_id == ^account_id)
+      |> add_type_to_asset_search_query(type)
       |> add_query_to_asset_search_query(query)
       |> preload([:asset_owned_file])
       |> order_by(^order)
@@ -267,6 +268,9 @@ defmodule Ret.MediaSearch do
     {:commit, results}
   end
 
+  defp add_type_to_asset_search_query(query, nil), do: query
+  defp add_type_to_asset_search_query(query, "all"), do: query
+  defp add_type_to_asset_search_query(query, type), do: query |> where([a], a.type == ^type)
   defp add_query_to_asset_search_query(query, nil), do: query
   defp add_query_to_asset_search_query(query, q), do: query |> where([a], ilike(a.name, ^"%#{q}%"))
 
