@@ -78,8 +78,7 @@ defmodule RetWeb.Router do
 
     scope "/v1", as: :api_v1 do
       pipe_through([:bot_header_auth])
-      post("/hub_bindings", Api.V1.HubBindingController, :create)
-      delete("/hub_bindings", Api.V1.HubBindingController, :delete)
+      resources("/hub_bindings", Api.V1.HubBindingController, only: [:create])
     end
 
     scope "/v1", as: :api_v1 do

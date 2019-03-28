@@ -20,21 +20,4 @@ defmodule RetWeb.Api.V1.HubBindingController do
       :error -> conn |> send_resp(422, "invalid binding")
     end
   end
-
-  def delete(conn, params) do
-    %{"hub_binding" => %{"type" => type, "community_id" => community_id, "channel_id" => channel_id}} = params
-
-    hub_binding =
-      HubBinding
-      |> Repo.get_by(type: type, community_id: community_id, channel_id: channel_id)
-
-    case hub_binding do
-      nil ->
-        conn |> send_resp(404, "not found")
-
-      _ ->
-        hub_binding |> Repo.delete()
-        conn |> send_resp(200, "OK")
-    end
-  end
 end
