@@ -29,10 +29,10 @@ defmodule RetWeb.Api.V1.MediaSearchController do
     conn |> render("index.json", results: results)
   end
 
-  def index(conn, %{"source" => "assets", "user" => account_id} = params) do 
+  def index(conn, %{"source" => "assets", "user" => user} = params) do 
     account = conn |> Guardian.Plug.current_resource()
 
-    if account.accound_id == account_id do
+    if account.account_id == String.to_integer(user) do
       user_assets_index(conn, account, params)
     else
       conn |> send_resp(401, "")
