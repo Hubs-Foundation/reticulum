@@ -36,7 +36,8 @@ defmodule RetWeb.Api.V1.OAuthController do
       perms_token =
         %{
           join_hub:
-            Ret.DiscordClient.member_of_channel?(discord_user_id, hub_binding.community_id, hub_binding.channel_id),
+            discord_user_id
+            |> Ret.DiscordClient.member_of_channel?(hub_binding.community_id, hub_binding.channel_id),
           kick_users: false
         }
         |> Ret.PermsToken.token_for_perms()
