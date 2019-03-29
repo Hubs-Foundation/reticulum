@@ -29,16 +29,16 @@ defmodule Ret.DiscordClient do
       ]
     }
 
-    HTTPoison.post!("#{@discord_api_base}/oauth2/token", body, %{
-      "content-type" => "application/x-www-form-urlencoded"
-    })
+    "#{@discord_api_base}/oauth2/token"
+    |> Ret.HttpUtils.retry_post_until_success(body, [{"content-type", "application/x-www-form-urlencoded"}])
     |> Map.get(:body)
     |> Poison.decode!()
     |> Map.get("access_token")
   end
 
   def get_user_info(access_token) do
-    HTTPoison.get!("#{@discord_api_base}/users/@me", %{"authorization" => "Bearer #{access_token}"})
+    "#{@discord_api_base}/users/@me"
+    |> Ret.HttpUtils.retry_get_until_success([{"authorization", "Bearer #{access_token}"}])
     |> Map.get(:body)
     |> Poison.decode!()
   end
@@ -49,7 +49,8 @@ defmodule Ret.DiscordClient do
   end
 
   def api_request(path) do
-    HTTPoison.get!("#{@discord_api_base}#{path}", %{"authorization" => "Bot #{module_config(:bot_token)}"})
+    "#{@discord_api_base}#{path}"
+    |> Ret.HttpUtils.retry_get_until_success([{"authorization", "Bot #{module_config(:bot_token)}"}])
     |> Map.get(:body)
     |> Poison.decode!()
   end
@@ -178,6 +179,7 @@ defmodule Ret.DiscordClient do
   defp compute_permissions(account_id, community_id, channel_id) do
     user_roles =
       case Cachex.fetch(:discord_api, "/guilds/#{community_id}/members/#{account_id}") do
+        {:error, _} -> nil
         {_status, result} -> result |> Map.get("roles")
       end
 
