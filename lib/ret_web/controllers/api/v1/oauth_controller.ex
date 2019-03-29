@@ -8,7 +8,7 @@ defmodule RetWeb.Api.V1.OAuthController do
     %{"hub_sid" => hub_sid} = claims
 
     %{"id" => discord_user_id, "email" => email, "verified" => verified} =
-      code |> Ret.DiscordClient.get_access_token() |> Ret.DiscordClient.get_user_info()
+      code |> Ret.DiscordClient.fetch_access_token() |> Ret.DiscordClient.fetch_user_info()
 
     hub = Ret.Hub |> Ret.Repo.get_by(hub_sid: hub_sid) |> Ret.Repo.preload(:hub_bindings)
     url = hub |> Ret.Hub.url_for()

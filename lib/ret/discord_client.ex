@@ -16,7 +16,7 @@ defmodule Ret.DiscordClient do
     "#{@discord_api_base}/oauth2/authorize?" <> URI.encode_query(authorize_params)
   end
 
-  def get_access_token(oauth_code) do
+  def fetch_access_token(oauth_code) do
     body = {
       :form,
       [
@@ -36,7 +36,7 @@ defmodule Ret.DiscordClient do
     |> Map.get("access_token")
   end
 
-  def get_user_info(access_token) do
+  def fetch_user_info(access_token) do
     "#{@discord_api_base}/users/@me"
     |> Ret.HttpUtils.retry_get_until_success([{"authorization", "Bearer #{access_token}"}])
     |> Map.get(:body)
