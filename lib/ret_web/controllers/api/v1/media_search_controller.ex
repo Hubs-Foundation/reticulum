@@ -33,7 +33,10 @@ defmodule RetWeb.Api.V1.MediaSearchController do
     account = conn |> Guardian.Plug.current_resource()
 
     if account.account_id == String.to_integer(user) do
-      user_assets_index(conn, account, params)
+      {:commit, results} =
+        %Ret.MediaSearchQuery{source: "assets", user: account.account_id, type: params["type"], q: params["q"], cursor: params["cursor"] || "1"} |> Ret.MediaSearch.search()
+
+      conn |> render("index.json", results: results)
     else
       conn |> send_resp(401, "")
     end
@@ -63,33 +66,5 @@ defmodule RetWeb.Api.V1.MediaSearchController do
 
   def index(conn) do
     conn |> send_resp(422, "")
-  end
-
-  defp user_assets_index(conn, account, %{"source" => "assets", "type" => "video"} = params) do
-    {:commit, results} =
-      %Ret.MediaSearchQuery{source: "assets", user: account.account_id, type: "video", q: params["q"], cursor: params["cursor"] || "1"} |> Ret.MediaSearch.search()
-
-    conn |> render("index.json", results: results)
-  end
-
-  defp user_assets_index(conn, account, %{"source" => "assets", "type" => "image"} = params) do
-    {:commit, results} =
-      %Ret.MediaSearchQuery{source: "assets", user: account.account_id, type: "image", q: params["q"], cursor: params["cursor"] || "1"} |> Ret.MediaSearch.search()
-
-    conn |> render("index.json", results: results)
-  end
-
-  defp user_assets_index(conn, account, %{"source" => "assets", "type" => "model"} = params) do
-    {:commit, results} =
-      %Ret.MediaSearchQuery{source: "assets", user: account.account_id, type: "model", q: params["q"], cursor: params["cursor"] || "1"} |> Ret.MediaSearch.search()
-
-    conn |> render("index.json", results: results)
-  end
-
-  defp user_assets_index(conn, account, %{"source" => "assets"} = params) do
-    {:commit, results} =
-      %Ret.MediaSearchQuery{source: "assets", user: account.account_id, type: nil, q: params["q"], cursor: params["cursor"] || "1"} |> Ret.MediaSearch.search()
-
-    conn |> render("index.json", results: results)
   end
 end
