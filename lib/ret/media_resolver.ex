@@ -3,12 +3,20 @@ defmodule Ret.ResolvedMedia do
   defstruct [:uri, :meta]
 end
 
+defmodule Ret.MediaResolverQuery do
+  @enforce_keys [:url]
+  defstruct [:url, supports_webm: true]
+end
+
 defmodule Ret.MediaResolver do
   use Retry
   import Ret.HttpUtils
 
+  alias Ret.{CachedFile, MediaResolverQuery, Statix}
+
   @ytdl_valid_status_codes [200, 302, 500]
   @ytdl_default_query "best[protocol*=http]/best[protocol*=m3u8]"
+  @ytdl_non_webm_query "best[ext=mp4][protocol*=http]/best[ext=mp4][protocol*=m3u8]"
   @ytdl_crunchyroll_query "best[format_id*=hardsub-enUS]/" <> @ytdl_default_query
 
   @non_video_root_hosts [
@@ -19,35 +27,39 @@ defmodule Ret.MediaResolver do
 
   @deviant_id_regex ~r/\"DeviantArt:\/\/deviation\/([^"]+)/
 
-  def resolve(url) when is_binary(url) do
+  def resolve(%MediaResolverQuery{url: url} = query) when is_binary(url) do
     uri = url |> URI.parse()
     root_host = get_root_host(uri.host)
-    resolve(uri, root_host)
+    resolve(query |> Map.put(:url, uri), root_host)
   end
 
-  def resolve(%URI{host: nil}, _root_host) do
+  def resolve(%MediaResolverQuery{url: %URI{host: nil}}, _root_host) do
     {:commit, nil}
   end
 
   # Necessary short circuit around google.com root_host to skip YT-DL check for Poly
-  def resolve(%URI{host: "poly.google.com"} = uri, root_host) do
+  def resolve(%MediaResolverQuery{url: %URI{host: "poly.google.com"} = uri}, root_host) do
     resolve_non_video(uri, root_host)
   end
 
-  def resolve(%URI{} = uri, root_host) when root_host in @non_video_root_hosts do
+  def resolve(%MediaResolverQuery{url: %URI{} = uri}, root_host) when root_host in @non_video_root_hosts do
     resolve_non_video(uri, root_host)
   end
 
-  def resolve(%URI{} = uri, "crunchyroll.com" = root_host) do
+  def resolve(%MediaResolverQuery{url: %URI{} = uri}, "crunchyroll.com" = root_host) do
     # Prefer a version with baked in (english) subtitles. Client locale should eventually determine this
     resolve_with_ytdl(uri, root_host, @ytdl_crunchyroll_query)
   end
 
-  def resolve(%URI{} = uri, root_host) do
-    resolve_with_ytdl(uri, root_host)
+  def resolve(%MediaResolverQuery{url: %URI{} = uri, supports_webm: true}, root_host) do
+    resolve_with_ytdl(uri, root_host, @ytdl_default_query)
   end
 
-  def resolve_with_ytdl(%URI{} = uri, root_host, ytdl_format \\ @ytdl_default_query) do
+  def resolve(%MediaResolverQuery{url: %URI{} = uri, supports_webm: false}, root_host) do
+    resolve_with_ytdl(uri, root_host, @ytdl_non_webm_query)
+  end
+
+  def resolve_with_ytdl(%URI{} = uri, root_host, ytdl_format) do
     with ytdl_host when is_binary(ytdl_host) <- module_config(:ytdl_host) do
       encoded_url = uri |> URI.to_string() |> URI.encode()
 
@@ -76,6 +88,8 @@ defmodule Ret.MediaResolver do
   end
 
   defp resolve_non_video(%URI{} = uri, "deviantart.com") do
+    Statix.increment("ret.media_resolver.deviant.requests")
+
     [uri, meta] =
       with client_id when is_binary(client_id) <- module_config(:deviantart_client_id),
            client_secret when is_binary(client_secret) <- module_config(:deviantart_client_secret) do
@@ -99,6 +113,7 @@ defmodule Ret.MediaResolver do
           |> Kernel.get_in(["content", "src"])
           |> URI.parse()
 
+        Statix.increment("ret.media_resolver.deviant.ok")
         # todo: determine appropriate content type here if possible
         [uri, nil]
       else
@@ -142,6 +157,8 @@ defmodule Ret.MediaResolver do
        ) do
     [uri, meta] =
       with api_key when is_binary(api_key) <- module_config(:google_poly_api_key) do
+        Statix.increment("ret.media_resolver.poly.requests")
+
         payload =
           "https://poly.googleapis.com/v1/assets/#{asset_id}?key=#{api_key}"
           |> retry_get_until_success
@@ -160,6 +177,8 @@ defmodule Ret.MediaResolver do
           (Enum.find(formats, &(&1["formatType"] == "GLTF2")) || Enum.find(formats, &(&1["formatType"] == "GLTF")))
           |> Kernel.get_in(["root", "url"])
           |> URI.parse()
+
+        Statix.increment("ret.media_resolver.poly.ok")
 
         [uri, meta]
       else
@@ -226,27 +245,44 @@ defmodule Ret.MediaResolver do
   end
 
   defp resolve_sketchfab_model(model_id, api_key) do
-    res =
-      "https://api.sketchfab.com/v3/models/#{model_id}/download"
-      |> retry_get_until_success([{"Authorization", "Token #{api_key}"}])
+    cached_file_result =
+      CachedFile.fetch("sketchfab-#{model_id}", fn path ->
+        Statix.increment("ret.media_resolver.sketchfab.requests")
 
-    uri =
-      case res do
-        :error ->
-          :error
+        res =
+          "https://api.sketchfab.com/v3/models/#{model_id}/download"
+          |> retry_get_until_success([{"Authorization", "Token #{api_key}"}])
 
-        res ->
-          res
-          |> Map.get(:body)
-          |> Poison.decode!()
-          |> Kernel.get_in(["gltf", "url"])
-          |> URI.parse()
-      end
+        case res do
+          :error ->
+            Statix.increment("ret.media_resolver.sketchfab.errors")
 
-    [uri, %{expected_content_type: "model/gltf+zip"}]
+            :error
+
+          res ->
+            Statix.increment("ret.media_resolver.sketchfab.ok")
+
+            zip_url =
+              res
+              |> Map.get(:body)
+              |> Poison.decode!()
+              |> Kernel.get_in(["gltf", "url"])
+
+            Download.from(zip_url, path: path)
+
+            {:ok, %{content_type: "model/gltf+zip"}}
+        end
+      end)
+
+    case cached_file_result do
+      {:ok, uri} -> [uri, %{expected_content_type: "model/gltf+zip"}]
+      {:error, _reason} -> :error
+    end
   end
 
   defp resolve_giphy_media_uri(%URI{} = uri, preferred_type) do
+    Statix.increment("ret.media_resolver.giphy.requests")
+
     [uri, meta] =
       with api_key when is_binary(api_key) <- module_config(:giphy_api_key) do
         gif_id = uri.path |> String.split("/") |> List.last() |> String.split("-") |> List.last()
@@ -295,12 +331,16 @@ defmodule Ret.MediaResolver do
   # https://youtube-dl-api-server.readthedocs.io/en/latest/api.html#api-methods
   defp retry_get_until_valid_ytdl_response(url) do
     retry with: exp_backoff() |> randomize |> cap(1_000) |> expiry(10_000) do
+      Statix.increment("ret.media_resolver.ytdl.requests")
+
       case HTTPoison.get(url) do
         {:ok, %HTTPoison.Response{status_code: status_code} = resp}
         when status_code in @ytdl_valid_status_codes ->
+          Statix.increment("ret.media_resolver.ytdl.ok")
           resp
 
         _ ->
+          Statix.increment("ret.media_resolver.ytdl.errors")
           :error
       end
     after

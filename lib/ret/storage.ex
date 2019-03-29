@@ -6,9 +6,17 @@ defmodule Ret.Storage do
 
   alias Ret.{OwnedFile, Repo, Account}
 
+  def store(path, content_type, key, promotion_token \\ nil)
+
   # Given a Plug.Upload, a content-type, and an optional encryption key, returns an id
   # that can be used to fetch a stream to the uploaded file after this call.
-  def store(%Plug.Upload{path: path}, content_type, key, promotion_token \\ nil) do
+  def store(%Plug.Upload{path: path}, content_type, key, promotion_token) do
+    store(path, content_type, key, promotion_token)
+  end
+
+  # Given a path to a file, a content-type, and an optional encryption key, returns an id
+  # that can be used to fetch a stream to the uploaded file after this call.
+  def store(path, content_type, key, promotion_token) do
     with storage_path when is_binary(storage_path) <- module_config(:storage_path) do
       {:ok, %{size: content_length}} = File.stat(path)
       uuid = Ecto.UUID.generate()
@@ -76,7 +84,7 @@ defmodule Ret.Storage do
 
   # Promotes multiple files into the given account.
   #
-  # Given a map that has { id, key } tuple values, returns a similarly-keyed map
+  # Given a map that has { id, key } or { id, key, promotion_token} tuple values, returns a similarly-keyed map
   # that has the return values of promote as values.
   def promote(map, %Account{} = account) when is_map(map) do
     map
@@ -194,11 +202,19 @@ defmodule Ret.Storage do
     end
   end
 
-  def uri_for(id, content_type) do
+  def uri_for(id, content_type, token \\ nil) do
     file_host = Application.get_env(:ret, Ret.Storage)[:host] || RetWeb.Endpoint.url()
     ext = MIME.extensions(content_type) |> List.first()
     filename = [id, ext] |> Enum.reject(&is_nil/1) |> Enum.join(".")
-    "#{file_host}/files/#{filename}" |> URI.parse()
+
+    "#{file_host}/files/#{filename}#{
+      if token do
+        "?" <> URI.encode_query(token: token)
+      else
+        ""
+      end
+    }"
+    |> URI.parse()
   end
 
   defp check_blob_file_key(_source_path, nil) do

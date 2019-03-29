@@ -35,7 +35,10 @@ config :logger, :console,
 
 config :ret, Ret.Repo,
   migration_source: "schema_migrations",
-  after_connect: {Ret.Repo, :set_search_path, ["public, ret0"]}
+  after_connect: {Ret.Repo, :set_search_path, ["public, ret0"]},
+  # Downloads from Sketchfab to file cache hold connections open
+  ownership_timeout: 60_000,
+  timeout: 60_000
 
 config :peerage, log_results: false
 
@@ -49,7 +52,8 @@ config :ret, Ret.SingletonScheduler,
     {"@daily", {Ret.Storage, :demote_inactive_owned_files, []}},
     {"@daily", {Ret.LoginToken, :expire_stale, []}},
     {"@daily", {Ret.Hub, :vacuum_entry_codes, []}},
-    {"@daily", {Ret.Hub, :vacuum_hosts, []}}
+    {"@daily", {Ret.Hub, :vacuum_hosts, []}},
+    {"@daily", {Ret.CachedFile, :vacuum, []}}
   ]
 
 # Import environment specific config. This must remain at the bottom

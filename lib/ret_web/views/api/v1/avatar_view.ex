@@ -18,6 +18,7 @@ defmodule RetWeb.Api.V1.AvatarView do
   end
 
   def render_avatar(avatar) do
+    version = avatar.updated_at |> NaiveDateTime.to_erl |> :calendar.datetime_to_gregorian_seconds
     %{
       avatar_id: avatar.avatar_sid,
       parent_avatar_id: unless(is_nil(avatar.parent_avatar), do: avatar.parent_avatar.avatar_sid),
@@ -26,6 +27,7 @@ defmodule RetWeb.Api.V1.AvatarView do
       attributions: if(is_nil(avatar.attributions), do: [], else: avatar.attributions),
       allow_remixing: avatar.allow_remixing,
       allow_promotion: avatar.allow_promotion,
+      gltf_url: "#{RetWeb.Endpoint.url()}/api/v1/avatars/#{avatar.avatar_sid}/avatar.gltf?v=#{version}",
       files:
         for col <- Avatar.file_columns(), into: %{} do
           key = col |> Atom.to_string() |> String.replace_suffix("_owned_file", "")
