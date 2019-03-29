@@ -40,8 +40,7 @@ defmodule RetWeb.Api.V1.OAuthController do
   defp process_oauth(conn, discord_user_id, false = _verified, _email, hub) do
     hub_binding = hub.hub_bindings |> Enum.find(&(&1.type == :discord))
 
-    can_join_hub =
-      discord_user_id |> Ret.DiscordClient.member_of_channel?(hub_binding.community_id, hub_binding.channel_id)
+    can_join_hub = discord_user_id |> Ret.DiscordClient.member_of_channel?(hub_binding)
 
     perms_token =
       %{

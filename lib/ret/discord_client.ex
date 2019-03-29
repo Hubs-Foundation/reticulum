@@ -43,8 +43,10 @@ defmodule Ret.DiscordClient do
     |> Poison.decode!()
   end
 
-  def member_of_channel?(account_id, community_id, channel_id) do
-    permissions = compute_permissions(account_id, community_id, channel_id) |> permissions_to_map
+  def member_of_channel?(account_id, %Ret.HubBinding{} = hub_binding) do
+    permissions =
+      compute_permissions(account_id, hub_binding.community_id, hub_binding.channel_id) |> permissions_to_map
+
     permissions[:view_channel]
   end
 

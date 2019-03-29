@@ -277,7 +277,7 @@ defimpl Canada.Can, for: Ret.Account do
       case provider do
         %Ret.OAuthProvider{source: :discord} ->
           provider.provider_account_id
-          |> Ret.DiscordClient.member_of_channel?(binding.community_id, binding.channel_id)
+          |> Ret.DiscordClient.member_of_channel?(binding)
 
         _ ->
           false
