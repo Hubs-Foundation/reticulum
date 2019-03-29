@@ -21,11 +21,23 @@ defmodule Ret.Project do
 
   def to_url(%Project{} = project), do: "#{RetWeb.Endpoint.url()}/projects/#{project.project_sid}"
 
+  def project_by_sid(project_sid) do
+    Project
+    |> Repo.get_by(project_sid: project_sid)
+    |> Repo.preload([:created_by_account, :project_owned_file, :thumbnail_owned_file])
+  end
+
   def project_by_sid_for_account(account, project_sid) do
     from(p in Project,
       where: p.project_sid == ^project_sid and p.created_by_account_id == ^account.account_id,
       preload: [assets: :asset_owned_file])
     |> Repo.one
+  end
+
+  def projects_for_account(account) do
+    Repo.all from p in Project,
+      where: p.created_by_account_id == ^account.account_id,
+      preload: [:project_owned_file, :thumbnail_owned_file]
   end
 
   # Create a Project

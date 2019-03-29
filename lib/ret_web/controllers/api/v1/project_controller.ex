@@ -1,6 +1,4 @@
 defmodule RetWeb.Api.V1.ProjectController do
-  import Ecto.Query
-
   use RetWeb, :controller
 
   alias Ret.{Account, Project, Repo, Storage}
@@ -10,12 +8,12 @@ defmodule RetWeb.Api.V1.ProjectController do
 
   def index(conn, %{} = _params) do
     account = Guardian.Plug.current_resource(conn)
-    projects = get_projects(account)
+    projects = Project.projects_for_account(account)
     render(conn, "index.json", projects: projects)
   end
 
   def show(conn, %{"id" => project_sid}) do
-    case project_sid |> get_project() do
+    case project_sid |> Project.project_by_sid() do
       %Project{} = project -> render(conn, "show.json", project: project)
       _ -> conn |> send_resp(404, "not found")
     end
@@ -43,22 +41,10 @@ defmodule RetWeb.Api.V1.ProjectController do
   def update(conn, %{"id" => project_sid, "project" => params}) do
     account = conn |> Guardian.Plug.current_resource()
 
-    case project_sid |> get_project() do
+    case project_sid |> Project.project_by_sid() do
       %Project{} = project -> update(conn, params, project, account)
       _ -> conn |> send_resp(404, "not found")
     end
-  end
-
-  defp get_projects(account) do
-    Repo.all from p in Project,
-      where: p.created_by_account_id == ^account.account_id,
-      preload: [:project_owned_file, :thumbnail_owned_file]
-  end
-
-  defp get_project(project_sid) do
-    Project
-    |> Repo.get_by(project_sid: project_sid)
-    |> Repo.preload([:created_by_account, :project_owned_file, :thumbnail_owned_file])
   end
 
   defp update(

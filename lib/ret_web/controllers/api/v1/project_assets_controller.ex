@@ -1,7 +1,7 @@
 defmodule RetWeb.Api.V1.ProjectAssetsController do
   use RetWeb, :controller
 
-  alias Ret.{Asset, Project, ProjectAsset, Repo, Storage}
+  alias Ret.{Asset, Project, Repo, Storage}
 
   # Limit to 1 TPS
   plug(RetWeb.Plugs.RateLimit when action in [:create])
