@@ -29,7 +29,7 @@ defmodule Ret.Asset do
     |> maybe_add_asset_sid_to_changeset
     |> unique_constraint(:asset_sid)
     |> put_assoc(:account, account)
-    |> put_change(:asset_owned_file_id, asset_owned_file.owned_file_id)
+    |> put_assoc(:asset_owned_file, asset_owned_file)
   end
 
   defp content_type_to_asset_type!(content_type) do
