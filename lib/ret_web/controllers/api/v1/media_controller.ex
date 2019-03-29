@@ -37,7 +37,7 @@ defmodule RetWeb.Api.V1.MediaController do
 
     case Ret.Storage.store(upload, content_type, access_token, promotion_token) do
       {:ok, uuid} ->
-        origin_uri = Ret.Storage.uri_for(uuid, content_type)
+        origin_uri = Ret.Storage.uri_for(uuid, content_type, access_token)
 
         raw_uri =
           case content_type do
