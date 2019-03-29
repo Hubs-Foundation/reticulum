@@ -1,8 +1,9 @@
 defmodule Ret.Project do
   use Ecto.Schema
   import Ecto.Changeset
+  import Ecto.Query
 
-  alias Ret.{Project, OwnedFile}
+  alias Ret.{Repo, Project, OwnedFile}
 
   @schema_prefix "ret0"
   @primary_key {:project_id, :id, autogenerate: true}
@@ -19,6 +20,13 @@ defmodule Ret.Project do
   end
 
   def to_url(%Project{} = project), do: "#{RetWeb.Endpoint.url()}/projects/#{project.project_sid}"
+
+  def project_by_sid_for_account(account, project_sid) do
+    from(p in Project,
+      where: p.project_sid == ^project_sid and p.created_by_account_id == ^account.account_id,
+      preload: [assets: :asset_owned_file])
+    |> Repo.one
+  end
 
   # Create a Project
   def changeset(%Project{} = project, account, params \\ %{}) do

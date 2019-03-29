@@ -1,6 +1,5 @@
 defmodule RetWeb.Api.V1.ProjectAssetsController do
   use RetWeb, :controller
-  import Ecto.Query
 
   alias Ecto.{Multi}
   alias Ret.{Asset, Project, ProjectAsset, Repo, Storage}
@@ -11,7 +10,7 @@ defmodule RetWeb.Api.V1.ProjectAssetsController do
   def index(conn, %{"id" => project_sid}) do
     account = Guardian.Plug.current_resource(conn)
 
-    case get_project(account, project_sid) do
+    case Project.project_by_sid_for_account(account, project_sid) do
       %Project{} = project -> render(conn, "index.json", assets: project.assets)
       nil -> conn |> send_resp(404, "Project not found")
     end
@@ -20,7 +19,7 @@ defmodule RetWeb.Api.V1.ProjectAssetsController do
   def create(conn, %{"id" => project_sid, "asset" => params}) do
     account = conn |> Guardian.Plug.current_resource()
 
-    case get_project(account, project_sid) do
+    case Project.project_by_sid_for_account(account, project_sid) do
       %Project{} = project -> create(conn, params, account, project)
       nil -> conn |> send_resp(404, "Project not found")
     end
@@ -51,12 +50,5 @@ defmodule RetWeb.Api.V1.ProjectAssetsController do
       {:error, _reason} ->
         conn |> send_resp(422, "invalid owned file")
     end
-  end
-
-  defp get_project(account, project_sid) do
-    from(p in Project,
-      where: p.project_sid == ^project_sid and p.created_by_account_id == ^account.account_id,
-      preload: [assets: :asset_owned_file])
-    |> Repo.one
   end
 end
