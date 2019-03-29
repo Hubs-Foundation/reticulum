@@ -218,7 +218,7 @@ defmodule Ret.MediaSearch do
           offset: cursor || 0,
           mkt: locale || "en-US",
           # If we don't do this filter, we get results for the author name, which isn't what we want
-          q: "body:(#{q})",
+          q: q,
           safeSearch: :Strict,
           pricing: :Free
         )
