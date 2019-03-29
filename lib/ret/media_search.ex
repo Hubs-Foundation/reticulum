@@ -217,7 +217,6 @@ defmodule Ret.MediaSearch do
           count: @page_size,
           offset: cursor || 0,
           mkt: locale || "en-US",
-          # If we don't do this filter, we get results for the author name, which isn't what we want
           q: q,
           safeSearch: :Strict,
           pricing: :Free
