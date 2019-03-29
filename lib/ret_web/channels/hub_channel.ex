@@ -365,15 +365,15 @@ defmodule RetWeb.HubChannel do
     socket.assigns |> Map.take([:presence, :profile, :context])
   end
 
+  defp join_with_hub(nil, _account, _socket, _params) do
+    Statix.increment("ret.channels.hub.joins.not_found")
+
+    {:error, %{message: "No such Hub"}}
+  end
+
   defp join_with_hub(%Hub{entry_mode: :deny}, _account, _socket, _params) do
     {:error, %{message: "Hub no longer accessible", reason: "closed"}}
   end
-
-  defp join_with_hub(%Hub{} = hub, %Account{}, _socket, %{
-         hub_requires_oauth: true,
-         account_has_provider_for_hub: false
-       }),
-       do: require_oauth(hub)
 
   defp join_with_hub(%Hub{}, %Account{}, _socket, %{
          hub_requires_oauth: true,
@@ -382,13 +382,6 @@ defmodule RetWeb.HubChannel do
        }),
        do: deny_join()
 
-  defp join_with_hub(%Hub{} = hub, nil = _account, _socket, %{
-         hub_requires_oauth: true,
-         has_valid_bot_access_key: false,
-         has_perms_token: false
-       }),
-       do: require_oauth(hub)
-
   defp join_with_hub(%Hub{}, nil = _account, _socket, %{
          hub_requires_oauth: true,
          has_valid_bot_access_key: false,
@@ -396,6 +389,19 @@ defmodule RetWeb.HubChannel do
          perms_token_can_join: false
        }),
        do: deny_join()
+
+  defp join_with_hub(%Hub{} = hub, %Account{}, _socket, %{
+         hub_requires_oauth: true,
+         account_has_provider_for_hub: false
+       }),
+       do: require_oauth(hub)
+
+  defp join_with_hub(%Hub{} = hub, nil = _account, _socket, %{
+         hub_requires_oauth: true,
+         has_valid_bot_access_key: false,
+         has_perms_token: false
+       }),
+       do: require_oauth(hub)
 
   defp join_with_hub(%Hub{} = hub, account, socket, params) do
     hub = hub |> Hub.ensure_valid_entry_code!() |> Hub.ensure_host()
@@ -444,12 +450,6 @@ defmodule RetWeb.HubChannel do
 
       {:ok, response, socket}
     end
-  end
-
-  defp join_with_hub(nil, _account, _socket, _params) do
-    Statix.increment("ret.channels.hub.joins.not_found")
-
-    {:error, %{message: "No such Hub"}}
   end
 
   defp require_oauth(hub) do
