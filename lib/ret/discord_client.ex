@@ -106,7 +106,7 @@ defmodule Ret.DiscordClient do
   defp compute_base_permissions(account_id, community_id, user_roles) do
     owner_id =
       case Cachex.fetch(:discord_api, "/guilds/#{community_id}") do
-        {_status, result} -> result |> Map.get("owner_id")
+        {status, result} when status in [:commit, :ok] -> result |> Map.get("owner_id")
       end
 
     if owner_id == account_id do
@@ -114,7 +114,7 @@ defmodule Ret.DiscordClient do
     else
       guild_roles =
         case Cachex.fetch(:discord_api, "/guilds/#{community_id}/roles") do
-          {_status, result} -> result |> Map.new(&{&1["id"], &1})
+          {status, result} when status in [:commit, :ok] -> result |> Map.new(&{&1["id"], &1})
         end
 
       role_everyone = guild_roles[community_id]
@@ -140,7 +140,7 @@ defmodule Ret.DiscordClient do
 
       channel_overwrites =
         case Cachex.fetch(:discord_api, "/channels/#{channel_id}") do
-          {_status, result} ->
+          {status, result} when status in [:commit, :ok] ->
             result
             |> Map.get("permission_overwrites")
             |> Map.new(&{&1["id"], &1})
@@ -181,7 +181,7 @@ defmodule Ret.DiscordClient do
     user_roles =
       case Cachex.fetch(:discord_api, "/guilds/#{community_id}/members/#{account_id}") do
         {:error, _} -> nil
-        {_status, result} -> result |> Map.get("roles")
+        {status, result} when status in [:commit, :ok] -> result |> Map.get("roles")
       end
 
     if user_roles == nil do
