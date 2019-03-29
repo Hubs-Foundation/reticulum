@@ -16,10 +16,11 @@ defmodule RetWeb.Api.V1.OAuthController do
     if verified do
       account = email |> Ret.Account.account_for_email()
 
-      Ret.Repo.insert!(
-        %Ret.OAuthProvider{source: :discord, account: account, provider_account_id: discord_user_id},
-        on_conflict: :nothing
-      )
+      oauth_provider = Ret.OAuthProvider |> Ret.Repo.get_by(source: :discord, account_id: account.account_id)
+
+      (oauth_provider || %Ret.OAuthProvider{source: :discord, account: account})
+      |> Ecto.Changeset.change(provider_account_id: discord_user_id)
+      |> Ret.Repo.insert_or_update()
 
       credentials = %{
         email: email,
