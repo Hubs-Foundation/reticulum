@@ -255,6 +255,8 @@ defmodule Ret.MediaSearch do
   end
 
   defp assets_search(cursor, type, account_id, query, order \\ [desc: :updated_at]) do
+    page_number = (cursor || "1") |> Integer.parse() |> elem(0)
+
     results =
       Asset
       |> where([a], a.account_id == ^account_id)
@@ -262,8 +264,8 @@ defmodule Ret.MediaSearch do
       |> add_query_to_asset_search_query(query)
       |> preload([:asset_owned_file])
       |> order_by(^order)
-      |> Repo.paginate(%{page: cursor, page_size: @page_size})
-      |> result_for_assets_page(cursor)
+      |> Repo.paginate(%{page: page_number, page_size: @page_size})
+      |> result_for_assets_page(page_number)
 
     {:commit, results}
   end
@@ -273,12 +275,12 @@ defmodule Ret.MediaSearch do
   defp add_query_to_asset_search_query(query, nil), do: query
   defp add_query_to_asset_search_query(query, q), do: query |> where([a], ilike(a.name, ^"%#{q}%"))
 
-  defp result_for_assets_page(page, cursor) do
+  defp result_for_assets_page(page, page_number) do
     %Ret.MediaSearchResult{
       meta: %Ret.MediaSearchResultMeta{
         next_cursor:
-          if page.total_pages > cursor do
-            (cursor || 1) + 1
+          if page.total_pages > page_number do
+            page_number + 1
           else
             nil
           end,
