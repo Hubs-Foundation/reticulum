@@ -93,6 +93,7 @@ defmodule Ret.DiscordClient do
     0x8000_0000 => :unused
   }
 
+  # Convert a permissions bit field integer into a {:permission_name => boolean} map
   defp permissions_to_map(permissions) do
     0..31
     |> Enum.map(&bsl(1, &1))
