@@ -1,4 +1,4 @@
-defmodule Ret.Repo.Migrations.CreateProjectFilesTable do
+defmodule Ret.Repo.Migrations.CreateAssetsTables do
   use Ecto.Migration
 
   def change do
@@ -6,7 +6,7 @@ defmodule Ret.Repo.Migrations.CreateProjectFilesTable do
       add(:asset_id, :bigint, default: fragment("ret0.next_id()"), primary_key: true)
       add(:asset_sid, :string, null: false)
       add(:name, :string, null: false)
-      add(:type, :string, null: false)
+      add(:type, :asset_type, null: false)
       add(:account_id, references(:accounts, column: :account_id), null: false)
       add(:asset_owned_file_id, :bigint, null: false)
 

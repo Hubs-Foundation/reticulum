@@ -10,7 +10,7 @@ defmodule Ret.Asset do
   schema "assets" do
     field(:asset_sid, :string)
     field(:name, :string)
-    field(:type, :string)
+    field(:type, Ret.Asset.Type)
     belongs_to(:account, Ret.Account, references: :account_id)
     belongs_to(:asset_owned_file, Ret.OwnedFile, references: :owned_file_id)
     many_to_many(:projects, Ret.Project, join_through: Ret.ProjectAsset, join_keys: [ asset_id: :asset_id, project_id: :project_id], on_replace: :delete)
@@ -24,7 +24,6 @@ defmodule Ret.Asset do
     |> cast(params, [:name])
     |> put_change(:type, content_type_to_asset_type!(asset_owned_file.content_type))
     |> validate_required([:name, :type])
-    |> validate_inclusion(:type, ["image", "video", "model"])
     # Asset names are defaulted to the owned file name so allow pretty much anything
     |> validate_length(:name, min: 1, max: 256)
     |> maybe_add_asset_sid_to_changeset
@@ -35,9 +34,9 @@ defmodule Ret.Asset do
 
   defp content_type_to_asset_type!(content_type) do
     cond do
-      String.starts_with?(content_type, "video/") -> "video"
-      String.starts_with?(content_type, "image/") -> "image"
-      String.starts_with?(content_type, "model/gltf") -> "model"
+      String.starts_with?(content_type, "video/") -> :video
+      String.starts_with?(content_type, "image/") -> :image
+      String.starts_with?(content_type, "model/gltf") -> :model
     end
   end
 
