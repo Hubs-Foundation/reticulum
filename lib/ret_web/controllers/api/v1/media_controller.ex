@@ -37,20 +37,14 @@ defmodule RetWeb.Api.V1.MediaController do
 
     case Ret.Storage.store(upload, content_type, access_token, promotion_token) do
       {:ok, uuid} ->
-        origin_uri = Ret.Storage.uri_for(uuid, content_type, access_token)
-
-        raw_uri =
-          case content_type do
-            "application/pdf" -> gen_farspark_url(origin_uri) |> URI.parse()
-            _ -> origin_uri
-          end
+        uri = Ret.Storage.uri_for(uuid, content_type)
 
         conn
         |> render(
           "show.json",
           file_id: uuid,
-          origin: origin_uri |> URI.to_string(),
-          raw: raw_uri |> URI.to_string(),
+          origin: uri |> URI.to_string(),
+          raw: uri |> URI.to_string(),
           meta: %{access_token: access_token, promotion_token: promotion_token, expected_content_type: content_type}
         )
 
