@@ -2,7 +2,8 @@ defmodule Ret.Asset do
   use Ecto.Schema
   import Ecto.Changeset
 
-  alias Ret.{Asset}
+  alias Ecto.{Multi}
+  alias Ret.{Repo, Asset, ProjectAsset}
 
   @schema_prefix "ret0"
   @primary_key {:asset_id, :id, autogenerate: true}
@@ -16,6 +17,19 @@ defmodule Ret.Asset do
     many_to_many(:projects, Ret.Project, join_through: Ret.ProjectAsset, join_keys: [ asset_id: :asset_id, project_id: :project_id], on_replace: :delete)
 
     timestamps()
+  end
+
+  def create_asset_and_project_asset(account, project, asset_owned_file, params) do
+    asset_changeset = Asset.changeset(%Asset{}, account, asset_owned_file, params)
+
+    multi = Multi.new
+      |> Multi.insert(:asset, asset_changeset)
+      |> Multi.run(:project_asset, fn %{asset: asset} ->
+        project_asset_changeset = ProjectAsset.changeset(%ProjectAsset{}, project, asset)
+        Repo.insert(project_asset_changeset)
+      end)
+
+    Repo.transaction(multi)
   end
 
   # Create an Asset

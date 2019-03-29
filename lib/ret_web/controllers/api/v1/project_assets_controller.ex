@@ -1,7 +1,6 @@
 defmodule RetWeb.Api.V1.ProjectAssetsController do
   use RetWeb, :controller
 
-  alias Ecto.{Multi}
   alias Ret.{Asset, Project, ProjectAsset, Repo, Storage}
 
   # Limit to 1 TPS
@@ -28,17 +27,7 @@ defmodule RetWeb.Api.V1.ProjectAssetsController do
   defp create(conn, params, account, project) do
     case Storage.promote(params["file_id"], params["access_token"], nil, account) do
       {:ok, asset_owned_file} ->
-
-        asset_changeset = Asset.changeset(%Asset{}, account, asset_owned_file, params)
-
-        multi = Multi.new
-          |> Multi.insert(:asset, asset_changeset)
-          |> Multi.run(:project_asset, fn %{asset: asset} ->
-            project_asset_changeset = ProjectAsset.changeset(%ProjectAsset{}, project, asset)
-            Repo.insert(project_asset_changeset)
-          end)
-
-        case Repo.transaction(multi) do
+        case Asset.create_asset_and_project_asset(account, project, asset_owned_file, params) do
           {:ok, result} ->
             asset = Repo.preload(result.asset, :asset_owned_file)
             conn |> render("show.json", asset: asset)
