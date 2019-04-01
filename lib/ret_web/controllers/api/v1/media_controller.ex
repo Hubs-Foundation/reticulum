@@ -75,14 +75,14 @@ defmodule RetWeb.Api.V1.MediaController do
   end
 
   defp render_resolved_media(conn, %Ret.ResolvedMedia{uri: uri, meta: meta}, index) do
-    raw = gen_farspark_url(uri, index, "raw", "")
+    raw = gen_farspark_url(uri, index)
 
     conn
     |> render("show.json", origin: uri |> URI.to_string(), raw: raw, meta: meta)
   end
 
-  defp gen_farspark_url(uri, index, method, extension) do
-    path = "/#{method}/0/0/0/#{index}/#{uri |> URI.to_string() |> Base.url_encode64(padding: false)}#{extension}"
+  defp gen_farspark_url(uri, index \\ 0) do
+    path = "/raw/0/0/0/#{index}/#{uri |> URI.to_string() |> Base.url_encode64(padding: false)}"
 
     host = Application.get_env(:ret, :farspark_host)
     "#{host}/#{gen_signature(path)}#{path}"

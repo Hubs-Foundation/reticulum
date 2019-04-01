@@ -251,6 +251,8 @@ defmodule Ret.MediaSearch do
   end
 
   defp scene_listing_search(cursor, query, filter, order \\ [desc: :updated_at]) do
+    page_number = (cursor || "1") |> Integer.parse() |> elem(0)
+
     results =
       SceneListing
       |> join(:inner, [l], s in assoc(l, :scene))
@@ -259,8 +261,8 @@ defmodule Ret.MediaSearch do
       |> add_tag_to_listing_search_query(filter)
       |> preload([:screenshot_owned_file, :model_owned_file, :scene_owned_file])
       |> order_by(^order)
-      |> Repo.paginate(%{page: cursor, page_size: @page_size})
-      |> result_for_scene_listing_page(cursor)
+      |> Repo.paginate(%{page: page_number, page_size: @page_size})
+      |> result_for_scene_listing_page(page_number)
 
     {:commit, results}
   end
@@ -271,12 +273,12 @@ defmodule Ret.MediaSearch do
   defp add_tag_to_listing_search_query(query, nil), do: query
   defp add_tag_to_listing_search_query(query, tag), do: query |> where(fragment("tags->'tags' \\? ?", ^tag))
 
-  defp result_for_scene_listing_page(page, cursor) do
+  defp result_for_scene_listing_page(page, page_number) do
     %Ret.MediaSearchResult{
       meta: %Ret.MediaSearchResultMeta{
         next_cursor:
-          if page.total_pages > cursor do
-            (cursor || 1) + 1
+          if page.total_pages > page_number do
+            page_number + 1
           else
             nil
           end,
