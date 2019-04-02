@@ -29,6 +29,19 @@ defmodule RetWeb.Api.V1.MediaSearchController do
     conn |> render("index.json", results: results)
   end
 
+  def index(conn, %{"source" => "assets", "user" => user} = params) do 
+    account = conn |> Guardian.Plug.current_resource()
+
+    if account.account_id == String.to_integer(user) do
+      {:commit, results} =
+        %Ret.MediaSearchQuery{source: "assets", user: account.account_id, type: params["type"], q: params["q"], cursor: params["cursor"] || "1"} |> Ret.MediaSearch.search()
+
+      conn |> render("index.json", results: results)
+    else
+      conn |> send_resp(401, "")
+    end
+  end
+
   def index(conn, %{"source" => source} = params)
       when source in ["sketchfab", "poly", "tenor", "youtube_videos", "bing_videos", "bing_images", "twitch"] do
     query = %Ret.MediaSearchQuery{

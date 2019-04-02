@@ -1,6 +1,6 @@
 defmodule Ret.MediaSearchQuery do
   @enforce_keys [:source]
-  defstruct [:source, :user, :filter, :q, :cursor, :locale]
+  defstruct [:source, :type, :user, :filter, :q, :cursor, :locale]
 end
 
 defmodule Ret.MediaSearchResult do
@@ -17,7 +17,7 @@ defmodule Ret.MediaSearch do
   import Ret.HttpUtils
   import Ecto.Query
 
-  alias Ret.{Repo, OwnedFile, Scene, SceneListing}
+  alias Ret.{Repo, OwnedFile, Scene, SceneListing, Asset}
 
   @page_size 24
   @max_face_count 60000
@@ -28,6 +28,10 @@ defmodule Ret.MediaSearch do
 
   def search(%Ret.MediaSearchQuery{source: "scene_listings", cursor: cursor, filter: filter, q: query}) do
     scene_listing_search(cursor, query, filter)
+  end
+
+  def search(%Ret.MediaSearchQuery{source: "assets", type: type, cursor: cursor, user: account_id, q: query}) do
+    assets_search(cursor, type, account_id, query)
   end
 
   def search(%Ret.MediaSearchQuery{source: "sketchfab", cursor: cursor, filter: "featured", q: q}) do
@@ -290,6 +294,57 @@ defmodule Ret.MediaSearch do
     else
       _ -> nil
     end
+  end
+
+  defp assets_search(cursor, type, account_id, query, order \\ [desc: :updated_at]) do
+    page_number = (cursor || "1") |> Integer.parse() |> elem(0)
+
+    results =
+      Asset
+      |> where([a], a.account_id == ^account_id)
+      |> add_type_to_asset_search_query(type)
+      |> add_query_to_asset_search_query(query)
+      |> preload([:asset_owned_file, :thumbnail_owned_file])
+      |> order_by(^order)
+      |> Repo.paginate(%{page: page_number, page_size: @page_size})
+      |> result_for_assets_page(page_number)
+
+    {:commit, results}
+  end
+
+  defp add_type_to_asset_search_query(query, nil), do: query
+  defp add_type_to_asset_search_query(query, type), do: query |> where([a], a.type == ^type)
+  defp add_query_to_asset_search_query(query, nil), do: query
+  defp add_query_to_asset_search_query(query, q), do: query |> where([a], ilike(a.name, ^"%#{q}%"))
+
+  defp result_for_assets_page(page, page_number) do
+    %Ret.MediaSearchResult{
+      meta: %Ret.MediaSearchResultMeta{
+        next_cursor:
+          if page.total_pages > page_number do
+            page_number + 1
+          else
+            nil
+          end,
+        source: :assets
+      },
+      entries:
+        page.entries
+        |> Enum.map(&asset_to_entry/1)
+    }
+  end
+
+  defp asset_to_entry(asset) do
+    %{
+      id: asset.asset_sid,
+      url: asset.asset_owned_file |> OwnedFile.uri_for() |> URI.to_string(),
+      type: asset.type,
+      name: asset.name,
+      attributions: %{},
+      images: %{
+        preview: %{url: asset.thumbnail_owned_file |> OwnedFile.uri_for() |> URI.to_string()}
+      }
+    }
   end
 
   defp scene_listing_search(cursor, query, filter, order \\ [desc: :updated_at]) do

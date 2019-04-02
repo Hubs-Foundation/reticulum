@@ -1,0 +1,235 @@
+{
+  "version": 3,
+  "root": "D8C474E1-CB44-4CB5-B698-69814B7A1F63",
+  "metadata": {},
+  "entities": {
+    "D8C474E1-CB44-4CB5-B698-69814B7A1F63": {
+      "name": "Untitled"
+    },
+    "36E1CD20-88F9-4AD5-9530-A932E537D318": {
+      "name": "Skybox",
+      "components": [
+        {
+          "name": "transform",
+          "props": {
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            }
+          }
+        },
+        {
+          "name": "visible",
+          "props": {
+            "visible": true
+          }
+        },
+        {
+          "name": "skybox",
+          "props": {
+            "turbidity": 10,
+            "rayleigh": 2,
+            "luminance": 1,
+            "mieCoefficient": 0.005,
+            "mieDirectionalG": 0.8,
+            "inclination": 0,
+            "azimuth": 0.15,
+            "distance": 8000
+          }
+        }
+      ],
+      "parent": "D8C474E1-CB44-4CB5-B698-69814B7A1F63",
+      "index": 0
+    },
+    "50440CC0-5B48-451D-8E78-8EF6D09BF6A8": {
+      "name": "Directional Light",
+      "components": [
+        {
+          "name": "transform",
+          "props": {
+            "position": {
+              "x": -1,
+              "y": 3,
+              "z": 0
+            },
+            "rotation": {
+              "x": 1.5707963267948966,
+              "y": 0.5235987755982988,
+              "z": -1.5707963267948966
+            },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            }
+          }
+        },
+        {
+          "name": "visible",
+          "props": {
+            "visible": true
+          }
+        },
+        {
+          "name": "directional-light",
+          "props": {
+            "color": "#ffffff",
+            "intensity": 1,
+            "castShadow": true,
+            "shadowMapResolution": [
+              512,
+              512
+            ],
+            "shadowBias": 0,
+            "shadowRadius": 1
+          }
+        }
+      ],
+      "parent": "D8C474E1-CB44-4CB5-B698-69814B7A1F63",
+      "index": 1
+    },
+    "B2977A53-D5CA-4B8E-B1B1-085632DA2055": {
+      "name": "Spawn Point",
+      "components": [
+        {
+          "name": "transform",
+          "props": {
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            }
+          }
+        },
+        {
+          "name": "visible",
+          "props": {
+            "visible": true
+          }
+        },
+        {
+          "name": "spawn-point",
+          "props": {}
+        }
+      ],
+      "parent": "D8C474E1-CB44-4CB5-B698-69814B7A1F63",
+      "index": 2
+    },
+    "585CEB07-03D7-4D73-A12D-A35A4D602360": {
+      "name": "Ground Plane",
+      "components": [
+        {
+          "name": "transform",
+          "props": {
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            }
+          }
+        },
+        {
+          "name": "visible",
+          "props": {
+            "visible": true
+          }
+        },
+        {
+          "name": "ground-plane",
+          "props": {
+            "color": "#5de336"
+          }
+        },
+        {
+          "name": "shadow",
+          "props": {
+            "receive": false
+          }
+        },
+        {
+          "name": "walkable",
+          "props": {}
+        }
+      ],
+      "parent": "D8C474E1-CB44-4CB5-B698-69814B7A1F63",
+      "index": 3
+    },
+    "8B8C103E-4DC2-4F88-B913-AEF26CCAC222": {
+      "name": "Floor Plan",
+      "components": [
+        {
+          "name": "transform",
+          "props": {
+            "position": {
+              "x": 0,
+              "y": 0.005,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            }
+          }
+        },
+        {
+          "name": "visible",
+          "props": {
+            "visible": true
+          }
+        },
+        {
+          "name": "floor-plan",
+          "props": {
+            "autoCellSize": true,
+            "cellSize": 0.166,
+            "cellHeight": 0.1,
+            "agentHeight": 1.7,
+            "agentRadius": 0.5,
+            "agentMaxClimb": 0.3,
+            "agentMaxSlope": 45,
+            "regionMinSize": 4
+          }
+        }
+      ],
+      "parent": "D8C474E1-CB44-4CB5-B698-69814B7A1F63",
+      "index": 4
+    }
+  }
+}
