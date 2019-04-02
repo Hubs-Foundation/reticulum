@@ -14,13 +14,13 @@ defmodule RetWeb.Api.V1.OAuthController do
     hub = Hub |> Repo.get_by(hub_sid: hub_sid) |> Repo.preload(:hub_bindings)
 
     conn
-    |> process_oauth(discord_user_id, verified, email, hub)
+    |> process_discord_oauth(discord_user_id, verified, email, hub)
     |> put_resp_header("location", hub |> Hub.url_for())
     |> send_resp(307, "")
   end
 
   # Discord user has a verified email, so we create a Hubs account for them associate it with their discord user id.
-  defp process_oauth(conn, discord_user_id, true = _verified, email, _hub) do
+  defp process_discord_oauth(conn, discord_user_id, true = _verified, email, _hub) do
     account = email |> Account.account_for_email()
 
     oauth_provider = OAuthProvider |> Repo.get_by(source: :discord, account_id: account.account_id)
@@ -39,13 +39,14 @@ defmodule RetWeb.Api.V1.OAuthController do
 
   # Discord user does not have a verified email, so we can't create an account for them. Instead, we generate a perms
   # token to let them join the hub if permitted.
-  defp process_oauth(conn, discord_user_id, false = _verified, _email, hub) do
+  defp process_discord_oauth(conn, discord_user_id, false = _verified, _email, hub) do
     hub_binding = hub.hub_bindings |> Enum.find(&(&1.type == :discord))
 
     can_join_hub = discord_user_id |> DiscordClient.member_of_channel?(hub_binding)
 
     perms_token =
       %{
+        oauth_account_id: discord_user_id,
         join_hub: can_join_hub,
         kick_users: false
       }
