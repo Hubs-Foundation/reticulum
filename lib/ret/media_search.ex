@@ -121,8 +121,6 @@ defmodule Ret.MediaSearch do
         "https://www.googleapis.com/youtube/v3/search?#{query}"
         |> retry_get_until_success()
 
-      IO.inspect(query)
-
       case res do
         :error ->
           :error
