@@ -83,6 +83,11 @@ config :ret, RetWeb.Plugs.HeaderAuthorization,
   header_name: "x-ret-admin-access-key",
   header_value: "admin-only"
 
+config :ret, Ret.DiscordClient,
+  client_id: "",
+  client_secret: "",
+  bot_token: ""
+
 # Allow any origin for API access in dev
 config :cors_plug, origin: ["*"]
 
@@ -92,7 +97,8 @@ config :ret,
     "248cf801c4f5d6fd70c1b0dfea8dedeb57adafa7821027d546f016efef5a501bd8168c8479d33b466199d0ac68c71bb71b68c27537102a63cd70776aa83bca76",
   farspark_signature_salt:
     "da914bb89e332b2a815a667875584d067b698fe1f6f5c61d98384dc74d2ed85b67eea0a51325afb9d9c7d798f4bbbd630102a261e152aceb13d9469b02da6b31",
-  farspark_host: "https://farspark-dev.reticulum.io"
+  farspark_host: "https://farspark-dev.reticulum.io",
+  bot_access_key: ""
 
 config :ret, Ret.PageOriginWarmer,
   page_origin: "https://#{host}:8080",
@@ -145,6 +151,8 @@ config :ret, RetWeb.Email, from: "info@hubs-mail.com"
 config :ret, Ret.PermsToken,
   perms_key:
     "-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEAq7o6egtZRhWyUYt9U/hUdxWRi2bO8yG4ZVm/CDqk+IJMFh3/\nXl88X5iQwxQxQrIv94Po/H5dnB8Bbw0toSw58HSk8L6BVBsOkIDic1Bfa82WxLWq\nWhhgkKWBOXctbUFoSCUWFQ/YGMH4Ur66pEhsqqodkPj3lJdFt3in0nu6w1duepnQ\nj3en9YUW3m387Oj1oCaLQtmLAPZ0VlBnLnwT9Y4Nr76Dww2FKoqBZH+Cb6ku12jM\naAwoZpRhIX6LVr/GPsHbuIdd+vOyQxD6EwBbtue6KQimkITwxnPxStdwPbhGIO63\ndPdv+rgw6u1iFIjMGEGCQmo0MoH9i5rvg42ThQIDAQABAoIBAQCMn9SxCkgRx0Sd\n2C9KKunoFoZ39Dl2Cd/5RtPThkp/ohtyZSAwhKZo1gN9bDSmnEoBU0jgMw6vAQjo\nio8aE6BikvJannZDjGCR3qkRqvhozBMxhF46pwm0iYNXrotJk600nwIFP1NDetvB\nzqQCUbiCzQmnJOmBCZsykiBDkcSvnrqw3kQocWu2vZ0vsuTqNwJT1gCW12hzeFu7\n/OYy5DgQkG7fjaxWyv1+OJSw2zg7jQmEG43C/W95C0uZ1aiVARM+dl6YYLdSGIxi\nioP9FwrqGuZGPQm1d6LBkoo/KgFdvQWl6poXT7oQJ4WS/kTGrWX9I29wsfC4gi6I\nVtqwoBEFAoGBANgY/OInP5pwa2YlVxGHEdko56yuXEcRDxwnDrIA8UPC2k/Emaye\nXDNVdH6olQ8yU9dy2UbitDy01yKV5r+u0Y+B4YCp6I6wsM5QUCQtpgmaPJKb90tL\njM9ZJLtR74Ch+IcOs8wG0sSYVNxWElhuWQg/eKgXq80fpStjepeWvTMjAoGBAMtv\n2Ozn6JTNAQ69xgAb+/tfBqMGfv7cbs03/1IQiG2r55dlEj8xSgBgTEHf4OK0dkPC\nFrkFi5RLDtWzjluxRan2kFEkIxU1CONGdd/wYGIzdhWubv18WChUEumCEhZaUw+v\n6Uh8o/9anVipii4LtEgVITsdcVfyBAgK75eiCv03AoGAFsgDmN/kX6asW9dh53Ii\n2o7qZZT4G3Hb8u7XKMLarHcVRsWGIeGL/Mlsf5HMLQ70MclkyIlL0P6Lk5TT/68x\nXnylxkejQa+04/sph7bcQzTkX9xbZK+xR4axTaIkqp3osmxFXiP2Ak3A3H2ib3oq\nnqj6UlY0gWptojZZjTOR/JsCgYAZPWg5hFBL3d9qt8rQCqjJuDF3mn+5GRo6Jd9s\njBaRHMnf868+3dujjk8HwUICfodJwtPU4sY9gM53Xw6je6v7+VZQat5bbDgNEpnf\nTdB3fpEBAaJNmtbJMh0ikXuzAEPb52RXFPe338Mz090L93HHm6+CyRVd5u3vHYQ6\nWOVqIwKBgGrPEPHO8a1/pa4+K/w/OkY6JSdZPtkJQs/PWULqI8QriTpJH290hMAD\nfnplvB2eaTLWopchYcMVxJJW5nJX48yPiNwuwWfajnvLlGMguKxWGseqpxbMgCPP\nBnnWTFVMfeX0s7sNgmF7OmpZU87V4NiQRk/mmr+7a/zr7hXvp0t1\n-----END RSA PRIVATE KEY-----"
+
+config :ret, Ret.OAuthToken, oauth_token_key: ""
 
 config :ret, Ret.Guardian,
   issuer: "ret",

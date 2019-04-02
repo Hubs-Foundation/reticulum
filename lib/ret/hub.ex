@@ -17,8 +17,6 @@ defmodule Ret.Hub do
   alias Ret.{Account, Hub, Repo, Scene, SceneListing, WebPushSubscription, RoomAssigner}
   alias Ret.Hub.{HubSlug}
 
-  use Bitwise
-
   @schema_prefix "ret0"
   @primary_key {:hub_id, :id, autogenerate: true}
   @max_entry_code 999_999
@@ -40,6 +38,7 @@ defmodule Ret.Hub do
     belongs_to(:scene_listing, Ret.SceneListing, references: :scene_listing_id)
     has_many(:web_push_subscriptions, Ret.WebPushSubscription, foreign_key: :hub_id)
     belongs_to(:created_by_account, Ret.Account, references: :account_id)
+    has_many(:hub_bindings, Ret.HubBinding, foreign_key: :hub_id)
 
     timestamps()
   end
@@ -266,16 +265,47 @@ defimpl Canada.Can, for: Ret.Account do
       when account_id != nil and action in [:update_hub, :kick_users, :mute_users],
       do: true
 
-  # Anyone can join a hub for now
-  def can?(_, :join_hub, %Ret.Hub{} = _hub), do: true
+  # Anyone can join an unbound hub
+  def can?(_, :join_hub, %Ret.Hub{hub_bindings: []}), do: true
 
-  def can?(_, _, %Ret.Hub{} = _hub), do: false
+  def can?(%Ret.Account{oauth_providers: oauth_providers}, :join_hub, %Ret.Hub{hub_bindings: hub_bindings})
+      when hub_bindings |> length > 0 and oauth_providers |> length > 0 do
+    hub_bindings
+    |> Enum.any?(fn binding ->
+      provider = oauth_providers |> Enum.find(&(&1.source == binding.type))
+
+      case provider do
+        %Ret.OAuthProvider{source: :discord} ->
+          provider.provider_account_id
+          |> Ret.DiscordClient.member_of_channel?(binding)
+
+        _ ->
+          false
+      end
+    end)
+  end
+
+  def can?(_, _, _), do: false
+end
+
+# Perms for oauth users that do not have a hubs account
+defimpl Canada.Can, for: Ret.OAuthProvider do
+  # OAuthProvider users cannot perform special actions
+  def can?(%Ret.OAuthProvider{}, action, %Ret.Hub{}) when action in [:update_hub, :kick_users, :mute_users], do: false
+
+  def can?(%Ret.OAuthProvider{provider_account_id: provider_account_id}, :join_hub, %Ret.Hub{hub_bindings: hub_bindings})
+      when hub_bindings |> length > 0 do
+    hub_bindings
+    |> Enum.any?(fn binding -> provider_account_id |> Ret.DiscordClient.member_of_channel?(binding) end)
+  end
+
+  def can?(_, _, _), do: false
 end
 
 # Permissions for un-authenticated clients
 defimpl Canada.Can, for: Atom do
-  # Anyone can join a hub for now
-  def can?(_, :join_hub, %Ret.Hub{} = _hub), do: true
+  # Anyone can join an unbound hub
+  def can?(_, :join_hub, %Ret.Hub{hub_bindings: []}), do: true
 
-  def can?(_, _, %Ret.Hub{} = _hub), do: false
+  def can?(_, _, _), do: false
 end

@@ -13,6 +13,7 @@ defmodule Ret.Account do
     has_one(:login, Ret.Login, foreign_key: :account_id)
     has_many(:owned_files, Ret.OwnedFile, foreign_key: :account_id)
     has_many(:created_hubs, Ret.Hub, foreign_key: :created_by_account_id)
+    has_many(:oauth_providers, Ret.OAuthProvider, foreign_key: :account_id)
     has_many(:projects, Ret.Project, foreign_key: :created_by_account_id)
     has_many(:assets, Ret.Asset, foreign_key: :account_id)
     timestamps()
@@ -41,7 +42,7 @@ defmodule Ret.Account do
     |> credentials_for_account
   end
 
-  defp credentials_for_account(account) do
+  def credentials_for_account(account) do
     {:ok, token, _claims} = account |> Guardian.encode_and_sign()
     token
   end
@@ -55,4 +56,14 @@ defmodule Ret.Account do
   end
 
   def add_global_perms_for_account(perms, _), do: perms
+
+  def matching_oauth_providers(nil, _), do: []
+  def matching_oauth_providers(_, nil), do: []
+
+  def matching_oauth_providers(%Ret.Account{} = account, %Ret.Hub{} = hub) do
+    account.oauth_providers
+    |> Enum.filter(fn provider ->
+      hub.hub_bindings |> Enum.any?(&(&1.type == provider.source))
+    end)
+  end
 end
