@@ -21,17 +21,16 @@ defmodule RetWeb.Api.V1.OAuthController do
 
   # Discord user has a verified email, so we create a Hubs account for them associate it with their discord user id.
   defp process_discord_oauth(conn, discord_user_id, true = _verified, email, _hub) do
-    account = email |> Account.account_for_email()
+    oauth_provider =
+      OAuthProvider
+      |> Repo.get_by(source: :discord, provider_account_id: discord_user_id)
+      |> Repo.preload(:account)
 
-    oauth_provider = OAuthProvider |> Repo.get_by(source: :discord, account_id: account.account_id)
-
-    (oauth_provider || %OAuthProvider{source: :discord, account: account})
-    |> Ecto.Changeset.change(provider_account_id: discord_user_id)
-    |> Repo.insert_or_update()
+    account = oauth_provider |> account_for_oauth_provider(email, discord_user_id)
 
     credentials = %{
       email: email,
-      token: email |> Account.account_for_email() |> Account.credentials_for_account()
+      token: account |> Account.credentials_for_account()
     }
 
     conn |> put_short_lived_cookie("ret-oauth-flow-account-credentials", credentials |> Poison.encode!())
@@ -53,6 +52,33 @@ defmodule RetWeb.Api.V1.OAuthController do
       |> PermsToken.token_for_perms()
 
     conn |> put_short_lived_cookie("ret-oauth-flow-perms-token", perms_token)
+  end
+
+  # If an oauthprovider exists for the given discord_user_id, return the associated account, updating the email
+  # if necessary.
+  defp account_for_oauth_provider(%OAuthProvider{} = oauth_provider, email, _discord_user_id) do
+    account = oauth_provider.account |> Repo.preload(:login)
+    login = account.login
+    current_identifier_hash = login.identifier_hash
+    identifier_hash = email |> Account.identifier_hash_for_email()
+
+    if current_identifier_hash != identifier_hash do
+      login |> Ecto.Changeset.change(identifier_hash: identifier_hash) |> Repo.update!()
+    end
+
+    account
+  end
+
+  # Create or get the account associated with the email and create or get an oauthprovider for that account.
+  defp account_for_oauth_provider(nil = _oauth_provider, email, discord_user_id) do
+    account = email |> Account.account_for_email()
+
+    (OAuthProvider |> Repo.get_by(source: :discord, account_id: account.account_id) ||
+       %OAuthProvider{source: :discord, account: account})
+    |> Ecto.Changeset.change(provider_account_id: discord_user_id)
+    |> Repo.insert_or_update()
+
+    account
   end
 
   defp put_short_lived_cookie(conn, key, value) do

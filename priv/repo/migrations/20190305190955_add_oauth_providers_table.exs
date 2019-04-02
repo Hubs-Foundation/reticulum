@@ -14,5 +14,6 @@ defmodule Ret.Repo.Migrations.AddOauthProvidersTable do
     end
 
     create(index(:oauth_providers, [:source, :account_id], unique: true))
+    create(index(:oauth_providers, [:source, :provider_account_id], unique: true))
   end
 end

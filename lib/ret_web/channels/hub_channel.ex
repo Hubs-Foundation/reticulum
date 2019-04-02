@@ -502,7 +502,7 @@ defmodule RetWeb.HubChannel do
     hub
     |> Hub.perms_for_account(account)
     |> Account.add_global_perms_for_account(account)
-    |> Map.put(:account_id, account_id)
+    |> Map.put(:account_id, account_id |> to_string)
     |> Map.put(:hub_id, hub.hub_sid)
     |> Ret.PermsToken.token_for_perms()
   end
