@@ -2,7 +2,7 @@ defmodule Ret.CachedFileTest do
   use Ret.DataCase
   import Ret.TestHelpers
 
-  alias Ret.{CachedFile, Storage}
+  alias Ret.{CachedFile}
 
   setup do
     on_exit(fn ->

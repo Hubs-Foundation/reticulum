@@ -10,12 +10,12 @@ defmodule DiscordBotManager do
   end
 
   # managed process exited normally
-  def handle_info({:DOWN, _, :process, pid, :normal}, state) do
+  def handle_info({:DOWN, _, :process, _pid, :normal}, state) do
     {:stop, :normal, state}
   end
 
   # managed process exited with an error
-  def handle_info({:DOWN, _, :process, pid, _reason}, state) do
+  def handle_info({:DOWN, _, :process, _pid, _reason}, state) do
     restart()
     {:noreply, state}
   end

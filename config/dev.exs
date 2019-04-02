@@ -111,6 +111,7 @@ config :ret, Ret.MediaResolver,
   imgur_mashape_api_key: nil,
   imgur_client_id: nil,
   google_poly_api_key: nil,
+  youtube_api_key: nil,
   sketchfab_api_key: nil,
   ytdl_host: "http://localhost:9191"
 
