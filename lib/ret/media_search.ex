@@ -102,6 +102,50 @@ defmodule Ret.MediaSearch do
     end
   end
 
+  def search(%Ret.MediaSearchQuery{source: "youtube_videos", cursor: cursor, filter: filter, q: q}) do
+    with api_key when is_binary(api_key) <- resolver_config(:youtube_api_key) do
+      query =
+        URI.encode_query(
+          part: :snippet,
+          maxResults: @page_size,
+          pageToken: cursor,
+          order: :relevance,
+          category: filter,
+          q: q,
+          safeSearch: :moderate,
+          type: :video,
+          key: api_key
+        )
+
+      res =
+        "https://www.googleapis.com/youtube/v3/search?#{query}"
+        |> retry_get_until_success()
+
+      IO.inspect(query)
+
+      case res do
+        :error ->
+          :error
+
+        res ->
+          decoded_res = res |> Map.get(:body) |> Poison.decode!()
+          entries = decoded_res |> Map.get("items") |> Enum.map(&youtube_api_result_to_entry/1)
+          next_cursor = decoded_res |> Map.get("nextPageToken")
+
+          {:commit,
+           %Ret.MediaSearchResult{
+             meta: %Ret.MediaSearchResultMeta{
+               next_cursor: next_cursor,
+               source: :youtube
+             },
+             entries: entries
+           }}
+      end
+    else
+      _ -> nil
+    end
+  end
+
   def search(%Ret.MediaSearchQuery{source: "tenor", cursor: cursor, filter: filter, q: q}) do
     with api_key when is_binary(api_key) <- resolver_config(:tenor_api_key) do
       query =
@@ -341,6 +385,17 @@ defmodule Ret.MediaSearch do
       attributions: %{creator: %{name: result["authorName"]}},
       url: "https://poly.google.com/view/#{result["name"] |> String.replace("assets/", "")}",
       images: %{preview: %{url: result["thumbnail"]["url"]}}
+    }
+  end
+
+  defp youtube_api_result_to_entry(result) do
+    %{
+      id: result["id"]["videoId"],
+      type: "youtube_video",
+      name: result["snippet"]["title"],
+      attributions: %{creator: %{name: result["snippet"]["channelTitle"]}},
+      url: "https://www.youtube.com/watch?v=#{result["id"]["videoId"]}",
+      images: %{preview: %{url: result["snippet"]["thumbnails"]["medium"]["url"]}}
     }
   end
 
