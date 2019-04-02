@@ -262,7 +262,7 @@ defmodule Ret.MediaSearch do
       |> where([a], a.account_id == ^account_id)
       |> add_type_to_asset_search_query(type)
       |> add_query_to_asset_search_query(query)
-      |> preload([:asset_owned_file])
+      |> preload([:asset_owned_file, :thumbnail_owned_file])
       |> order_by(^order)
       |> Repo.paginate(%{page: page_number, page_size: @page_size})
       |> result_for_assets_page(page_number)
@@ -300,7 +300,7 @@ defmodule Ret.MediaSearch do
       name: asset.name,
       attributions: %{},
       images: %{
-        preview: %{url: nil}
+        preview: %{url: asset.thumbnail_owned_file |> OwnedFile.uri_for() |> URI.to_string()}
       }
     }
   end

@@ -14,13 +14,14 @@ defmodule Ret.Asset do
     field(:type, Ret.Asset.Type)
     belongs_to(:account, Ret.Account, references: :account_id)
     belongs_to(:asset_owned_file, Ret.OwnedFile, references: :owned_file_id)
+    belongs_to(:thumbnail_owned_file, Ret.OwnedFile, references: :owned_file_id)
     many_to_many(:projects, Ret.Project, join_through: Ret.ProjectAsset, join_keys: [ asset_id: :asset_id, project_id: :project_id], on_replace: :delete)
 
     timestamps()
   end
 
-  def create_asset_and_project_asset(account, project, asset_owned_file, params) do
-    asset_changeset = Asset.changeset(%Asset{}, account, asset_owned_file, params)
+  def create_asset_and_project_asset(account, project, asset_owned_file, thumbnail_owned_file, params) do
+    asset_changeset = Asset.changeset(%Asset{}, account, asset_owned_file, thumbnail_owned_file, params)
 
     multi = Multi.new
       |> Multi.insert(:asset, asset_changeset)
@@ -33,7 +34,7 @@ defmodule Ret.Asset do
   end
 
   # Create an Asset
-  def changeset(%Asset{} = asset, account, asset_owned_file, params) do
+  def changeset(%Asset{} = asset, account, asset_owned_file, thumbnail_owned_file, params) do
     asset
     |> cast(params, [:name])
     |> put_change(:type, content_type_to_asset_type!(asset_owned_file.content_type))
@@ -44,6 +45,7 @@ defmodule Ret.Asset do
     |> unique_constraint(:asset_sid)
     |> put_assoc(:account, account)
     |> put_assoc(:asset_owned_file, asset_owned_file)
+    |> put_assoc(:thumbnail_owned_file, thumbnail_owned_file)
   end
 
   defp content_type_to_asset_type!(content_type) do

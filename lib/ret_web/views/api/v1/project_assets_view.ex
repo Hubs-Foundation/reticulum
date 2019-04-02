@@ -7,6 +7,7 @@ defmodule RetWeb.Api.V1.ProjectAssetsView do
       asset_id: asset.asset_sid,
       name: asset.name,
       file_url: asset.asset_owned_file |> OwnedFile.uri_for() |> URI.to_string(),
+      thumbnail_url: asset.thumbnail_owned_file |> OwnedFile.uri_for() |> URI.to_string(),
       type: asset.type,
       content_type: asset.asset_owned_file.content_type,
       content_length: asset.asset_owned_file.content_length

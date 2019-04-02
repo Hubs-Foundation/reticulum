@@ -9,6 +9,7 @@ defmodule Ret.Repo.Migrations.CreateAssetsTables do
       add(:type, :asset_type, null: false)
       add(:account_id, references(:accounts, column: :account_id), null: false)
       add(:asset_owned_file_id, :bigint, null: false)
+      add(:thumbnail_owned_file_id, :bigint, null: false)
 
       timestamps()
     end
