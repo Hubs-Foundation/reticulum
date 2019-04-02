@@ -10,7 +10,7 @@ defmodule RetWeb.PageController do
     scene_meta_tags = Phoenix.View.render_to_string(RetWeb.PageView, "scene-meta.html", scene: scene)
 
     chunks =
-      chunks_for_page("scene.html")
+      chunks_for_page("scene.html", :hubs)
       |> List.insert_at(1, scene_meta_tags)
 
     conn
@@ -44,6 +44,9 @@ defmodule RetWeb.PageController do
   def render_for_path("/spoke", conn), do: conn |> render_page("spoke.html")
   def render_for_path("/spoke/", conn), do: conn |> render_page("spoke.html")
 
+  def render_for_path("/spoke-dev", conn), do: conn |> render_page("index.html", :spoke)
+  def render_for_path("/spoke-dev/", conn), do: conn |> render_page("index.html", :spoke)
+
   def render_for_path("/whats-new", conn), do: conn |> render_page("whats-new.html")
   def render_for_path("/whats-new/", conn), do: conn |> render_page("whats-new.html")
 
@@ -76,7 +79,7 @@ defmodule RetWeb.PageController do
     hub_meta_tags = Phoenix.View.render_to_string(RetWeb.PageView, "hub-meta.html", hub: hub, scene: hub.scene)
 
     chunks =
-      chunks_for_page("hub.html")
+      chunks_for_page("hub.html", :hubs)
       |> List.insert_at(1, hub_meta_tags)
 
     conn
@@ -97,17 +100,19 @@ defmodule RetWeb.PageController do
     end
   end
 
-  defp render_page(conn, nil) do
+  defp render_page(conn, page, source \\ :hubs)
+
+  defp render_page(conn, nil, _source) do
     conn |> send_resp(404, "")
   end
 
-  defp render_page(conn, page) do
-    chunks = page |> chunks_for_page
+  defp render_page(conn, page, source) do
+    chunks = page |> chunks_for_page(source)
     conn |> render_chunks(chunks, page |> content_type_for_page)
   end
 
-  defp chunks_for_page(page) do
-    with {:ok, chunks} <- Cachex.get(:page_chunks, page) do
+  defp chunks_for_page(page, source) do
+    with {:ok, chunks} <- Cachex.get(:page_chunks, {source, page}) do
       chunks
     else
       _ -> nil

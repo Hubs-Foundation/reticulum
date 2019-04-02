@@ -66,7 +66,8 @@ bing_search_api_key = "{{ cfg.resolver.bing_search_api_key }}"
 twitch_client_id = "{{ cfg.resolver.twitch_client_id }}"
 
 [ret."Elixir.Ret.PageOriginWarmer"]
-page_origin = "{{ cfg.pages.page_origin }}"
+hubs_page_origin = "{{ cfg.pages.hubs_page_origin }}"
+spoke_page_origin = "{{ cfg.pages.spoke_page_origin }}"
 
 [ret."Elixir.Ret.Storage"]
 storage_path = "{{ cfg.uploads.storage_path }}"
