@@ -81,7 +81,7 @@ defmodule RetWeb.Api.V1.MediaController do
     |> render("show.json", origin: uri |> URI.to_string(), raw: raw, meta: meta)
   end
 
-  defp gen_farspark_url(uri, index \\ 0) do
+  defp gen_farspark_url(uri, index) do
     path = "/raw/0/0/0/#{index}/#{uri |> URI.to_string() |> Base.url_encode64(padding: false)}"
 
     host = Application.get_env(:ret, :farspark_host)
