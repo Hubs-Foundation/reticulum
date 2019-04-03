@@ -283,7 +283,8 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
-  def handle_in("refresh_perms_token", _args, %{assigns: %{oauth_account_id: oauth_account_id}} = socket) do
+  def handle_in("refresh_perms_token", _args, %{assigns: %{oauth_account_id: oauth_account_id}} = socket)
+      when oauth_account_id != nil do
     perms_token = socket |> hub_for_socket |> get_perms_token(%Ret.OAuthProvider{provider_account_id: oauth_account_id})
     {:reply, {:ok, %{perms_token: perms_token}}, socket}
   end
