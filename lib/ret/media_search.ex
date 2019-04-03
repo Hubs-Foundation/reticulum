@@ -111,6 +111,7 @@ defmodule Ret.MediaSearch do
       query =
         URI.encode_query(
           part: :snippet,
+          fields: "id/videoId,snippet/title,snippet/channelTitle,snippet/thumbnails/medium/url",
           maxResults: @page_size,
           pageToken: cursor,
           order: :relevance,
