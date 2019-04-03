@@ -2,15 +2,23 @@ defmodule Ret.PageOriginWarmer do
   use Cachex.Warmer
   use Retry
 
-  @pages ~w(index.html whats-new.html hub.html link.html scene.html spoke.html admin.html avatar-selector.html hub.service.js)
+  # @pages is a list of { source, page } tuples eg { :hubs, "scene.html" }
+  @pages %{
+           hubs:
+             ~w(index.html whats-new.html hub.html link.html scene.html spoke.html admin.html avatar-selector.html hub.service.js),
+           spoke: ~w(index.html)
+         }
+         |> Enum.map(fn {k, vs} -> vs |> Enum.map(&{k, &1}) end)
+         |> List.flatten()
 
   def interval, do: :timer.seconds(15)
 
   def execute(_state) do
-    with page_origin when is_binary(page_origin) <- module_config(:page_origin) do
+    with hubs_page_origin when is_binary(hubs_page_origin) <- module_config(:hubs_page_origin),
+         spoke_page_origin when is_binary(spoke_page_origin) <- module_config(:spoke_page_origin) do
       cache_values =
         @pages
-        |> Enum.map(&Task.async(fn -> page_to_cache_entry(&1) end))
+        |> Enum.map(fn {source, page} -> Task.async(fn -> page_to_cache_entry(source, page) end) end)
         |> Enum.map(&Task.await(&1, 15000))
         |> Enum.reject(&is_nil/1)
 
@@ -20,9 +28,16 @@ defmodule Ret.PageOriginWarmer do
     end
   end
 
-  defp page_to_cache_entry(page) do
+  defp page_to_cache_entry(source, page) do
+    config_key =
+      if source == :hubs do
+        :hubs_page_origin
+      else
+        :spoke_page_origin
+      end
+
     # Split the HTML file into two parts, on the line that contains HUB_META_TAGS, so we can add meta tags
-    case "#{module_config(:page_origin)}/#{page}"
+    case "#{module_config(config_key)}/#{page}"
          |> retry_get_until_success do
       :error ->
         # Nils are rejected after tasks are joined
@@ -36,7 +51,7 @@ defmodule Ret.PageOriginWarmer do
           |> Enum.split_while(&(!Regex.match?(~r/META_TAGS/, &1)))
           |> Tuple.to_list()
 
-        {page, chunks}
+        {{source, page}, chunks}
     end
   end
 

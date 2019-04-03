@@ -101,7 +101,8 @@ config :ret,
   bot_access_key: ""
 
 config :ret, Ret.PageOriginWarmer,
-  page_origin: "https://#{host}:8080",
+  hubs_page_origin: "https://#{host}:8080",
+  spoke_page_origin: "https://#{host}:9090",
   insecure_ssl: true
 
 config :ret, Ret.MediaResolver,
@@ -121,13 +122,13 @@ config :ret, Ret.Storage,
 
 asset_hosts =
   "https://localhost:4000 https://localhost:8080 " <>
-    "https://#{host}:4000 https://#{host}:8080 https://#{host}:3000 " <>
+    "https://#{host}:4000 https://#{host}:8080 https://#{host}:3000 https://#{host}:9090 " <>
     "https://asset-bundles-dev.reticulum.io https://asset-bundles-prod.reticulum.io " <>
     "https://farspark-prod.reticulum.io https://farspark-dev.reticulum.io " <> "https://hubs-proxy.com"
 
 websocket_hosts =
   "https://localhost:4000 https://localhost:8080 wss://localhost:4000 " <>
-    "https://#{host}:4000 https://#{host}:8080 wss://#{host}:4000 wss://#{host}:8080 " <>
+    "https://#{host}:4000 https://#{host}:8080 wss://#{host}:4000 wss://#{host}:8080 wss://#{host}:9090 " <>
     "wss://#{dev_janus_host} wss://prod-janus.reticulum.io"
 
 config :secure_headers, SecureHeaders,
