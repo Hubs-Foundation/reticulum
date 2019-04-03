@@ -59,7 +59,6 @@ defmodule RetWeb.Api.V1.MediaSearchController do
       locale: params["locale"]
     }
 
-    # For Google services, increase cache duration for landing pages by using long-lived cache, due to quotas.
     case Cachex.fetch(cache_for_query(query), query) do
       {_status, nil} ->
         conn |> send_resp(404, "")
@@ -72,6 +71,7 @@ defmodule RetWeb.Api.V1.MediaSearchController do
     end
   end
 
+  # For Google services, increase cache duration for landing pages by using long-lived cache, due to quotas.
   defp cache_for_query(%Ret.MediaSearchQuery{source: source, q: nil})
        when source == "youtube_videos" or source === "poly",
        do: :media_search_results_long
