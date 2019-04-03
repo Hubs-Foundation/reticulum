@@ -24,4 +24,11 @@ defmodule Ret.HubBinding do
     |> cast(params, [:type, :community_id, :channel_id])
     |> put_change(:hub_id, hub_id)
   end
+
+  def member_of_channel?(
+        %Ret.OAuthProvider{source: :discord} = oauth_provider,
+        %Ret.HubBinding{type: :discord} = hub_binding
+      ) do
+    oauth_provider |> Ret.DiscordClient.member_of_channel?(hub_binding)
+  end
 end

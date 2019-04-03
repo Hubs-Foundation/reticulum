@@ -271,21 +271,14 @@ defimpl Canada.Can, for: Ret.Account do
   def can?(%Ret.Account{oauth_providers: oauth_providers}, :join_hub, %Ret.Hub{hub_bindings: hub_bindings})
       when hub_bindings |> length > 0 and oauth_providers |> length > 0 do
     hub_bindings
-    |> Enum.any?(fn binding ->
-      provider = oauth_providers |> Enum.find(&(&1.source == binding.type))
-
-      case provider do
-        %Ret.OAuthProvider{source: :discord} ->
-          provider.provider_account_id
-          |> Ret.DiscordClient.member_of_channel?(binding)
-
-        _ ->
-          false
-      end
-    end)
+    |> Enum.any?(&(&1 |> matching_oauth_provider(oauth_providers) |> Ret.HubBinding.member_of_channel?(&1)))
   end
 
   def can?(_, _, _), do: false
+
+  defp matching_oauth_provider(hub_binding, oauth_providers) do
+    oauth_providers |> Enum.find(&(&1.source == hub_binding.type))
+  end
 end
 
 # Perms for oauth users that do not have a hubs account
@@ -293,10 +286,9 @@ defimpl Canada.Can, for: Ret.OAuthProvider do
   # OAuthProvider users cannot perform special actions
   def can?(%Ret.OAuthProvider{}, action, %Ret.Hub{}) when action in [:update_hub, :kick_users, :mute_users], do: false
 
-  def can?(%Ret.OAuthProvider{provider_account_id: provider_account_id}, :join_hub, %Ret.Hub{hub_bindings: hub_bindings})
+  def can?(%Ret.OAuthProvider{} = oauth_provider, :join_hub, %Ret.Hub{hub_bindings: hub_bindings})
       when hub_bindings |> length > 0 do
-    hub_bindings
-    |> Enum.any?(fn binding -> provider_account_id |> Ret.DiscordClient.member_of_channel?(binding) end)
+    hub_bindings |> Enum.any?(&(oauth_provider |> Ret.HubBinding.member_of_channel?(&1)))
   end
 
   def can?(_, _, _), do: false
