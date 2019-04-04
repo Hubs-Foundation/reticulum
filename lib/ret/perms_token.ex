@@ -21,7 +21,7 @@ defmodule Ret.PermsToken do
         # PermsTokens do not have a resource associated with them
         nil,
         perms |> Map.put(:aud, :ret_perms),
-        ttl: {30, :seconds},
+        ttl: {5, :minutes},
         allowed_drift: 60 * 1000
       )
 
