@@ -43,17 +43,17 @@ defmodule Ret.DiscordClient do
     |> Poison.decode!()
   end
 
-  def member_of_channel?(nil, _), do: false
+  def has_permission?(nil, _, _), do: false
 
-  def member_of_channel?(%Ret.OAuthProvider{} = oauth_provider, %Ret.HubBinding{} = hub_binding) do
-    oauth_provider.provider_account_id |> member_of_channel?(hub_binding)
+  def has_permission?(%Ret.OAuthProvider{} = oauth_provider, %Ret.HubBinding{} = hub_binding, permission) do
+    oauth_provider.provider_account_id |> has_permission?(hub_binding, permission)
   end
 
-  def member_of_channel?(account_id, %Ret.HubBinding{} = hub_binding) when is_binary(account_id) do
+  def has_permission?(account_id, %Ret.HubBinding{} = hub_binding, permission) when is_binary(account_id) do
     permissions =
       compute_permissions(account_id, hub_binding.community_id, hub_binding.channel_id) |> permissions_to_map
 
-    permissions[:view_channel]
+    permissions[permission]
   end
 
   def api_request(path) do

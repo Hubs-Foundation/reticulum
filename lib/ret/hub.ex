@@ -260,25 +260,30 @@ defmodule Ret.Hub do
 end
 
 defimpl Canada.Can, for: Ret.Account do
-  # Only creators can perform these actions
-  def can?(%Ret.Account{account_id: account_id}, action, %Ret.Hub{created_by_account_id: account_id})
-      when account_id != nil and action in [:update_hub, :kick_users, :mute_users],
-      do: true
+  def can?(%Ret.Account{} = account, :join_hub, %Ret.Hub{hub_bindings: hub_bindings})
+      when hub_bindings |> length > 0 do
+    hub_bindings |> Enum.any?(&(account |> Ret.HubBinding.member_of_channel?(&1)))
+  end
+
+  def can?(%Ret.Account{} = account, :update_hub, %Ret.Hub{hub_bindings: hub_bindings})
+      when hub_bindings |> length > 0 do
+    hub_bindings |> Enum.any?(&(account |> Ret.HubBinding.can_manage_channel?(&1)))
+  end
+
+  def can?(%Ret.Account{} = account, action, %Ret.Hub{hub_bindings: hub_bindings})
+      when hub_bindings |> length > 0 and action in [:kick_users, :mute_users] do
+    hub_bindings |> Enum.any?(&(account |> Ret.HubBinding.can_moderate_users?(&1)))
+  end
 
   # Anyone can join an unbound hub
   def can?(_, :join_hub, %Ret.Hub{hub_bindings: []}), do: true
 
-  def can?(%Ret.Account{oauth_providers: oauth_providers}, :join_hub, %Ret.Hub{hub_bindings: hub_bindings})
-      when hub_bindings |> length > 0 and oauth_providers |> length > 0 do
-    hub_bindings
-    |> Enum.any?(&(&1 |> matching_oauth_provider(oauth_providers) |> Ret.HubBinding.member_of_channel?(&1)))
-  end
+  # Creators of unbound hubs can perform special actions
+  def can?(%Ret.Account{account_id: account_id}, action, %Ret.Hub{created_by_account_id: account_id})
+      when account_id != nil and action in [:update_hub, :kick_users, :mute_users],
+      do: true
 
   def can?(_, _, _), do: false
-
-  defp matching_oauth_provider(hub_binding, oauth_providers) do
-    oauth_providers |> Enum.find(&(&1.source == hub_binding.type))
-  end
 end
 
 # Perms for oauth users that do not have a hubs account

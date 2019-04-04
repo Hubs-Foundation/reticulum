@@ -70,10 +70,13 @@ defmodule RetWeb.HubChannel do
         _ -> false
       end
 
-    oauth_account_id =
+    {oauth_account_id, oauth_source} =
       case decode_result do
-        {:ok, %{"oauth_account_id" => oauth_account_id}} -> oauth_account_id
-        _ -> nil
+        {:ok, %{"oauth_account_id" => oauth_account_id, "oauth_source" => oauth_source}} ->
+          {oauth_account_id, oauth_source}
+
+        _ ->
+          {nil, nil}
       end
 
     params =
@@ -85,6 +88,7 @@ defmodule RetWeb.HubChannel do
         account_can_join: account_can_join,
         has_perms_token: has_perms_token,
         oauth_account_id: oauth_account_id,
+        oauth_source: oauth_source,
         perms_token_can_join: perms_token_can_join
       })
 
@@ -283,9 +287,20 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
-  def handle_in("refresh_perms_token", _args, %{assigns: %{oauth_account_id: oauth_account_id}} = socket)
+  def handle_in(
+        "refresh_perms_token",
+        _args,
+        %{assigns: %{oauth_account_id: oauth_account_id, oauth_source: oauth_source}} = socket
+      )
       when oauth_account_id != nil do
-    perms_token = socket |> hub_for_socket |> get_perms_token(%Ret.OAuthProvider{provider_account_id: oauth_account_id})
+    perms_token =
+      socket
+      |> hub_for_socket
+      |> get_perms_token(%Ret.OAuthProvider{
+        provider_account_id: oauth_account_id,
+        source: oauth_source |> String.to_atom()
+      })
+
     {:reply, {:ok, %{perms_token: perms_token}}, socket}
   end
 
@@ -433,7 +448,8 @@ defmodule RetWeb.HubChannel do
            socket
            |> assign(:hub_sid, hub.hub_sid)
            |> assign(:presence, :lobby)
-           |> assign(:oauth_account_id, params[:oauth_account_id]),
+           |> assign(:oauth_account_id, params[:oauth_account_id])
+           |> assign(:oauth_source, params[:oauth_source]),
          response <- HubView.render("show.json", %{hub: hub}) do
       response = response |> Map.put(:subscriptions, %{web_push: is_push_subscribed})
 
@@ -489,10 +505,11 @@ defmodule RetWeb.HubChannel do
     )
   end
 
-  defp get_perms_token(hub, %Ret.OAuthProvider{provider_account_id: provider_account_id} = account) do
+  defp get_perms_token(hub, %Ret.OAuthProvider{provider_account_id: provider_account_id, source: source} = account) do
     hub
     |> Hub.perms_for_account(account)
     |> Map.put(:oauth_account_id, provider_account_id)
+    |> Map.put(:oauth_source, source)
     |> Map.put(:hub_id, hub.hub_sid)
     |> Ret.PermsToken.token_for_perms()
   end

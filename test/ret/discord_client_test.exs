@@ -49,19 +49,19 @@ defmodule Ret.DiscordClientTest do
     :ok
   end
 
-  test "regular member should be member of general channel" do
-    assert @regular_user_id |> DiscordClient.member_of_channel?(@general_channel_binding)
+  test "regular member should be able to view general channel" do
+    assert @regular_user_id |> DiscordClient.has_permission?(@general_channel_binding, :view_channel)
   end
 
-  test "regular member should not be member of restricted channel" do
-    refute @regular_user_id |> DiscordClient.member_of_channel?(@restricted_channel_binding)
+  test "regular member should not be able to view restricted channel" do
+    refute @regular_user_id |> DiscordClient.has_permission?(@restricted_channel_binding, :view_channel)
   end
 
-  test "owner should be member of restricted channel" do
-    assert @owner_user_id |> DiscordClient.member_of_channel?(@restricted_channel_binding)
+  test "owner should be able to view restricted channel" do
+    assert @owner_user_id |> DiscordClient.has_permission?(@restricted_channel_binding, :view_channel)
   end
 
-  test "moderator should be member of restricted channel" do
-    assert @moderator_user_id |> DiscordClient.member_of_channel?(@restricted_channel_binding)
+  test "moderator should be able to view restricted channel" do
+    assert @moderator_user_id |> DiscordClient.has_permission?(@restricted_channel_binding, :view_channel)
   end
 end
