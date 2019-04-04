@@ -39,16 +39,13 @@ defmodule RetWeb.Api.V1.OAuthController do
   # Discord user does not have a verified email, so we can't create an account for them. Instead, we generate a perms
   # token to let them join the hub if permitted.
   defp process_discord_oauth(conn, discord_user_id, false = _verified, _email, hub) do
-    hub_binding = hub.hub_bindings |> Enum.find(&(&1.type == :discord))
-
-    can_join_hub = discord_user_id |> DiscordClient.member_of_channel?(hub_binding)
+    oauth_provider = %Ret.OAuthProvider{provider_account_id: discord_user_id, source: :discord}
 
     perms_token =
-      %{
-        oauth_account_id: discord_user_id,
-        join_hub: can_join_hub,
-        kick_users: false
-      }
+      hub
+      |> Hub.perms_for_account(oauth_provider)
+      |> Map.put(:oauth_account_id, discord_user_id)
+      |> Map.put(:oauth_source, :discord)
       |> PermsToken.token_for_perms()
 
     conn |> put_short_lived_cookie("ret-oauth-flow-perms-token", perms_token)

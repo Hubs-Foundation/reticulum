@@ -24,4 +24,29 @@ defmodule Ret.HubBinding do
     |> cast(params, [:type, :community_id, :channel_id])
     |> put_change(:hub_id, hub_id)
   end
+
+  def can_manage_channel?(%Ret.Account{} = account, %Ret.HubBinding{type: :discord} = hub_binding) do
+    account |> matching_oauth_provider(hub_binding) |> Ret.DiscordClient.has_permission?(hub_binding, :manage_channels)
+  end
+
+  def can_moderate_users?(%Ret.Account{} = account, %Ret.HubBinding{type: :discord} = hub_binding) do
+    account |> matching_oauth_provider(hub_binding) |> Ret.DiscordClient.has_permission?(hub_binding, :kick_members)
+  end
+
+  def member_of_channel?(%Ret.Account{} = account, %Ret.HubBinding{} = hub_binding) do
+    account |> matching_oauth_provider(hub_binding) |> member_of_channel?(hub_binding)
+  end
+
+  def member_of_channel?(
+        %Ret.OAuthProvider{source: :discord} = oauth_provider,
+        %Ret.HubBinding{type: :discord} = hub_binding
+      ) do
+    oauth_provider |> Ret.DiscordClient.has_permission?(hub_binding, :view_channel)
+  end
+
+  def member_of_channel?(_, _), do: false
+
+  defp matching_oauth_provider(account, hub_binding) do
+    account.oauth_providers |> Enum.find(&(&1.source == hub_binding.type))
+  end
 end
