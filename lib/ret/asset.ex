@@ -1,6 +1,7 @@
 defmodule Ret.Asset do
   use Ecto.Schema
   import Ecto.Changeset
+  import Ecto.Query
 
   alias Ecto.{Multi}
   alias Ret.{Repo, Asset, ProjectAsset}
@@ -20,6 +21,12 @@ defmodule Ret.Asset do
     timestamps()
   end
 
+  def create_asset(account, asset_owned_file, thumbnail_owned_file, params) do
+    %Asset{}
+    |> Asset.changeset(account, asset_owned_file, thumbnail_owned_file, params)
+    |> Repo.insert()
+  end
+
   def create_asset_and_project_asset(account, project, asset_owned_file, thumbnail_owned_file, params) do
     asset_changeset = Asset.changeset(%Asset{}, account, asset_owned_file, thumbnail_owned_file, params)
 
@@ -31,6 +38,13 @@ defmodule Ret.Asset do
       end)
 
     Repo.transaction(multi)
+  end
+
+  def asset_by_sid_for_account(account, asset_sid) do
+    from(a in Asset,
+      where: a.asset_sid == ^asset_sid and a.account_id == ^account.account_id,
+      preload: [:account, :asset_owned_file, :thumbnail_owned_file])
+    |> Repo.one
   end
 
   # Create an Asset

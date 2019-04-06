@@ -1,7 +1,7 @@
 defmodule RetWeb.Api.V1.ProjectController do
   use RetWeb, :controller
 
-  alias Ret.{Account, Project, Repo, Storage}
+  alias Ret.{Project, Repo, Storage}
 
   # Limit to 1 TPS
   plug(RetWeb.Plugs.RateLimit when action in [:create])
@@ -13,7 +13,8 @@ defmodule RetWeb.Api.V1.ProjectController do
   end
 
   def show(conn, %{"id" => project_sid}) do
-    case project_sid |> Project.project_by_sid() do
+    account = Guardian.Plug.current_resource(conn)
+    case Project.project_by_sid_for_account(account, project_sid) do
       %Project{} = project -> render(conn, "show.json", project: project)
       _ -> conn |> send_resp(404, "not found")
     end
@@ -41,20 +42,10 @@ defmodule RetWeb.Api.V1.ProjectController do
   def update(conn, %{"id" => project_sid, "project" => params}) do
     account = conn |> Guardian.Plug.current_resource()
 
-    case project_sid |> Project.project_by_sid() do
+    case Project.project_by_sid_for_account(account, project_sid) do
       %Project{} = project -> update(conn, params, project, account)
       _ -> conn |> send_resp(404, "not found")
     end
-  end
-
-  defp update(
-         conn,
-         _params,
-         %Project{created_by_account_id: project_account_id},
-         %Account{account_id: account_id}
-       )
-       when not is_nil(project_account_id) and project_account_id != account_id do
-    conn |> send_resp(401, "")
   end
 
   defp update(conn, params, project, account) do
@@ -93,6 +84,19 @@ defmodule RetWeb.Api.V1.ProjectController do
 
       {:error, :not_allowed} ->
         conn |> send_resp(401, "")
+    end
+  end
+
+  def delete(conn, %{"id" => project_sid }) do
+    account = Guardian.Plug.current_resource(conn)
+
+    case Project.project_by_sid_for_account(account, project_sid) do
+      %Project{} = project -> 
+        case Repo.delete(project) do
+          {:ok, _} -> conn |> send_resp(200, "OK")
+          {:error, _} -> conn |> send_resp(500, "error deleting project")
+        end
+      _ -> conn |> send_resp(404, "not found")
     end
   end
 end
