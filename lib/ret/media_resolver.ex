@@ -388,17 +388,21 @@ defmodule Ret.MediaResolver do
     ext = query |> ytdl_ext
 
     # Prefer a version with baked in (english) subtitles. Client locale should eventually determine this
-    "best#{ext}[format_id*=hardsub-enUS][height<=?#{resolution}]/best#{ext}[format_id*=hardsub-enUS]/" <>
-      ytdl_query(query, nil)
+    ["best#{ext}[format_id*=hardsub-enUS][height<=?#{resolution}]", "best#{ext}[format_id*=hardsub-enUS]"]
+    |> (Enum.join("/") <> "/" <> ytdl_query(query, nil))
   end
 
   defp ytdl_query(query, _root_host) do
     resolution = query |> ytdl_resolution
     ext = query |> ytdl_ext
 
-    "best#{ext}[protocol*=http][height<=?#{resolution}]/best#{ext}[protocol*=m3u8][height<=?#{resolution}]/best#{ext}[protocol*=http]/best#{
-      ext
-    }[protocol*=m3u8]"
+    [
+      "best#{ext}[protocol*=http][height<=?#{resolution}]",
+      "best#{ext}[protocol*=m3u8][height<=?#{resolution}]",
+      "best#{ext}[protocol*=http]",
+      "best#{ext}[protocol*=m3u8]"
+    ]
+    |> Enum.join("/")
   end
 
   def ytdl_ext(%MediaResolverQuery{supports_webm: false}), do: "[ext=mp4]"
