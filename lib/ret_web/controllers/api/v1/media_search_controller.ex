@@ -29,12 +29,19 @@ defmodule RetWeb.Api.V1.MediaSearchController do
     conn |> render("index.json", results: results)
   end
 
-  def index(conn, %{"source" => "assets", "user" => user} = params) do 
+  def index(conn, %{"source" => "assets", "user" => user} = params) do
     account = conn |> Guardian.Plug.current_resource()
 
     if account.account_id == String.to_integer(user) do
       {:commit, results} =
-        %Ret.MediaSearchQuery{source: "assets", user: account.account_id, type: params["type"], q: params["q"], cursor: params["cursor"] || "1"} |> Ret.MediaSearch.search()
+        %Ret.MediaSearchQuery{
+          source: "assets",
+          user: account.account_id,
+          type: params["type"],
+          q: params["q"],
+          cursor: params["cursor"] || "1"
+        }
+        |> Ret.MediaSearch.search()
 
       conn |> render("index.json", results: results)
     else
@@ -52,7 +59,7 @@ defmodule RetWeb.Api.V1.MediaSearchController do
       locale: params["locale"]
     }
 
-    case Cachex.fetch(:media_search_results, query) do
+    case Cachex.fetch(cache_for_query(query), query) do
       {_status, nil} ->
         conn |> send_resp(404, "")
 
@@ -63,6 +70,13 @@ defmodule RetWeb.Api.V1.MediaSearchController do
         conn |> send_resp(404, "")
     end
   end
+
+  # For Google services, increase cache duration for landing pages by using long-lived cache, due to quotas.
+  defp cache_for_query(%Ret.MediaSearchQuery{source: source, q: nil})
+       when source == "youtube_videos" or source == "poly",
+       do: :media_search_results_long
+
+  defp cache_for_query(_query), do: :media_search_results
 
   def index(conn) do
     conn |> send_resp(422, "")

@@ -50,6 +50,19 @@ defmodule Ret.Application do
         id: :media_search_cache
       ),
 
+      # Long-lived media search cache, used for common queries that have quotas
+      worker(
+        Cachex,
+        [
+          :media_search_results_long,
+          [
+            expiration: expiration(default: :timer.hours(24)),
+            fallback: fallback(default: &Ret.MediaSearch.search/1)
+          ]
+        ],
+        id: :media_search_cache_long
+      ),
+
       # Discord API cache
       worker(
         Cachex,
