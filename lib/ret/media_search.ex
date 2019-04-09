@@ -14,6 +14,8 @@ defmodule Ret.MediaSearchResultMeta do
 end
 
 defmodule Ret.MediaSearch do
+  require Logger
+
   import Ret.HttpUtils
   import Ecto.Query
 
@@ -121,6 +123,8 @@ defmodule Ret.MediaSearch do
           type: :video,
           key: api_key
         )
+
+      Logger.info("YT Search #{q} | #{filter} | #{cursor}")
 
       res =
         "https://www.googleapis.com/youtube/v3/search?#{query}"
