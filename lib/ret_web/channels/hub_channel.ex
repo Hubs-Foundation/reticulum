@@ -134,6 +134,15 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
+  def handle_in("naf" = event, %{"data" => %{"isFirstSync" => true}} = payload, socket) do
+    data =
+      payload["data"] |> Map.put("creator", socket.assigns.session_id) |> Map.put("owner", socket.assigns.session_id)
+
+    payload = payload |> Map.put("data", data)
+    broadcast_from!(socket, event, payload)
+    {:noreply, socket}
+  end
+
   def handle_in("naf" = event, payload, socket) do
     broadcast_from!(socket, event, payload)
     {:noreply, socket}
@@ -451,6 +460,8 @@ defmodule RetWeb.HubChannel do
            |> assign(:oauth_account_id, params[:oauth_account_id])
            |> assign(:oauth_source, params[:oauth_source]),
          response <- HubView.render("show.json", %{hub: hub}) do
+      response = response |> Map.put(:session_id, socket.assigns.session_id)
+
       response = response |> Map.put(:subscriptions, %{web_push: is_push_subscribed})
 
       perms_token = params["perms_token"] || get_perms_token(hub, account)
