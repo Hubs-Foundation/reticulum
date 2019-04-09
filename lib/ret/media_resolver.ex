@@ -388,8 +388,8 @@ defmodule Ret.MediaResolver do
     ext = query |> ytdl_ext
 
     # Prefer a version with baked in (english) subtitles. Client locale should eventually determine this
-    ["best#{ext}[format_id*=hardsub-enUS][height<=?#{resolution}]", "best#{ext}[format_id*=hardsub-enUS]"]
-    |> (Enum.join("/") <> "/" <> ytdl_query(query, nil))
+    crunchy_query = ["best#{ext}[format_id*=hardsub-enUS][height<=?#{resolution}]", "best#{ext}[format_id*=hardsub-enUS]"] |> Enum.join("/")
+    crunchy_query <> "/" <> ytdl_query(query, nil))
   end
 
   defp ytdl_query(query, _root_host) do
