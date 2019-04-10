@@ -12,6 +12,17 @@ defmodule RetWeb.ProjectsControllerTest do
     end)
   end
 
+  test "projects create 401's when not logged in", %{conn: conn} do
+    params = %{ project: %{ name: "Test Project" } }
+    conn |> post(api_v1_project_path(conn, :create)) |> response(401)
+  end
+
+  @tag :authenticated
+  test "projects create works when logged in", %{conn: conn} do
+    params = %{ project: %{ name: "Test Project" } }
+    conn |> post(api_v1_project_path(conn, :create, params)) |> response(200)
+  end
+
   test "projects delete 401's when not logged in", %{conn: conn, project: project} do
     conn |> delete(api_v1_project_path(conn, :delete, project.project_sid)) |> response(401)
   end

@@ -48,7 +48,7 @@ defmodule Ret.Project do
 
   def create_project(account, params) do
     with {:ok, project} <- %Project{} |> Project.changeset(account, params) |> Repo.insert() do
-      {:ok, project: Repo.preload(project, [:project_owned_file, :thumbnail_owned_file])}
+      {:ok, Repo.preload(project, [:project_owned_file, :thumbnail_owned_file])}
     end
   end
 
