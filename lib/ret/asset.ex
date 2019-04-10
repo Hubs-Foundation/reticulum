@@ -40,7 +40,7 @@ defmodule Ret.Asset do
     Repo.transaction(multi)
   end
 
-  def asset_by_sid_for_account(account, asset_sid) do
+  def asset_by_sid_for_account(asset_sid, account) do
     from(a in Asset,
       where: a.asset_sid == ^asset_sid and a.account_id == ^account.account_id,
       preload: [:account, :asset_owned_file, :thumbnail_owned_file])

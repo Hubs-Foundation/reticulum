@@ -1,6 +1,10 @@
 defmodule RetWeb.ErrorView do
   use RetWeb, :view
 
+  def render("error.json", %{ error: error }) do
+    %{error: error}
+  end
+
   def render("404.html", _assigns) do
     "Page not found"
   end
