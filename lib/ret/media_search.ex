@@ -333,7 +333,13 @@ defmodule Ret.MediaSearch do
           decoded_res = res |> Map.get(:body) |> Poison.decode!()
           next_cursor = decoded_res |> Map.get("nextOffset")
           entries = decoded_res |> Map.get("value") |> Enum.map(&bing_api_result_to_entry(type, &1))
-          suggestions = decoded_res |> Map.get("relatedSearches") |> Enum.map(& &1["text"])
+
+          suggestions =
+            if decoded_res["relatedSearches"] do
+              decoded_res |> Map.get("relatedSearches") |> Enum.map(& &1["text"])
+            else
+              []
+            end
 
           {:commit,
            %Ret.MediaSearchResult{
@@ -525,16 +531,27 @@ defmodule Ret.MediaSearch do
   defp bing_api_result_to_entry(type, result) do
     object_type = type |> String.replace(~r/s$/, "")
 
+    attributions = %{}
+
+    attributions =
+      if result["publisher"] do
+        attributions |> Map.put(:publisher, result["publisher"] |> Enum.at(0))
+      else
+        attributions
+      end
+
+    attributions =
+      if result["creator"] do
+        attributions |> Map.put(:creator, result["creator"])
+      else
+        attributions
+      end
+
     %{
       id: result["#{object_type}Id"],
       type: "bing_#{object_type}",
       name: result["name"],
-      attributions:
-        if result["publisher"] do
-          %{publisher: result["publisher"] |> Enum.at(0), creator: result["creator"]}
-        else
-          %{}
-        end,
+      attributions: attributions,
       url: result["contentUrl"],
       images: %{
         preview: %{
