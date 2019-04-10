@@ -62,7 +62,12 @@ defmodule Ret.MediaSearch do
         processing_status: :succeeded,
         cursor: cursor,
         categories: filter,
-        q: q
+        q:
+          if q == nil || q == "" do
+            "model"
+          else
+            q
+          end
       )
 
     sketchfab_search(query)
