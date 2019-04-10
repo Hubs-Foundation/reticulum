@@ -266,6 +266,47 @@ defmodule Ret.MediaSearch do
     end
   end
 
+  def bing_search(%Ret.MediaSearchQuery{source: "bing_videos", q: q, locale: locale}) when q == nil or q == "" do
+    with api_key when is_binary(api_key) <- resolver_config(:bing_search_api_key) do
+      query =
+        URI.encode_query(
+          mkt: locale || "en-US",
+          safeSearch: :Strict
+        )
+
+      res =
+        "https://westus.api.cognitive.microsoft.com/bing/v7.0/videos/trending?#{query}"
+        |> retry_get_until_success([{"Ocp-Apim-Subscription-Key", api_key}])
+
+      case res do
+        :error ->
+          :error
+
+        res ->
+          decoded_res = res |> Map.get(:body) |> Poison.decode!()
+
+          tiles =
+            decoded_res
+            |> Kernel.get_in(["categories"])
+            |> Kernel.get_in([Access.all(), "subcategories"])
+            |> List.flatten()
+            |> Enum.map(&Kernel.get_in(&1, ["tiles"]))
+            |> List.flatten()
+
+          entries = tiles |> Enum.with_index() |> Enum.map(&bing_trending_api_result_to_entry/1)
+
+          {:commit,
+           %Ret.MediaSearchResult{
+             meta: %Ret.MediaSearchResultMeta{source: "bing_videos", next_cursor: nil},
+             entries: entries,
+             suggestions: []
+           }}
+      end
+    else
+      _ -> nil
+    end
+  end
+
   def bing_search(%Ret.MediaSearchQuery{source: source, cursor: cursor, filter: _filter, q: q, locale: locale}) do
     with api_key when is_binary(api_key) <- resolver_config(:bing_search_api_key) do
       query =
@@ -500,6 +541,26 @@ defmodule Ret.MediaSearch do
           url: result["thumbnailUrl"],
           width: result["thumbnail"]["width"],
           height: result["thumbnail"]["height"]
+        }
+      }
+    }
+  end
+
+  defp bing_trending_api_result_to_entry({result, index}) do
+    search_url = result["query"]["webSearchUrl"] |> URI.parse()
+    search_query = search_url.query |> URI.decode_query()
+
+    %{
+      id: index,
+      type: "bing_video",
+      name: result["query"]["displayText"],
+      url: result["image"]["contentUrl"],
+      lucky_query: search_query["q"],
+      images: %{
+        preview: %{
+          url: result["image"]["thumbnailUrl"],
+          width: 474,
+          height: 248
         }
       }
     }
