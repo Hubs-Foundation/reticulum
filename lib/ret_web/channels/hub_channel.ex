@@ -461,6 +461,7 @@ defmodule RetWeb.HubChannel do
            |> assign(:oauth_source, params[:oauth_source]),
          response <- HubView.render("show.json", %{hub: hub}) do
       response = response |> Map.put(:session_id, socket.assigns.session_id)
+      response = response |> Map.put(:session_token, socket.assigns.session_id |> Ret.SessionToken.token_for_session())
 
       response = response |> Map.put(:subscriptions, %{web_push: is_push_subscribed})
 
