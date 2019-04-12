@@ -25,11 +25,11 @@ defmodule Ret.SessionToken do
 end
 
 defmodule Ret.SessionTokenSecretFetcher do
-  def fetch_signing_secret(mod, _opts) do
+  def fetch_signing_secret(_mod, _opts) do
     {:ok, Application.get_env(:ret, Ret.Guardian)[:secret_key] |> JOSE.JWK.from_oct()}
   end
 
-  def fetch_verifying_secret(mod, _token_headers, _opts) do
+  def fetch_verifying_secret(_mod, _token_headers, _opts) do
     {:ok, Application.get_env(:ret, Ret.Guardian)[:secret_key] |> JOSE.JWK.from_oct()}
   end
 end
