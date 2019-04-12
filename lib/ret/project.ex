@@ -3,7 +3,7 @@ defmodule Ret.Project do
   import Ecto.Changeset
   import Ecto.Query
 
-  alias Ret.{Repo, Project, OwnedFile}
+  alias Ret.{Repo, Project, ProjectAsset, OwnedFile}
 
   @schema_prefix "ret0"
   @primary_key {:project_id, :id, autogenerate: true}
@@ -27,10 +27,10 @@ defmodule Ret.Project do
     |> Repo.preload([:created_by_account, :project_owned_file, :thumbnail_owned_file])
   end
 
-  def project_by_sid_for_account(account, project_sid) do
+  def project_by_sid_for_account(project_sid, account) do
     from(p in Project,
       where: p.project_sid == ^project_sid and p.created_by_account_id == ^account.account_id,
-      preload: [assets: [:asset_owned_file, :thumbnail_owned_file]])
+      preload: [:created_by_account, assets: [:asset_owned_file, :thumbnail_owned_file]])
     |> Repo.one
   end
 
@@ -38,6 +38,18 @@ defmodule Ret.Project do
     Repo.all from p in Project,
       where: p.created_by_account_id == ^account.account_id,
       preload: [:project_owned_file, :thumbnail_owned_file]
+  end
+
+  def add_asset_to_project(project, asset) do
+    %ProjectAsset{}
+    |> ProjectAsset.changeset(project, asset)
+    |> Repo.insert
+  end
+
+  def create_project(account, params) do
+    with {:ok, project} <- %Project{} |> Project.changeset(account, params) |> Repo.insert() do
+      {:ok, Repo.preload(project, [:project_owned_file, :thumbnail_owned_file])}
+    end
   end
 
   # Create a Project
