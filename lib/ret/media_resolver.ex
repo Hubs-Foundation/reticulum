@@ -192,30 +192,66 @@ defmodule Ret.MediaResolver do
   end
 
   defp resolve_non_video(%URI{} = uri, _root_host) do
-    # Fall back on og: tags
-    [uri, meta] =
-      case uri |> URI.to_string() |> retry_get_until_success([{"Range", "bytes=0-32768"}]) do
-        :error ->
-          nil
+    IO.puts("HI")
+    photomnemonic_endpoint = module_config(:photomnemonic_endpoint)
 
-        # note that there exist og:image:type and og:video:type tags we could use,
-        # but our OpenGraph library fails to parse them out.
+    # For text/html pages we use the screenshotter, otherwise return the raw URL.
+    # Try HEAD, if HEAD fails then do a GET and check content type.
+    # If HEAD works, check content type.
+    case uri |> URI.to_string() |> retry_head_until_success() do
+      :error ->
+        IO.inspect("head fail")
 
-        # also, we could technically be correct to emit an "image/*" content type from the OG image case,
-        # but our client right now will be confused by that because some images need to turn into
-        # image-like views and some (GIFs) need to turn into video-like views.
-        resp ->
-          case resp.body |> OpenGraph.parse() do
-            %{video: video} when is_binary(video) ->
-              [URI.parse(video), %{expected_content_type: "video/*"}]
+        case uri |> URI.to_string() |> retry_get_until_success([{"Range", "bytes=0-32768"}]) do
+          %HTTPoison.Response{headers: headers} = res ->
+            if photomnemonic_endpoint && headers |> content_type_from_headers |> String.starts_with?("text/html") do
+              screenshot_commit_for_uri(uri)
+            else
+              IO.inspect("og")
+              og_tag_commit_for_response(uri, res)
+            end
 
-            # don't send image/*
-            %{image: image} when is_binary(image) ->
-              [URI.parse(image), %{}]
+          :error ->
+            nil
+        end
 
-            _ ->
-              [uri, %{expected_content_type: content_type_from_headers(resp.headers)}]
+      %HTTPoison.Response{headers: headers} ->
+        if photomnemonic_endpoint && headers |> content_type_from_headers |> String.starts_with?("text/html") do
+          screenshot_commit_for_uri(uri)
+        else
+          case uri |> URI.to_string() |> retry_get_until_success([{"Range", "bytes=0-32768"}]) do
+            :error ->
+              nil
+
+            resp ->
+              IO.inspect("og")
+              og_tag_commit_for_response(uri, resp)
           end
+        end
+    end
+  end
+
+  defp screenshot_commit_for_uri(uri) do
+    IO.inspect("screenshot")
+  end
+
+  defp og_tag_commit_for_response(uri, resp) do
+    # note that there exist og:image:type and og:video:type tags we could use,
+    # but our OpenGraph library fails to parse them out.
+    # also, we could technically be correct to emit an "image/*" content type from the OG image case,
+    # but our client right now will be confused by that because some images need to turn into
+    # image-like views and some (GIFs) need to turn into video-like views.
+    [uri, meta] =
+      case resp.body |> OpenGraph.parse() do
+        %{video: video} when is_binary(video) ->
+          [URI.parse(video), %{expected_content_type: "video/*"}]
+
+        # don't send image/*
+        %{image: image} when is_binary(image) ->
+          [URI.parse(image), %{}]
+
+        _ ->
+          [uri, %{expected_content_type: content_type_from_headers(resp.headers)}]
       end
 
     {:commit, uri |> resolved(meta)}
