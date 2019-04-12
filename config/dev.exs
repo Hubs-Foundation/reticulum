@@ -114,7 +114,8 @@ config :ret, Ret.MediaResolver,
   google_poly_api_key: nil,
   youtube_api_key: nil,
   sketchfab_api_key: nil,
-  ytdl_host: "http://localhost:9191"
+  ytdl_host: "http://localhost:9191",
+  photomnemonic_endpoint: nil
 
 config :ret, Ret.Storage,
   storage_path: "storage/dev",
