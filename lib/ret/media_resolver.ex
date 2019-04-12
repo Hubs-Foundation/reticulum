@@ -192,7 +192,6 @@ defmodule Ret.MediaResolver do
   end
 
   defp resolve_non_video(%URI{} = uri, _root_host) do
-    IO.puts("HI")
     photomnemonic_endpoint = module_config(:photomnemonic_endpoint)
 
     # For text/html pages we use the screenshotter, otherwise return the raw URL.
@@ -200,14 +199,13 @@ defmodule Ret.MediaResolver do
     # If HEAD works, check content type.
     case uri |> URI.to_string() |> retry_head_until_success() do
       :error ->
-        IO.inspect("head fail")
-
         case uri |> URI.to_string() |> retry_get_until_success([{"Range", "bytes=0-32768"}]) do
           %HTTPoison.Response{headers: headers} = res ->
-            if photomnemonic_endpoint && headers |> content_type_from_headers |> String.starts_with?("text/html") do
-              screenshot_commit_for_uri(uri)
+            content_type = headers |> content_type_from_headers
+
+            if photomnemonic_endpoint && content_type |> String.starts_with?("text/html") do
+              screenshot_commit_for_uri(uri, content_type)
             else
-              IO.inspect("og")
               og_tag_commit_for_response(uri, res)
             end
 
@@ -216,23 +214,43 @@ defmodule Ret.MediaResolver do
         end
 
       %HTTPoison.Response{headers: headers} ->
-        if photomnemonic_endpoint && headers |> content_type_from_headers |> String.starts_with?("text/html") do
-          screenshot_commit_for_uri(uri)
+        content_type = headers |> content_type_from_headers
+
+        if photomnemonic_endpoint && content_type |> String.starts_with?("text/html") do
+          screenshot_commit_for_uri(uri, content_type)
         else
           case uri |> URI.to_string() |> retry_get_until_success([{"Range", "bytes=0-32768"}]) do
             :error ->
               nil
 
             resp ->
-              IO.inspect("og")
               og_tag_commit_for_response(uri, resp)
           end
         end
     end
   end
 
-  defp screenshot_commit_for_uri(uri) do
-    IO.inspect("screenshot")
+  defp screenshot_commit_for_uri(uri, content_type) do
+    photomnemonic_endpoint = module_config(:photomnemonic_endpoint)
+    query = URI.encode_query(url: uri |> URI.to_string())
+
+    cached_file_result =
+      CachedFile.fetch("screenshot-#{query}", fn path ->
+        Statix.increment("ret.media_resolver.screenshot.requests")
+        Download.from("#{photomnemonic_endpoint}/screenshot?#{query}", path: path)
+
+        {:ok, %{content_type: "image/png"}}
+      end)
+
+    case cached_file_result do
+      {:ok, file_uri} ->
+        meta = %{thumbnail: file_uri |> URI.to_string(), expected_content_type: content_type}
+
+        {:commit, uri |> resolved(meta)}
+
+      {:error, _reason} ->
+        :error
+    end
   end
 
   defp og_tag_commit_for_response(uri, resp) do
