@@ -73,6 +73,7 @@ sketchfab_api_key = "{{ cfg.resolver.sketchfab_api_key }}"
 tenor_api_key = "{{ cfg.resolver.tenor_api_key }}"
 bing_search_api_key = "{{ cfg.resolver.bing_search_api_key }}"
 twitch_client_id = "{{ cfg.resolver.twitch_client_id }}"
+photomnemonic_endpoint = "{{ cfg.resolver.photomnemonic_endpoint }}"
 
 [ret."Elixir.Ret.PageOriginWarmer"]
 hubs_page_origin = "{{ cfg.pages.hubs_page_origin }}"
