@@ -57,6 +57,12 @@ defmodule Ret.DiscordClient do
     permissions[permission]
   end
 
+  def fetch_display_name(%Ret.OAuthProvider{source: :discord, provider_account_id: provider_account_id}) do
+    case Cachex.fetch(:discord_api, "/users/#{provider_account_id}") do
+      {status, result} when status in [:commit, :ok] -> "#{result["username"]}##{result["discriminator"]}"
+    end
+  end
+
   def api_request(path) do
     "#{@discord_api_base}#{path}"
     |> Ret.HttpUtils.retry_get_until_success([{"authorization", "Bot #{module_config(:bot_token)}"}])
