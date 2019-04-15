@@ -30,7 +30,7 @@ defmodule Ret.Project do
   def project_by_sid_for_account(project_sid, account) do
     from(p in Project,
       where: p.project_sid == ^project_sid and p.created_by_account_id == ^account.account_id,
-      preload: [:created_by_account, assets: [:asset_owned_file, :thumbnail_owned_file]])
+      preload: [:created_by_account, :project_owned_file, :thumbnail_owned_file, assets: [:asset_owned_file, :thumbnail_owned_file]])
     |> Repo.one
   end
 
