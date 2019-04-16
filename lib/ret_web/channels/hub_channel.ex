@@ -501,14 +501,15 @@ defmodule RetWeb.HubChannel do
            |> assign(:oauth_source, params[:oauth_source])
            |> assign(:has_valid_bot_access_key, params[:has_valid_bot_access_key]),
          response <- HubView.render("show.json", %{hub: hub}) do
-      response = response |> Map.put(:session_id, socket.assigns.session_id)
-      response = response |> Map.put(:session_token, socket.assigns.session_id |> Ret.SessionToken.token_for_session())
-
-      response = response |> Map.put(:subscriptions, %{web_push: is_push_subscribed})
-
       perms_token = params["perms_token"] || get_perms_token(hub, account)
 
-      response = response |> Map.put(:perms_token, perms_token)
+      response =
+        response
+        |> Map.put(:session_id, socket.assigns.session_id)
+        |> Map.put(:session_token, socket.assigns.session_id |> Ret.SessionToken.token_for_session())
+        |> Map.put(:subscriptions, %{web_push: is_push_subscribed})
+        |> Map.put(:perms_token, perms_token)
+        |> Map.put(:hub_requires_oauth, params[:hub_requires_oauth])
 
       existing_stat_count =
         socket
