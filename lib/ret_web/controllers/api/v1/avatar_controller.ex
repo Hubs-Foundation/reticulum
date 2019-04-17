@@ -103,15 +103,19 @@ defmodule RetWeb.Api.V1.AvatarController do
     conn |> render("show.json", avatar: avatar)
   end
 
-  def show_gltf(conn, %{"id" => avatar_sid}) do
-    conn |> show_gltf(Avatar |> Repo.get_by(avatar_sid: avatar_sid))
+  def show_avatar_gltf(conn, %{"id" => avatar_sid}) do
+    conn |> show_gltf(Avatar |> Repo.get_by(avatar_sid: avatar_sid), true)
   end
 
-  def show_gltf(conn, nil = _avatar) do
-    conn |> send_resp(404, "")
+  def show_base_gltf(conn, %{"id" => avatar_sid}) do
+    conn |> show_gltf(Avatar |> Repo.get_by(avatar_sid: avatar_sid), false)
   end
 
-  def show_gltf(conn, %Avatar{} = avatar) do
+  def show_gltf(conn, nil = _avatar, _apply_overrides) do
+    conn |> send_resp(404, "Avatar not found")
+  end
+
+  def show_gltf(conn, %Avatar{} = avatar, apply_overrides) do
     avatar_files = avatar |> Avatar.collapsed_files()
 
     case Storage.fetch(avatar_files.gltf_owned_file) do
@@ -122,7 +126,7 @@ defmodule RetWeb.Api.V1.AvatarController do
           |> Poison.decode!()
           |> GLTFUtils.with_material(
             @primary_material_name,
-            avatar_files |> Map.take(Avatar.image_columns())
+            (apply_overrides && avatar_files |> Map.take(Avatar.image_columns())) || []
           )
           |> GLTFUtils.with_buffer(avatar_files.bin_owned_file)
 
@@ -131,10 +135,10 @@ defmodule RetWeb.Api.V1.AvatarController do
         |> send_resp(200, gltf |> Poison.encode!())
 
       {:error, :not_found} ->
-        conn |> send_resp(404, "")
+        conn |> send_resp(404, "Avatar is missing a gltf file")
 
       {:error, :not_allowed} ->
-        conn |> send_resp(401, "")
+        conn |> send_resp(401, "You are not allowed to access this avatar")
     end
   end
 end
