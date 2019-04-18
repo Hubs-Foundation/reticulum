@@ -5,7 +5,7 @@ defmodule Ret.PageOriginWarmer do
   # @pages is a list of { source, page } tuples eg { :hubs, "scene.html" }
   @pages %{
            hubs:
-             ~w(index.html whats-new.html hub.html link.html scene.html spoke.html admin.html avatar-selector.html hub.service.js),
+             ~w(index.html whats-new.html hub.html link.html scene.html spoke.html discord.html admin.html avatar-selector.html hub.service.js),
            spoke: ~w(index.html)
          }
          |> Enum.map(fn {k, vs} -> vs |> Enum.map(&{k, &1}) end)

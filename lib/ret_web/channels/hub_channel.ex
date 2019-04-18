@@ -21,6 +21,8 @@ defmodule RetWeb.HubChannel do
   alias RetWeb.{Presence}
   alias RetWeb.Api.V1.{HubView}
 
+  intercept(["mute"])
+
   @hub_preloads [
     scene: [:model_owned_file, :screenshot_owned_file, :scene_owned_file],
     scene_listing: [:model_owned_file, :screenshot_owned_file, :scene_owned_file, :scene],
@@ -157,6 +159,17 @@ defmodule RetWeb.HubChannel do
       context: socket.assigns,
       payload: payload
     })
+
+    {:noreply, socket}
+  end
+
+  def handle_in("mute" = event, payload, socket) do
+    hub = socket |> hub_for_socket
+    account = Guardian.Phoenix.Socket.current_resource(socket)
+
+    if account |> can?(mute_users(hub)) do
+      broadcast_from!(socket, event, payload)
+    end
 
     {:noreply, socket}
   end
@@ -333,6 +346,16 @@ defmodule RetWeb.HubChannel do
   def handle_in(_message, _payload, socket) do
     {:noreply, socket}
   end
+
+  def handle_out("mute" = event, %{"session_id" => session_id} = payload, socket) do
+    if socket.assigns.session_id == session_id do
+      push(socket, event, payload)
+    end
+
+    {:noreply, socket}
+  end
+
+  def handle_out("mute", _payload, socket), do: {:noreply, socket}
 
   defp with_account(socket, handler) do
     case Guardian.Phoenix.Socket.current_resource(socket) do

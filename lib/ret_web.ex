@@ -23,6 +23,7 @@ defmodule RetWeb do
       import Plug.Conn
       import RetWeb.Router.Helpers
       import RetWeb.Gettext
+      import RetWeb.ControllerHelpers
     end
   end
 

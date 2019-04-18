@@ -44,6 +44,9 @@ defmodule RetWeb.PageController do
   def render_for_path("/spoke", conn), do: conn |> render_page("spoke.html")
   def render_for_path("/spoke/", conn), do: conn |> render_page("spoke.html")
 
+  def render_for_path("/discord", conn), do: conn |> render_page("discord.html")
+  def render_for_path("/discord/", conn), do: conn |> render_page("discord.html")
+
   def render_for_path("/spoke-dev", conn), do: conn |> render_page("index.html", :spoke)
   def render_for_path("/spoke-dev/" <> _path, conn), do: conn |> render_page("index.html", :spoke)
 

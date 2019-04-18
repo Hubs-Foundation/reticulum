@@ -14,6 +14,8 @@ defmodule Ret.MediaSearchResultMeta do
 end
 
 defmodule Ret.MediaSearch do
+  require Logger
+
   import Ret.HttpUtils
   import Ecto.Query
 
@@ -60,7 +62,12 @@ defmodule Ret.MediaSearch do
         processing_status: :succeeded,
         cursor: cursor,
         categories: filter,
-        q: q
+        q:
+          if q == nil || q == "" do
+            "model"
+          else
+            q
+          end
       )
 
     sketchfab_search(query)
@@ -111,7 +118,7 @@ defmodule Ret.MediaSearch do
       query =
         URI.encode_query(
           part: :snippet,
-          fields: "items(id,snippet(title,channelTitle,thumbnails(medium(url))))",
+          fields: "nextPageToken,items(id,snippet(title,channelTitle,thumbnails(medium(url))))",
           maxResults: @page_size,
           pageToken: cursor,
           order: :relevance,
@@ -121,6 +128,8 @@ defmodule Ret.MediaSearch do
           type: :video,
           key: api_key
         )
+
+      Logger.info("YT Search #{q} | #{filter} | #{cursor}")
 
       res =
         "https://www.googleapis.com/youtube/v3/search?#{query}"
@@ -257,6 +266,47 @@ defmodule Ret.MediaSearch do
     end
   end
 
+  def bing_search(%Ret.MediaSearchQuery{source: "bing_videos", q: q, locale: locale}) when q == nil or q == "" do
+    with api_key when is_binary(api_key) <- resolver_config(:bing_search_api_key) do
+      query =
+        URI.encode_query(
+          mkt: locale || "en-US",
+          safeSearch: :Strict
+        )
+
+      res =
+        "https://westus.api.cognitive.microsoft.com/bing/v7.0/videos/trending?#{query}"
+        |> retry_get_until_success([{"Ocp-Apim-Subscription-Key", api_key}])
+
+      case res do
+        :error ->
+          :error
+
+        res ->
+          decoded_res = res |> Map.get(:body) |> Poison.decode!()
+
+          tiles =
+            decoded_res
+            |> Kernel.get_in(["categories"])
+            |> Kernel.get_in([Access.all(), "subcategories"])
+            |> List.flatten()
+            |> Enum.map(&Kernel.get_in(&1, ["tiles"]))
+            |> List.flatten()
+
+          entries = tiles |> Enum.with_index() |> Enum.map(&bing_trending_api_result_to_entry/1)
+
+          {:commit,
+           %Ret.MediaSearchResult{
+             meta: %Ret.MediaSearchResultMeta{source: "bing_videos", next_cursor: nil},
+             entries: entries,
+             suggestions: []
+           }}
+      end
+    else
+      _ -> nil
+    end
+  end
+
   def bing_search(%Ret.MediaSearchQuery{source: source, cursor: cursor, filter: _filter, q: q, locale: locale}) do
     with api_key when is_binary(api_key) <- resolver_config(:bing_search_api_key) do
       query =
@@ -283,7 +333,13 @@ defmodule Ret.MediaSearch do
           decoded_res = res |> Map.get(:body) |> Poison.decode!()
           next_cursor = decoded_res |> Map.get("nextOffset")
           entries = decoded_res |> Map.get("value") |> Enum.map(&bing_api_result_to_entry(type, &1))
-          suggestions = decoded_res |> Map.get("relatedSearches") |> Enum.map(& &1["text"])
+
+          suggestions =
+            if decoded_res["relatedSearches"] do
+              decoded_res |> Map.get("relatedSearches") |> Enum.map(& &1["text"])
+            else
+              []
+            end
 
           {:commit,
            %Ret.MediaSearchResult{
@@ -475,22 +531,53 @@ defmodule Ret.MediaSearch do
   defp bing_api_result_to_entry(type, result) do
     object_type = type |> String.replace(~r/s$/, "")
 
+    attributions = %{}
+
+    attributions =
+      if result["publisher"] do
+        attributions |> Map.put(:publisher, result["publisher"] |> Enum.at(0))
+      else
+        attributions
+      end
+
+    attributions =
+      if result["creator"] do
+        attributions |> Map.put(:creator, result["creator"])
+      else
+        attributions
+      end
+
     %{
       id: result["#{object_type}Id"],
       type: "bing_#{object_type}",
       name: result["name"],
-      attributions:
-        if result["publisher"] do
-          %{publisher: result["publisher"] |> Enum.at(0), creator: result["creator"]}
-        else
-          %{}
-        end,
+      attributions: attributions,
       url: result["contentUrl"],
       images: %{
         preview: %{
           url: result["thumbnailUrl"],
           width: result["thumbnail"]["width"],
           height: result["thumbnail"]["height"]
+        }
+      }
+    }
+  end
+
+  defp bing_trending_api_result_to_entry({result, index}) do
+    search_url = result["query"]["webSearchUrl"] |> URI.parse()
+    search_query = search_url.query |> URI.decode_query()
+
+    %{
+      id: index,
+      type: "bing_video",
+      name: result["query"]["displayText"],
+      url: result["image"]["contentUrl"],
+      lucky_query: search_query["q"],
+      images: %{
+        preview: %{
+          url: result["image"]["thumbnailUrl"],
+          width: 474,
+          height: 248
         }
       }
     }
