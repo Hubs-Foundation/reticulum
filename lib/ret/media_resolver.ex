@@ -277,7 +277,7 @@ defmodule Ret.MediaResolver do
     parsed_og = resp.body |> OpenGraph.parse()
 
     thumbnail =
-      if parsed_og[:image] do
+      if parsed_og && parsed_og[:image] do
         parsed_og[:image]
       else
         nil
