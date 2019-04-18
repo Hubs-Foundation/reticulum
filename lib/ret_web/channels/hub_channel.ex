@@ -64,18 +64,18 @@ defmodule RetWeb.HubChannel do
 
     has_perms_token = perms_token != nil
 
-    decode_result = perms_token |> Ret.PermsToken.decode_and_verify()
+    decoded_perms = perms_token |> Ret.PermsToken.decode_and_verify()
 
     perms_token_can_join =
-      case decode_result do
+      case decoded_perms do
         {:ok, %{"join_hub" => true}} -> true
         _ -> false
       end
 
     {oauth_account_id, oauth_source} =
-      case decode_result do
+      case decoded_perms do
         {:ok, %{"oauth_account_id" => oauth_account_id, "oauth_source" => oauth_source}} ->
-          {oauth_account_id, oauth_source}
+          {oauth_account_id, oauth_source |> String.to_atom()}
 
         _ ->
           {nil, nil}
@@ -320,7 +320,7 @@ defmodule RetWeb.HubChannel do
       |> hub_for_socket
       |> get_perms_token(%Ret.OAuthProvider{
         provider_account_id: oauth_account_id,
-        source: oauth_source |> String.to_atom()
+        source: oauth_source
       })
 
     {:reply, {:ok, %{perms_token: perms_token}}, socket}
@@ -424,8 +424,69 @@ defmodule RetWeb.HubChannel do
   end
 
   defp presence_meta_for_socket(socket) do
-    socket.assigns |> Map.take([:presence, :profile, :context])
+    socket.assigns
+    |> maybe_override_display_name(socket)
+    |> Map.take([:presence, :profile, :context])
   end
+
+  # Hubs Bot can set their own display name.
+  defp maybe_override_display_name(
+         %{
+           hub_requires_oauth: true,
+           has_valid_bot_access_key: true
+         } = assigns,
+         _socket
+       ),
+       do: assigns
+
+  # Do a direct display name lookup for OAuth users without a verified email (and thus, no Hubs account).
+  defp maybe_override_display_name(
+         %{
+           hub_requires_oauth: true,
+           oauth_source: oauth_source,
+           oauth_account_id: oauth_account_id
+         } = assigns,
+         _socket
+       )
+       when not is_nil(oauth_source) and not is_nil(oauth_account_id) do
+    display_name =
+      Ret.HubBinding.fetch_display_name(%Ret.OAuthProvider{
+        source: oauth_source,
+        provider_account_id: oauth_account_id
+      })
+
+    assigns |> Map.merge(%{profile: %{"displayName" => display_name}})
+  end
+
+  # If there isn't an oauth account id on the socket, we expect the user to have an account
+  defp maybe_override_display_name(
+         %{
+           hub_requires_oauth: true,
+           hub_sid: hub_sid,
+           oauth_account_id: oauth_account_id
+         } = assigns,
+         socket
+       )
+       when is_nil(oauth_account_id) do
+    hub = Hub |> Repo.get_by(hub_sid: hub_sid) |> Repo.preload(:hub_bindings)
+    account = Guardian.Phoenix.Socket.current_resource(socket)
+
+    # Note: There's no way tell which oauth_provider a user would like to identify with. We're just going to pick
+    # the first one for now.
+    oauth_provider = account |> Account.matching_oauth_providers(hub) |> Enum.at(0)
+    display_name = Ret.HubBinding.fetch_display_name(oauth_provider)
+
+    assigns |> Map.merge(%{profile: %{"displayName" => display_name}})
+  end
+
+  # We don't override display names for unbound hubs
+  defp maybe_override_display_name(
+         %{
+           hub_requires_oauth: false
+         } = assigns,
+         _socket
+       ),
+       do: assigns
 
   defp join_with_hub(nil, _account, _socket, _params) do
     Statix.increment("ret.channels.hub.joins.not_found")
@@ -479,18 +540,21 @@ defmodule RetWeb.HubChannel do
     with socket <-
            socket
            |> assign(:hub_sid, hub.hub_sid)
+           |> assign(:hub_requires_oauth, params[:hub_requires_oauth])
            |> assign(:presence, :lobby)
            |> assign(:oauth_account_id, params[:oauth_account_id])
-           |> assign(:oauth_source, params[:oauth_source]),
+           |> assign(:oauth_source, params[:oauth_source])
+           |> assign(:has_valid_bot_access_key, params[:has_valid_bot_access_key]),
          response <- HubView.render("show.json", %{hub: hub}) do
-      response = response |> Map.put(:session_id, socket.assigns.session_id)
-      response = response |> Map.put(:session_token, socket.assigns.session_id |> Ret.SessionToken.token_for_session())
-
-      response = response |> Map.put(:subscriptions, %{web_push: is_push_subscribed})
-
       perms_token = params["perms_token"] || get_perms_token(hub, account)
 
-      response = response |> Map.put(:perms_token, perms_token)
+      response =
+        response
+        |> Map.put(:session_id, socket.assigns.session_id)
+        |> Map.put(:session_token, socket.assigns.session_id |> Ret.SessionToken.token_for_session())
+        |> Map.put(:subscriptions, %{web_push: is_push_subscribed})
+        |> Map.put(:perms_token, perms_token)
+        |> Map.put(:hub_requires_oauth, params[:hub_requires_oauth])
 
       existing_stat_count =
         socket
