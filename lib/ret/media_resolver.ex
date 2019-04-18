@@ -191,8 +191,11 @@ defmodule Ret.MediaResolver do
     resolve_sketchfab_model(model_id, uri)
   end
 
-  defp resolve_non_video(%URI{} = uri, _root_host) do
+  defp resolve_non_video(%URI{host: host} = uri, _root_host) do
     photomnemonic_endpoint = module_config(:photomnemonic_endpoint)
+
+    # Crawl og tags for hubs rooms + scenes
+    is_local_url = host === RetWeb.Endpoint.host()
 
     # For text/html pages we use the screenshotter, otherwise return the raw URL.
     # Try HEAD, if HEAD fails then do a GET and check content type.
@@ -203,7 +206,7 @@ defmodule Ret.MediaResolver do
           %HTTPoison.Response{headers: headers} = res ->
             content_type = headers |> content_type_from_headers
 
-            if photomnemonic_endpoint && content_type |> String.starts_with?("text/html") do
+            if !is_local_url && photomnemonic_endpoint && content_type |> String.starts_with?("text/html") do
               screenshot_commit_for_uri(uri, content_type)
             else
               og_tag_commit_for_response(uri, res)
@@ -216,7 +219,7 @@ defmodule Ret.MediaResolver do
       %HTTPoison.Response{headers: headers} ->
         content_type = headers |> content_type_from_headers
 
-        if photomnemonic_endpoint && content_type |> String.starts_with?("text/html") do
+        if !is_local_url && photomnemonic_endpoint && content_type |> String.starts_with?("text/html") do
           screenshot_commit_for_uri(uri, content_type)
         else
           case uri |> URI.to_string() |> retry_get_until_success([{"Range", "bytes=0-32768"}]) do
