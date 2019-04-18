@@ -5,7 +5,7 @@ end
 
 defmodule Ret.MediaResolverQuery do
   @enforce_keys [:url]
-  defstruct [:url, supports_webm: true]
+  defstruct [:url, supports_webm: true, low_resolution: false]
 end
 
 defmodule Ret.MediaResolver do
@@ -15,9 +15,6 @@ defmodule Ret.MediaResolver do
   alias Ret.{CachedFile, MediaResolverQuery, Statix}
 
   @ytdl_valid_status_codes [200, 302, 500]
-  @ytdl_default_query "best[protocol*=http]/best[protocol*=m3u8]"
-  @ytdl_non_webm_query "best[ext=mp4][protocol*=http]/best[ext=mp4][protocol*=m3u8]"
-  @ytdl_crunchyroll_query "best[format_id*=hardsub-enUS]/" <> @ytdl_default_query
 
   @non_video_root_hosts [
     "sketchfab.com",
@@ -46,17 +43,8 @@ defmodule Ret.MediaResolver do
     resolve_non_video(uri, root_host)
   end
 
-  def resolve(%MediaResolverQuery{url: %URI{} = uri}, "crunchyroll.com" = root_host) do
-    # Prefer a version with baked in (english) subtitles. Client locale should eventually determine this
-    resolve_with_ytdl(uri, root_host, @ytdl_crunchyroll_query)
-  end
-
-  def resolve(%MediaResolverQuery{url: %URI{} = uri, supports_webm: true}, root_host) do
-    resolve_with_ytdl(uri, root_host, @ytdl_default_query)
-  end
-
-  def resolve(%MediaResolverQuery{url: %URI{} = uri, supports_webm: false}, root_host) do
-    resolve_with_ytdl(uri, root_host, @ytdl_non_webm_query)
+  def resolve(%MediaResolverQuery{url: %URI{} = uri} = query, root_host) do
+    resolve_with_ytdl(uri, root_host, query |> ytdl_query(root_host))
   end
 
   def resolve_with_ytdl(%URI{} = uri, root_host, ytdl_format) do
@@ -391,4 +379,35 @@ defmodule Ret.MediaResolver do
   defp module_config(key) do
     Application.get_env(:ret, __MODULE__)[key]
   end
+
+  defp ytdl_resolution(%MediaResolverQuery{low_resolution: true}), do: "480"
+  defp ytdl_resolution(_query), do: "720"
+
+  defp ytdl_query(query, "crunchyroll.com") do
+    resolution = query |> ytdl_resolution
+    ext = query |> ytdl_ext
+
+    # Prefer a version with baked in (english) subtitles. Client locale should eventually determine this
+    crunchy_query =
+      ["best#{ext}[format_id*=hardsub-enUS][height<=?#{resolution}]", "best#{ext}[format_id*=hardsub-enUS]"]
+      |> Enum.join("/")
+
+    crunchy_query <> "/" <> ytdl_query(query, nil)
+  end
+
+  defp ytdl_query(query, _root_host) do
+    resolution = query |> ytdl_resolution
+    ext = query |> ytdl_ext
+
+    [
+      "best#{ext}[protocol*=http][height<=?#{resolution}]",
+      "best#{ext}[protocol*=m3u8][height<=?#{resolution}]",
+      "best#{ext}[protocol*=http]",
+      "best#{ext}[protocol*=m3u8]"
+    ]
+    |> Enum.join("/")
+  end
+
+  def ytdl_ext(%MediaResolverQuery{supports_webm: false}), do: "[ext=mp4]"
+  def ytdl_ext(_query), do: ""
 end

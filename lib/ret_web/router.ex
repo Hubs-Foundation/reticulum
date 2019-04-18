@@ -91,8 +91,10 @@ defmodule RetWeb.Router do
       resources("/scenes", Api.V1.SceneController, only: [:create, :update])
       resources("/avatars", Api.V1.AvatarController, only: [:create, :update])
       resources("/hubs", Api.V1.HubController, only: [:update])
-      resources("/projects", Api.V1.ProjectController, only: [:index, :show, :create, :update])
-      resources("/projects/:id/assets", Api.V1.ProjectAssetsController, only: [:index, :create])
+      resources("/assets", Api.V1.AssetsController, only: [:create, :delete])
+      resources("/projects", Api.V1.ProjectController, only: [:index, :show, :create, :update, :delete]) do
+        resources("/assets", Api.V1.ProjectAssetsController, only: [:index, :create, :delete])
+      end
     end
   end
 

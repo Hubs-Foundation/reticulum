@@ -91,11 +91,22 @@ defmodule Ret.TestHelpers do
     {:ok, project: project}
   end
 
-  def create_project_asset(%{account: account, project: project, thumbnail_owned_file: owned_file}) do
+  def create_asset(%{account: account, thumbnail_owned_file: owned_file}) do
     {:ok, asset} =
       %Asset{}
       |> Asset.changeset(account, owned_file, owned_file, %{
         name: "Test Asset"
+      })
+      |> Repo.insert_or_update()
+
+    {:ok, asset: asset}
+  end
+
+  def create_project_asset(%{account: account, project: project, thumbnail_owned_file: owned_file}) do
+    {:ok, asset} =
+      %Asset{}
+      |> Asset.changeset(account, owned_file, owned_file, %{
+        name: "Test Project Asset"
       })
       |> Repo.insert_or_update()
 

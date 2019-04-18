@@ -1,4 +1,8 @@
 defmodule Ret.PermsToken do
+  @moduledoc """
+  PermsTokens grant granular permissions to users in various contexts.
+  They are signed with an RSA algorithm so that external systems can verify tokens with our corresponding public key.
+  """
   use Guardian, otp_app: :ret, secret_fetcher: Ret.PermsTokenSecretFetcher, allowed_algos: ["RS512"]
 
   def subject_for_token(_resource, %{"account_id" => account_id, "hub_id" => hub_id}) do

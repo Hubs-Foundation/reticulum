@@ -61,8 +61,13 @@ defmodule RetWeb.Api.V1.MediaController do
       |> UAParser.parse()
 
     supports_webm = ua.family != "Safari" && ua.family != "Mobile Safari"
+    low_resolution = ua.os.family == "Android" || ua.os.family == "iOS"
 
-    case Cachex.fetch(:media_urls, %Ret.MediaResolverQuery{url: url, supports_webm: supports_webm}) do
+    case Cachex.fetch(:media_urls, %Ret.MediaResolverQuery{
+           url: url,
+           supports_webm: supports_webm,
+           low_resolution: low_resolution
+         }) do
       {_status, nil} ->
         conn |> send_resp(404, "")
 

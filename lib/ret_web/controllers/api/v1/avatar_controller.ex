@@ -36,7 +36,7 @@ defmodule RetWeb.Api.V1.AvatarController do
          %Account{account_id: account_id}
        )
        when not is_nil(avatar_account_id) and avatar_account_id != account_id do
-    conn |> send_resp(401, "")
+    conn |> send_resp(401, "You do not own this avatar")
   end
 
   defp create_or_update(conn, params, avatar, account) do
@@ -87,7 +87,7 @@ defmodule RetWeb.Api.V1.AvatarController do
         conn |> send_resp(404, "no such file(s)")
 
       {:error, :not_allowed} ->
-        conn |> send_resp(401, "")
+        conn |> send_resp(401, "not allowed to promote file(s)")
     end
   end
 
