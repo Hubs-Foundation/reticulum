@@ -83,7 +83,7 @@ config :ret, Ret.Scheduler,
   ]
 
 config :ret, RetWeb.Plugs.HeaderAuthorization, header_name: "x-ret-admin-access-key"
-config :secure_headers, SecureHeaders, secure_headers: []
+config :ret, RetWeb.AddCSPPlug, content_security_policy: nil
 
 config :ret, Ret.Mailer,
   adapter: Bamboo.SMTPAdapter,

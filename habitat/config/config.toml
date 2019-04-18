@@ -99,7 +99,7 @@ slack_webhook_url = "{{ cfg.support.slack_webhook_url }}"
 token = "{{ cfg.discord.bot_token }}"
 hostnames = "{{ cfg.discord.hostnames }}"
 
-[secure_headers."Elixir.SecureHeaders.secure_headers".config]
+[secure_headers."Elixir.RetWeb.AddCSPPlug"]
 content_security_policy = "{{ cfg.security.content_security_policy }}"
 
 [web_push_encryption.vapid_details]
