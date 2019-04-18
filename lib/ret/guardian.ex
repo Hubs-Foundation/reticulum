@@ -1,4 +1,7 @@
 defmodule Ret.Guardian do
+  @moduledoc """
+  This is our primary, long-lived, authenticion token. We used to sign clients in and associate them with a Ret.Account.
+  """
   use Guardian, otp_app: :ret
   import Ecto.Query
 
