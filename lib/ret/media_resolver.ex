@@ -232,12 +232,22 @@ defmodule Ret.MediaResolver do
 
   defp screenshot_commit_for_uri(uri, content_type) do
     photomnemonic_endpoint = module_config(:photomnemonic_endpoint)
+    photomnemonic_api_id = module_config(:photomnemonic_api_id)
+
     query = URI.encode_query(url: uri |> URI.to_string())
 
     cached_file_result =
       CachedFile.fetch("screenshot-#{query}", fn path ->
         Statix.increment("ret.media_resolver.screenshot.requests")
-        Download.from("#{photomnemonic_endpoint}/screenshot?#{query}", path: path)
+
+        headers =
+          if photomnemonic_api_id do
+            %{"x-amzn-apigateway-api-id" => photomnemonic_api_id}
+          else
+            %{}
+          end
+
+        Download.from("#{photomnemonic_endpoint}/screenshot?#{query}", path: path, headers: headers)
 
         {:ok, %{content_type: "image/png"}}
       end)

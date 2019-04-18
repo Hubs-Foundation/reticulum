@@ -115,7 +115,8 @@ config :ret, Ret.MediaResolver,
   youtube_api_key: nil,
   sketchfab_api_key: nil,
   ytdl_host: "http://localhost:9191",
-  photomnemonic_endpoint: nil
+  photomnemonic_endpoint: "https://bf3wuh016f.execute-api.us-west-1.amazonaws.com/prod",
+  photomnemonic_api_id: nil
 
 config :ret, Ret.Storage,
   storage_path: "storage/dev",
