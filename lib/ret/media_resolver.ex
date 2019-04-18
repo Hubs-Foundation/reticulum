@@ -247,7 +247,8 @@ defmodule Ret.MediaResolver do
             %{}
           end
 
-        Download.from("#{photomnemonic_endpoint}/screenshot?#{query}", path: path, headers: headers)
+        url = "#{photomnemonic_endpoint}/screenshot?#{query}"
+        {:ok, _path} = Download.from(url, path: path, headers: headers)
 
         {:ok, %{content_type: "image/png"}}
       end)
