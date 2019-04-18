@@ -277,24 +277,13 @@ defmodule Ret.MediaResolver do
     parsed_og = resp.body |> OpenGraph.parse()
 
     thumbnail =
-      if parsed_og && parsed_og[:image] do
-        parsed_og[:image]
+      if parsed_og && parsed_og.image do
+        parsed_og.image
       else
         nil
       end
 
-    [uri, meta] =
-      case parsed_og do
-        %{video: video} when is_binary(video) ->
-          [URI.parse(video), %{expected_content_type: "video/*", thumbnail: thumbnail}]
-
-        # don't send image/*
-        %{image: image} when is_binary(image) ->
-          [URI.parse(image), %{thumbnail: thumbnail}]
-
-        _ ->
-          [uri, %{expected_content_type: content_type_from_headers(resp.headers), thumbail: thumbnail}]
-      end
+    meta = %{expected_content_type: content_type_from_headers(resp.headers), thumbnail: thumbnail}
 
     {:commit, uri |> resolved(meta)}
   end
