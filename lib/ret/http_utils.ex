@@ -5,6 +5,16 @@ defmodule Ret.HttpUtils do
   def retry_get_until_success(url, headers \\ []), do: retry_until_success(:get, url, "", headers)
   def retry_post_until_success(url, body, headers \\ []), do: retry_until_success(:post, url, body, headers)
 
+  def retry_head_then_get_until_success(url, headers \\ []) do
+    case url |> retry_head_until_success(headers) do
+      :error ->
+        url |> retry_get_until_success(headers)
+
+      res ->
+        res
+    end
+  end
+
   def retry_until_success(verb, url, body \\ "", headers \\ []) do
     retry with: exp_backoff() |> randomize |> cap(5_000) |> expiry(10_000) do
       case HTTPoison.request(verb, url, body, headers, follow_redirect: true) do

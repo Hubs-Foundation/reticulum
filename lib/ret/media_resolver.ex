@@ -197,38 +197,20 @@ defmodule Ret.MediaResolver do
     # Crawl og tags for hubs rooms + scenes
     is_local_url = host === RetWeb.Endpoint.host()
 
-    # For text/html pages we use the screenshotter, otherwise return the raw URL.
-    # Try HEAD, if HEAD fails then do a GET and check content type.
-    # If HEAD works, check content type.
-    case uri |> URI.to_string() |> retry_head_until_success() do
+    case uri |> URI.to_string() |> retry_head_then_get_until_success([{"Range", "bytes=0-32768"}]) do
       :error ->
-        case uri |> URI.to_string() |> retry_get_until_success([{"Range", "bytes=0-32768"}]) do
-          %HTTPoison.Response{headers: headers} = res ->
-            content_type = headers |> content_type_from_headers
-
-            if !is_local_url && photomnemonic_endpoint && content_type |> String.starts_with?("text/html") do
-              screenshot_commit_for_uri(uri, content_type)
-            else
-              og_tag_commit_for_response(uri, res)
-            end
-
-          :error ->
-            nil
-        end
+        nil
 
       %HTTPoison.Response{headers: headers} ->
         content_type = headers |> content_type_from_headers
 
         if !is_local_url && photomnemonic_endpoint && content_type |> String.starts_with?("text/html") do
-          screenshot_commit_for_uri(uri, content_type)
-        else
-          case uri |> URI.to_string() |> retry_get_until_success([{"Range", "bytes=0-32768"}]) do
-            :error ->
-              nil
-
-            resp ->
-              og_tag_commit_for_response(uri, resp)
+          case uri |> screenshot_commit_for_uri(content_type) do
+            :error -> uri |> og_tag_commit_for_uri()
+            commit -> commit
           end
+        else
+          uri |> og_tag_commit_for_uri()
         end
     end
   end
@@ -251,9 +233,11 @@ defmodule Ret.MediaResolver do
           end
 
         url = "#{photomnemonic_endpoint}/screenshot?#{query}"
-        {:ok, _path} = Download.from(url, path: path, headers: headers)
 
-        {:ok, %{content_type: "image/png"}}
+        case Download.from(url, path: path, headers: headers) do
+          {:ok, _path} -> {:ok, %{content_type: "image/png"}}
+          error -> {:error, error}
+        end
       end)
 
     case cached_file_result do
@@ -267,25 +251,31 @@ defmodule Ret.MediaResolver do
     end
   end
 
-  defp og_tag_commit_for_response(uri, resp) do
-    # note that there exist og:image:type and og:video:type tags we could use,
-    # but our OpenGraph library fails to parse them out.
-    # also, we could technically be correct to emit an "image/*" content type from the OG image case,
-    # but our client right now will be confused by that because some images need to turn into
-    # image-like views and some (GIFs) need to turn into video-like views.
+  defp og_tag_commit_for_uri(uri) do
+    case uri |> URI.to_string() |> retry_get_until_success([{"Range", "bytes=0-32768"}]) do
+      :error ->
+        :error
 
-    parsed_og = resp.body |> OpenGraph.parse()
+      resp ->
+        # note that there exist og:image:type and og:video:type tags we could use,
+        # but our OpenGraph library fails to parse them out.
+        # also, we could technically be correct to emit an "image/*" content type from the OG image case,
+        # but our client right now will be confused by that because some images need to turn into
+        # image-like views and some (GIFs) need to turn into video-like views.
 
-    thumbnail =
-      if parsed_og && parsed_og.image do
-        parsed_og.image
-      else
-        nil
-      end
+        parsed_og = resp.body |> OpenGraph.parse()
 
-    meta = %{expected_content_type: content_type_from_headers(resp.headers), thumbnail: thumbnail}
+        thumbnail =
+          if parsed_og && parsed_og.image do
+            parsed_og.image
+          else
+            nil
+          end
 
-    {:commit, uri |> resolved(meta)}
+        meta = %{expected_content_type: content_type_from_headers(resp.headers), thumbnail: thumbnail}
+
+        {:commit, uri |> resolved(meta)}
+    end
   end
 
   defp resolve_sketchfab_model(model_id, %URI{} = uri) do
