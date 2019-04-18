@@ -131,19 +131,15 @@ websocket_hosts =
     "https://#{host}:4000 https://#{host}:8080 wss://#{host}:4000 wss://#{host}:8080 wss://#{host}:9090 " <>
     "wss://#{dev_janus_host} wss://prod-janus.reticulum.io"
 
-config :secure_headers, SecureHeaders,
-  secure_headers: [
-    config: [
-      content_security_policy:
-        "default-src 'none'; script-src 'self' #{asset_hosts} https://cdn.rawgit.com https://aframe.io 'unsafe-eval'; worker-src 'self' blob:; font-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://cdn.aframe.io #{
-          asset_hosts
-        }; style-src 'self' https://fonts.googleapis.com #{asset_hosts} 'unsafe-inline'; connect-src 'self' https://sentry.prod.mozaws.net https://dpdb.webvr.rocks #{
-          asset_hosts
-        } #{websocket_hosts} https://cdn.aframe.io https://www.mozilla.org data: blob:; img-src 'self' #{asset_hosts} https://cdn.aframe.io data: blob:; media-src 'self' #{
-          asset_hosts
-        } data: blob:; frame-src 'self'; frame-ancestors 'self'; base-uri 'none'; form-action 'self';"
-    ]
-  ]
+config :ret, RetWeb.AddCSPPlug,
+  content_security_policy:
+    "default-src 'none'; script-src 'self' #{asset_hosts} https://cdn.rawgit.com https://aframe.io 'unsafe-eval'; worker-src 'self' blob:; font-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://cdn.aframe.io #{
+      asset_hosts
+    }; style-src 'self' https://fonts.googleapis.com #{asset_hosts} 'unsafe-inline'; connect-src 'self' https://sentry.prod.mozaws.net https://dpdb.webvr.rocks #{
+      asset_hosts
+    } #{websocket_hosts} https://cdn.aframe.io https://www.mozilla.org data: blob:; img-src 'self' #{asset_hosts} https://cdn.aframe.io data: blob:; media-src 'self' #{
+      asset_hosts
+    } data: blob:; frame-src 'self'; frame-ancestors 'self'; base-uri 'none'; form-action 'self';"
 
 config :ret, Ret.Mailer, adapter: Bamboo.LocalAdapter
 
