@@ -191,34 +191,91 @@ defmodule Ret.MediaResolver do
     resolve_sketchfab_model(model_id, uri)
   end
 
-  defp resolve_non_video(%URI{} = uri, _root_host) do
-    # Fall back on og: tags
-    [uri, meta] =
-      case uri |> URI.to_string() |> retry_get_until_success([{"Range", "bytes=0-32768"}]) do
-        :error ->
-          nil
+  defp resolve_non_video(%URI{host: host} = uri, _root_host) do
+    photomnemonic_endpoint = module_config(:photomnemonic_endpoint)
 
+    # Crawl og tags for hubs rooms + scenes
+    is_local_url = host === RetWeb.Endpoint.host()
+
+    case uri |> URI.to_string() |> retry_head_then_get_until_success([{"Range", "bytes=0-32768"}]) do
+      :error ->
+        nil
+
+      %HTTPoison.Response{headers: headers} ->
+        content_type = headers |> content_type_from_headers
+
+        if !is_local_url && photomnemonic_endpoint && content_type |> String.starts_with?("text/html") do
+          case uri |> screenshot_commit_for_uri(content_type) do
+            :error -> uri |> og_tag_commit_for_uri()
+            commit -> commit
+          end
+        else
+          uri |> og_tag_commit_for_uri()
+        end
+    end
+  end
+
+  defp screenshot_commit_for_uri(uri, content_type) do
+    photomnemonic_endpoint = module_config(:photomnemonic_endpoint)
+    photomnemonic_api_id = module_config(:photomnemonic_api_id)
+
+    query = URI.encode_query(url: uri |> URI.to_string())
+
+    cached_file_result =
+      CachedFile.fetch("screenshot-#{query}", fn path ->
+        Statix.increment("ret.media_resolver.screenshot.requests")
+
+        headers =
+          if photomnemonic_api_id do
+            %{"x-amzn-apigateway-api-id" => photomnemonic_api_id}
+          else
+            %{}
+          end
+
+        url = "#{photomnemonic_endpoint}/screenshot?#{query}"
+
+        case Download.from(url, path: path, headers: headers) do
+          {:ok, _path} -> {:ok, %{content_type: "image/png"}}
+          error -> {:error, error}
+        end
+      end)
+
+    case cached_file_result do
+      {:ok, file_uri} ->
+        meta = %{thumbnail: file_uri |> URI.to_string(), expected_content_type: content_type}
+
+        {:commit, uri |> resolved(meta)}
+
+      {:error, _reason} ->
+        :error
+    end
+  end
+
+  defp og_tag_commit_for_uri(uri) do
+    case uri |> URI.to_string() |> retry_get_until_success([{"Range", "bytes=0-32768"}]) do
+      :error ->
+        :error
+
+      resp ->
         # note that there exist og:image:type and og:video:type tags we could use,
         # but our OpenGraph library fails to parse them out.
-
         # also, we could technically be correct to emit an "image/*" content type from the OG image case,
         # but our client right now will be confused by that because some images need to turn into
         # image-like views and some (GIFs) need to turn into video-like views.
-        resp ->
-          case resp.body |> OpenGraph.parse() do
-            %{video: video} when is_binary(video) ->
-              [URI.parse(video), %{expected_content_type: "video/*"}]
 
-            # don't send image/*
-            %{image: image} when is_binary(image) ->
-              [URI.parse(image), %{}]
+        parsed_og = resp.body |> OpenGraph.parse()
 
-            _ ->
-              [uri, %{expected_content_type: content_type_from_headers(resp.headers)}]
+        thumbnail =
+          if parsed_og && parsed_og.image do
+            parsed_og.image
+          else
+            nil
           end
-      end
 
-    {:commit, uri |> resolved(meta)}
+        meta = %{expected_content_type: content_type_from_headers(resp.headers), thumbnail: thumbnail}
+
+        {:commit, uri |> resolved(meta)}
+    end
   end
 
   defp resolve_sketchfab_model(model_id, %URI{} = uri) do
