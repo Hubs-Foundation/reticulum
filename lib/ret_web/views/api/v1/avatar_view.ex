@@ -28,6 +28,7 @@ defmodule RetWeb.Api.V1.AvatarView do
       allow_remixing: avatar.allow_remixing,
       allow_promotion: avatar.allow_promotion,
       gltf_url: "#{RetWeb.Endpoint.url()}/api/v1/avatars/#{avatar.avatar_sid}/avatar.gltf?v=#{version}",
+      base_gltf_url: "#{RetWeb.Endpoint.url()}/api/v1/avatars/#{avatar.avatar_sid}/base.gltf?v=#{version}",
       files:
         for col <- Avatar.file_columns(), into: %{} do
           key = col |> Atom.to_string() |> String.replace_suffix("_owned_file", "")
