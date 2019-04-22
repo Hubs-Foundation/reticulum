@@ -258,7 +258,7 @@ end
 
 defimpl Canada.Can, for: Ret.Account do
   # Always deny access to non-enterable hubs
-  def can?(_account, :join_hub, %Ret.Hub{entry_mode: :deny}), do: false
+  def can?(%Ret.Account{}, :join_hub, %Ret.Hub{entry_mode: :deny}), do: false
 
   def can?(%Ret.Account{} = account, :join_hub, %Ret.Hub{hub_bindings: hub_bindings})
       when hub_bindings |> length > 0 do
@@ -266,8 +266,7 @@ defimpl Canada.Can, for: Ret.Account do
   end
 
   def can?(%Ret.Account{} = account, action, %Ret.Hub{hub_bindings: hub_bindings})
-      when action in [:update_hub, :close_hub]
-      when hub_bindings |> length > 0 do
+      when action in [:update_hub, :close_hub] and hub_bindings |> length > 0 do
     hub_bindings |> Enum.any?(&(account |> Ret.HubBinding.can_manage_channel?(&1)))
   end
 
@@ -289,6 +288,9 @@ end
 
 # Perms for oauth users that do not have a hubs account
 defimpl Canada.Can, for: Ret.OAuthProvider do
+  # Always deny access to non-enterable hubs
+  def can?(%Ret.OAuthProvider{}, :join_hub, %Ret.Hub{entry_mode: :deny}), do: false
+
   # OAuthProvider users cannot perform special actions
   def can?(%Ret.OAuthProvider{}, action, %Ret.Hub{}) when action in [:update_hub, :close_hub, :kick_users, :mute_users],
     do: false
@@ -303,6 +305,9 @@ end
 
 # Permissions for un-authenticated clients
 defimpl Canada.Can, for: Atom do
+  # Always deny access to non-enterable hubs
+  def can?(_, :join_hub, %Ret.Hub{entry_mode: :deny}), do: false
+
   # Anyone can join an unbound hub
   def can?(_, :join_hub, %Ret.Hub{hub_bindings: []}), do: true
 
