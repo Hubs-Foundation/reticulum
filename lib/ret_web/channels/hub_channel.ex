@@ -286,6 +286,14 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
+  def handle_in("close_hub", _payload, socket) do
+    socket |> handle_entry_mode_change(:deny)
+  end
+
+  def handle_in("open_hub", _payload, socket) do
+    socket |> handle_entry_mode_change(:allow)
+  end
+
   def handle_in("update_scene", %{"url" => url}, socket) do
     hub = socket |> hub_for_socket |> Repo.preload([:scene, :scene_listing])
     account = Guardian.Phoenix.Socket.current_resource(socket)
@@ -356,6 +364,21 @@ defmodule RetWeb.HubChannel do
   end
 
   def handle_out("mute", _payload, socket), do: {:noreply, socket}
+
+  defp handle_entry_mode_change(socket, entry_mode) do
+    hub = socket |> hub_for_socket
+    account = Guardian.Phoenix.Socket.current_resource(socket)
+
+    if account |> can?(close_hub(hub)) do
+      hub
+      |> Hub.changeset_for_entry_mode(entry_mode)
+      |> Repo.update!()
+      |> Repo.preload(@hub_preloads, force: true)
+      |> broadcast_hub_refresh!(socket, ["entry_mode"])
+    end
+
+    {:noreply, socket}
+  end
 
   defp with_account(socket, handler) do
     case Guardian.Phoenix.Socket.current_resource(socket) do

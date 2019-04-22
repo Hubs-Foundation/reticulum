@@ -27,13 +27,13 @@ defmodule Ret.HubTest do
   test "should deny permissions for non-creator", %{scene: scene} do
     {:ok, hub} = %Hub{} |> Hub.changeset(scene, %{name: "Test Hub"}) |> Repo.insert()
 
-    %{update_hub: false, mute_users: false} =
+    %{update_hub: false, close_hub: false, mute_users: false} =
       hub |> Hub.perms_for_account(Ret.Account.account_for_email("non-creator@mozilla.com"))
   end
 
   test "should deny permissions for anon", %{scene: scene} do
     {:ok, hub} = %Hub{} |> Hub.changeset(scene, %{name: "Test Hub"}) |> Repo.insert()
-    %{update_hub: false, mute_users: false} = hub |> Hub.perms_for_account(nil)
+    %{update_hub: false, close_hub: false, mute_users: false} = hub |> Hub.perms_for_account(nil)
   end
 
   test "should grant permssions for hub creator", %{account: account, scene: scene} do
@@ -43,6 +43,6 @@ defmodule Ret.HubTest do
       |> Hub.add_account_to_changeset(account)
       |> Repo.insert()
 
-    %{update_hub: true, mute_users: true} = hub |> Hub.perms_for_account(account)
+    %{update_hub: true, close_hub: true, mute_users: true} = hub |> Hub.perms_for_account(account)
   end
 end

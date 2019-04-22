@@ -17,7 +17,7 @@ defmodule RetWeb.ProjectsControllerTest do
   end
 
   @tag :authenticated
-  test "projects index works when logged in", %{conn: conn, project: project} do
+  test "projects index works when logged in", %{conn: conn, project: _project} do
     response = conn |> get(api_v1_project_path(conn, :index)) |> json_response(200)
 
     %{
@@ -59,13 +59,12 @@ defmodule RetWeb.ProjectsControllerTest do
   end
 
   test "projects create 401's when not logged in", %{conn: conn} do
-    params = %{ project: %{ name: "Test Project" } }
     conn |> post(api_v1_project_path(conn, :create)) |> response(401)
   end
 
   @tag :authenticated
   test "projects create works when logged in", %{conn: conn} do
-    params = %{ project: %{ name: "Test Project" } }
+    params = %{project: %{name: "Test Project"}}
     response = conn |> post(api_v1_project_path(conn, :create, params)) |> json_response(200)
 
     %{
@@ -81,7 +80,12 @@ defmodule RetWeb.ProjectsControllerTest do
     assert project_id != nil
   end
 
-  test "projects update 401's when not logged in", %{conn: conn, project: project, project_owned_file: project_owned_file, thumbnail_owned_file: thumbnail_owned_file} do
+  test "projects update 401's when not logged in", %{
+    conn: conn,
+    project: project,
+    project_owned_file: project_owned_file,
+    thumbnail_owned_file: thumbnail_owned_file
+  } do
     params = %{
       project: %{
         name: "Test Project 2",
@@ -96,7 +100,12 @@ defmodule RetWeb.ProjectsControllerTest do
   end
 
   @tag :authenticated
-  test "projects update works when logged in", %{conn: conn, project: project, project_owned_file: project_owned_file, thumbnail_owned_file: thumbnail_owned_file} do
+  test "projects update works when logged in", %{
+    conn: conn,
+    project: project,
+    project_owned_file: project_owned_file,
+    thumbnail_owned_file: thumbnail_owned_file
+  } do
     params = %{
       project: %{
         name: "Test Project 2",
@@ -106,7 +115,7 @@ defmodule RetWeb.ProjectsControllerTest do
         project_file_token: project_owned_file.key
       }
     }
-    
+
     response = conn |> patch(api_v1_project_path(conn, :update, project.project_sid, params)) |> json_response(200)
 
     %{
@@ -136,10 +145,15 @@ defmodule RetWeb.ProjectsControllerTest do
   end
 
   @tag :authenticated
-  test "projects delete shows a 404 when the user does not own the project", %{conn: conn, project_owned_file: project_owned_file, thumbnail_owned_file: thumbnail_owned_file} do
+  test "projects delete shows a 404 when the user does not own the project", %{
+    conn: conn,
+    project_owned_file: project_owned_file,
+    thumbnail_owned_file: thumbnail_owned_file
+  } do
     other_account = Account.account_for_email("test2@mozilla.com")
 
-    {:ok, project} = %Project{}
+    {:ok, project} =
+      %Project{}
       |> Project.changeset(other_account, project_owned_file, thumbnail_owned_file, %{
         name: "Test Scene"
       })
