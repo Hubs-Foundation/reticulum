@@ -38,7 +38,7 @@ defmodule RetWeb.Api.V1.HubController do
   def delete(conn, %{"id" => hub_sid}) do
     Hub
     |> Repo.get_by(hub_sid: hub_sid)
-    |> Hub.changeset_to_deny_entry()
+    |> Hub.changeset_for_entry_mode(:deny)
     |> Repo.update!()
 
     conn |> send_resp(200, "OK")

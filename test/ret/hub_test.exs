@@ -26,14 +26,32 @@ defmodule Ret.HubTest do
 
   test "should deny permissions for non-creator", %{scene: scene} do
     {:ok, hub} = %Hub{} |> Hub.changeset(scene, %{name: "Test Hub"}) |> Repo.insert()
+    hub = hub |> Repo.preload([:hub_bindings])
 
-    %{update_hub: false, mute_users: false} =
+    %{join_hub: true, update_hub: false, close_hub: false, mute_users: false} =
       hub |> Hub.perms_for_account(Ret.Account.account_for_email("non-creator@mozilla.com"))
   end
 
   test "should deny permissions for anon", %{scene: scene} do
     {:ok, hub} = %Hub{} |> Hub.changeset(scene, %{name: "Test Hub"}) |> Repo.insert()
-    %{update_hub: false, mute_users: false} = hub |> Hub.perms_for_account(nil)
+    hub = hub |> Repo.preload([:hub_bindings])
+
+    %{join_hub: true, update_hub: false, close_hub: false, mute_users: false} = hub |> Hub.perms_for_account(nil)
+  end
+
+  test "should deny entry for closed hub, allow entry for re-opened hub", %{scene: scene} do
+    {:ok, hub} = %Hub{} |> Hub.changeset(scene, %{name: "Test Hub"}) |> Repo.insert()
+    hub = hub |> Repo.preload([:hub_bindings])
+
+    %{join_hub: true} = hub |> Hub.perms_for_account(nil)
+
+    hub = hub |> Hub.changeset_for_entry_mode(:deny) |> Repo.update!()
+
+    %{join_hub: false} = hub |> Hub.perms_for_account(nil)
+
+    hub = hub |> Hub.changeset_for_entry_mode(:allow) |> Repo.update!()
+
+    %{join_hub: true} = hub |> Hub.perms_for_account(nil)
   end
 
   test "should grant permssions for hub creator", %{account: account, scene: scene} do
@@ -43,6 +61,8 @@ defmodule Ret.HubTest do
       |> Hub.add_account_to_changeset(account)
       |> Repo.insert()
 
-    %{update_hub: true, mute_users: true} = hub |> Hub.perms_for_account(account)
+    hub = hub |> Repo.preload([:hub_bindings])
+
+    %{join_hub: true, update_hub: true, close_hub: true, mute_users: true} = hub |> Hub.perms_for_account(account)
   end
 end
