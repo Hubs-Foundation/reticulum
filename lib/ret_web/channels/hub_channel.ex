@@ -369,7 +369,7 @@ defmodule RetWeb.HubChannel do
       hub
       |> Hub.changeset_for_entry_mode(entry_mode)
       |> Repo.update!()
-      |> Repo.preload(@hub_preloads, force: true)
+      |> Repo.preload(@hub_preloads)
       |> broadcast_hub_refresh!(socket, ["entry_mode"])
     end
 
