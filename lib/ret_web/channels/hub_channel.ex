@@ -290,10 +290,6 @@ defmodule RetWeb.HubChannel do
     socket |> handle_entry_mode_change(:deny)
   end
 
-  def handle_in("open_hub", _payload, socket) do
-    socket |> handle_entry_mode_change(:allow)
-  end
-
   def handle_in("update_scene", %{"url" => url}, socket) do
     hub = socket |> hub_for_socket |> Repo.preload([:scene, :scene_listing])
     account = Guardian.Phoenix.Socket.current_resource(socket)
