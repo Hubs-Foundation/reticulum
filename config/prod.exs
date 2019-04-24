@@ -23,6 +23,15 @@ config :ret, RetWeb.Endpoint,
 # Do not print debug messages in production
 config :logger, level: :info
 
+config :ret, Ret.Repo,
+  adapter: Ecto.Adapters.Postgres,
+  username: "postgres",
+  password: "postgres",
+  database: "ret_production",
+  hostname: "localhost",
+  template: "template0",
+  pool_size: 10
+
 # ## SSL Support
 #
 # To get SSL working, you will need to add the `https` key
