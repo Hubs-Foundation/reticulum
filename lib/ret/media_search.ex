@@ -24,15 +24,31 @@ defmodule Ret.MediaSearch do
   @page_size 24
   @max_face_count 60000
 
-  def search(%Ret.MediaSearchQuery{source: "scene_listings", cursor: cursor, filter: "featured", q: query}) do
+  def search(%Ret.MediaSearchQuery{
+        source: "scene_listings",
+        cursor: cursor,
+        filter: "featured",
+        q: query
+      }) do
     scene_listing_search(cursor, query, "featured", asc: :order)
   end
 
-  def search(%Ret.MediaSearchQuery{source: "scene_listings", cursor: cursor, filter: filter, q: query}) do
+  def search(%Ret.MediaSearchQuery{
+        source: "scene_listings",
+        cursor: cursor,
+        filter: filter,
+        q: query
+      }) do
     scene_listing_search(cursor, query, filter)
   end
 
-  def search(%Ret.MediaSearchQuery{source: "assets", type: type, cursor: cursor, user: account_id, q: query}) do
+  def search(%Ret.MediaSearchQuery{
+        source: "assets",
+        type: type,
+        cursor: cursor,
+        user: account_id,
+        q: query
+      }) do
     assets_search(cursor, type, account_id, query)
   end
 
@@ -216,7 +232,8 @@ defmodule Ret.MediaSearch do
         )
 
       res =
-        "https://api.twitch.tv/kraken/search/streams?#{query}" |> retry_get_until_success([{"Client-ID", client_id}])
+        "https://api.twitch.tv/kraken/search/streams?#{query}"
+        |> retry_get_until_success([{"Client-ID", client_id}])
 
       case res do
         :error ->
@@ -252,7 +269,10 @@ defmodule Ret.MediaSearch do
 
         res ->
           decoded_res = res |> Map.get(:body) |> Poison.decode!()
-          entries = decoded_res |> Map.get("results") |> Enum.map(&sketchfab_api_result_to_entry/1)
+
+          entries =
+            decoded_res |> Map.get("results") |> Enum.map(&sketchfab_api_result_to_entry/1)
+
           cursors = decoded_res |> Map.get("cursors")
 
           {:commit,
@@ -266,7 +286,8 @@ defmodule Ret.MediaSearch do
     end
   end
 
-  def bing_search(%Ret.MediaSearchQuery{source: "bing_videos", q: q, locale: locale}) when q == nil or q == "" do
+  def bing_search(%Ret.MediaSearchQuery{source: "bing_videos", q: q, locale: locale})
+      when q == nil or q == "" do
     with api_key when is_binary(api_key) <- resolver_config(:bing_search_api_key) do
       query =
         URI.encode_query(
@@ -307,7 +328,13 @@ defmodule Ret.MediaSearch do
     end
   end
 
-  def bing_search(%Ret.MediaSearchQuery{source: source, cursor: cursor, filter: _filter, q: q, locale: locale}) do
+  def bing_search(%Ret.MediaSearchQuery{
+        source: source,
+        cursor: cursor,
+        filter: _filter,
+        q: q,
+        locale: locale
+      }) do
     with api_key when is_binary(api_key) <- resolver_config(:bing_search_api_key) do
       query =
         URI.encode_query(
@@ -332,7 +359,9 @@ defmodule Ret.MediaSearch do
         res ->
           decoded_res = res |> Map.get(:body) |> Poison.decode!()
           next_cursor = decoded_res |> Map.get("nextOffset")
-          entries = decoded_res |> Map.get("value") |> Enum.map(&bing_api_result_to_entry(type, &1))
+
+          entries =
+            decoded_res |> Map.get("value") |> Enum.map(&bing_api_result_to_entry(type, &1))
 
           suggestions =
             if decoded_res["relatedSearches"] do
@@ -372,7 +401,9 @@ defmodule Ret.MediaSearch do
   defp add_type_to_asset_search_query(query, nil), do: query
   defp add_type_to_asset_search_query(query, type), do: query |> where([a], a.type == ^type)
   defp add_query_to_asset_search_query(query, nil), do: query
-  defp add_query_to_asset_search_query(query, q), do: query |> where([a], ilike(a.name, ^"%#{q}%"))
+
+  defp add_query_to_asset_search_query(query, q),
+    do: query |> where([a], ilike(a.name, ^"%#{q}%"))
 
   defp result_for_assets_page(page, page_number) do
     %Ret.MediaSearchResult{
@@ -410,7 +441,10 @@ defmodule Ret.MediaSearch do
     results =
       SceneListing
       |> join(:inner, [l], s in assoc(l, :scene))
-      |> where([l, s], l.state == ^"active" and s.state == ^"active" and s.allow_promotion == ^true)
+      |> where(
+        [l, s],
+        l.state == ^"active" and s.state == ^"active" and s.allow_promotion == ^true
+      )
       |> add_query_to_listing_search_query(query)
       |> add_tag_to_listing_search_query(filter)
       |> preload([:screenshot_owned_file, :model_owned_file, :scene_owned_file])
@@ -422,10 +456,14 @@ defmodule Ret.MediaSearch do
   end
 
   defp add_query_to_listing_search_query(query, nil), do: query
-  defp add_query_to_listing_search_query(query, q), do: query |> where([l, s], ilike(l.name, ^"%#{q}%"))
+
+  defp add_query_to_listing_search_query(query, q),
+    do: query |> where([l, s], ilike(l.name, ^"%#{q}%"))
 
   defp add_tag_to_listing_search_query(query, nil), do: query
-  defp add_tag_to_listing_search_query(query, tag), do: query |> where(fragment("tags->'tags' \\? ?", ^tag))
+
+  defp add_tag_to_listing_search_query(query, tag),
+    do: query |> where(fragment("tags->'tags' \\? ?", ^tag))
 
   defp result_for_scene_listing_page(page, page_number) do
     %Ret.MediaSearchResult{
@@ -453,7 +491,9 @@ defmodule Ret.MediaSearch do
       description: scene_listing.description,
       attributions: scene_listing.attributions,
       images: %{
-        preview: %{url: scene_listing.screenshot_owned_file |> OwnedFile.uri_for() |> URI.to_string()}
+        preview: %{
+          url: scene_listing.screenshot_owned_file |> OwnedFile.uri_for() |> URI.to_string()
+        }
       }
     }
   end
@@ -481,7 +521,9 @@ defmodule Ret.MediaSearch do
       id: result["uid"],
       type: "sketchfab_model",
       name: result["name"],
-      attributions: %{creator: %{name: result["user"]["username"], url: result["user"]["profileUrl"]}},
+      attributions: %{
+        creator: %{name: result["user"]["username"], url: result["user"]["profileUrl"]}
+      },
       url: "https://sketchfab.com/models/#{result["uid"]}",
       images: images
     }
