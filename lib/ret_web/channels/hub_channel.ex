@@ -266,6 +266,12 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
+  def handle_in("kill", payload, socket) do
+    IO.inspect(["BPDEBUG got kill signal"])
+    %{missingkey: missingvalue} = payload
+    {:noreply, socket}
+  end
+
   def handle_in("get_host", _args, socket) do
     hub = socket |> hub_for_socket |> Hub.ensure_host()
     {:reply, {:ok, %{host: hub.host}}, socket}
