@@ -94,6 +94,29 @@ defmodule Ret.Avatar do
     |> avatar_to_collapsed_files()
   end
 
+  def version(%Avatar{} = avatar) do
+    avatar.updated_at |> NaiveDateTime.to_erl |> :calendar.datetime_to_gregorian_seconds
+  end
+
+  def url(%Avatar{} = avatar) do
+    "#{RetWeb.Endpoint.url()}/api/v1/avatars/#{avatar.avatar_sid}"
+  end
+
+  def gltf_url(%Avatar{} = avatar) do
+    "#{Avatar.url(avatar)}/avatar.gltf?v=#{Avatar.version(avatar)}"
+  end
+
+  def base_gltf_url(%Avatar{} = avatar) do
+    "#{Avatar.url(avatar)}/base.gltf?v=#{Avatar.version(avatar)}"
+  end
+
+  def file_url_or_nil(%Avatar{} = avatar, column) do
+    case avatar |> Map.get(column) do
+      nil -> nil
+      owned_file -> owned_file |> OwnedFile.uri_for() |> URI.to_string()
+    end
+  end
+
   @doc false
   def changeset(
         %Avatar{} = avatar,
