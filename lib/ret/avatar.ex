@@ -22,7 +22,7 @@ defmodule Ret.Avatar do
     :normal_map_owned_file,
     :orm_map_owned_file
   ]
-  @file_columns [:gltf_owned_file, :bin_owned_file] ++ @image_columns
+  @file_columns [:gltf_owned_file, :bin_owned_file, :thumbnail_owned_file] ++ @image_columns
 
   def image_columns, do: @image_columns
   def file_columns, do: @file_columns
@@ -42,6 +42,7 @@ defmodule Ret.Avatar do
 
     belongs_to(:gltf_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
     belongs_to(:bin_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
+    belongs_to(:thumbnail_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
 
     belongs_to(:base_map_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
 
