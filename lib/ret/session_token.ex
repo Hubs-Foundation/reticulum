@@ -21,7 +21,7 @@ defmodule Ret.SessionToken do
           session_id: session_id,
           aud: :ret_session
         },
-        ttl: {2, :minutes},
+        ttl: {1, :days},
         allowed_drift: 60 * 1000
       )
 

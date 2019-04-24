@@ -32,13 +32,8 @@ defmodule RetWeb.SessionSocket do
 
   defp session_id_for_token(session_token) do
     case session_token |> Ret.SessionToken.decode_and_verify() do
-      {:ok, %{"session_id" => session_id}} ->
-        IO.inspect(["BPDEBUG valid session id"])
-        session_id
-
-      _ ->
-        IO.inspect(["BPDEBUG invalid session id"])
-        nil
+      {:ok, %{"session_id" => session_id}} -> session_id
+      _ -> nil
     end
   end
 
