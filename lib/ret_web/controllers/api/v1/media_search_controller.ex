@@ -29,6 +29,13 @@ defmodule RetWeb.Api.V1.MediaSearchController do
     conn |> render("index.json", results: results)
   end
 
+  def index(conn, %{"source" => "avatars", "user" => user} = params) do
+    {:commit, results} =
+      %Ret.MediaSearchQuery{source: "avatars", cursor: params["cursor"] || "1", user: user |> String.to_integer} |> Ret.MediaSearch.search()
+
+    conn |> render("index.json", results: results)
+  end
+
   def index(conn, %{"source" => "assets", "user" => user} = params) do
     account = conn |> Guardian.Plug.current_resource()
 
