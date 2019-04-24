@@ -99,9 +99,6 @@ defmodule Ret.Application do
         ],
         id: :janus_load_status
       ),
-
-      # Runs Discord bot
-      worker(DiscordBotManager, []),
       supervisor(TheEnd.Of.Phoenix, [[timeout: 10_000, endpoint: RetWeb.Endpoint]])
     ]
 

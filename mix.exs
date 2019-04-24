@@ -20,7 +20,7 @@ defmodule Ret.Mixfile do
   def application do
     [
       mod: {Ret.Application, []},
-      extra_applications: [:runtime_tools, :websocket_client, :canada]
+      extra_applications: [:runtime_tools, :canada]
     ]
   end
 
@@ -51,12 +51,12 @@ defmodule Ret.Mixfile do
       {:cors_plug, "~> 1.5"},
       {:basic_auth, "~> 2.2"},
       {:statix, "~> 1.1"},
-      {:quantum, "~> 2.2"},
+      {:quantum, "~> 2.3"},
       {:credo, "~> 0.9.1", only: [:dev, :test], runtime: false},
       {:plug_attack, "~> 0.3"},
       {:ecto_enum, "~> 1.2"},
       {:the_end, "~> 1.1.0"},
-      {:cachex, "~> 3.0.2"},
+      {:cachex, "~> 3.1"},
       {:retry, "~> 0.10.0"},
       {:open_graph, "~> 0.0.3"},
       {:secure_random, "~> 0.5.1"},
@@ -67,7 +67,6 @@ defmodule Ret.Mixfile do
       {:temp, "~> 0.4"},
       {:timex, "~> 3.4"},
       {:web_push_encryption, "~> 0.2.0"},
-      {:alchemy, "~> 0.6.1", hex: :discord_alchemy},
       {:sentry, "~> 6.0"},
       {:toml, "~> 0.5"},
       {:scrivener_ecto, "~> 1.0"},
