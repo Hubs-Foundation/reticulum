@@ -63,8 +63,17 @@ defmodule RetWeb.ProjectsControllerTest do
   end
 
   @tag :authenticated
-  test "projects create works when logged in", %{conn: conn} do
-    params = %{project: %{name: "Test Project"}}
+  test "projects create works when logged in", %{conn: conn, project_owned_file: project_owned_file, thumbnail_owned_file: thumbnail_owned_file} do
+    params = %{
+      project: %{
+        name: "Test Project",
+        thumbnail_file_id: thumbnail_owned_file.owned_file_uuid,
+        thumbnail_file_token: thumbnail_owned_file.key,
+        project_file_id: project_owned_file.owned_file_uuid,
+        project_file_token: project_owned_file.key
+      }
+    }
+
     response = conn |> post(api_v1_project_path(conn, :create, params)) |> json_response(200)
 
     %{
@@ -75,8 +84,8 @@ defmodule RetWeb.ProjectsControllerTest do
     } = response
 
     assert name == "Test Project"
-    assert thumbnail_url == nil
-    assert project_url == nil
+    assert thumbnail_url != nil
+    assert project_url != nil
     assert project_id != nil
   end
 

@@ -23,24 +23,27 @@ defmodule RetWeb.Api.V1.ProjectController do
 
   def create(conn, %{"project" => params}) do
     account = Guardian.Plug.current_resource(conn)
-
-    case Project.create_project(account, params) do
-      {:ok, project} -> render(conn, "show.json", project: project)
-      {:error, error} -> render_error_json(conn, error)
-    end
+    create_or_update_project(conn, account, params, %Project{})
   end
 
   def update(conn, %{"id" => project_sid, "project" => params}) do
     account = Guardian.Plug.current_resource(conn)
 
+    with %Project{} = project <- Project.project_by_sid_for_account(project_sid, account) do
+      create_or_update_project(conn, account, params, project)
+    else
+      nil -> render_error_json(conn, :not_found)
+    end
+  end
+
+  defp create_or_update_project(conn, account, params, project) do
     promotion_params = %{
       project: {params["project_file_id"], params["project_file_token"]},
       thumbnail: {params["thumbnail_file_id"], params["thumbnail_file_token"]},
     }
 
-    with %Project{} = project <- Project.project_by_sid_for_account(project_sid, account),
-         %{project: {:ok, project_file}, thumbnail: {:ok, thumbnail_file}} <- Storage.promote(promotion_params, account),
-         {:ok, project} <- project |> Project.changeset(account, project_file, thumbnail_file, params) |> Repo.update() do
+    with %{project: {:ok, project_file}, thumbnail: {:ok, thumbnail_file}} <- Storage.promote(promotion_params, account),
+         {:ok, project} <- project |> Project.changeset(account, project_file, thumbnail_file, params) |> Repo.insert_or_update() do
       project = Repo.preload(project, [:project_owned_file, :thumbnail_owned_file])
       render(conn, "show.json", project: project)
     else
