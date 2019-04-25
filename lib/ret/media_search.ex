@@ -280,8 +280,7 @@ defmodule Ret.MediaSearch do
         res ->
           decoded_res = res |> Map.get(:body) |> Poison.decode!()
 
-          entries =
-            decoded_res |> Map.get("results") |> Enum.map(&sketchfab_api_result_to_entry/1)
+          entries = decoded_res |> Map.get("results") |> Enum.map(&sketchfab_api_result_to_entry/1)
 
           cursors = decoded_res |> Map.get("cursors")
 
@@ -370,8 +369,7 @@ defmodule Ret.MediaSearch do
           decoded_res = res |> Map.get(:body) |> Poison.decode!()
           next_cursor = decoded_res |> Map.get("nextOffset")
 
-          entries =
-            decoded_res |> Map.get("value") |> Enum.map(&bing_api_result_to_entry(type, &1))
+          entries = decoded_res |> Map.get("value") |> Enum.map(&bing_api_result_to_entry(type, &1))
 
           suggestions =
             if decoded_res["relatedSearches"] do
@@ -533,13 +531,11 @@ defmodule Ret.MediaSearch do
       description: avatar.description,
       attributions: avatar.attributions,
       images: %{
-        preview:
-          thumbnail &&
-            %{
-              url: thumbnail,
-              width: 720,
-              height: 1280
-            }
+        preview: %{
+          url: thumbnail || "https://placekitten.com/720/1280",
+          width: 720,
+          height: 1280
+        }
       },
       gltfs: %{
         avatar: avatar |> Avatar.gltf_url(),
