@@ -1,7 +1,3 @@
-[ueberauth."Elixir.Ueberauth.Strategy.Google.OAuth"]
-client_id = "{{ cfg.oauth_google.client_id }}"
-client_secret = "{{ cfg.oauth_google.client_secret }}"
-
 [ret."Elixir.RetWeb.Plugs.HeaderAuthorization"]
 header_value = "{{ cfg.phx.admin_access_key }}"
 
@@ -19,9 +15,15 @@ secret_key_base = "{{ cfg.phx.secret_key }}"
 
 [ret."Elixir.RetWeb.Endpoint".url]
 host = "{{ cfg.phx.url_host_prefix }}{{ cfg.phx.url_host }}"
+{{#if cfg.phx.url_port }}
+port = "{{ cfg.phx.url_port }}"
+{{/if}}
 
 [ret."Elixir.RetWeb.Endpoint".static_url]
 host = "{{ cfg.phx.static_url_host_prefix }}{{ cfg.phx.static_url_host }}"
+{{#if cfg.phx.static_url_port }}
+port = "{{ cfg.phx.static_url_port }}"
+{{/if}}
 
 [ret."Elixir.Ret.Repo"]
 username = "{{ cfg.db.username }}"
@@ -50,10 +52,6 @@ perms_key = "{{ cfg.guardian.perms_key }}"
 [ret."Elixir.Ret.OAuthToken"]
 oauth_token_key = "{{ cfg.guardian.oauth_token_key }}"
 
-[ret.basic_auth]
-username = "{{ cfg.basic_auth.username }}"
-password = "{{ cfg.basic_auth.password }}"
-
 [ret]
 farspark_signature_key = "{{ cfg.farspark.signature_key }}"
 farspark_signature_salt = "{{ cfg.farspark.signature_salt }}"
@@ -78,6 +76,7 @@ photomnemonic_endpoint = "{{ cfg.resolver.photomnemonic_endpoint }}"
 [ret."Elixir.Ret.PageOriginWarmer"]
 hubs_page_origin = "{{ cfg.pages.hubs_page_origin }}"
 spoke_page_origin = "{{ cfg.pages.spoke_page_origin }}"
+insecure_ssl = {{ cfg.pages.insecure_ssl }}
 
 [ret."Elixir.Ret.Storage"]
 storage_path = "{{ cfg.uploads.storage_path }}"
@@ -95,10 +94,6 @@ password = "{{ cfg.email.password }}"
 
 [ret."Elixir.Ret.Support"]
 slack_webhook_url = "{{ cfg.support.slack_webhook_url }}"
-
-[ret."Elixir.DiscordBot"]
-token = "{{ cfg.discord.bot_token }}"
-hostnames = "{{ cfg.discord.hostnames }}"
 
 [ret."Elixir.RetWeb.AddCSPPlug"]
 content_security_policy = "{{ cfg.security.content_security_policy }}"

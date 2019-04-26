@@ -39,10 +39,6 @@ defmodule RetWeb.Router do
     plug(RetWeb.Plugs.RedirectToMainDomain)
   end
 
-  pipeline :http_auth do
-    plug(BasicAuth, use_config: {:ret, :basic_auth})
-  end
-
   scope "/health", RetWeb do
     get("/", HealthController, :index)
   end
@@ -81,6 +77,7 @@ defmodule RetWeb.Router do
       resources("/avatars", Api.V1.AvatarController, only: [:create, :update])
       resources("/hubs", Api.V1.HubController, only: [:update])
       resources("/assets", Api.V1.AssetsController, only: [:create, :delete])
+
       resources("/projects", Api.V1.ProjectController, only: [:index, :show, :create, :update, :delete]) do
         resources("/assets", Api.V1.ProjectAssetsController, only: [:index, :create, :delete])
       end
