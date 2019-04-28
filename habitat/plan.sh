@@ -32,6 +32,7 @@ do_verify() {
 do_prepare() {
     export LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
     export MIX_ENV=prod
+    export RELEASE_VERSION="1.0.$(echo $pkg_prefix | cut -d '/' -f 7)" 
 
     # Rebar3 will hate us otherwise because it looks for
     # /usr/bin/env when it does some of its compiling
@@ -48,8 +49,7 @@ do_build() {
 }
 
 do_install() {
-    VERSION_PATH=$(echo $pkg_prefix | cut -d '/' -f 6,7)
-    RELEASE_VERSION="${VERSION_PATH/\//.}" mix release --env=prod
+    mix release --env=prod
     cp -a _build/prod/rel/ret/* ${pkg_prefix}
 
     for f in $(find ${pkg_prefix} -name '*.sh')
