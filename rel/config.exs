@@ -47,7 +47,7 @@ end
 # will be used by default
 
 release :ret do
-  set(version: current_version(:ret))
+  set(version: System.get_env("RELEASE_VERSION") || current_version(:ret))
 
   set(
     applications: [

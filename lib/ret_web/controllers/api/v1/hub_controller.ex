@@ -6,7 +6,7 @@ defmodule RetWeb.Api.V1.HubController do
   # Limit to 1 TPS
   plug(RetWeb.Plugs.RateLimit)
 
-  # Only allow access with secret header
+  # Only allow access to remove hubs with secret header
   plug(RetWeb.Plugs.HeaderAuthorization when action in [:delete])
 
   def create(conn, %{"hub" => %{"scene_id" => scene_id}} = params) do

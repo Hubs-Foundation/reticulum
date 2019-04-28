@@ -1,6 +1,6 @@
 pkg_name=reticulum
 pkg_origin=mozillareality
-pkg_version="0.0.2"
+pkg_version="1.0.0"
 pkg_maintainer="Mozilla Mixed Reality <mixreality@mozilla.com>"
 pkg_upstream_url="http://github.com/mozilla/reticulum"
 pkg_license=('MPL-2.0')
@@ -32,6 +32,7 @@ do_verify() {
 do_prepare() {
     export LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
     export MIX_ENV=prod
+    export RELEASE_VERSION="1.0.$(echo $pkg_prefix | cut -d '/' -f 7)" 
 
     # Rebar3 will hate us otherwise because it looks for
     # /usr/bin/env when it does some of its compiling

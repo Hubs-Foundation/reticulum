@@ -1,3 +1,6 @@
+[ret]
+pool = "default"
+
 [phx]
 port = 4000
 ip = "127.0.0.1"

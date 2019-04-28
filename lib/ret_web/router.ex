@@ -47,6 +47,7 @@ defmodule RetWeb.Router do
     pipe_through([:secure_headers, :api] ++ if(Mix.env() == :prod, do: [:ssl_only, :canonicalize_domain], else: []))
 
     scope "/v1", as: :api_v1 do
+      get("/meta", Api.V1.MetaController, :show)
       resources("/media", Api.V1.MediaController, only: [:create])
       resources("/scenes", Api.V1.SceneController, only: [:show])
       resources("/avatars", Api.V1.AvatarController, only: [:show])
@@ -58,6 +59,8 @@ defmodule RetWeb.Router do
         resources("/subscriptions", Api.V1.SupportSubscriptionController, only: [:create, :delete])
         resources("/availability", Api.V1.SupportSubscriptionController, only: [:index])
       end
+
+      resources("/ret_notices", Api.V1.RetNoticeController, only: [:create])
     end
 
     scope "/v1", as: :api_v1 do
