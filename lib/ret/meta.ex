@@ -5,8 +5,8 @@ defmodule Ret.Meta do
   def get_meta do
     %{
       version: @version,
-      phx_host: :inet.gethostname() |> elem(1) |> to_string,
-      pool: :net_adm.localhost() |> :net_adm.dns_hostname() |> elem(1) |> to_string
+      phx_host: :net_adm.localhost() |> :net_adm.dns_hostname() |> elem(1) |> to_string,
+      pool: Application.get_env(:ret, Ret)[:pool]
     }
   end
 end
