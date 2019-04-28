@@ -48,7 +48,8 @@ do_build() {
 }
 
 do_install() {
-    RET_USE_VERSION=${pkg_version} mix release --env=prod
+    VERSION_PATH=$(echo $pkg_prefix | cut -d '/' -f 6,7)
+    RELEASE_VERSION="${VERSION_PATH/\//.}" mix release --env=prod
     cp -a _build/prod/rel/ret/* ${pkg_prefix}
 
     for f in $(find ${pkg_prefix} -name '*.sh')
