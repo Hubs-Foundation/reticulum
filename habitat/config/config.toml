@@ -1,3 +1,6 @@
+[ret."Elixir.Ret"]
+pool = "{{ cfg.ret.pool }}"
+
 [ret."Elixir.RetWeb.Plugs.HeaderAuthorization"]
 header_value = "{{ cfg.phx.admin_access_key }}"
 

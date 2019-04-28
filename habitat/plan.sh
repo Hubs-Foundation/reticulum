@@ -1,6 +1,6 @@
 pkg_name=reticulum
 pkg_origin=mozillareality
-pkg_version="0.0.2"
+pkg_version="1.0.0"
 pkg_maintainer="Mozilla Mixed Reality <mixreality@mozilla.com>"
 pkg_upstream_url="http://github.com/mozilla/reticulum"
 pkg_license=('MPL-2.0')
@@ -48,7 +48,7 @@ do_build() {
 }
 
 do_install() {
-    mix release --env=prod
+    RET_USE_VERSION=${pkg_version} mix release --env=prod
     cp -a _build/prod/rel/ret/* ${pkg_prefix}
 
     for f in $(find ${pkg_prefix} -name '*.sh')

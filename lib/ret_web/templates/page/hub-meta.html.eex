@@ -9,4 +9,7 @@
 <meta name="twitter:description" content="Join others in VR at <%= @hub.name %>, right in your browser." />
 <meta property="twitter:image" content="<%= @hub |> Ret.Hub.image_url_for %>"/>
 <meta name="twitter:url" value="<%= @hub |> Ret.Hub.url_for %>" />
+<meta name="ret:version" value="<%= @ret_meta[:version] %>" />
+<meta name="ret:phx_host" value="<%= @ret_meta[:phx_host] %>" />
+<meta name="ret:pool" value="<%= @ret_meta[:pool] %>" />
 <title><%= @hub.name %> | Hubs by Mozilla</title>
