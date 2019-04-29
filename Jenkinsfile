@@ -49,7 +49,9 @@ pipeline {
             def packageTimeVersion = packageIdent.tokenize('/')[3]
             def (major, minor, version) = packageIdent.tokenize('/')[2].tokenize('.')
             def retVersion = "${major}.${minor}.${packageTimeVersion}"
-            def retPool = sh(returnStdout: true, script: "curl https://dev.reticulum.io/api/v1/meta | jq '.pool'").trim()
+            def poolHost = env.RET_LIVE_POOL_HOST
+            def retPool = sh(returnStdout: true, script: "curl https://${poolHost}/api/v1/meta | jq -r '.pool'").trim()
+            def retPoolIcon = retPool == 'earth' ? ':earth_americas:' : ':new_moon:'
 
             def gitMessage = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'[%an] %s'").trim()
             def gitSha = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'%h'").trim()
@@ -58,7 +60,7 @@ pipeline {
               "*<http://localhost:8080/job/${env.JOB_NAME}/${env.BUILD_NUMBER}|#${env.BUILD_NUMBER}>* *${env.JOB_NAME}* " +
               "<https://bldr.habitat.sh/#/pkgs/${packageIdent}|${packageIdent}>\n" +
               "<https://github.com/mozilla/reticulum/commit/$gitSha|$gitSha> " +
-              "Reticulum: ```${gitSha} ${gitMessage}```\n" +
+              "Reticulum -> ${retIcon} `${retPool}`: ```${gitSha} ${gitMessage}```\n" +
               "<https://smoke-hubs.mozilla.com/0zuesf6c6mf/smoke-test?required_ret_version=${retVersion}&required_ret_pool=${retPool}|Smoke Test> - to push:\n" +
               "`/mr hab promote ${packageIdent}`"
             )
@@ -68,6 +70,7 @@ pipeline {
               username  : "buildbot",
               icon_emoji: ":gift:"
             ])
+            sh 'sudo /usr/bin/hab-pkg-promote "$packageIdent" "$retPool"'
             sh "curl -X POST --data-urlencode ${shellString(payload)} ${slackURL}"
         }
       }
