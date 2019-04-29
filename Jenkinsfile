@@ -46,6 +46,10 @@ pipeline {
             def identPath = sh(returnStdout: true, script: "${s}").trim()
             s = $/eval 'tail -n +6 ${hart} | xzcat | tar xf - "${identPath}" -O'/$
             def packageIdent = sh(returnStdout: true, script: "${s}").trim()
+            def packageTimeVersion = packageIdent.tokenize('/')[3]
+            def (major, minor, version) = packageIdent.tokenize('/')[2].tokenize('.')
+            def retVersion = "${major}.${minor}.${packageTimeVersion}"
+            def retPool = sh(returnStdout: true, script: "curl https://dev.reticulum.io/api/v1/meta | jq '.pool'").trim()
 
             def gitMessage = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'[%an] %s'").trim()
             def gitSha = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'%h'").trim()
@@ -55,7 +59,7 @@ pipeline {
               "<https://bldr.habitat.sh/#/pkgs/${packageIdent}|${packageIdent}>\n" +
               "<https://github.com/mozilla/reticulum/commit/$gitSha|$gitSha> " +
               "Reticulum: ```${gitSha} ${gitMessage}```\n" +
-              "<https://smoke-hubs.mozilla.com/0zuesf6c6mf/smoke-test|Smoke Test> - to push:\n" +
+              "<https://smoke-hubs.mozilla.com/0zuesf6c6mf/smoke-test?required_ret_version=${retVersion}&required_ret_pool=${retPool}|Smoke Test> - to push:\n" +
               "`/mr hab promote ${packageIdent}`"
             )
             def payload = 'payload=' + JsonOutput.toJson([
