@@ -70,7 +70,7 @@ pipeline {
               username  : "buildbot",
               icon_emoji: ":gift:"
             ])
-            sh 'sudo /usr/bin/hab-pkg-promote "$packageIdent" "$retPool"'
+            sh "sudo /usr/bin/hab-pkg-promote '${packageIdent}' '${retPool}'"
             sh "curl -X POST --data-urlencode ${shellString(payload)} ${slackURL}"
         }
       }
