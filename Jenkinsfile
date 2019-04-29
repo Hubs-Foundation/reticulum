@@ -60,7 +60,7 @@ pipeline {
               "*<http://localhost:8080/job/${env.JOB_NAME}/${env.BUILD_NUMBER}|#${env.BUILD_NUMBER}>* *${env.JOB_NAME}* " +
               "<https://bldr.habitat.sh/#/pkgs/${packageIdent}|${packageIdent}>\n" +
               "<https://github.com/mozilla/reticulum/commit/$gitSha|$gitSha> " +
-              "Reticulum -> ${retIcon} `${retPool}`: ```${gitSha} ${gitMessage}```\n" +
+              "Reticulum -> ${retPoolIcon} `${retPool}`: ```${gitSha} ${gitMessage}```\n" +
               "<https://smoke-hubs.mozilla.com/0zuesf6c6mf/smoke-test?required_ret_version=${retVersion}&required_ret_pool=${retPool}|Smoke Test> - to push:\n" +
               "`/mr hab promote ${packageIdent}`"
             )
