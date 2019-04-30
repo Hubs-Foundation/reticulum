@@ -98,17 +98,11 @@ defmodule Ret.Avatar do
     avatar.updated_at |> NaiveDateTime.to_erl |> :calendar.datetime_to_gregorian_seconds
   end
 
-  def url(%Avatar{} = avatar) do
-    "#{RetWeb.Endpoint.url()}/api/v1/avatars/#{avatar.avatar_sid}"
-  end
+  def url(%Avatar{} = avatar), do: "#{RetWeb.Endpoint.url()}/api/v1/avatars/#{avatar.avatar_sid}"
 
-  def gltf_url(%Avatar{} = avatar) do
-    "#{Avatar.url(avatar)}/avatar.gltf?v=#{Avatar.version(avatar)}"
-  end
+  def gltf_url(%Avatar{} = avatar), do: "#{Avatar.url(avatar)}/avatar.gltf?v=#{Avatar.version(avatar)}"
 
-  def base_gltf_url(%Avatar{} = avatar) do
-    "#{Avatar.url(avatar)}/base.gltf?v=#{Avatar.version(avatar)}"
-  end
+  def base_gltf_url(%Avatar{} = avatar), do: "#{Avatar.url(avatar)}/base.gltf?v=#{Avatar.version(avatar)}"
 
   def file_url_or_nil(%Avatar{} = avatar, column) do
     case avatar |> Map.get(column) do
