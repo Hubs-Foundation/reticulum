@@ -470,7 +470,9 @@ defmodule Ret.MediaSearch do
       name: scene_listing.name,
       description: scene_listing.description,
       attributions: scene_listing.attributions,
-      images: %{preview: %{url: scene_listing.screenshot_owned_file |> OwnedFile.uri_for() |> URI.to_string()}}
+      images: %{
+        preview: %{url: scene_listing.screenshot_owned_file |> OwnedFile.uri_for() |> URI.to_string()}
+      }
     }
   end
 
