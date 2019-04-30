@@ -62,7 +62,7 @@ pipeline {
               "<https://github.com/mozilla/reticulum/commit/$gitSha|$gitSha> " +
               "Reticulum -> ${retPoolIcon} `${retPool}`: ```${gitSha} ${gitMessage}```\n" +
               "<https://smoke-hubs.mozilla.com/0zuesf6c6mf/smoke-test?required_ret_version=${retVersion}&required_ret_pool=${retPool}|Smoke Test> - to push:\n" +
-              "`/mr hab promote ${packageIdent}`"
+              "`/mr ret deploy ${retVersion} ${retPool}`"
             )
             def payload = 'payload=' + JsonOutput.toJson([
               text      : text,
