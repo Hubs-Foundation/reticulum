@@ -532,7 +532,7 @@ defmodule Ret.MediaSearch do
       attributions: avatar.attributions,
       images: %{
         preview: %{
-          url: thumbnail || "https://placekitten.com/720/1280",
+          url: thumbnail || "https://asset-bundles-prod.reticulum.io/bots/avatar_unavailable.png",
           width: 720,
           height: 1280
         }
