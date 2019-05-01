@@ -1,4 +1,4 @@
-defmodule RetWeb.SceneControllerTest do
+defmodule RetWeb.MediaSearchControllerTest do
   use RetWeb.ConnCase
   import Ret.TestHelpers
 
