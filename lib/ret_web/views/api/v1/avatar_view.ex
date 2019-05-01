@@ -10,13 +10,6 @@ defmodule RetWeb.Api.V1.AvatarView do
     %{avatars: [render_avatar(avatar)]}
   end
 
-  defp file_url_or_nil(avatar, column) do
-    case avatar |> Map.get(column) do
-      nil -> nil
-      owned_file -> owned_file |> OwnedFile.uri_for() |> URI.to_string()
-    end
-  end
-
   def render_avatar(avatar) do
     version = avatar.updated_at |> NaiveDateTime.to_erl |> :calendar.datetime_to_gregorian_seconds
     %{
@@ -27,12 +20,12 @@ defmodule RetWeb.Api.V1.AvatarView do
       attributions: if(is_nil(avatar.attributions), do: [], else: avatar.attributions),
       allow_remixing: avatar.allow_remixing,
       allow_promotion: avatar.allow_promotion,
-      gltf_url: "#{RetWeb.Endpoint.url()}/api/v1/avatars/#{avatar.avatar_sid}/avatar.gltf?v=#{version}",
-      base_gltf_url: "#{RetWeb.Endpoint.url()}/api/v1/avatars/#{avatar.avatar_sid}/base.gltf?v=#{version}",
+      gltf_url: avatar |> Avatar.gltf_url,
+      base_gltf_url: avatar |> Avatar.base_gltf_url,
       files:
         for col <- Avatar.file_columns(), into: %{} do
           key = col |> Atom.to_string() |> String.replace_suffix("_owned_file", "")
-          {key, avatar |> file_url_or_nil(col)}
+          {key, avatar |> Avatar.file_url_or_nil(col)}
         end
     }
   end

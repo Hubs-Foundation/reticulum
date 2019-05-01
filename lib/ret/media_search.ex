@@ -19,7 +19,7 @@ defmodule Ret.MediaSearch do
   import Ret.HttpUtils
   import Ecto.Query
 
-  alias Ret.{Repo, OwnedFile, Scene, SceneListing, Asset}
+  alias Ret.{Repo, OwnedFile, Scene, SceneListing, Asset, Avatar}
 
   @page_size 24
   @max_face_count 60000
@@ -30,6 +30,10 @@ defmodule Ret.MediaSearch do
 
   def search(%Ret.MediaSearchQuery{source: "scene_listings", cursor: cursor, filter: filter, q: query}) do
     scene_listing_search(cursor, query, filter)
+  end
+
+  def search(%Ret.MediaSearchQuery{source: "avatars", cursor: cursor, filter: filter, user: account_id, q: query}) do
+    avatar_search(cursor, query, filter, account_id)
   end
 
   def search(%Ret.MediaSearchQuery{source: "assets", type: type, cursor: cursor, user: account_id, q: query}) do
@@ -404,6 +408,20 @@ defmodule Ret.MediaSearch do
     }
   end
 
+  defp avatar_search(cursor, query, filter, account_id, order \\ [desc: :updated_at]) do
+    page_number = (cursor || "1") |> Integer.parse() |> elem(0)
+
+    results =
+      Avatar
+      |> where([a], a.account_id == ^account_id)
+      |> preload([:thumbnail_owned_file])
+      |> order_by(^order)
+      |> Repo.paginate(%{page: page_number, page_size: @page_size})
+      |> result_for_page(page_number, :avatar, &avatar_to_entry/1)
+
+    {:commit, results}
+  end
+
   defp scene_listing_search(cursor, query, filter, order \\ [desc: :updated_at]) do
     page_number = (cursor || "1") |> Integer.parse() |> elem(0)
 
@@ -416,7 +434,7 @@ defmodule Ret.MediaSearch do
       |> preload([:screenshot_owned_file, :model_owned_file, :scene_owned_file])
       |> order_by(^order)
       |> Repo.paginate(%{page: page_number, page_size: @page_size})
-      |> result_for_scene_listing_page(page_number)
+      |> result_for_page(page_number, :scene_listings, &scene_listing_to_entry/1)
 
     {:commit, results}
   end
@@ -427,7 +445,7 @@ defmodule Ret.MediaSearch do
   defp add_tag_to_listing_search_query(query, nil), do: query
   defp add_tag_to_listing_search_query(query, tag), do: query |> where(fragment("tags->'tags' \\? ?", ^tag))
 
-  defp result_for_scene_listing_page(page, page_number) do
+  defp result_for_page(page, page_number, source, entry_fn) do
     %Ret.MediaSearchResult{
       meta: %Ret.MediaSearchResultMeta{
         next_cursor:
@@ -436,11 +454,11 @@ defmodule Ret.MediaSearch do
           else
             nil
           end,
-        source: :scene_listings
+        source: source
       },
       entries:
         page.entries
-        |> Enum.map(&scene_listing_to_entry/1)
+        |> Enum.map(entry_fn)
     }
   end
 
@@ -454,6 +472,30 @@ defmodule Ret.MediaSearch do
       attributions: scene_listing.attributions,
       images: %{
         preview: %{url: scene_listing.screenshot_owned_file |> OwnedFile.uri_for() |> URI.to_string()}
+      }
+    }
+  end
+
+  defp avatar_to_entry(avatar) do
+    thumbnail = avatar |> Avatar.file_url_or_nil(:thumbnail_owned_file)
+
+    %{
+      id: avatar.avatar_sid,
+      type: "avatar",
+      url: avatar |> Avatar.url(),
+      name: avatar.name,
+      description: avatar.description,
+      attributions: avatar.attributions,
+      images: %{
+        preview: %{
+          url: thumbnail || "https://asset-bundles-prod.reticulum.io/bots/avatar_unavailable.png",
+          width: 720,
+          height: 1280
+        }
+      },
+      gltfs: %{
+        avatar: avatar |> Avatar.gltf_url(),
+        base: avatar |> Avatar.base_gltf_url()
       }
     }
   end

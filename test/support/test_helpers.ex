@@ -1,5 +1,5 @@
 defmodule Ret.TestHelpers do
-  alias Ret.{Storage, Project, Account, Asset, ProjectAsset, Scene, SceneListing, Repo, Hub}
+  alias Ret.{Storage, Project, Account, Asset, ProjectAsset, Scene, SceneListing, Repo, Hub, Avatar}
 
   def generate_temp_owned_file(account) do
     temp_file = generate_temp_file("test")
@@ -19,6 +19,11 @@ defmodule Ret.TestHelpers do
     file_path = temp_path |> Path.join("test.txt")
     file_path |> File.write(contents)
     file_path
+  end
+
+  def auth_with_account(conn, account) do
+    {:ok, token, _claims} = account |> Ret.Guardian.encode_and_sign()
+    conn |> Plug.Conn.put_req_header("authorization", "bearer: " <> token)
   end
 
   def create_account() do
@@ -45,6 +50,29 @@ defmodule Ret.TestHelpers do
 
     scene = scene |> Repo.preload([:model_owned_file, :screenshot_owned_file, :scene_owned_file, :account])
     {:ok, scene: scene}
+  end
+
+  def create_avatar(%{account: account}) do
+    {:ok, avatar: create_avatar(account)}
+  end
+
+  def create_avatar(account) do
+    {:ok, avatar} =
+      %Avatar{}
+      |> Avatar.changeset(
+        account,
+        %{
+          gltf: generate_temp_owned_file(account),
+          bin: generate_temp_owned_file(account)
+        },
+        nil,
+        %{
+          name: "Test Avatar"
+        }
+      )
+      |> Repo.insert_or_update()
+
+    avatar
   end
 
   def create_scene_listing(%{scene: scene}) do
