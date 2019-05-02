@@ -12,6 +12,7 @@
 <meta name="twitter:url" value="<%= @scene |> Ret.Scene.to_url %>" />
 <meta name="ret:version" value="<%= @ret_meta[:version] %>" />
 <meta name="ret:phx_host" value="<%= @ret_meta[:phx_host] %>" />
+<meta name="ret:phx_port" value="<%= @ret_meta[:phx_port] %>" />
 <meta name="ret:pool" value="<%= @ret_meta[:pool] %>" />
 <title><%= @scene.name %> | Hubs by Mozilla</title>
 <% end %>
