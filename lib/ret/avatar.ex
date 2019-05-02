@@ -22,7 +22,7 @@ defmodule Ret.Avatar do
     :normal_map_owned_file,
     :orm_map_owned_file
   ]
-  @file_columns [:gltf_owned_file, :bin_owned_file] ++ @image_columns
+  @file_columns [:gltf_owned_file, :bin_owned_file, :thumbnail_owned_file] ++ @image_columns
 
   def image_columns, do: @image_columns
   def file_columns, do: @file_columns
@@ -42,6 +42,7 @@ defmodule Ret.Avatar do
 
     belongs_to(:gltf_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
     belongs_to(:bin_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
+    belongs_to(:thumbnail_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
 
     belongs_to(:base_map_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
 
@@ -91,6 +92,23 @@ defmodule Ret.Avatar do
     avatar
     |> Avatar.load_parents(@file_columns)
     |> avatar_to_collapsed_files()
+  end
+
+  def version(%Avatar{} = avatar) do
+    avatar.updated_at |> NaiveDateTime.to_erl() |> :calendar.datetime_to_gregorian_seconds()
+  end
+
+  def url(%Avatar{} = avatar), do: "#{RetWeb.Endpoint.url()}/api/v1/avatars/#{avatar.avatar_sid}"
+
+  def gltf_url(%Avatar{} = avatar), do: "#{Avatar.url(avatar)}/avatar.gltf?v=#{Avatar.version(avatar)}"
+
+  def base_gltf_url(%Avatar{} = avatar), do: "#{Avatar.url(avatar)}/base.gltf?v=#{Avatar.version(avatar)}"
+
+  def file_url_or_nil(%Avatar{} = avatar, column) do
+    case avatar |> Map.get(column) do
+      nil -> nil
+      owned_file -> owned_file |> OwnedFile.uri_for() |> URI.to_string()
+    end
   end
 
   @doc false
