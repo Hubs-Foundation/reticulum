@@ -30,27 +30,24 @@ defmodule Ret.Avatar do
   schema "avatars" do
     field(:avatar_sid, :string)
     field(:slug, AvatarSlug.Type)
-    belongs_to(:parent_avatar, Avatar, references: :avatar_id)
 
     field(:name, :string)
     field(:description, :string)
     field(:attributions, :map)
 
+    belongs_to(:account, Account, references: :account_id)
+    belongs_to(:parent_avatar, Avatar, references: :avatar_id)
+    belongs_to(:parent_avatar_listing, AvatarListing, references: :avatar_listing_id)
+
     field(:allow_remixing, :boolean)
     field(:allow_promotion, :boolean)
-    belongs_to(:account, Account, references: :account_id)
 
     belongs_to(:gltf_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
     belongs_to(:bin_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
     belongs_to(:thumbnail_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
 
     belongs_to(:base_map_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
-
-    belongs_to(:emissive_map_owned_file, OwnedFile,
-      references: :owned_file_id,
-      on_replace: :nilify
-    )
-
+    belongs_to(:emissive_map_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
     belongs_to(:normal_map_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
     belongs_to(:orm_map_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
 
