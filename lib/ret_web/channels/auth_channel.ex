@@ -15,7 +15,7 @@ defmodule RetWeb.AuthChannel do
     :timer.sleep(500)
 
     Statix.increment("ret.channels.auth.joins.ok")
-    {:ok, "{}", socket}
+    {:ok, %{session_id: socket.assigns.session_id}, socket}
   end
 
   def handle_in("auth_request", %{"email" => email, "origin" => origin}, socket) do
