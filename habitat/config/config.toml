@@ -12,6 +12,7 @@ bot_token = "{{ cfg.discord_client.bot_token }}"
 [ret."Elixir.RetWeb.Endpoint".https]
 port = {{ cfg.phx.port }}
 certfile = "{{ pkg.svc_files_path }}/ssl.pem"
+cacertfile = "{{ pkg.svc_files_path }}/ssl-chain.pem"
 keyfile = "{{ pkg.svc_files_path }}/ssl.key"
 
 [ret."Elixir.RetWeb.Endpoint"]
