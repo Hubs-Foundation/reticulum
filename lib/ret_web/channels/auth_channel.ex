@@ -26,7 +26,11 @@ defmodule RetWeb.AuthChannel do
       token = LoginToken.new_token_for_email(email)
       signin_args = %{auth_topic: socket.topic, auth_token: token, auth_origin: origin}
 
+      Statix.increment("ret.emails.auth.attempted", 1)
+
       RetWeb.Email.auth_email(email, signin_args) |> Ret.Mailer.deliver_now()
+
+      Statix.increment("ret.emails.auth.sent", 1)
 
       {:noreply, socket}
     else
