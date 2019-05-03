@@ -29,6 +29,7 @@ defmodule Ret.Hub do
     field(:host, :string)
     field(:entry_code, :integer)
     field(:entry_code_expires_at, :utc_datetime)
+    field(:creator_assignment_token, :string)
     field(:default_environment_gltf_bundle_url, :string)
     field(:slug, HubSlug.Type)
     field(:max_occupant_count, :integer, default: 0)
@@ -67,6 +68,7 @@ defmodule Ret.Hub do
     |> cast(attrs, [:default_environment_gltf_bundle_url])
     |> add_name_to_changeset(attrs)
     |> add_hub_sid_to_changeset
+    |> add_creator_assignment_token_to_changeset
     |> add_entry_code_to_changeset
     |> unique_constraint(:hub_sid)
     |> unique_constraint(:entry_code)
@@ -126,7 +128,7 @@ defmodule Ret.Hub do
   def add_account_to_changeset(changeset, nil), do: changeset
 
   def add_account_to_changeset(changeset, %Account{} = account) do
-    changeset |> put_assoc(:created_by_account, account)
+    changeset |> put_assoc(:created_by_account, account) |> put_change(:creator_assignment_token, nil)
   end
 
   def send_push_messages_for_join(%Hub{web_push_subscriptions: subscriptions} = hub, endpoint_to_skip \\ nil) do
@@ -213,6 +215,11 @@ defmodule Ret.Hub do
   defp add_hub_sid_to_changeset(changeset) do
     hub_sid = Ret.Sids.generate_sid()
     changeset |> put_change(:hub_sid, hub_sid)
+  end
+
+  defp add_creator_assignment_token_to_changeset(changeset) do
+    creator_assignment_token = SecureRandom.hex()
+    changeset |> put_change(:creator_assignment_token, creator_assignment_token)
   end
 
   defp add_entry_code_to_changeset(changeset) do
