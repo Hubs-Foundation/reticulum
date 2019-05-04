@@ -196,7 +196,7 @@ defmodule RetWeb.HubChannel do
         hub = socket |> hub_for_socket |> Repo.preload(@hub_preloads)
 
         hub =
-          if hub.creator_assignment_token && creator_assignment_token do
+          if creator_assignment_token do
             hub
             |> Hub.changeset_for_creator_assignment(account, creator_assignment_token)
             |> Repo.update!()
