@@ -6,7 +6,8 @@ defmodule RetWeb.Api.V1.HubView do
     %{
       status: :ok,
       hub_id: hub.hub_sid,
-      url: hub |> Hub.url_for()
+      url: hub |> Hub.url_for(),
+      creator_assignment_token: hub.creator_assignment_token
     }
   end
 

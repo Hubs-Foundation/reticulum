@@ -27,7 +27,8 @@ defmodule RetWeb.HubChannel do
     scene: [:model_owned_file, :screenshot_owned_file, :scene_owned_file],
     scene_listing: [:model_owned_file, :screenshot_owned_file, :scene_owned_file, :scene],
     web_push_subscriptions: [],
-    hub_bindings: []
+    hub_bindings: [],
+    created_by_account: []
   ]
 
   def join("hub:" <> hub_sid, %{"profile" => profile, "context" => context} = params, socket) do
@@ -185,12 +186,23 @@ defmodule RetWeb.HubChannel do
     {:reply, {:ok, %{has_remaining_subscriptions: has_remaining_subscriptions}}, socket}
   end
 
-  def handle_in("sign_in", %{"token" => token}, socket) do
+  def handle_in("sign_in", %{"token" => token} = payload, socket) do
+    creator_assignment_token = payload["creator_assignment_token"]
+
     case Ret.Guardian.resource_from_token(token) do
       {:ok, %Account{} = account, _claims} ->
         socket = Guardian.Phoenix.Socket.put_current_resource(socket, account)
 
-        hub = socket |> hub_for_socket
+        hub = socket |> hub_for_socket |> Repo.preload(@hub_preloads)
+
+        hub =
+          if hub.creator_assignment_token && creator_assignment_token do
+            hub
+            |> Hub.changeset_for_creator_assignment(account, creator_assignment_token)
+            |> Repo.update!()
+          else
+            hub
+          end
 
         perms_token = get_perms_token(hub, account)
 

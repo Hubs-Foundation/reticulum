@@ -125,6 +125,17 @@ defmodule Ret.Hub do
 
   def changeset_for_new_host(%Hub{} = hub, host), do: hub |> cast(%{host: host}, [:host])
 
+  def changeset_for_creator_assignment(
+        %Ret.Hub{creator_assignment_token: expected_token} = hub,
+        account,
+        token
+      )
+      when expected_token != nil and expected_token == token do
+    hub |> cast(%{}, []) |> add_account_to_changeset(account)
+  end
+
+  def changeset_for_creator_assignment(hub, _, _), do: hub |> cast(%{}, [])
+
   def add_account_to_changeset(changeset, nil), do: changeset
 
   def add_account_to_changeset(changeset, %Account{} = account) do
