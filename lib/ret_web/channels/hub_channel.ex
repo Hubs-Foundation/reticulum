@@ -206,6 +206,10 @@ defmodule RetWeb.HubChannel do
 
         perms_token = get_perms_token(hub, account)
 
+        if creator_assignment_token do
+          broadcast_presence_update(socket)
+        end
+
         {:reply, {:ok, %{perms_token: perms_token}}, socket}
 
       {:error, reason} ->
@@ -446,9 +450,13 @@ defmodule RetWeb.HubChannel do
   end
 
   defp presence_meta_for_socket(socket) do
+    hub = socket |> hub_for_socket
+    account = Guardian.Phoenix.Socket.current_resource(socket)
+
     socket.assigns
     |> maybe_override_display_name(socket)
-    |> Map.take([:presence, :profile, :context])
+    |> Map.put(:perms, hub |> Hub.perms_for_account(account))
+    |> Map.take([:presence, :profile, :context, :perms])
   end
 
   # Hubs Bot can set their own display name.
