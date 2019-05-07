@@ -455,8 +455,8 @@ defmodule RetWeb.HubChannel do
 
     socket.assigns
     |> maybe_override_display_name(socket)
-    |> Map.put(:perms, hub |> Hub.perms_for_account(account))
-    |> Map.take([:presence, :profile, :context, :perms])
+    |> Map.put(:roles, hub |> Hub.roles_for_account(account))
+    |> Map.take([:presence, :profile, :context, :roles])
   end
 
   # Hubs Bot can set their own display name.

@@ -272,6 +272,12 @@ defmodule Ret.Hub do
       mute_users: account |> can?(mute_users(hub))
     }
   end
+
+  def roles_for_account(%Ret.Hub{} = hub, account), do: hub |> perms_for_account(account) |> roles_for_perms
+
+  # Eventually this will draw upon a real role system
+  defp roles_for_perms(%{kick_users: true}), do: %{moderator: true}
+  defp roles_for_perms(_), do: %{moderator: false}
 end
 
 defimpl Canada.Can, for: Ret.Account do
