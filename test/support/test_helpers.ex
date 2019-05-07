@@ -31,7 +31,7 @@ defmodule Ret.TestHelpers do
   end
 
   def create_account(_) do
-    {:ok, account: create_account()}
+    {:ok, account: create_account(), account2: create_account()}
   end
 
   def create_owned_file(%{account: account}) do

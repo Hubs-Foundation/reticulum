@@ -65,4 +65,72 @@ defmodule Ret.HubTest do
 
     %{join_hub: true, update_hub: true, close_hub: true, mute_users: true} = hub |> Hub.perms_for_account(account)
   end
+
+  test "should have creator assignment token if no account assigned", %{scene: scene} do
+    {:ok, hub} = %Hub{} |> Hub.changeset(scene, %{name: "Test Hub"}) |> Repo.insert()
+
+    assert hub.creator_assignment_token != nil
+  end
+
+  test "should allow creator assignment if token is correct", %{scene: scene, account: account} do
+    {:ok, hub} = %Hub{} |> Hub.changeset(scene, %{name: "Test Hub"}) |> Repo.insert()
+
+    hub =
+      hub
+      |> Repo.preload(created_by_account: [])
+      |> Hub.changeset_for_creator_assignment(account, hub.creator_assignment_token)
+      |> Repo.update!()
+
+    assert hub.created_by_account_id == account.account_id
+  end
+
+  test "show disallow creator assignment if token is incorrect", %{scene: scene, account: account} do
+    {:ok, hub} = %Hub{} |> Hub.changeset(scene, %{name: "Test Hub"}) |> Repo.insert()
+
+    hub =
+      hub
+      |> Repo.preload(created_by_account: [])
+      |> Hub.changeset_for_creator_assignment(account, "bad token")
+      |> Repo.update!()
+
+    assert hub.created_by_account_id == nil
+  end
+
+  test "show disallow creator assignment if token is already used", %{
+    scene: scene,
+    account: account,
+    account2: account2
+  } do
+    {:ok, hub} = %Hub{} |> Hub.changeset(scene, %{name: "Test Hub"}) |> Repo.insert()
+
+    hub =
+      hub
+      |> Repo.preload(created_by_account: [])
+      |> Hub.changeset_for_creator_assignment(account, hub.creator_assignment_token)
+      |> Repo.update!()
+
+    hub =
+      hub
+      |> Repo.preload(created_by_account: [])
+      |> Hub.changeset_for_creator_assignment(account2, hub.creator_assignment_token)
+      |> Repo.update!()
+
+    hub =
+      hub
+      |> Repo.preload(created_by_account: [])
+      |> Hub.changeset_for_creator_assignment(account2, nil)
+      |> Repo.update!()
+
+    assert hub.created_by_account_id == account.account_id
+  end
+
+  test "should not have creator assignment token if account assigned", %{account: account, scene: scene} do
+    {:ok, hub} =
+      %Hub{}
+      |> Hub.changeset(scene, %{name: "Test Hub"})
+      |> Hub.add_account_to_changeset(account)
+      |> Repo.insert()
+
+    assert hub.creator_assignment_token == nil
+  end
 end
