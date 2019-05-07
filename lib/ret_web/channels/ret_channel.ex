@@ -61,6 +61,6 @@ defmodule RetWeb.RetChannel do
     vapid_public_key = Application.get_env(:web_push_encryption, :vapid_details)[:public_key]
 
     send(self(), {:begin_tracking, socket.assigns.session_id, hub_id})
-    {:ok, %{vapid_public_key: vapid_public_key}, socket}
+    {:ok, %{vapid_public_key: vapid_public_key, session_id: socket.assigns.session_id}, socket}
   end
 end

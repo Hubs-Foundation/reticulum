@@ -15,7 +15,7 @@ defmodule RetWeb.AuthChannel do
     :timer.sleep(500)
 
     Statix.increment("ret.channels.auth.joins.ok")
-    {:ok, "{}", socket}
+    {:ok, %{session_id: socket.assigns.session_id}, socket}
   end
 
   def handle_in("auth_request", %{"email" => email, "origin" => origin}, socket) do
@@ -26,7 +26,11 @@ defmodule RetWeb.AuthChannel do
       token = LoginToken.new_token_for_email(email)
       signin_args = %{auth_topic: socket.topic, auth_token: token, auth_origin: origin}
 
+      Statix.increment("ret.emails.auth.attempted", 1)
+
       RetWeb.Email.auth_email(email, signin_args) |> Ret.Mailer.deliver_now()
+
+      Statix.increment("ret.emails.auth.sent", 1)
 
       {:noreply, socket}
     else

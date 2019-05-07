@@ -92,14 +92,14 @@ defmodule Ret.Hub do
 
   def changeset_for_new_scene(%Hub{} = hub, %Scene{} = scene) do
     hub
-    |> cast(%{}, [])
+    |> change()
     |> put_change(:scene_id, scene.scene_id)
     |> put_change(:scene_listing_id, nil)
   end
 
   def changeset_for_new_scene(%Hub{} = hub, %SceneListing{} = scene_listing) do
     hub
-    |> cast(%{}, [])
+    |> change()
     |> put_change(:scene_listing_id, scene_listing.scene_listing_id)
     |> put_change(:scene_id, nil)
   end
@@ -131,10 +131,10 @@ defmodule Ret.Hub do
         token
       )
       when expected_token != nil and expected_token == token do
-    hub |> cast(%{}, []) |> add_account_to_changeset(account)
+    hub |> change() |> add_account_to_changeset(account)
   end
 
-  def changeset_for_creator_assignment(hub, _, _), do: hub |> cast(%{}, [])
+  def changeset_for_creator_assignment(hub, _, _), do: hub |> change()
 
   def add_account_to_changeset(changeset, nil), do: changeset
 

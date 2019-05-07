@@ -19,7 +19,7 @@ defmodule RetWeb.LinkChannel do
       send(self(), {:begin_tracking, socket.assigns.session_id, link_code})
 
       Statix.increment("ret.channels.link.joins.ok")
-      {:ok, "{}", socket}
+      {:ok, %{session_id: socket.assigns.session_id}, socket}
     else
       {:error, %{event: "Invalid link code"}}
     end
