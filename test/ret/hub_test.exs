@@ -124,7 +124,7 @@ defmodule Ret.HubTest do
     assert hub.created_by_account_id == account.account_id
   end
 
-  test "should have creator assignment token if account assigned", %{account: account, scene: scene} do
+  test "should not have creator assignment token if account assigned", %{account: account, scene: scene} do
     {:ok, hub} =
       %Hub{}
       |> Hub.changeset(scene, %{name: "Test Hub"})
