@@ -72,7 +72,7 @@ defmodule Ret.HubTest do
     assert hub.creator_assignment_token != nil
   end
 
-  test "show allow creator assignment if token is correct", %{scene: scene, account: account} do
+  test "should allow creator assignment if token is correct", %{scene: scene, account: account} do
     {:ok, hub} = %Hub{} |> Hub.changeset(scene, %{name: "Test Hub"}) |> Repo.insert()
 
     hub =
@@ -124,7 +124,7 @@ defmodule Ret.HubTest do
     assert hub.created_by_account_id == account.account_id
   end
 
-  test "should have creator assignment token if account assigned", %{account: account, scene: scene} do
+  test "should not have creator assignment token if account assigned", %{account: account, scene: scene} do
     {:ok, hub} =
       %Hub{}
       |> Hub.changeset(scene, %{name: "Test Hub"})
