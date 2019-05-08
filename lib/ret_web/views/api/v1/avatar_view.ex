@@ -15,9 +15,10 @@ defmodule RetWeb.Api.V1.AvatarView do
     %{
       avatar_id: avatar.avatar_sid,
       parent_avatar_id: unless(is_nil(avatar.parent_avatar), do: avatar.parent_avatar.avatar_sid),
+      parent_avatar_listing_id: unless(is_nil(avatar.parent_avatar_listing), do: avatar.parent_avatar_listing.avatar_listing_sid),
       name: avatar.name,
       description: avatar.description,
-      attributions: if(is_nil(avatar.attributions), do: [], else: avatar.attributions),
+      attributions: if(is_nil(avatar.attributions), do: %{}, else: avatar.attributions),
       allow_remixing: avatar.allow_remixing,
       allow_promotion: avatar.allow_promotion,
       gltf_url: avatar |> Avatar.gltf_url,

@@ -10,7 +10,7 @@ defmodule Ret.Avatar do
   use Ecto.Schema
   import Ecto.Changeset
 
-  alias Ret.{Avatar, Repo, OwnedFile, Account, Sids}
+  alias Ret.{Avatar, AvatarListing, Repo, OwnedFile, Account, Sids}
   alias Ret.Avatar.{AvatarSlug}
 
   @schema_prefix "ret0"
@@ -115,15 +115,17 @@ defmodule Ret.Avatar do
         account,
         owned_files_map,
         parent_avatar,
+        parent_avatar_listing,
         attrs \\ %{}
       ) do
     avatar
-    |> cast(attrs, [:name])
+    |> cast(attrs, [:name, :description, :attributions, :allow_remixing, :allow_promotion])
     |> validate_required([])
     |> maybe_add_avatar_sid_to_changeset
     |> unique_constraint(:avatar_sid)
     |> put_assoc(:account, account)
     |> put_assoc(:parent_avatar, parent_avatar)
+    |> put_assoc(:parent_avatar_listing, parent_avatar_listing)
     |> put_owned_files(owned_files_map)
     |> AvatarSlug.maybe_generate_slug()
     |> AvatarSlug.unique_constraint()

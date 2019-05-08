@@ -11,7 +11,7 @@ defmodule Ret.AvatarListing do
   import Ecto.Changeset
 
   alias Ret.{AvatarListing}
-  alias Ret.AvatarListing.{AvatarListingSlug}
+  alias AvatarListing.{AvatarListingSlug}
 
   @schema_prefix "ret0"
   @primary_key {:avatar_listing_id, :id, autogenerate: true}

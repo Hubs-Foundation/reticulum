@@ -1,7 +1,7 @@
 defmodule RetWeb.Api.V1.AvatarController do
   use RetWeb, :controller
 
-  alias Ret.{Account, Repo, Avatar, Storage, GLTFUtils}
+  alias Ret.{Account, Repo, Avatar, AvatarListing, Storage, GLTFUtils}
 
   plug(RetWeb.Plugs.RateLimit when action in [:create, :update])
 
@@ -10,7 +10,7 @@ defmodule RetWeb.Api.V1.AvatarController do
   defp get_avatar(avatar_sid) do
     Avatar
     |> Repo.get_by(avatar_sid: avatar_sid)
-    |> Repo.preload([Avatar.file_columns() ++ [:parent_avatar, :account]])
+    |> Repo.preload([Avatar.file_columns() ++ [:parent_avatar, :parent_avatar_listing, :account]])
   end
 
   def create(conn, %{"avatar" => params}) do
@@ -68,9 +68,13 @@ defmodule RetWeb.Api.V1.AvatarController do
           params["parent_avatar_id"] &&
             Repo.get_by(Avatar, avatar_sid: params["parent_avatar_id"])
 
+        parent_avatar_listing =
+          params["parent_avatar_listing_id"] &&
+            Repo.get_by(AvatarListing, avatar_listing_sid: params["parent_avatar_listing_id"])
+
         {result, avatar} =
           avatar
-          |> Avatar.changeset(account, owned_files, parent_avatar, params)
+          |> Avatar.changeset(account, owned_files, parent_avatar, parent_avatar_listing, params)
           |> Repo.insert_or_update()
 
         avatar = avatar |> Repo.preload(Avatar.file_columns())
