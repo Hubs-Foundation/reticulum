@@ -53,6 +53,7 @@ defmodule Ret.Avatar do
 
     field(:state, Avatar.State)
 
+    field(:reviewed_at, :utc_datetime)
     timestamps()
   end
 

@@ -34,7 +34,9 @@ defmodule Ret.Repo.Migrations.CreateAvatarListings do
 
     alter table(:avatars) do
       add(:parent_avatar_listing_id, references(:avatar_listings, column: :avatar_listing_id))
+      add(:reviewed_at, :utc_datetime, null: true)
     end
+    create(index(:avatars, [:reviewed_at], where: "reviewed_at is null or reviewed_at < updated_at"))
     drop constraint(:avatars, :gltf_or_parent)
     create constraint(:avatars, :gltf_or_parent_or_parent_listing, check: "parent_avatar_id is not null or parent_avatar_listing_id is not null or (gltf_owned_file_id is not null and bin_owned_file_id is not null)")
   end
