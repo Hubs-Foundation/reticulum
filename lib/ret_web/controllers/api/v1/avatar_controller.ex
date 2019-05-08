@@ -56,13 +56,11 @@ defmodule RetWeb.Api.V1.AvatarController do
       end)
       |> Enum.into(%{})
 
-    promotion_error =
-      owned_file_results |> Map.values() |> Enum.filter(&(elem(&1, 0) == :error)) |> Enum.at(0)
+    promotion_error = owned_file_results |> Map.values() |> Enum.filter(&(elem(&1, 0) == :error)) |> Enum.at(0)
 
     case promotion_error do
       nil ->
-        owned_files =
-          owned_file_results |> Enum.map(fn {k, {:ok, file}} -> {k, file} end) |> Enum.into(%{})
+        owned_files = owned_file_results |> Enum.map(fn {k, {:ok, file}} -> {k, file} end) |> Enum.into(%{})
 
         parent_avatar =
           params["parent_avatar_id"] &&
