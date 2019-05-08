@@ -145,4 +145,25 @@ defmodule RetWeb.Api.V1.AvatarController do
         conn |> send_resp(401, "You are not allowed to access this avatar")
     end
   end
+
+  def delete(conn, %{"id" => avatar_sid}) do
+    account = Guardian.Plug.current_resource(conn)
+
+    case avatar_sid |> get_avatar() do
+      %Avatar{} = avatar -> delete(conn, avatar, account)
+      _ -> conn |> send_resp(404, "not found")
+    end
+  end
+
+  defp delete(conn, %Avatar{account_id: avatar_account_id}, %Account{account_id: account_id})
+       when not is_nil(avatar_account_id) and avatar_account_id != account_id do
+    conn |> send_resp(401, "You do not own this avatar")
+  end
+
+  defp delete(conn, %Avatar{} = avatar, %Account{} = account) do
+    case Repo.delete(avatar) do
+      {:ok, _} -> send_resp(conn, 200, "OK")
+      {:error, error} -> render_error_json(conn, error)
+    end
+  end
 end
