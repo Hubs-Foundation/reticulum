@@ -29,7 +29,6 @@ defmodule Ret.Repo.Migrations.CreateAvatarListings do
       add(:normal_map_owned_file_id, references(:owned_files, column: :owned_file_id))
       add(:orm_map_owned_file_id, references(:owned_files, column: :owned_file_id))
     end
-
     create(index(:avatar_listings, [:avatar_listing_sid], unique: true))
 
     alter table(:avatars) do
@@ -37,7 +36,5 @@ defmodule Ret.Repo.Migrations.CreateAvatarListings do
       add(:reviewed_at, :utc_datetime, null: true)
     end
     create(index(:avatars, [:reviewed_at], where: "reviewed_at is null or reviewed_at < updated_at"))
-    drop constraint(:avatars, :gltf_or_parent)
-    create constraint(:avatars, :gltf_or_parent_or_parent_listing, check: "parent_avatar_id is not null or parent_avatar_listing_id is not null or (gltf_owned_file_id is not null and bin_owned_file_id is not null)")
   end
 end
