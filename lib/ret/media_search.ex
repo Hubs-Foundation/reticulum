@@ -416,7 +416,7 @@ defmodule Ret.MediaSearch do
     }
   end
 
-  defp avatar_search(cursor, query, filter, account_id, order \\ [desc: :updated_at]) do
+  defp avatar_search(cursor, _query, _filter, account_id, order \\ [desc: :updated_at]) do
     page_number = (cursor || "1") |> Integer.parse() |> elem(0)
 
     results =
