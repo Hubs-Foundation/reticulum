@@ -66,6 +66,7 @@ defmodule Ret.TestHelpers do
           bin: generate_temp_owned_file(account)
         },
         nil,
+        nil,
         %{
           name: "Test Avatar"
         }
