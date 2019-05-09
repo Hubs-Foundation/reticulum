@@ -43,6 +43,23 @@ defmodule Ret.AvatarListing do
     belongs_to(:orm_map_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
   end
 
+  def version(%AvatarListing{} = avatar) do
+    avatar.updated_at |> NaiveDateTime.to_erl() |> :calendar.datetime_to_gregorian_seconds()
+  end
+
+  def url(%AvatarListing{} = avatar), do: "#{RetWeb.Endpoint.url()}/api/v1/avatars/#{avatar.avatar_listing_sid}"
+
+  def gltf_url(%AvatarListing{} = avatar), do: "#{AvatarListing.url(avatar)}/avatar.gltf?v=#{AvatarListing.version(avatar)}"
+
+  def base_gltf_url(%AvatarListing{} = avatar), do: "#{AvatarListing.url(avatar)}/base.gltf?v=#{AvatarListing.version(avatar)}"
+
+  def file_url_or_nil(%AvatarListing{} = avatar, column) do
+    case avatar |> Map.get(column) do
+      nil -> nil
+      owned_file -> owned_file |> OwnedFile.uri_for() |> URI.to_string()
+    end
+  end
+
   def changeset_for_listing_for_avatar(
         %AvatarListing{} = listing,
         avatar,

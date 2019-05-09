@@ -19,7 +19,7 @@ defmodule Ret.MediaSearch do
   import Ret.HttpUtils
   import Ecto.Query
 
-  alias Ret.{Repo, OwnedFile, Scene, SceneListing, Asset, Avatar}
+  alias Ret.{Repo, OwnedFile, Scene, SceneListing, Asset, Avatar, AvatarListing}
 
   @page_size 24
   @max_face_count 60000
@@ -30,6 +30,14 @@ defmodule Ret.MediaSearch do
 
   def search(%Ret.MediaSearchQuery{source: "scene_listings", cursor: cursor, filter: filter, q: query}) do
     scene_listing_search(cursor, query, filter)
+  end
+
+  def search(%Ret.MediaSearchQuery{source: "avatar_listings", cursor: cursor, filter: "featured", q: query}) do
+    avatar_listing_search(cursor, query, "featured", asc: :order)
+  end
+
+  def search(%Ret.MediaSearchQuery{source: "avatar_listings", cursor: cursor, filter: filter, q: query}) do
+    avatar_listing_search(cursor, query, filter)
   end
 
   def search(%Ret.MediaSearchQuery{source: "avatars", cursor: cursor, filter: filter, user: account_id, q: query}) do
@@ -422,6 +430,23 @@ defmodule Ret.MediaSearch do
     {:commit, results}
   end
 
+  defp avatar_listing_search(cursor, query, filter, order \\ [desc: :updated_at]) do
+    page_number = (cursor || "1") |> Integer.parse() |> elem(0)
+
+    results =
+      AvatarListing
+      |> join(:inner, [l], a in assoc(l, :avatar))
+      |> where([l, a], l.state == ^"active" and a.state == ^"active" and a.allow_promotion == ^true)
+      |> add_query_to_listing_search_query(query)
+      |> add_tag_to_listing_search_query(filter)
+      |> preload([:thumbnail_owned_file])
+      |> order_by(^order)
+      |> Repo.paginate(%{page: page_number, page_size: @page_size})
+      |> result_for_page(page_number, :avatar_listings, &avatar_listing_to_entry/1)
+
+    {:commit, results}
+  end
+
   defp scene_listing_search(cursor, query, filter, order \\ [desc: :updated_at]) do
     page_number = (cursor || "1") |> Integer.parse() |> elem(0)
 
@@ -496,6 +521,30 @@ defmodule Ret.MediaSearch do
       gltfs: %{
         avatar: avatar |> Avatar.gltf_url(),
         base: avatar |> Avatar.base_gltf_url()
+      }
+    }
+  end
+
+  defp avatar_listing_to_entry(avatar_listing) do
+    thumbnail = avatar_listing |> AvatarListing.file_url_or_nil(:thumbnail_owned_file)
+
+    %{
+      id: avatar_listing.avatar_listing_sid,
+      type: "avatar_listing",
+      url: avatar_listing |> AvatarListing.url(),
+      name: avatar_listing.name,
+      description: avatar_listing.description,
+      attributions: avatar_listing.attributions,
+      images: %{
+        preview: %{
+          url: thumbnail || "https://asset-bundles-prod.reticulum.io/bots/avatar_unavailable.png",
+          width: 720,
+          height: 1280
+        }
+      },
+      gltfs: %{
+        avatar: avatar_listing |> AvatarListing.gltf_url(),
+        base: avatar_listing |> AvatarListing.base_gltf_url()
       }
     }
   end
