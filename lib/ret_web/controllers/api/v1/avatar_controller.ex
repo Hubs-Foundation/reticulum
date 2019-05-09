@@ -1,7 +1,7 @@
 defmodule RetWeb.Api.V1.AvatarController do
   use RetWeb, :controller
 
-  alias Ret.{Account, Repo, Avatar, Storage, GLTFUtils}
+  alias Ret.{Account, Repo, Avatar, AvatarListing, Storage, GLTFUtils}
 
   plug(RetWeb.Plugs.RateLimit when action in [:create, :update])
 
@@ -10,7 +10,7 @@ defmodule RetWeb.Api.V1.AvatarController do
   defp get_avatar(avatar_sid) do
     Avatar
     |> Repo.get_by(avatar_sid: avatar_sid)
-    |> Repo.preload([Avatar.file_columns() ++ [:parent_avatar, :account]])
+    |> Repo.preload([Avatar.file_columns() ++ [:parent_avatar, :parent_avatar_listing, :account]])
   end
 
   def create(conn, %{"avatar" => params}) do
@@ -56,21 +56,23 @@ defmodule RetWeb.Api.V1.AvatarController do
       end)
       |> Enum.into(%{})
 
-    promotion_error =
-      owned_file_results |> Map.values() |> Enum.filter(&(elem(&1, 0) == :error)) |> Enum.at(0)
+    promotion_error = owned_file_results |> Map.values() |> Enum.filter(&(elem(&1, 0) == :error)) |> Enum.at(0)
 
     case promotion_error do
       nil ->
-        owned_files =
-          owned_file_results |> Enum.map(fn {k, {:ok, file}} -> {k, file} end) |> Enum.into(%{})
+        owned_files = owned_file_results |> Enum.map(fn {k, {:ok, file}} -> {k, file} end) |> Enum.into(%{})
 
         parent_avatar =
           params["parent_avatar_id"] &&
             Repo.get_by(Avatar, avatar_sid: params["parent_avatar_id"])
 
+        parent_avatar_listing =
+          params["parent_avatar_listing_id"] &&
+            Repo.get_by(AvatarListing, avatar_listing_sid: params["parent_avatar_listing_id"])
+
         {result, avatar} =
           avatar
-          |> Avatar.changeset(account, owned_files, parent_avatar, params)
+          |> Avatar.changeset(account, owned_files, parent_avatar, parent_avatar_listing, params)
           |> Repo.insert_or_update()
 
         avatar = avatar |> Repo.preload(Avatar.file_columns())
@@ -139,6 +141,27 @@ defmodule RetWeb.Api.V1.AvatarController do
 
       {:error, :not_allowed} ->
         conn |> send_resp(401, "You are not allowed to access this avatar")
+    end
+  end
+
+  def delete(conn, %{"id" => avatar_sid}) do
+    account = Guardian.Plug.current_resource(conn)
+
+    case avatar_sid |> get_avatar() do
+      %Avatar{} = avatar -> delete(conn, avatar, account)
+      _ -> conn |> send_resp(404, "not found")
+    end
+  end
+
+  defp delete(conn, %Avatar{account_id: avatar_account_id}, %Account{account_id: account_id})
+       when not is_nil(avatar_account_id) and avatar_account_id != account_id do
+    conn |> send_resp(401, "You do not own this avatar")
+  end
+
+  defp delete(conn, %Avatar{} = avatar, %Account{} = account) do
+    case Repo.delete(avatar) do
+      {:ok, _} -> send_resp(conn, 200, "OK")
+      {:error, error} -> render_error_json(conn, error)
     end
   end
 end

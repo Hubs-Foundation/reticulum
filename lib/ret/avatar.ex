@@ -10,7 +10,7 @@ defmodule Ret.Avatar do
   use Ecto.Schema
   import Ecto.Changeset
 
-  alias Ret.{Avatar, Repo, OwnedFile, Account, Sids}
+  alias Ret.{Avatar, AvatarListing, Repo, OwnedFile, Account, Sids}
   alias Ret.Avatar.{AvatarSlug}
 
   @schema_prefix "ret0"
@@ -30,32 +30,30 @@ defmodule Ret.Avatar do
   schema "avatars" do
     field(:avatar_sid, :string)
     field(:slug, AvatarSlug.Type)
-    belongs_to(:parent_avatar, Avatar, references: :avatar_id)
 
     field(:name, :string)
     field(:description, :string)
     field(:attributions, :map)
 
+    belongs_to(:account, Account, references: :account_id)
+    belongs_to(:parent_avatar, Avatar, references: :avatar_id)
+    belongs_to(:parent_avatar_listing, AvatarListing, references: :avatar_listing_id)
+
     field(:allow_remixing, :boolean)
     field(:allow_promotion, :boolean)
-    belongs_to(:account, Account, references: :account_id)
 
     belongs_to(:gltf_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
     belongs_to(:bin_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
     belongs_to(:thumbnail_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
 
     belongs_to(:base_map_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
-
-    belongs_to(:emissive_map_owned_file, OwnedFile,
-      references: :owned_file_id,
-      on_replace: :nilify
-    )
-
+    belongs_to(:emissive_map_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
     belongs_to(:normal_map_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
     belongs_to(:orm_map_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
 
     field(:state, Avatar.State)
 
+    field(:reviewed_at, :utc_datetime)
     timestamps()
   end
 
@@ -117,15 +115,17 @@ defmodule Ret.Avatar do
         account,
         owned_files_map,
         parent_avatar,
+        parent_avatar_listing,
         attrs \\ %{}
       ) do
     avatar
-    |> cast(attrs, [:name])
+    |> cast(attrs, [:name, :description, :attributions, :allow_remixing, :allow_promotion])
     |> validate_required([])
     |> maybe_add_avatar_sid_to_changeset
     |> unique_constraint(:avatar_sid)
     |> put_assoc(:account, account)
     |> put_assoc(:parent_avatar, parent_avatar)
+    |> put_assoc(:parent_avatar_listing, parent_avatar_listing)
     |> put_owned_files(owned_files_map)
     |> AvatarSlug.maybe_generate_slug()
     |> AvatarSlug.unique_constraint()
