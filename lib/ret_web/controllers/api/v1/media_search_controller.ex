@@ -29,7 +29,6 @@ defmodule RetWeb.Api.V1.MediaSearchController do
     conn |> render("index.json", results: results)
   end
 
-
   def index(conn, %{"source" => "avatar_listings", "filter" => "featured"} = params) do
     {:commit, results} =
       %Ret.MediaSearchQuery{source: "avatar_listings", cursor: params["cursor"] || "1", filter: "featured"}
@@ -40,7 +39,8 @@ defmodule RetWeb.Api.V1.MediaSearchController do
 
   def index(conn, %{"source" => "avatar_listings", "q" => q} = params) do
     {:commit, results} =
-      %Ret.MediaSearchQuery{source: "avatar_listings", cursor: params["cursor"] || "1", q: q} |> Ret.MediaSearch.search()
+      %Ret.MediaSearchQuery{source: "avatar_listings", cursor: params["cursor"] || "1", q: q}
+      |> Ret.MediaSearch.search()
 
     conn |> render("index.json", results: results)
   end
@@ -51,7 +51,6 @@ defmodule RetWeb.Api.V1.MediaSearchController do
 
     conn |> render("index.json", results: results)
   end
-
 
   def index(conn, %{"source" => "avatars", "user" => user} = params) do
     account = conn |> Guardian.Plug.current_resource()
@@ -64,6 +63,20 @@ defmodule RetWeb.Api.V1.MediaSearchController do
       conn |> render("index.json", results: results)
     else
       conn |> send_resp(401, "You can only search avatars by user for your own account.")
+    end
+  end
+
+  def index(conn, %{"source" => "scenes", "user" => user} = params) do
+    account = conn |> Guardian.Plug.current_resource()
+
+    if account && account.account_id == String.to_integer(user) do
+      {:commit, results} =
+        %Ret.MediaSearchQuery{source: "scenes", cursor: params["cursor"] || "1", user: account.account_id}
+        |> Ret.MediaSearch.search()
+
+      conn |> render("index.json", results: results)
+    else
+      conn |> send_resp(401, "You can only search scenes by user for your own account.")
     end
   end
 

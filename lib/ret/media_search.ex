@@ -32,6 +32,10 @@ defmodule Ret.MediaSearch do
     scene_listing_search(cursor, query, filter)
   end
 
+  def search(%Ret.MediaSearchQuery{source: "scenes", cursor: cursor, filter: filter, user: account_id, q: query}) do
+    scene_search(cursor, query, filter, account_id)
+  end
+
   def search(%Ret.MediaSearchQuery{source: "avatar_listings", cursor: cursor, filter: "featured", q: query}) do
     avatar_listing_search(cursor, query, "featured", asc: :order)
   end
@@ -459,7 +463,21 @@ defmodule Ret.MediaSearch do
       |> preload([:screenshot_owned_file, :model_owned_file, :scene_owned_file])
       |> order_by(^order)
       |> Repo.paginate(%{page: page_number, page_size: @page_size})
-      |> result_for_page(page_number, :scene_listings, &scene_listing_to_entry/1)
+      |> result_for_page(page_number, :scene_listings, &scene_or_scene_listing_to_entry/1)
+
+    {:commit, results}
+  end
+
+  defp scene_search(cursor, _query, _filter, account_id, order \\ [desc: :updated_at]) do
+    page_number = (cursor || "1") |> Integer.parse() |> elem(0)
+
+    results =
+      Scene
+      |> where([a], a.account_id == ^account_id)
+      |> preload([:screenshot_owned_file, :model_owned_file, :scene_owned_file])
+      |> order_by(^order)
+      |> Repo.paginate(%{page: page_number, page_size: @page_size})
+      |> result_for_page(page_number, :scenes, &scene_or_scene_listing_to_entry/1)
 
     {:commit, results}
   end
@@ -487,16 +505,21 @@ defmodule Ret.MediaSearch do
     }
   end
 
-  defp scene_listing_to_entry(scene_listing) do
+  defp scene_or_scene_listing_to_entry(%Scene{} = scene), do: scene_or_scene_listing_to_entry(scene, "scene")
+
+  defp scene_or_scene_listing_to_entry(%SceneListing{} = scene),
+    do: scene_or_scene_listing_to_entry(scene, "scene_listing")
+
+  defp scene_or_scene_listing_to_entry(s, type) do
     %{
-      id: scene_listing.scene_listing_sid,
-      url: scene_listing |> Scene.to_url(),
-      type: "scene_listing",
-      name: scene_listing.name,
-      description: scene_listing.description,
-      attributions: scene_listing.attributions,
+      id: s |> Scene.to_sid(),
+      url: s |> Scene.to_url(),
+      type: type,
+      name: s.name,
+      description: s.description,
+      attributions: s.attributions,
       images: %{
-        preview: %{url: scene_listing.screenshot_owned_file |> OwnedFile.uri_for() |> URI.to_string()}
+        preview: %{url: s.screenshot_owned_file |> OwnedFile.uri_for() |> URI.to_string()}
       }
     }
   end
