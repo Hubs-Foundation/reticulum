@@ -38,6 +38,11 @@ defmodule Ret.TestHelpers do
     {:ok, owned_file: generate_temp_owned_file(account)}
   end
 
+  def create_scene(%Account{} = account) do
+    {:ok, scene: scene} = create_scene(%{account: account, owned_file: generate_temp_owned_file(account)})
+    scene
+  end
+
   def create_scene(%{account: account, owned_file: owned_file}) do
     {:ok, scene} =
       %Scene{}

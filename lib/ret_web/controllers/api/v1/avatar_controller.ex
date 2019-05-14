@@ -62,9 +62,7 @@ defmodule RetWeb.Api.V1.AvatarController do
       nil ->
         owned_files = owned_file_results |> Enum.map(fn {k, {:ok, file}} -> {k, file} end) |> Enum.into(%{})
 
-        parent_avatar =
-          params["parent_avatar_id"] &&
-            Repo.get_by(Avatar, avatar_sid: params["parent_avatar_id"])
+        parent_avatar = params["parent_avatar_id"] && Repo.get_by(Avatar, avatar_sid: params["parent_avatar_id"])
 
         parent_avatar_listing =
           params["parent_avatar_listing_id"] &&
@@ -158,7 +156,7 @@ defmodule RetWeb.Api.V1.AvatarController do
     conn |> send_resp(401, "You do not own this avatar")
   end
 
-  defp delete(conn, %Avatar{} = avatar, %Account{} = account) do
+  defp delete(conn, %Avatar{} = avatar, %Account{}) do
     case Repo.delete(avatar) do
       {:ok, _} -> send_resp(conn, 200, "OK")
       {:error, error} -> render_error_json(conn, error)
