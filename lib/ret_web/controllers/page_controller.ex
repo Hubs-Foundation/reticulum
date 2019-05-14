@@ -7,7 +7,8 @@ defmodule RetWeb.PageController do
   end
 
   defp render_scene_content(%t{} = scene, conn) when t in [Scene, SceneListing] do
-    scene_meta_tags = Phoenix.View.render_to_string(RetWeb.PageView, "scene-meta.html", scene: scene, ret_meta: Ret.Meta.get_meta)
+    scene_meta_tags =
+      Phoenix.View.render_to_string(RetWeb.PageView, "scene-meta.html", scene: scene, ret_meta: Ret.Meta.get_meta())
 
     chunks =
       chunks_for_page("scene.html", :hubs)
@@ -47,8 +48,8 @@ defmodule RetWeb.PageController do
   def render_for_path("/discord", conn), do: conn |> render_page("discord.html")
   def render_for_path("/discord/", conn), do: conn |> render_page("discord.html")
 
-  def render_for_path("/spoke-dev", conn), do: conn |> render_page("index.html", :spoke)
-  def render_for_path("/spoke-dev/" <> _path, conn), do: conn |> render_page("index.html", :spoke)
+  def render_for_path("/spoke", conn), do: conn |> render_page("index.html", :spoke)
+  def render_for_path("/spoke/" <> _path, conn), do: conn |> render_page("index.html", :spoke)
 
   def render_for_path("/whats-new", conn), do: conn |> render_page("whats-new.html")
   def render_for_path("/whats-new/", conn), do: conn |> render_page("whats-new.html")
@@ -79,7 +80,13 @@ defmodule RetWeb.PageController do
 
   def render_hub_content(conn, hub, _slug) do
     hub = hub |> Repo.preload(scene: [:screenshot_owned_file])
-    hub_meta_tags = Phoenix.View.render_to_string(RetWeb.PageView, "hub-meta.html", hub: hub, scene: hub.scene, ret_meta: Ret.Meta.get_meta)
+
+    hub_meta_tags =
+      Phoenix.View.render_to_string(RetWeb.PageView, "hub-meta.html",
+        hub: hub,
+        scene: hub.scene,
+        ret_meta: Ret.Meta.get_meta()
+      )
 
     chunks =
       chunks_for_page("hub.html", :hubs)
