@@ -11,7 +11,6 @@ defmodule RetWeb.Api.V1.AvatarView do
   end
 
   def render_avatar(avatar) do
-    # version = avatar.updated_at |> NaiveDateTime.to_erl |> :calendar.datetime_to_gregorian_seconds
     %{
       avatar_id: avatar.avatar_sid,
       parent_avatar_id: unless(is_nil(avatar.parent_avatar), do: avatar.parent_avatar.avatar_sid),
