@@ -42,9 +42,6 @@ defmodule RetWeb.PageController do
     conn |> redirect_to_hub_identifier(hub_identifier)
   end
 
-  def render_for_path("/spoke", conn), do: conn |> render_page("spoke.html")
-  def render_for_path("/spoke/", conn), do: conn |> render_page("spoke.html")
-
   def render_for_path("/discord", conn), do: conn |> render_page("discord.html")
   def render_for_path("/discord/", conn), do: conn |> render_page("discord.html")
 
