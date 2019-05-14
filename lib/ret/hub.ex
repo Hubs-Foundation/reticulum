@@ -29,6 +29,7 @@ defmodule Ret.Hub do
     field(:host, :string)
     field(:entry_code, :integer)
     field(:entry_code_expires_at, :utc_datetime)
+    field(:last_active_at, :utc_datetime)
     field(:creator_assignment_token, :string)
     field(:default_environment_gltf_bundle_url, :string)
     field(:slug, HubSlug.Type)
@@ -87,8 +88,15 @@ defmodule Ret.Hub do
 
     hub
     |> cast(%{max_occupant_count: new_max_occupant_count}, [:max_occupant_count])
+    |> maybe_add_last_active_at_to_changeset(occupant_count)
     |> validate_required([:max_occupant_count])
   end
+
+  # NOTE occupant_count is 1 when there is 1 *other* user in the room with you, so active is when >= 1.
+  defp maybe_add_last_active_at_to_changeset(changeset, occupant_count) when occupant_count >= 1,
+    do: changeset |> put_change(:last_active_at, Timex.now())
+
+  defp maybe_add_last_active_at_to_changeset(changeset, _), do: changeset
 
   def changeset_for_new_scene(%Hub{} = hub, %Scene{} = scene) do
     hub
