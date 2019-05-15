@@ -22,6 +22,7 @@ defmodule Ret.MediaSearch do
   alias Ret.{Repo, OwnedFile, Scene, SceneListing, Asset, Avatar, AvatarListing}
 
   @page_size 24
+  @scene_page_size 23 # HACK for now to reduce page size for scene listings -- real fix will be to expose page_size to API
   @max_face_count 60000
 
   def search(%Ret.MediaSearchQuery{source: "scene_listings", cursor: cursor, filter: "featured", q: query}) do
@@ -462,7 +463,7 @@ defmodule Ret.MediaSearch do
       |> add_tag_to_listing_search_query(filter)
       |> preload([:screenshot_owned_file, :model_owned_file, :scene_owned_file])
       |> order_by(^order)
-      |> Repo.paginate(%{page: page_number, page_size: @page_size})
+      |> Repo.paginate(%{page: page_number, page_size: @scene_page_size})
       |> result_for_page(page_number, :scene_listings, &scene_or_scene_listing_to_entry/1)
 
     {:commit, results}
@@ -476,7 +477,7 @@ defmodule Ret.MediaSearch do
       |> where([a], a.account_id == ^account_id)
       |> preload([:screenshot_owned_file, :model_owned_file, :scene_owned_file])
       |> order_by(^order)
-      |> Repo.paginate(%{page: page_number, page_size: @page_size})
+      |> Repo.paginate(%{page: page_number, page_size: @scene_page_size})
       |> result_for_page(page_number, :scenes, &scene_or_scene_listing_to_entry/1)
 
     {:commit, results}
