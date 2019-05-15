@@ -24,7 +24,8 @@ defmodule Ret.MediaSearch do
   @page_size 24
   # HACK for now to reduce page size for scene listings -- real fix will be to expose page_size to API
   @scene_page_size 23
-  @max_face_count 60000
+
+  @max_low_poly_face_count 60000
 
   def search(%Ret.MediaSearchQuery{source: "scene_listings", cursor: cursor, filter: "featured", q: query}) do
     scene_listing_search(cursor, query, "featured", asc: :order)
@@ -54,13 +55,18 @@ defmodule Ret.MediaSearch do
     assets_search(cursor, type, account_id, query)
   end
 
-  def search(%Ret.MediaSearchQuery{source: "sketchfab", cursor: cursor, filter: "featured", q: q}) do
+  def search(%Ret.MediaSearchQuery{source: "sketchfab", cursor: cursor, filter: "featured", q: q, type: type}) do
     query =
       URI.encode_query(
         type: :models,
         downloadable: true,
         count: @page_size,
-        max_face_count: @max_face_count,
+        max_face_count:
+          if type === "models_high" do
+            nil
+          else
+            @max_low_poly_face_count
+          end,
         processing_status: :succeeded,
         cursor: cursor,
         collection: "ec06ae45eba24bfdb1278b223f8e289c",
@@ -70,13 +76,18 @@ defmodule Ret.MediaSearch do
     sketchfab_search(query)
   end
 
-  def search(%Ret.MediaSearchQuery{source: "sketchfab", cursor: cursor, filter: filter, q: q}) do
+  def search(%Ret.MediaSearchQuery{source: "sketchfab", cursor: cursor, filter: filter, q: q, type: type}) do
     query =
       URI.encode_query(
         type: :models,
         downloadable: true,
         count: @page_size,
-        max_face_count: @max_face_count,
+        max_face_count:
+          if type === "models_high" do
+            nil
+          else
+            @max_low_poly_face_count
+          end,
         processing_status: :succeeded,
         cursor: cursor,
         categories: filter,
@@ -91,12 +102,17 @@ defmodule Ret.MediaSearch do
     sketchfab_search(query)
   end
 
-  def search(%Ret.MediaSearchQuery{source: "poly", cursor: cursor, filter: filter, q: q}) do
+  def search(%Ret.MediaSearchQuery{source: "poly", cursor: cursor, filter: filter, q: q, type: type}) do
     with api_key when is_binary(api_key) <- resolver_config(:google_poly_api_key) do
       query =
         URI.encode_query(
           pageSize: @page_size,
-          maxComplexity: :MEDIUM,
+          maxComplexity:
+            if type == "models_high" do
+              :COMPLEXITY_UNSPECIFIED
+            else
+              :MEDIUM
+            end,
           format: :GLTF2,
           pageToken: cursor,
           category: filter,

@@ -107,7 +107,8 @@ defmodule RetWeb.Api.V1.MediaSearchController do
       cursor: params["cursor"],
       q: params["q"],
       filter: params["filter"],
-      locale: params["locale"]
+      locale: params["locale"],
+      type: params["type"]
     }
 
     case Cachex.fetch(cache_for_query(query), query) do
