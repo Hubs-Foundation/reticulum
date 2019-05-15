@@ -59,6 +59,12 @@ defmodule Ret.DiscordClient do
 
   def fetch_display_name(%Ret.OAuthProvider{source: :discord, provider_account_id: provider_account_id}) do
     case Cachex.fetch(:discord_api, "/users/#{provider_account_id}") do
+      {status, result} when status in [:commit, :ok] -> "#{result["username"]}"
+    end
+  end
+
+  def fetch_community_identifier(%Ret.OAuthProvider{source: :discord, provider_account_id: provider_account_id}) do
+    case Cachex.fetch(:discord_api, "/users/#{provider_account_id}") do
       {status, result} when status in [:commit, :ok] -> "#{result["username"]}##{result["discriminator"]}"
     end
   end

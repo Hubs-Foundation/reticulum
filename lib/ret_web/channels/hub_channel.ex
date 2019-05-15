@@ -454,7 +454,7 @@ defmodule RetWeb.HubChannel do
     account = Guardian.Phoenix.Socket.current_resource(socket)
 
     socket.assigns
-    |> maybe_override_display_name(socket)
+    |> maybe_override_display_name(account)
     |> Map.put(:roles, hub |> Hub.roles_for_account(account))
     |> Map.take([:presence, :profile, :context, :roles])
   end
@@ -465,7 +465,7 @@ defmodule RetWeb.HubChannel do
            hub_requires_oauth: true,
            has_valid_bot_access_key: true
          } = assigns,
-         _socket
+         _account
        ),
        do: assigns
 
@@ -476,16 +476,15 @@ defmodule RetWeb.HubChannel do
            oauth_source: oauth_source,
            oauth_account_id: oauth_account_id
          } = assigns,
-         _socket
+         _account
        )
        when not is_nil(oauth_source) and not is_nil(oauth_account_id) do
-    display_name =
-      Ret.HubBinding.fetch_display_name(%Ret.OAuthProvider{
-        source: oauth_source,
-        provider_account_id: oauth_account_id
-      })
+    oauth_provider = %Ret.OAuthProvider{
+      source: oauth_source,
+      provider_account_id: oauth_account_id
+    }
 
-    assigns |> Map.merge(%{profile: %{"displayName" => display_name}})
+    assigns |> override_display_name(oauth_provider)
   end
 
   # If there isn't an oauth account id on the socket, we expect the user to have an account
@@ -495,18 +494,16 @@ defmodule RetWeb.HubChannel do
            hub_sid: hub_sid,
            oauth_account_id: oauth_account_id
          } = assigns,
-         socket
+         account
        )
        when is_nil(oauth_account_id) do
     hub = Hub |> Repo.get_by(hub_sid: hub_sid) |> Repo.preload(:hub_bindings)
-    account = Guardian.Phoenix.Socket.current_resource(socket)
 
     # Note: There's no way tell which oauth_provider a user would like to identify with. We're just going to pick
     # the first one for now.
     oauth_provider = account |> Account.matching_oauth_providers(hub) |> Enum.at(0)
-    display_name = Ret.HubBinding.fetch_display_name(oauth_provider)
 
-    assigns |> Map.merge(%{profile: %{"displayName" => display_name}})
+    assigns |> override_display_name(oauth_provider)
   end
 
   # We don't override display names for unbound hubs
@@ -514,9 +511,22 @@ defmodule RetWeb.HubChannel do
          %{
            hub_requires_oauth: false
          } = assigns,
-         _socket
+         _account
        ),
        do: assigns
+
+  defp override_display_name(assigns, oauth_provider) do
+    display_name = oauth_provider |> Ret.HubBinding.fetch_display_name()
+    community_identifier = oauth_provider |> Ret.HubBinding.fetch_community_identifier()
+
+    assigns
+    |> Map.merge(%{
+      profile: %{
+        "displayName" => display_name,
+        "communityIdentifier" => community_identifier
+      }
+    })
+  end
 
   defp join_with_hub(nil, _account, _socket, _params) do
     Statix.increment("ret.channels.hub.joins.not_found")

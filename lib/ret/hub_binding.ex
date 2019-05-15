@@ -52,6 +52,12 @@ defmodule Ret.HubBinding do
 
   def fetch_display_name(_), do: nil
 
+  def fetch_community_identifier(%Ret.OAuthProvider{source: :discord} = oauth_provider) do
+    Ret.DiscordClient.fetch_community_identifier(oauth_provider)
+  end
+
+  def fetch_community_identifier(_), do: nil
+
   defp matching_oauth_provider(account, hub_binding) do
     account.oauth_providers |> Enum.find(&(&1.source == hub_binding.type))
   end
