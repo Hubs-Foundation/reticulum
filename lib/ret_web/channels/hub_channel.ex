@@ -473,18 +473,24 @@ defmodule RetWeb.HubChannel do
   defp maybe_override_display_name(
          %{
            hub_requires_oauth: true,
+           hub_sid: hub_sid,
            oauth_source: oauth_source,
            oauth_account_id: oauth_account_id
          } = assigns,
          _account
        )
        when not is_nil(oauth_source) and not is_nil(oauth_account_id) do
+    hub = Hub |> Repo.get_by(hub_sid: hub_sid) |> Repo.preload(:hub_bindings)
+
+    # Assume hubs only have a single hub binding for now.
+    hub_binding = hub.hub_bindings |> Enum.at(0)
+
     oauth_provider = %Ret.OAuthProvider{
       source: oauth_source,
       provider_account_id: oauth_account_id
     }
 
-    assigns |> override_display_name(oauth_provider)
+    assigns |> override_display_name(oauth_provider, hub_binding)
   end
 
   # If there isn't an oauth account id on the socket, we expect the user to have an account
@@ -499,11 +505,15 @@ defmodule RetWeb.HubChannel do
        when is_nil(oauth_account_id) do
     hub = Hub |> Repo.get_by(hub_sid: hub_sid) |> Repo.preload(:hub_bindings)
 
-    # Note: There's no way tell which oauth_provider a user would like to identify with. We're just going to pick
-    # the first one for now.
-    oauth_provider = account |> Account.matching_oauth_providers(hub) |> Enum.at(0)
+    # Assume hubs only have a single hub binding for now.
+    hub_binding = hub.hub_bindings |> Enum.at(0)
 
-    assigns |> override_display_name(oauth_provider)
+    # There's no way tell which oauth_provider a user would like to identify with. We're just going to pick
+    # the first one for now.
+    oauth_provider =
+      account.oauth_providers |> Enum.filter(fn provider -> hub_binding.type == provider.source end) |> Enum.at(0)
+
+    assigns |> override_display_name(oauth_provider, hub_binding)
   end
 
   # We don't override display names for unbound hubs
@@ -515,8 +525,8 @@ defmodule RetWeb.HubChannel do
        ),
        do: assigns
 
-  defp override_display_name(assigns, oauth_provider) do
-    display_name = oauth_provider |> Ret.HubBinding.fetch_display_name()
+  defp override_display_name(assigns, oauth_provider, hub_binding) do
+    display_name = oauth_provider |> Ret.HubBinding.fetch_display_name(hub_binding)
     community_identifier = oauth_provider |> Ret.HubBinding.fetch_community_identifier()
 
     assigns

@@ -57,9 +57,21 @@ defmodule Ret.DiscordClient do
     permissions[permission]
   end
 
-  def fetch_display_name(%Ret.OAuthProvider{source: :discord, provider_account_id: provider_account_id}) do
-    case Cachex.fetch(:discord_api, "/users/#{provider_account_id}") do
-      {status, result} when status in [:commit, :ok] -> "#{result["username"]}"
+  def fetch_display_name(
+        %Ret.OAuthProvider{source: :discord, provider_account_id: provider_account_id},
+        %Ret.HubBinding{community_id: community_id}
+      ) do
+    nickname =
+      case Cachex.fetch(:discord_api, "/guilds/#{community_id}/members/#{provider_account_id}") do
+        {status, result} when status in [:commit, :ok] -> "#{result["nick"]}"
+      end
+
+    if nickname == "" do
+      case Cachex.fetch(:discord_api, "/users/#{provider_account_id}") do
+        {status, result} when status in [:commit, :ok] -> "#{result["username"]}"
+      end
+    else
+      nickname
     end
   end
 
