@@ -22,7 +22,8 @@ defmodule Ret.MediaSearch do
   alias Ret.{Repo, OwnedFile, Scene, SceneListing, Asset, Avatar, AvatarListing}
 
   @page_size 24
-  @scene_page_size 23 # HACK for now to reduce page size for scene listings -- real fix will be to expose page_size to API
+  # HACK for now to reduce page size for scene listings -- real fix will be to expose page_size to API
+  @scene_page_size 23
   @max_face_count 60000
 
   def search(%Ret.MediaSearchQuery{source: "scene_listings", cursor: cursor, filter: "featured", q: query}) do
@@ -310,7 +311,7 @@ defmodule Ret.MediaSearch do
             |> Enum.map(&Kernel.get_in(&1, ["tiles"]))
             |> List.flatten()
 
-          entries = tiles |> Enum.with_index() |> Enum.map(&bing_trending_api_result_to_entry/1)
+          entries = tiles |> Enum.shuffle() |> Enum.with_index() |> Enum.map(&bing_trending_api_result_to_entry/1)
 
           {:commit,
            %Ret.MediaSearchResult{
