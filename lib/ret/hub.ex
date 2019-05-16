@@ -20,7 +20,7 @@ defmodule Ret.Hub do
   @schema_prefix "ret0"
   @primary_key {:hub_id, :id, autogenerate: true}
   @max_entry_code 999_999
-  @entry_code_expiration_hours 24
+  @entry_code_expiration_hours 72
   @max_entry_code_generate_attempts 25
 
   schema "hubs" do
