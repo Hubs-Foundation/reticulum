@@ -529,13 +529,14 @@ defmodule RetWeb.HubChannel do
     display_name = oauth_provider |> Ret.HubBinding.fetch_display_name(hub_binding)
     community_identifier = oauth_provider |> Ret.HubBinding.fetch_community_identifier()
 
-    assigns
-    |> Map.merge(%{
-      profile: %{
+    overriden =
+      assigns.profile
+      |> Map.merge(%{
         "displayName" => display_name,
         "communityIdentifier" => community_identifier
-      }
-    })
+      })
+
+    assigns |> Map.put(:profile, overriden)
   end
 
   defp join_with_hub(nil, _account, _socket, _params) do
