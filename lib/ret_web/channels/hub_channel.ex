@@ -490,7 +490,7 @@ defmodule RetWeb.HubChannel do
       provider_account_id: oauth_account_id
     }
 
-    assigns |> override_display_name(oauth_provider, hub_binding)
+    assigns |> override_display_name_via_binding(oauth_provider, hub_binding)
   end
 
   # If there isn't an oauth account id on the socket, we expect the user to have an account
@@ -513,7 +513,7 @@ defmodule RetWeb.HubChannel do
     oauth_provider =
       account.oauth_providers |> Enum.filter(fn provider -> hub_binding.type == provider.source end) |> Enum.at(0)
 
-    assigns |> override_display_name(oauth_provider, hub_binding)
+    assigns |> override_display_name_via_binding(oauth_provider, hub_binding)
   end
 
   # We don't override display names for unbound hubs
@@ -525,7 +525,7 @@ defmodule RetWeb.HubChannel do
        ),
        do: assigns
 
-  defp override_display_name(assigns, oauth_provider, hub_binding) do
+  defp override_display_name_via_binding(assigns, oauth_provider, hub_binding) do
     display_name = oauth_provider |> Ret.HubBinding.fetch_display_name(hub_binding)
     community_identifier = oauth_provider |> Ret.HubBinding.fetch_community_identifier()
 
