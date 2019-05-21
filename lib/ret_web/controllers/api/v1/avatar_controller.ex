@@ -107,13 +107,13 @@ defmodule RetWeb.Api.V1.AvatarController do
     conn |> send_resp(404, "")
   end
 
+  def show(conn, %Avatar{state: :removed}), do: conn |> send_resp(404, "Avatar not found")
+  def show(conn, %AvatarListing{state: :delisted}), do: conn |> send_resp(404, "Avatar not found")
+
   def show(conn, %t{} = avatar) when t in [Avatar, AvatarListing] do
     account = conn |> Guardian.Plug.current_resource()
     conn |> render("show.json", avatar: avatar, account: account)
   end
-
-  def show(conn, %Avatar{state: :removed}), do: conn |> send_resp(404, "Avatar not found")
-  def show(conn, %AvatarListing{state: :delisted}), do: conn |> send_resp(404, "Avatar not found")
 
   def show_avatar_gltf(conn, %{"id" => avatar_sid}) do
     conn |> show_gltf(avatar_sid |> get_avatar(), true)
