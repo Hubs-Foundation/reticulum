@@ -127,6 +127,9 @@ defmodule RetWeb.Api.V1.AvatarController do
     conn |> send_resp(404, "Avatar not found")
   end
 
+  def show_gltf(conn, %Avatar{state: :removed}, _overrides), do: conn |> send_resp(404, "Avatar not found")
+  def show_gltf(conn, %AvatarListing{state: :delisted}, _overrides), do: conn |> send_resp(404, "Avatar not found")
+
   def show_gltf(conn, %t{} = a, apply_overrides) when t in [Avatar, AvatarListing],
     do: conn |> show_gltf(a |> Avatar.collapsed_files(), apply_overrides)
 
