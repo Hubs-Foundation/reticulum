@@ -85,7 +85,7 @@ defmodule RetWeb.Api.V1.AvatarController do
 
         case result do
           :ok ->
-            conn |> render("create.json", avatar: avatar)
+            conn |> render("create.json", avatar: avatar, account: account)
 
           :error ->
             conn |> send_resp(422, "invalid avatar")
@@ -108,11 +108,13 @@ defmodule RetWeb.Api.V1.AvatarController do
   end
 
   def show(conn, %Avatar{} = avatar) do
-    conn |> render("show.json", avatar: avatar)
+    account = conn |> Guardian.Plug.current_resource()
+    conn |> render("show.json", avatar: avatar, account: account)
   end
 
   def show(conn, %AvatarListing{} = avatar_listing) do
-    conn |> render("show.json", avatar: avatar_listing)
+    account = conn |> Guardian.Plug.current_resource()
+    conn |> render("show.json", avatar: avatar_listing, account: account)
   end
 
   def show_avatar_gltf(conn, %{"id" => avatar_sid}) do

@@ -2,15 +2,15 @@ defmodule RetWeb.Api.V1.AvatarView do
   use RetWeb, :view
   alias Ret.{Avatar, AvatarListing}
 
-  def render("create.json", %{avatar: avatar}) do
-    %{avatars: [render_avatar(avatar)]}
+  def render("create.json", %{avatar: avatar, account: account}) do
+    %{avatars: [render_avatar(avatar, account)]}
   end
 
-  def render("show.json", %{avatar: avatar}) do
-    %{avatars: [render_avatar(avatar)]}
+  def render("show.json", %{avatar: avatar, account: account}) do
+    %{avatars: [render_avatar(avatar, account)]}
   end
 
-  def render_avatar(%Avatar{} = a) do
+  def render_avatar(%Avatar{} = a, account) do
     %{
       avatar_id: a.avatar_sid,
       parent_avatar_id: unless(is_nil(a.parent_avatar), do: a.parent_avatar.avatar_sid),
@@ -20,6 +20,7 @@ defmodule RetWeb.Api.V1.AvatarView do
       attributions: if(is_nil(a.attributions), do: %{}, else: a.attributions),
       allow_remixing: a.allow_remixing,
       allow_promotion: a.allow_promotion,
+      account_id: account && a.account_id == account.account_id && a.account_id |> Integer.to_string(), # Only include account id on your own avatars
       gltf_url: a |> Avatar.gltf_url(),
       base_gltf_url: a |> Avatar.base_gltf_url(),
       files:
@@ -30,7 +31,7 @@ defmodule RetWeb.Api.V1.AvatarView do
     }
   end
 
-  def render_avatar(%AvatarListing{} = a) do
+  def render_avatar(%AvatarListing{} = a, _account) do
     %{
       avatar_id: a.avatar_listing_sid,
       parent_avatar_listing_id: unless(is_nil(a.parent_avatar_listing), do: a.parent_avatar_listing.avatar_listing_sid),
