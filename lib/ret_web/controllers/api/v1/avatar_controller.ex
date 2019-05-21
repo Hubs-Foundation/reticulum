@@ -112,6 +112,9 @@ defmodule RetWeb.Api.V1.AvatarController do
     conn |> render("show.json", avatar: avatar, account: account)
   end
 
+  def show(conn, %Avatar{state: :removed}), do: conn |> send_resp(404, "Avatar not found")
+  def show(conn, %AvatarListing{state: :delisted}), do: conn |> send_resp(404, "Avatar not found")
+
   def show_avatar_gltf(conn, %{"id" => avatar_sid}) do
     conn |> show_gltf(avatar_sid |> get_avatar(), true)
   end
