@@ -75,9 +75,9 @@ defmodule Ret.Avatar do
 
   defp avatar_listing_to_collapsed_files(%{parent_avatar_listing: parent} = listing) do
     parent
-    |> Repo.preload(Avatar.file_columns())
-    |> Map.take(Avatar.file_columns())
-    |> Map.merge(listing |> Map.take(Avatar.file_columns()), fn
+    |> Repo.preload(@file_columns)
+    |> Map.take(@file_columns)
+    |> Map.merge(listing |> Map.take(@file_columns), fn
       _k, v1, nil -> v1
       _k, _v1, v2 -> v2
     end)
