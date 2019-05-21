@@ -43,41 +43,6 @@ defmodule Ret.AvatarListing do
     belongs_to(:orm_map_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
   end
 
-  def version(%AvatarListing{} = avatar) do
-    avatar.updated_at |> NaiveDateTime.to_erl() |> :calendar.datetime_to_gregorian_seconds()
-  end
-
-  def url(%AvatarListing{} = avatar), do: "#{RetWeb.Endpoint.url()}/api/v1/avatars/#{avatar.avatar_listing_sid}"
-
-  def gltf_url(%AvatarListing{} = avatar),
-    do: "#{AvatarListing.url(avatar)}/avatar.gltf?v=#{AvatarListing.version(avatar)}"
-
-  def base_gltf_url(%AvatarListing{} = avatar),
-    do: "#{AvatarListing.url(avatar)}/base.gltf?v=#{AvatarListing.version(avatar)}"
-
-  def file_url_or_nil(%AvatarListing{} = avatar, column) do
-    case avatar |> Map.get(column) do
-      nil -> nil
-      owned_file -> owned_file |> OwnedFile.uri_for() |> URI.to_string()
-    end
-  end
-
-  defp avatar_listing_to_collapsed_files(%{parent_avatar_listing: nil} = a), do: a |> Map.take(Avatar.file_columns())
-
-  defp avatar_listing_to_collapsed_files(%{parent_avatar_listing: p} = a) do
-    p
-    |> Repo.preload(Avatar.file_columns())
-    |> Map.take(Avatar.file_columns())
-    |> Map.merge(a |> Map.take(Avatar.file_columns()), fn
-      _k, v1, nil -> v1
-      _k, _v1, v2 -> v2
-    end)
-  end
-
-  def collapsed_files(%AvatarListing{} = a) do
-    a |> Repo.preload([:parent_avatar_listing] ++ Avatar.file_columns()) |> avatar_listing_to_collapsed_files()
-  end
-
   def changeset_for_listing_for_avatar(
         %AvatarListing{} = listing,
         avatar,

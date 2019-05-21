@@ -10,42 +10,41 @@ defmodule RetWeb.Api.V1.AvatarView do
     %{avatars: [render_avatar(avatar, account)]}
   end
 
-  def render_avatar(%Avatar{} = a, account) do
+  defp render_avatar(%Avatar{} = avatar, account) do
+    avatar
+    |> common_fields()
+    |> Map.merge(%{
+      avatar_id: avatar.avatar_sid,
+      parent_avatar_id: unless(is_nil(avatar.parent_avatar), do: avatar.parent_avatar.avatar_sid),
+      # Only include account id on your own avatars
+      account_id: account && avatar.account_id == account.account_id && avatar.account_id |> Integer.to_string(),
+      allow_remixing: avatar.allow_remixing,
+      allow_promotion: avatar.allow_promotion
+    })
+  end
+
+  defp render_avatar(%AvatarListing{} = listing, _account) do
+    listing
+    |> common_fields()
+    |> Map.merge(%{
+      avatar_id: listing.avatar_listing_sid,
+      allow_remixing: listing.avatar.allow_remixing,
+      allow_promotion: listing.avatar.allow_promotion
+    })
+  end
+
+  defp common_fields(%t{} = a) when t in [Avatar, AvatarListing] do
     %{
-      avatar_id: a.avatar_sid,
-      parent_avatar_id: unless(is_nil(a.parent_avatar), do: a.parent_avatar.avatar_sid),
       parent_avatar_listing_id: unless(is_nil(a.parent_avatar_listing), do: a.parent_avatar_listing.avatar_listing_sid),
       name: a.name,
       description: a.description,
       attributions: if(is_nil(a.attributions), do: %{}, else: a.attributions),
-      allow_remixing: a.allow_remixing,
-      allow_promotion: a.allow_promotion,
-      account_id: account && a.account_id == account.account_id && a.account_id |> Integer.to_string(), # Only include account id on your own avatars
       gltf_url: a |> Avatar.gltf_url(),
       base_gltf_url: a |> Avatar.base_gltf_url(),
       files:
         for col <- Avatar.file_columns(), into: %{} do
           key = col |> Atom.to_string() |> String.replace_suffix("_owned_file", "")
           {key, a |> Avatar.file_url_or_nil(col)}
-        end
-    }
-  end
-
-  def render_avatar(%AvatarListing{} = a, _account) do
-    %{
-      avatar_id: a.avatar_listing_sid,
-      parent_avatar_listing_id: unless(is_nil(a.parent_avatar_listing), do: a.parent_avatar_listing.avatar_listing_sid),
-      name: a.name,
-      description: a.description,
-      attributions: if(is_nil(a.attributions), do: %{}, else: a.attributions),
-      allow_remixing: a.avatar.allow_remixing,
-      allow_promotion: a.avatar.allow_promotion,
-      gltf_url: a |> AvatarListing.gltf_url(),
-      base_gltf_url: a |> AvatarListing.base_gltf_url(),
-      files:
-        for col <- Avatar.file_columns(), into: %{} do
-          key = col |> Atom.to_string() |> String.replace_suffix("_owned_file", "")
-          {key, a |> AvatarListing.file_url_or_nil(col)}
         end
     }
   end

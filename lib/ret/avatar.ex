@@ -70,24 +70,41 @@ defmodule Ret.Avatar do
     end)
   end
 
+  defp avatar_listing_to_collapsed_files(%{parent_avatar_listing: nil} = listing),
+    do: listing |> Map.take(Avatar.file_columns())
+
+  defp avatar_listing_to_collapsed_files(%{parent_avatar_listing: parent} = listing) do
+    parent
+    |> Repo.preload(Avatar.file_columns())
+    |> Map.take(Avatar.file_columns())
+    |> Map.merge(listing |> Map.take(Avatar.file_columns()), fn
+      _k, v1, nil -> v1
+      _k, _v1, v2 -> v2
+    end)
+  end
+
   def collapsed_files(%Avatar{} = avatar) do
     avatar
     |> Repo.preload([:parent_avatar, :parent_avatar_listing] ++ @file_columns)
     |> avatar_to_collapsed_files()
   end
 
-  def version(%Avatar{} = avatar) do
-    avatar.updated_at |> NaiveDateTime.to_erl() |> :calendar.datetime_to_gregorian_seconds()
+  def collapsed_files(%AvatarListing{} = listing) do
+    listing |> Repo.preload([:parent_avatar_listing] ++ Avatar.file_columns()) |> avatar_listing_to_collapsed_files()
   end
 
+  def version(%t{} = a) when t in [Avatar, AvatarListing],
+    do: a.updated_at |> NaiveDateTime.to_erl() |> :calendar.datetime_to_gregorian_seconds()
+
   def url(%Avatar{} = avatar), do: "#{RetWeb.Endpoint.url()}/api/v1/avatars/#{avatar.avatar_sid}"
+  def url(%AvatarListing{} = avatar), do: "#{RetWeb.Endpoint.url()}/api/v1/avatars/#{avatar.avatar_listing_sid}"
 
-  def gltf_url(%Avatar{} = avatar), do: "#{Avatar.url(avatar)}/avatar.gltf?v=#{Avatar.version(avatar)}"
+  def gltf_url(%t{} = a) when t in [Avatar, AvatarListing], do: "#{Avatar.url(a)}/avatar.gltf?v=#{Avatar.version(a)}"
 
-  def base_gltf_url(%Avatar{} = avatar), do: "#{Avatar.url(avatar)}/base.gltf?v=#{Avatar.version(avatar)}"
+  def base_gltf_url(%t{} = a) when t in [Avatar, AvatarListing], do: "#{Avatar.url(a)}/base.gltf?v=#{Avatar.version(a)}"
 
-  def file_url_or_nil(%Avatar{} = avatar, column) do
-    case avatar |> Map.get(column) do
+  def file_url_or_nil(%t{} = a, column) when t in [Avatar, AvatarListing] do
+    case a |> Map.get(column) do
       nil -> nil
       owned_file -> owned_file |> OwnedFile.uri_for() |> URI.to_string()
     end

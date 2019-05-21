@@ -107,14 +107,9 @@ defmodule RetWeb.Api.V1.AvatarController do
     conn |> send_resp(404, "")
   end
 
-  def show(conn, %Avatar{} = avatar) do
+  def show(conn, %t{} = avatar) when t in [Avatar, AvatarListing] do
     account = conn |> Guardian.Plug.current_resource()
     conn |> render("show.json", avatar: avatar, account: account)
-  end
-
-  def show(conn, %AvatarListing{} = avatar_listing) do
-    account = conn |> Guardian.Plug.current_resource()
-    conn |> render("show.json", avatar: avatar_listing, account: account)
   end
 
   def show_avatar_gltf(conn, %{"id" => avatar_sid}) do
@@ -129,11 +124,8 @@ defmodule RetWeb.Api.V1.AvatarController do
     conn |> send_resp(404, "Avatar not found")
   end
 
-  def show_gltf(conn, %Avatar{} = a, apply_overrides),
+  def show_gltf(conn, %t{} = a, apply_overrides) when t in [Avatar, AvatarListing],
     do: conn |> show_gltf(a |> Avatar.collapsed_files(), apply_overrides)
-
-  def show_gltf(conn, %AvatarListing{} = a, apply_overrides),
-    do: conn |> show_gltf(a |> AvatarListing.collapsed_files(), apply_overrides)
 
   def show_gltf(conn, avatar_files, apply_overrides) do
     case Storage.fetch(avatar_files.gltf_owned_file) do
