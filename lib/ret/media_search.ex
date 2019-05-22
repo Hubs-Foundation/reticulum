@@ -551,12 +551,12 @@ defmodule Ret.MediaSearch do
   end
 
   defp avatar_listing_to_entry(avatar_listing) do
-    thumbnail = avatar_listing |> AvatarListing.file_url_or_nil(:thumbnail_owned_file)
+    thumbnail = avatar_listing |> Avatar.file_url_or_nil(:thumbnail_owned_file)
 
     %{
       id: avatar_listing.avatar_listing_sid,
       type: "avatar_listing",
-      url: avatar_listing |> AvatarListing.url(),
+      url: avatar_listing |> Avatar.url(),
       name: avatar_listing.name,
       description: avatar_listing.description,
       attributions: avatar_listing.attributions,
@@ -568,8 +568,8 @@ defmodule Ret.MediaSearch do
         }
       },
       gltfs: %{
-        avatar: avatar_listing |> AvatarListing.gltf_url(),
-        base: avatar_listing |> AvatarListing.base_gltf_url()
+        avatar: avatar_listing |> Avatar.gltf_url(),
+        base: avatar_listing |> Avatar.base_gltf_url()
       }
     }
   end
