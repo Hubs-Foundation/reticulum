@@ -51,7 +51,6 @@ defmodule RetWeb.PageController do
   def render_for_path("/whats-new", conn), do: conn |> render_page("whats-new.html")
   def render_for_path("/whats-new/", conn), do: conn |> render_page("whats-new.html")
 
-  def render_for_path("/avatar-selector.html", conn), do: conn |> render_page("avatar-selector.html")
   def render_for_path("/hub.service.js", conn), do: conn |> render_page("hub.service.js")
 
   def render_for_path("/admin", conn), do: conn |> render_page("admin.html")
