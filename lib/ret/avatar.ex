@@ -96,12 +96,16 @@ defmodule Ret.Avatar do
   def version(%t{} = a) when t in [Avatar, AvatarListing],
     do: a.updated_at |> NaiveDateTime.to_erl() |> :calendar.datetime_to_gregorian_seconds()
 
-  def url(%Avatar{} = avatar), do: "#{RetWeb.Endpoint.url()}/api/v1/avatars/#{avatar.avatar_sid}"
-  def url(%AvatarListing{} = avatar), do: "#{RetWeb.Endpoint.url()}/api/v1/avatars/#{avatar.avatar_listing_sid}"
+  def url(%Avatar{} = avatar), do: "#{RetWeb.Endpoint.url()}/avatars/#{avatar.avatar_sid}"
+  def url(%AvatarListing{} = avatar), do: "#{RetWeb.Endpoint.url()}/avatars/#{avatar.avatar_listing_sid}"
 
-  def gltf_url(%t{} = a) when t in [Avatar, AvatarListing], do: "#{Avatar.url(a)}/avatar.gltf?v=#{Avatar.version(a)}"
+  defp api_base_url(%Avatar{} = avatar), do: "#{RetWeb.Endpoint.url()}/api/v1/avatars/#{avatar.avatar_sid}"
+  defp api_base_url(%AvatarListing{} = avatar), do: "#{RetWeb.Endpoint.url()}/api/v1/avatars/#{avatar.avatar_listing_sid}"
 
-  def base_gltf_url(%t{} = a) when t in [Avatar, AvatarListing], do: "#{Avatar.url(a)}/base.gltf?v=#{Avatar.version(a)}"
+  def gltf_url(%t{} = a) when t in [Avatar, AvatarListing], do: "#{api_base_url(a)}/avatar.gltf?v=#{Avatar.version(a)}"
+
+  def base_gltf_url(%t{} = a) when t in [Avatar, AvatarListing],
+    do: "#{api_base_url(a)}/base.gltf?v=#{Avatar.version(a)}"
 
   def file_url_or_nil(%t{} = a, column) when t in [Avatar, AvatarListing] do
     case a |> Map.get(column) do
