@@ -10,7 +10,7 @@ defmodule Ret.AvatarListing do
   use Ecto.Schema
   import Ecto.Changeset
 
-  alias Ret.{AvatarListing, OwnedFile, Repo}
+  alias Ret.{AvatarListing, OwnedFile}
   alias AvatarListing.{AvatarListingSlug}
 
   @schema_prefix "ret0"
