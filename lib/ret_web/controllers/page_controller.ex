@@ -152,8 +152,8 @@ defmodule RetWeb.PageController do
     end
   end
 
-  defp content_type_for_page("hub.service.js") do: "application/javascript; charset=utf-8"
-  defp content_type_for_page("manifest.webmanifest") do: "application/manifest+json"
+  defp content_type_for_page("hub.service.js"), do: "application/javascript; charset=utf-8"
+  defp content_type_for_page("manifest.webmanifest"), do: "application/manifest+json"
 
   defp content_type_for_page(_) do
     "text/html; charset=utf-8"
