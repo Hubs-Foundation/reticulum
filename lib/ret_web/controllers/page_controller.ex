@@ -78,6 +78,7 @@ defmodule RetWeb.PageController do
   def render_for_path("/whats-new/", conn), do: conn |> render_page("whats-new.html")
 
   def render_for_path("/hub.service.js", conn), do: conn |> render_page("hub.service.js")
+  def render_for_path("/manifest.webmanifest", conn), do: conn |> render_page("manifest.webmanifest")
 
   def render_for_path("/admin", conn), do: conn |> render_page("admin.html")
 
@@ -151,9 +152,8 @@ defmodule RetWeb.PageController do
     end
   end
 
-  defp content_type_for_page("hub.service.js") do
-    "application/javascript; charset=utf-8"
-  end
+  defp content_type_for_page("hub.service.js"), do: "application/javascript; charset=utf-8"
+  defp content_type_for_page("manifest.webmanifest"), do: "application/manifest+json"
 
   defp content_type_for_page(_) do
     "text/html; charset=utf-8"
