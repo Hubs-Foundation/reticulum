@@ -21,7 +21,7 @@ defmodule RetWeb.HubChannel do
   alias RetWeb.{Presence}
   alias RetWeb.Api.V1.{HubView}
 
-  intercept(["mute"])
+  intercept(["mute", "naf"])
 
   @hub_preloads [
     scene: [:model_owned_file, :screenshot_owned_file, :scene_owned_file],
@@ -35,6 +35,7 @@ defmodule RetWeb.HubChannel do
     socket
     |> assign(:profile, profile)
     |> assign(:context, context)
+    |> assign(:block_naf, false)
     |> perform_join(
       hub_sid,
       params |> Map.take(["push_subscription_endpoint", "auth_token", "perms_token", "bot_access_key"])
@@ -356,12 +357,24 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
+  def handle_in("block_naf", _payload, socket), do: {:noreply, socket |> assign(:block_naf, true)}
+  def handle_in("unblock_naf", _payload, socket), do: {:noreply, socket |> assign(:block_naf, false)}
+
   def handle_in(_message, _payload, socket) do
     {:noreply, socket}
   end
 
   def handle_out("mute" = event, %{"session_id" => session_id} = payload, socket) do
     if socket.assigns.session_id == session_id do
+      push(socket, event, payload)
+    end
+
+    {:noreply, socket}
+  end
+
+  def handle_out("naf" = event, payload, socket) do
+    # Sockets can block NAF as an optimization, eg iframe embeds do not need NAF messages until user clicks load
+    if !socket.assigns.block_naf do
       push(socket, event, payload)
     end
 
