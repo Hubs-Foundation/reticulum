@@ -6,6 +6,6 @@ defenum(Ret.OAuthProvider.Source, :oauth_provider_source, [:discord, :slack], sc
 defenum(Ret.OwnedFile.State, :owned_file_state, [:active, :inactive, :removed], schema: "ret0")
 defenum(Ret.Scene.State, :scene_state, [:active, :removed], schema: "ret0")
 defenum(Ret.SceneListing.State, :scene_listing_state, [:active, :delisted], schema: "ret0")
-defenum(Ret.Avatar.State, :avatar_state, [:active], schema: "ret0")
+defenum(Ret.Avatar.State, :avatar_state, [:active, :removed], schema: "ret0")
 defenum(Ret.AvatarListing.State, :avatar_listing_state, [:active, :delisted], schema: "ret0")
 defenum(Ret.Asset.Type, :asset_type, [:image, :video, :model], schema: "ret0")

@@ -1,6 +1,6 @@
 defmodule RetWeb.PageController do
   use RetWeb, :controller
-  alias Ret.{Repo, Hub, Scene, SceneListing}
+  alias Ret.{Repo, Hub, Scene, SceneListing, Avatar, AvatarListing}
 
   def call(conn, _params) do
     render_for_path(conn.request_path, conn)
@@ -23,6 +23,23 @@ defmodule RetWeb.PageController do
     conn |> send_resp(404, "")
   end
 
+  defp render_avatar_content(%t{} = avatar, conn) when t in [Avatar, AvatarListing] do
+    avatar_meta_tags =
+      Phoenix.View.render_to_string(RetWeb.PageView, "avatar-meta.html", avatar: avatar, ret_meta: Ret.Meta.get_meta())
+
+    chunks =
+      chunks_for_page("avatar.html", :hubs)
+      |> List.insert_at(1, avatar_meta_tags)
+
+    conn
+    |> put_resp_header("content-type", "text/html; charset=utf-8")
+    |> send_resp(200, chunks)
+  end
+
+  defp render_avatar_content(nil, conn) do
+    conn |> send_resp(404, "")
+  end
+
   def render_for_path("/", conn), do: conn |> render_page("index.html")
 
   def render_for_path("/scenes/" <> path, conn) do
@@ -32,6 +49,15 @@ defmodule RetWeb.PageController do
     |> Scene.scene_or_scene_listing_by_sid()
     |> Repo.preload([:screenshot_owned_file])
     |> render_scene_content(conn)
+  end
+
+  def render_for_path("/avatars/" <> path, conn) do
+    path
+    |> String.split("/")
+    |> Enum.at(0)
+    |> Avatar.avatar_or_avatar_listing_by_sid()
+    |> Repo.preload([:thumbnail_owned_file])
+    |> render_avatar_content(conn)
   end
 
   def render_for_path("/link", conn), do: conn |> render_page("link.html")
@@ -51,8 +77,8 @@ defmodule RetWeb.PageController do
   def render_for_path("/whats-new", conn), do: conn |> render_page("whats-new.html")
   def render_for_path("/whats-new/", conn), do: conn |> render_page("whats-new.html")
 
-  def render_for_path("/avatar-selector.html", conn), do: conn |> render_page("avatar-selector.html")
   def render_for_path("/hub.service.js", conn), do: conn |> render_page("hub.service.js")
+  def render_for_path("/manifest.webmanifest", conn), do: conn |> render_page("manifest.webmanifest")
 
   def render_for_path("/admin", conn), do: conn |> render_page("admin.html")
 
@@ -126,9 +152,8 @@ defmodule RetWeb.PageController do
     end
   end
 
-  defp content_type_for_page("hub.service.js") do
-    "application/javascript; charset=utf-8"
-  end
+  defp content_type_for_page("hub.service.js"), do: "application/javascript; charset=utf-8"
+  defp content_type_for_page("manifest.webmanifest"), do: "application/manifest+json"
 
   defp content_type_for_page(_) do
     "text/html; charset=utf-8"

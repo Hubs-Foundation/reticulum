@@ -17,7 +17,7 @@ defmodule Ret.OAuthToken do
         nil,
         %{hub_sid: hub_sid, aud: :ret_oauth},
         allowed_algos: ["HS512"],
-        ttl: {5, :minutes},
+        ttl: {10, :minutes},
         allowed_drift: 60 * 1000
       )
 

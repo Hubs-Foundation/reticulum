@@ -8,9 +8,17 @@ defmodule RetWeb.Api.V1.AvatarController do
   @primary_material_name "Bot_PBS"
 
   defp get_avatar(avatar_sid) do
-    Avatar
-    |> Repo.get_by(avatar_sid: avatar_sid)
-    |> Repo.preload([Avatar.file_columns() ++ [:parent_avatar, :parent_avatar_listing, :account]])
+    avatar_sid
+    |> Avatar.avatar_or_avatar_listing_by_sid()
+    |> preload()
+  end
+
+  defp preload(%Avatar{} = a) do
+    a |> Repo.preload([Avatar.file_columns() ++ [:parent_avatar, :parent_avatar_listing, :account]])
+  end
+
+  defp preload(%AvatarListing{} = a) do
+    a |> Repo.preload([Avatar.file_columns() ++ [:avatar, :parent_avatar_listing, :account]])
   end
 
   def create(conn, %{"avatar" => params}) do
@@ -77,7 +85,7 @@ defmodule RetWeb.Api.V1.AvatarController do
 
         case result do
           :ok ->
-            conn |> render("create.json", avatar: avatar)
+            conn |> render("create.json", avatar: avatar, account: account)
 
           :error ->
             conn |> send_resp(422, "invalid avatar")
@@ -99,25 +107,33 @@ defmodule RetWeb.Api.V1.AvatarController do
     conn |> send_resp(404, "")
   end
 
-  def show(conn, %Avatar{} = avatar) do
-    conn |> render("show.json", avatar: avatar)
+  def show(conn, %Avatar{state: :removed}), do: conn |> send_resp(404, "Avatar not found")
+  def show(conn, %AvatarListing{state: :delisted}), do: conn |> send_resp(404, "Avatar not found")
+
+  def show(conn, %t{} = avatar) when t in [Avatar, AvatarListing] do
+    account = conn |> Guardian.Plug.current_resource()
+    conn |> render("show.json", avatar: avatar, account: account)
   end
 
   def show_avatar_gltf(conn, %{"id" => avatar_sid}) do
-    conn |> show_gltf(Avatar |> Repo.get_by(avatar_sid: avatar_sid), true)
+    conn |> show_gltf(avatar_sid |> get_avatar(), true)
   end
 
   def show_base_gltf(conn, %{"id" => avatar_sid}) do
-    conn |> show_gltf(Avatar |> Repo.get_by(avatar_sid: avatar_sid), false)
+    conn |> show_gltf(avatar_sid |> get_avatar(), false)
   end
 
   def show_gltf(conn, nil = _avatar, _apply_overrides) do
     conn |> send_resp(404, "Avatar not found")
   end
 
-  def show_gltf(conn, %Avatar{} = avatar, apply_overrides) do
-    avatar_files = avatar |> Avatar.collapsed_files()
+  def show_gltf(conn, %Avatar{state: :removed}, _overrides), do: conn |> send_resp(404, "Avatar not found")
+  def show_gltf(conn, %AvatarListing{state: :delisted}, _overrides), do: conn |> send_resp(404, "Avatar not found")
 
+  def show_gltf(conn, %t{} = a, apply_overrides) when t in [Avatar, AvatarListing],
+    do: conn |> show_gltf(a |> Avatar.collapsed_files(), apply_overrides)
+
+  def show_gltf(conn, avatar_files, apply_overrides) do
     case Storage.fetch(avatar_files.gltf_owned_file) do
       {:ok, _meta, stream} ->
         gltf =

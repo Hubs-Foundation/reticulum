@@ -6,15 +6,33 @@ defmodule RetWeb.Api.V1.OAuthController do
   plug(RetWeb.Plugs.RateLimit when action in [:show])
 
   def show(conn, %{"type" => "discord", "state" => state, "code" => code}) do
-    {:ok, %{"hub_sid" => hub_sid}} = OAuthToken.decode_and_verify(state)
+    %{claims: %{"hub_sid" => hub_sid}} = OAuthToken.peek(state)
+    hub = Hub |> Repo.get_by(hub_sid: hub_sid)
 
-    %{"id" => discord_user_id, "email" => email, "verified" => verified} =
-      code |> DiscordClient.fetch_access_token() |> DiscordClient.fetch_user_info()
+    case OAuthToken.decode_and_verify(state) do
+      {:ok, _} ->
+        %{"id" => discord_user_id, "email" => email, "verified" => verified} =
+          code |> DiscordClient.fetch_access_token() |> DiscordClient.fetch_user_info()
 
-    hub = Hub |> Repo.get_by(hub_sid: hub_sid) |> Repo.preload(:hub_bindings)
+        hub = hub |> Repo.preload(:hub_bindings)
+
+        conn
+        |> process_discord_oauth(discord_user_id, verified, email, hub)
+        |> put_resp_header("location", hub |> Hub.url_for())
+        |> send_resp(307, "")
+
+      {:error, :token_expired} ->
+        conn
+        |> put_resp_header("location", hub |> Hub.url_for())
+        |> send_resp(307, "")
+    end
+  end
+
+  def show(conn, %{"type" => "discord", "error" => "access_denied", "state" => state}) do
+    %{claims: %{"hub_sid" => hub_sid}} = OAuthToken.peek(state)
+    hub = Hub |> Repo.get_by(hub_sid: hub_sid)
 
     conn
-    |> process_discord_oauth(discord_user_id, verified, email, hub)
     |> put_resp_header("location", hub |> Hub.url_for())
     |> send_resp(307, "")
   end
