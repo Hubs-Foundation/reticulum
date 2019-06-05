@@ -143,7 +143,7 @@ config :ret, RetWeb.AddCSPPlug,
       asset_hosts
     } #{websocket_hosts} https://cdn.aframe.io https://www.mozilla.org data: blob:; img-src 'self' #{asset_hosts} https://cdn.aframe.io data: blob:; media-src 'self' #{
       asset_hosts
-    } data: blob:; frame-src 'self'; frame-ancestors 'self'; base-uri 'none'; form-action 'self';"
+    } data: blob:; frame-src 'self'; base-uri 'none'; form-action 'self';"
 
 config :ret, Ret.Mailer, adapter: Bamboo.LocalAdapter
 
