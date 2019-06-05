@@ -561,7 +561,7 @@ defmodule RetWeb.HubChannel do
     {:error, %{message: "No such Hub"}}
   end
 
-  defp join_with_hub(%Hub{entry_mode: :deny}, _account, _socket, _params, _context) do
+  defp join_with_hub(%Hub{entry_mode: :deny}, _account, _socket, _context, _params) do
     {:error, %{message: "Hub no longer accessible", reason: "closed"}}
   end
 
