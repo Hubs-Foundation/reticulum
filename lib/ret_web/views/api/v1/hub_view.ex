@@ -12,12 +12,12 @@ defmodule RetWeb.Api.V1.HubView do
     }
   end
 
-  def render("show.json", %{hub: %Hub{scene: %Scene{}} = hub}) do
-    hub |> render_with_scene
+  def render("show.json", %{hub: %Hub{scene: %Scene{}} = hub, embeddable: embeddable}) do
+    hub |> render_with_scene(embeddable)
   end
 
-  def render("show.json", %{hub: %Hub{scene_listing: %SceneListing{}} = hub}) do
-    hub |> render_with_scene
+  def render("show.json", %{hub: %Hub{scene_listing: %SceneListing{}} = hub, embeddable: embeddable}) do
+    hub |> render_with_scene(embeddable)
   end
 
   # DEPRECATED
@@ -25,7 +25,7 @@ defmodule RetWeb.Api.V1.HubView do
     hub |> render_with_scene_asset(:gltf_bundle, hub.default_environment_gltf_bundle_url)
   end
 
-  def render_with_scene(hub) do
+  def render_with_scene(hub, embeddable) do
     %{
       hubs: [
         %{
@@ -35,7 +35,13 @@ defmodule RetWeb.Api.V1.HubView do
           entry_code: hub.entry_code,
           entry_mode: hub.entry_mode,
           host: hub.host,
-          scene: RetWeb.Api.V1.SceneView.render_scene(hub.scene || hub.scene_listing)
+          scene: RetWeb.Api.V1.SceneView.render_scene(hub.scene || hub.scene_listing),
+          embed_token:
+            if embeddable do
+              hub.embed_token
+            else
+              nil
+            end
         }
       ]
     }

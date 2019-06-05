@@ -454,8 +454,10 @@ defmodule RetWeb.HubChannel do
   # For example, if the scene needs to be refreshed, this message indicates that by including
   # "scene" in the list of stale fields.
   defp broadcast_hub_refresh!(hub, socket, stale_fields) do
+    account = Guardian.Phoenix.Socket.current_resource(socket)
+
     response =
-      HubView.render("show.json", %{hub: hub})
+      HubView.render("show.json", %{hub: hub, embeddable: account |> can?(embed_hub(hub))})
       |> Map.put(:session_id, socket.assigns.session_id)
       |> Map.put(:stale_fields, stale_fields)
 
@@ -622,7 +624,7 @@ defmodule RetWeb.HubChannel do
            |> assign(:oauth_account_id, params[:oauth_account_id])
            |> assign(:oauth_source, params[:oauth_source])
            |> assign(:has_valid_bot_access_key, params[:has_valid_bot_access_key]),
-         response <- HubView.render("show.json", %{hub: hub}) do
+         response <- HubView.render("show.json", %{hub: hub, embeddable: account |> can?(embed_hub(hub))}) do
       perms_token = params["perms_token"] || get_perms_token(hub, account)
 
       response =
@@ -631,14 +633,6 @@ defmodule RetWeb.HubChannel do
         |> Map.put(:session_token, socket.assigns.session_id |> Ret.SessionToken.token_for_session())
         |> Map.put(:subscriptions, %{web_push: is_push_subscribed})
         |> Map.put(:perms_token, perms_token)
-        |> Map.put(
-          :embed_token,
-          if account |> can?(embed_hub(hub)) do
-            hub.embed_token
-          else
-            nil
-          end
-        )
         |> Map.put(:hub_requires_oauth, params[:hub_requires_oauth])
 
       existing_stat_count =
