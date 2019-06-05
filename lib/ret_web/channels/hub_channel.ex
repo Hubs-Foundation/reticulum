@@ -38,11 +38,12 @@ defmodule RetWeb.HubChannel do
     |> assign(:block_naf, false)
     |> perform_join(
       hub_sid,
-      params |> Map.take(["push_subscription_endpoint", "auth_token", "perms_token", "bot_access_key", "embed_token"])
+      context,
+      params |> Map.take(["push_subscription_endpoint", "auth_token", "perms_token", "bot_access_key"])
     )
   end
 
-  defp perform_join(socket, hub_sid, params) do
+  defp perform_join(socket, hub_sid, context, params) do
     account =
       case Ret.Guardian.resource_from_token(params["auth_token"]) do
         {:ok, %Account{} = account, _claims} -> account
@@ -96,7 +97,7 @@ defmodule RetWeb.HubChannel do
         perms_token_can_join: perms_token_can_join
       })
 
-    hub |> join_with_hub(account, socket, params)
+    hub |> join_with_hub(account, socket, context, params)
   end
 
   def handle_in("events:entered", %{"initialOccupantCount" => occupant_count} = payload, socket) do
@@ -554,63 +555,76 @@ defmodule RetWeb.HubChannel do
     assigns |> Map.put(:profile, overriden)
   end
 
-  defp join_with_hub(nil, _account, _socket, _params) do
+  defp join_with_hub(nil, _account, _socket, _context, _params) do
     Statix.increment("ret.channels.hub.joins.not_found")
 
     {:error, %{message: "No such Hub"}}
   end
 
-  defp join_with_hub(%Hub{entry_mode: :deny}, _account, _socket, _params) do
+  defp join_with_hub(%Hub{entry_mode: :deny}, _account, _socket, _params, _context) do
     {:error, %{message: "Hub no longer accessible", reason: "closed"}}
   end
 
-  defp join_with_hub(%Hub{}, %Account{}, _socket, %{
-         hub_requires_oauth: true,
-         account_has_provider_for_hub: true,
-         account_can_join: false
-       }),
+  defp join_with_hub(
+         %Hub{},
+         %Account{},
+         _socket,
+         _context,
+         %{
+           hub_requires_oauth: true,
+           account_has_provider_for_hub: true,
+           account_can_join: false
+         }
+       ),
        do: deny_join()
 
-  defp join_with_hub(%Hub{}, nil = _account, _socket, %{
-         hub_requires_oauth: true,
-         has_valid_bot_access_key: false,
-         has_perms_token: true,
-         perms_token_can_join: false
-       }),
+  defp join_with_hub(
+         %Hub{},
+         nil = _account,
+         _socket,
+         _context,
+         %{
+           hub_requires_oauth: true,
+           has_valid_bot_access_key: false,
+           has_perms_token: true,
+           perms_token_can_join: false
+         }
+       ),
        do: deny_join()
 
-  defp join_with_hub(%Hub{} = hub, %Account{}, _socket, %{
-         hub_requires_oauth: true,
-         account_has_provider_for_hub: false
-       }),
-       do: require_oauth(hub)
-
-  defp join_with_hub(%Hub{} = hub, nil = _account, _socket, %{
-         hub_requires_oauth: true,
-         has_valid_bot_access_key: false,
-         has_perms_token: false
-       }),
+  defp join_with_hub(
+         %Hub{} = hub,
+         %Account{},
+         _socket,
+         _context,
+         %{
+           hub_requires_oauth: true,
+           account_has_provider_for_hub: false
+         }
+       ),
        do: require_oauth(hub)
 
   defp join_with_hub(
-         %Hub{embed_token: hub_embed_token} = hub,
-         account,
-         socket,
-         %{"embed_token" => provided_embed_token} = params
-       )
-       when hub_embed_token == provided_embed_token do
-    hub
-    |> Hub.changeset_for_seen_embedded_hub()
-    |> Repo.update!()
+         %Hub{} = hub,
+         nil = _account,
+         _socket,
+         _context,
+         %{
+           hub_requires_oauth: true,
+           has_valid_bot_access_key: false,
+           has_perms_token: false
+         }
+       ),
+       do: require_oauth(hub)
 
-    params = params |> Map.delete("embed_token")
-    join_with_hub(hub, account, socket, params)
-  end
-
-  defp join_with_hub(_hub, _account, _socket, %{"embed_token" => _embed_token}), do: deny_join()
-
-  defp join_with_hub(%Hub{} = hub, account, socket, params) do
+  defp join_with_hub(%Hub{} = hub, account, socket, context, params) do
     hub = hub |> Hub.ensure_valid_entry_code!() |> Hub.ensure_host()
+
+    if context["embed"] do
+      hub
+      |> Hub.changeset_for_seen_embedded_hub()
+      |> Repo.update!()
+    end
 
     push_subscription_endpoint = params["push_subscription_endpoint"]
 
