@@ -32,6 +32,7 @@ defmodule Ret.Hub do
     field(:last_active_at, :utc_datetime)
     field(:creator_assignment_token, :string)
     field(:embed_token, :string)
+    field(:embedded, :boolean)
     field(:default_environment_gltf_bundle_url, :string)
     field(:slug, HubSlug.Type)
     field(:max_occupant_count, :integer, default: 0)
@@ -92,6 +93,8 @@ defmodule Ret.Hub do
     |> maybe_add_last_active_at_to_changeset(occupant_count)
     |> validate_required([:max_occupant_count])
   end
+
+  def changeset_for_seen_embedded_hub(%Hub{} = hub), do: hub |> cast(%{embedded: true}, [:embedded])
 
   # NOTE occupant_count is 1 when there is 1 *other* user in the room with you, so active is when >= 1.
   defp maybe_add_last_active_at_to_changeset(changeset, occupant_count) when occupant_count >= 1,

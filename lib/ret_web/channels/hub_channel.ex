@@ -599,6 +599,10 @@ defmodule RetWeb.HubChannel do
          %{"embed_token" => provided_embed_token} = params
        )
        when hub_embed_token == provided_embed_token do
+    hub
+    |> Hub.changeset_for_seen_embedded_hub()
+    |> Repo.update!()
+
     params = params |> Map.delete("embed_token")
     join_with_hub(hub, account, socket, params)
   end
