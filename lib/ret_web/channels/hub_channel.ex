@@ -38,7 +38,7 @@ defmodule RetWeb.HubChannel do
     |> assign(:block_naf, false)
     |> perform_join(
       hub_sid,
-      params |> Map.take(["push_subscription_endpoint", "auth_token", "perms_token", "bot_access_key"])
+      params |> Map.take(["push_subscription_endpoint", "auth_token", "perms_token", "bot_access_key", "embed_token"])
     )
   end
 
@@ -590,6 +590,19 @@ defmodule RetWeb.HubChannel do
        }),
        do: require_oauth(hub)
 
+  defp join_with_hub(
+         %Hub{embed_token: hub_embed_token} = hub,
+         account,
+         socket,
+         %{"embed_token" => provided_embed_token} = params
+       )
+       when hub_embed_token == provided_embed_token do
+    params = params |> Map.delete("embed_token")
+    join_with_hub(hub, account, socket, params)
+  end
+
+  defp join_with_hub(_hub, _account, _socket, %{"embed_token" => _embed_token}), do: deny_join()
+
   defp join_with_hub(%Hub{} = hub, account, socket, params) do
     hub = hub |> Hub.ensure_valid_entry_code!() |> Hub.ensure_host()
 
@@ -618,6 +631,14 @@ defmodule RetWeb.HubChannel do
         |> Map.put(:session_token, socket.assigns.session_id |> Ret.SessionToken.token_for_session())
         |> Map.put(:subscriptions, %{web_push: is_push_subscribed})
         |> Map.put(:perms_token, perms_token)
+        |> Map.put(
+          :embed_token,
+          if account |> can?(embed_hub(hub)) do
+            hub.embed_token
+          else
+            nil
+          end
+        )
         |> Map.put(:hub_requires_oauth, params[:hub_requires_oauth])
 
       existing_stat_count =
