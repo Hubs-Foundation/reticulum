@@ -8,6 +8,7 @@ defmodule RetWeb.HubChannel do
   alias Ret.{
     Hub,
     Account,
+    AccountHubFavorite,
     Repo,
     RoomObject,
     OwnedFile,
@@ -173,6 +174,18 @@ defmodule RetWeb.HubChannel do
     |> hub_for_socket
     |> WebPushSubscription.subscribe_to_hub(subscription)
 
+    {:noreply, socket}
+  end
+
+  def handle_in("favorite", _params, socket) do
+    account = Guardian.Phoenix.Socket.current_resource(socket)
+    socket |> hub_for_socket |> AccountHubFavorite.ensure_favorited(account)
+    {:noreply, socket}
+  end
+
+  def handle_in("unfavorite", _params, socket) do
+    account = Guardian.Phoenix.Socket.current_resource(socket)
+    socket |> hub_for_socket |> AccountHubFavorite.ensure_not_favorited(account)
     {:noreply, socket}
   end
 
@@ -586,6 +599,8 @@ defmodule RetWeb.HubChannel do
       push_subscription_endpoint &&
         hub.web_push_subscriptions |> Enum.any?(&(&1.endpoint == push_subscription_endpoint))
 
+    is_favorited = AccountHubFavorite.timestamp_join_if_favorited(hub, account)
+
     socket = Guardian.Phoenix.Socket.put_current_resource(socket, account)
 
     with socket <-
@@ -603,7 +618,7 @@ defmodule RetWeb.HubChannel do
         response
         |> Map.put(:session_id, socket.assigns.session_id)
         |> Map.put(:session_token, socket.assigns.session_id |> Ret.SessionToken.token_for_session())
-        |> Map.put(:subscriptions, %{web_push: is_push_subscribed})
+        |> Map.put(:subscriptions, %{web_push: is_push_subscribed, favorites: is_favorited})
         |> Map.put(:perms_token, perms_token)
         |> Map.put(:hub_requires_oauth, params[:hub_requires_oauth])
 
