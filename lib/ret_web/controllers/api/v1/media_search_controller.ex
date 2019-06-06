@@ -52,51 +52,24 @@ defmodule RetWeb.Api.V1.MediaSearchController do
     conn |> render("index.json", results: results)
   end
 
-  def index(conn, %{"source" => "avatars", "user" => user} = params) do
+  def index(conn, %{"source" => source, "user" => user} = params)
+      when source in ["scenes", "avatars", "favorites", "assets"] do
     account = conn |> Guardian.Plug.current_resource()
 
     if account && account.account_id == String.to_integer(user) do
-      {:commit, results} =
-        %Ret.MediaSearchQuery{source: "avatars", cursor: params["cursor"] || "1", user: account.account_id}
-        |> Ret.MediaSearch.search()
-
-      conn |> render("index.json", results: results)
-    else
-      conn |> send_resp(401, "You can only search avatars by user for your own account.")
-    end
-  end
-
-  def index(conn, %{"source" => "scenes", "user" => user} = params) do
-    account = conn |> Guardian.Plug.current_resource()
-
-    if account && account.account_id == String.to_integer(user) do
-      {:commit, results} =
-        %Ret.MediaSearchQuery{source: "scenes", cursor: params["cursor"] || "1", user: account.account_id}
-        |> Ret.MediaSearch.search()
-
-      conn |> render("index.json", results: results)
-    else
-      conn |> send_resp(401, "You can only search scenes by user for your own account.")
-    end
-  end
-
-  def index(conn, %{"source" => "assets", "user" => user} = params) do
-    account = conn |> Guardian.Plug.current_resource()
-
-    if account.account_id == String.to_integer(user) do
       {:commit, results} =
         %Ret.MediaSearchQuery{
-          source: "assets",
+          source: source,
+          cursor: params["cursor"] || "1",
           user: account.account_id,
           type: params["type"],
-          q: params["q"],
-          cursor: params["cursor"] || "1"
+          q: params["q"]
         }
         |> Ret.MediaSearch.search()
 
       conn |> render("index.json", results: results)
     else
-      conn |> send_resp(401, "")
+      conn |> send_resp(401, "You can only search #{source} by user for your own account.")
     end
   end
 

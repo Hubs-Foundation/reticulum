@@ -19,7 +19,7 @@ defmodule Ret.MediaSearch do
   import Ret.HttpUtils
   import Ecto.Query
 
-  alias Ret.{Repo, OwnedFile, Scene, SceneListing, Asset, Avatar, AvatarListing}
+  alias Ret.{Repo, OwnedFile, Scene, SceneListing, Asset, Avatar, AvatarListing, AccountHubFavorite}
 
   @page_size 24
   # HACK for now to reduce page size for scene listings -- real fix will be to expose page_size to API
@@ -52,6 +52,10 @@ defmodule Ret.MediaSearch do
 
   def search(%Ret.MediaSearchQuery{source: "assets", type: type, cursor: cursor, user: account_id, q: query}) do
     assets_search(cursor, type, account_id, query)
+  end
+
+  def search(%Ret.MediaSearchQuery{source: "favorites", type: "hubs", cursor: cursor, user: account_id, q: q}) do
+    favorites_search(cursor, "hubs", account_id, q)
   end
 
   def search(%Ret.MediaSearchQuery{source: "sketchfab", cursor: cursor, filter: "featured", q: q}) do
@@ -388,6 +392,20 @@ defmodule Ret.MediaSearch do
     {:commit, results}
   end
 
+  defp favorites_search(cursor, "hubs", account_id, _query, order \\ [desc: :last_joined_at]) do
+    page_number = (cursor || "1") |> Integer.parse() |> elem(0)
+
+    results =
+      AccountHubFavorite
+      |> where([a], a.account_id == ^account_id)
+      |> preload(hub: [scene: [:screenshot_owned_file], scene_listing: [:screenshot_owned_file]])
+      |> order_by(^order)
+      |> Repo.paginate(%{page: page_number, page_size: @page_size})
+      |> result_for_page(page_number, :scenes, &hub_favorite_to_entry/1)
+
+    {:commit, results}
+  end
+
   defp add_type_to_asset_search_query(query, nil), do: query
   defp add_type_to_asset_search_query(query, type), do: query |> where([a], a.type == ^type)
   defp add_query_to_asset_search_query(query, nil), do: query
@@ -505,6 +523,17 @@ defmodule Ret.MediaSearch do
       entries:
         page.entries
         |> Enum.map(entry_fn)
+    }
+  end
+
+  defp hub_favorite_to_entry(%AccountHubFavorite{hub: hub} = favorite) do
+    scene_entry = scene_or_scene_listing_to_entry(hub.scene || hub.scene_listing, "scene")
+
+    %{
+      id: hub.hub_sid,
+      name: hub.name,
+      last_joined_at: favorite.last_joined_at,
+      images: scene_entry.images
     }
   end
 
