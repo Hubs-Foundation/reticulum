@@ -21,7 +21,7 @@ defmodule RetWeb.HubChannel do
   alias RetWeb.{Presence}
   alias RetWeb.Api.V1.{HubView}
 
-  intercept(["mute"])
+  intercept(["mute", "naf"])
 
   @hub_preloads [
     scene: [:model_owned_file, :screenshot_owned_file, :scene_owned_file],
@@ -35,13 +35,15 @@ defmodule RetWeb.HubChannel do
     socket
     |> assign(:profile, profile)
     |> assign(:context, context)
+    |> assign(:block_naf, false)
     |> perform_join(
       hub_sid,
+      context,
       params |> Map.take(["push_subscription_endpoint", "auth_token", "perms_token", "bot_access_key"])
     )
   end
 
-  defp perform_join(socket, hub_sid, params) do
+  defp perform_join(socket, hub_sid, context, params) do
     account =
       case Ret.Guardian.resource_from_token(params["auth_token"]) do
         {:ok, %Account{} = account, _claims} -> account
@@ -95,7 +97,7 @@ defmodule RetWeb.HubChannel do
         perms_token_can_join: perms_token_can_join
       })
 
-    hub |> join_with_hub(account, socket, params)
+    hub |> join_with_hub(account, socket, context, params)
   end
 
   def handle_in("events:entered", %{"initialOccupantCount" => occupant_count} = payload, socket) do
@@ -356,12 +358,24 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
+  def handle_in("block_naf", _payload, socket), do: {:noreply, socket |> assign(:block_naf, true)}
+  def handle_in("unblock_naf", _payload, socket), do: {:noreply, socket |> assign(:block_naf, false)}
+
   def handle_in(_message, _payload, socket) do
     {:noreply, socket}
   end
 
   def handle_out("mute" = event, %{"session_id" => session_id} = payload, socket) do
     if socket.assigns.session_id == session_id do
+      push(socket, event, payload)
+    end
+
+    {:noreply, socket}
+  end
+
+  def handle_out("naf" = event, payload, socket) do
+    # Sockets can block NAF as an optimization, eg iframe embeds do not need NAF messages until user clicks load
+    if !socket.assigns.block_naf do
       push(socket, event, payload)
     end
 
@@ -441,8 +455,10 @@ defmodule RetWeb.HubChannel do
   # For example, if the scene needs to be refreshed, this message indicates that by including
   # "scene" in the list of stale fields.
   defp broadcast_hub_refresh!(hub, socket, stale_fields) do
+    account = Guardian.Phoenix.Socket.current_resource(socket)
+
     response =
-      HubView.render("show.json", %{hub: hub})
+      HubView.render("show.json", %{hub: hub, embeddable: account |> can?(embed_hub(hub))})
       |> Map.put(:session_id, socket.assigns.session_id)
       |> Map.put(:stale_fields, stale_fields)
 
@@ -539,46 +555,76 @@ defmodule RetWeb.HubChannel do
     assigns |> Map.put(:profile, overriden)
   end
 
-  defp join_with_hub(nil, _account, _socket, _params) do
+  defp join_with_hub(nil, _account, _socket, _context, _params) do
     Statix.increment("ret.channels.hub.joins.not_found")
 
     {:error, %{message: "No such Hub"}}
   end
 
-  defp join_with_hub(%Hub{entry_mode: :deny}, _account, _socket, _params) do
+  defp join_with_hub(%Hub{entry_mode: :deny}, _account, _socket, _context, _params) do
     {:error, %{message: "Hub no longer accessible", reason: "closed"}}
   end
 
-  defp join_with_hub(%Hub{}, %Account{}, _socket, %{
-         hub_requires_oauth: true,
-         account_has_provider_for_hub: true,
-         account_can_join: false
-       }),
+  defp join_with_hub(
+         %Hub{},
+         %Account{},
+         _socket,
+         _context,
+         %{
+           hub_requires_oauth: true,
+           account_has_provider_for_hub: true,
+           account_can_join: false
+         }
+       ),
        do: deny_join()
 
-  defp join_with_hub(%Hub{}, nil = _account, _socket, %{
-         hub_requires_oauth: true,
-         has_valid_bot_access_key: false,
-         has_perms_token: true,
-         perms_token_can_join: false
-       }),
+  defp join_with_hub(
+         %Hub{},
+         nil = _account,
+         _socket,
+         _context,
+         %{
+           hub_requires_oauth: true,
+           has_valid_bot_access_key: false,
+           has_perms_token: true,
+           perms_token_can_join: false
+         }
+       ),
        do: deny_join()
 
-  defp join_with_hub(%Hub{} = hub, %Account{}, _socket, %{
-         hub_requires_oauth: true,
-         account_has_provider_for_hub: false
-       }),
+  defp join_with_hub(
+         %Hub{} = hub,
+         %Account{},
+         _socket,
+         _context,
+         %{
+           hub_requires_oauth: true,
+           account_has_provider_for_hub: false
+         }
+       ),
        do: require_oauth(hub)
 
-  defp join_with_hub(%Hub{} = hub, nil = _account, _socket, %{
-         hub_requires_oauth: true,
-         has_valid_bot_access_key: false,
-         has_perms_token: false
-       }),
+  defp join_with_hub(
+         %Hub{} = hub,
+         nil = _account,
+         _socket,
+         _context,
+         %{
+           hub_requires_oauth: true,
+           has_valid_bot_access_key: false,
+           has_perms_token: false
+         }
+       ),
        do: require_oauth(hub)
 
-  defp join_with_hub(%Hub{} = hub, account, socket, params) do
+  defp join_with_hub(%Hub{} = hub, account, socket, context, params) do
     hub = hub |> Hub.ensure_valid_entry_code!() |> Hub.ensure_host()
+
+    if context["embed"] do
+      hub
+      |> Hub.changeset_for_seen_embedded_hub()
+      |> Repo.update!()
+    end
 
     push_subscription_endpoint = params["push_subscription_endpoint"]
 
@@ -596,7 +642,7 @@ defmodule RetWeb.HubChannel do
            |> assign(:oauth_account_id, params[:oauth_account_id])
            |> assign(:oauth_source, params[:oauth_source])
            |> assign(:has_valid_bot_access_key, params[:has_valid_bot_access_key]),
-         response <- HubView.render("show.json", %{hub: hub}) do
+         response <- HubView.render("show.json", %{hub: hub, embeddable: account |> can?(embed_hub(hub))}) do
       perms_token = params["perms_token"] || get_perms_token(hub, account)
 
       response =

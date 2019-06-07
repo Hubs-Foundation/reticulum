@@ -62,8 +62,8 @@ defmodule Ret.MediaSearch do
         count: @page_size,
         max_face_count: @max_face_count,
         processing_status: :succeeded,
+        sort_by: "-likeCount",
         cursor: cursor,
-        collection: "ec06ae45eba24bfdb1278b223f8e289c",
         q: q
       )
 
@@ -80,12 +80,13 @@ defmodule Ret.MediaSearch do
         processing_status: :succeeded,
         cursor: cursor,
         categories: filter,
-        q:
+        sort_by:
           if q == nil || q == "" do
-            "model"
+            "-likeCount"
           else
-            q
-          end
+            nil
+          end,
+        q: q
       )
 
     sketchfab_search(query)
