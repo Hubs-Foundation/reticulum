@@ -19,7 +19,7 @@ defmodule Ret.MediaSearch do
   import Ret.HttpUtils
   import Ecto.Query
 
-  alias Ret.{Repo, OwnedFile, Scene, SceneListing, Asset, Avatar, AvatarListing, AccountHubFavorite}
+  alias Ret.{Repo, OwnedFile, Scene, SceneListing, Asset, Avatar, AvatarListing, AccountFavorite, Hub}
 
   @page_size 24
   # HACK for now to reduce page size for scene listings -- real fix will be to expose page_size to API
@@ -54,8 +54,8 @@ defmodule Ret.MediaSearch do
     assets_search(cursor, type, account_id, query)
   end
 
-  def search(%Ret.MediaSearchQuery{source: "favorites", type: "hubs", cursor: cursor, user: account_id, q: q}) do
-    favorites_search(cursor, "hubs", account_id, q)
+  def search(%Ret.MediaSearchQuery{source: "favorites", type: type, cursor: cursor, user: account_id, q: q}) do
+    favorites_search(cursor, type, account_id, q)
   end
 
   def search(%Ret.MediaSearchQuery{source: "sketchfab", cursor: cursor, filter: "featured", q: q}) do
@@ -392,16 +392,16 @@ defmodule Ret.MediaSearch do
     {:commit, results}
   end
 
-  defp favorites_search(cursor, "hubs", account_id, _query, order \\ [desc: :last_joined_at]) do
+  defp favorites_search(cursor, _type, account_id, _query, order \\ [desc: :last_activated_at]) do
     page_number = (cursor || "1") |> Integer.parse() |> elem(0)
 
     results =
-      AccountHubFavorite
+      AccountFavorite
       |> where([a], a.account_id == ^account_id)
       |> preload(hub: [scene: [:screenshot_owned_file], scene_listing: [:screenshot_owned_file]])
       |> order_by(^order)
       |> Repo.paginate(%{page: page_number, page_size: @page_size})
-      |> result_for_page(page_number, :scenes, &hub_favorite_to_entry/1)
+      |> result_for_page(page_number, :favorites, &favorite_to_entry/1)
 
     {:commit, results}
   end
@@ -526,13 +526,15 @@ defmodule Ret.MediaSearch do
     }
   end
 
-  defp hub_favorite_to_entry(%AccountHubFavorite{hub: hub} = favorite) do
+  defp favorite_to_entry(%AccountFavorite{hub: hub} = favorite) when hub != nil do
     scene_entry = scene_or_scene_listing_to_entry(hub.scene || hub.scene_listing, "scene")
 
     %{
       id: hub.hub_sid,
+      url: hub |> Hub.url_for(),
+      type: :hub,
       name: hub.name,
-      last_joined_at: favorite.last_joined_at,
+      last_activated_at: favorite.last_activated_at,
       images: scene_entry.images
     }
   end

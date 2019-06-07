@@ -8,7 +8,7 @@ defmodule RetWeb.HubChannel do
   alias Ret.{
     Hub,
     Account,
-    AccountHubFavorite,
+    AccountFavorite,
     Repo,
     RoomObject,
     OwnedFile,
@@ -179,13 +179,13 @@ defmodule RetWeb.HubChannel do
 
   def handle_in("favorite", _params, socket) do
     account = Guardian.Phoenix.Socket.current_resource(socket)
-    socket |> hub_for_socket |> AccountHubFavorite.ensure_favorited(account)
+    socket |> hub_for_socket |> AccountFavorite.ensure_favorited(account)
     {:noreply, socket}
   end
 
   def handle_in("unfavorite", _params, socket) do
     account = Guardian.Phoenix.Socket.current_resource(socket)
-    socket |> hub_for_socket |> AccountHubFavorite.ensure_not_favorited(account)
+    socket |> hub_for_socket |> AccountFavorite.ensure_not_favorited(account)
     {:noreply, socket}
   end
 
@@ -599,7 +599,7 @@ defmodule RetWeb.HubChannel do
       push_subscription_endpoint &&
         hub.web_push_subscriptions |> Enum.any?(&(&1.endpoint == push_subscription_endpoint))
 
-    is_favorited = AccountHubFavorite.timestamp_join_if_favorited(hub, account)
+    is_favorited = AccountFavorite.timestamp_join_if_favorited(hub, account)
 
     socket = Guardian.Phoenix.Socket.put_current_resource(socket, account)
 

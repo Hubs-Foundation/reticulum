@@ -2,7 +2,7 @@ defmodule RetWeb.MediaSearchControllerTest do
   use RetWeb.ConnCase
   import Ret.TestHelpers
 
-  alias Ret.Account
+  alias Ret.{Account, AccountFavorite}
 
   setup do
     on_exit(fn ->
@@ -15,14 +15,23 @@ defmodule RetWeb.MediaSearchControllerTest do
     account_2 = Account.account_for_email("test2@mozilla.com")
     account_3 = Account.account_for_email("test3@mozilla.com")
 
+    scene_1 = create_scene(account_1)
+    scene_2 = create_scene(account_2)
+    {:ok, hub: hub_1} = create_hub(%{scene: scene_1})
+    {:ok, hub: hub_2} = create_hub(%{scene: scene_2})
+
+    AccountFavorite.ensure_favorited(hub_1, account_1)
+
     %{
       account_1: account_1,
       account_2: account_2,
       account_3: account_3,
       avatar_1: create_avatar(account_1),
       avatar_2: create_avatar(account_2),
-      scene_1: create_scene(account_1),
-      scene_2: create_scene(account_2)
+      scene_1: scene_1,
+      scene_2: scene_2,
+      hub_1: hub_1,
+      hub_2: hub_2
     }
   end
 
@@ -38,6 +47,14 @@ defmodule RetWeb.MediaSearchControllerTest do
     conn
     |> get(api_v1_media_search_path(conn, :index), %{
       source: "scenes",
+      user: account_id |> Integer.to_string()
+    })
+  end
+
+  defp search_favorites_for_account_id(conn, account_id) do
+    conn
+    |> get(api_v1_media_search_path(conn, :index), %{
+      source: "favorites",
       user: account_id |> Integer.to_string()
     })
   end
@@ -138,6 +155,56 @@ defmodule RetWeb.MediaSearchControllerTest do
     |> get(api_v1_media_search_path(conn, :index), %{
       source: "scenes",
       user: scene_1.account_id |> Integer.to_string()
+    })
+    |> response(401)
+  end
+
+  test "Search for a user's own favorites should return results if they have favorites", %{
+    conn: conn,
+    account_1: account,
+    hub_1: hub_1
+  } do
+    resp =
+      conn
+      |> auth_with_account(account)
+      |> search_favorites_for_account_id(account.account_id)
+      |> json_response(200)
+
+    # there should only be one entry
+    [entry] = resp["entries"]
+
+    # and the hub should be the favorited hub
+    assert entry["id"] == hub_1.hub_sid
+    assert entry["type"] == "hub"
+  end
+
+  test "Search for a user's own favorites should return an empty list if they have no favorites", %{
+    conn: conn,
+    account_3: account
+  } do
+    resp =
+      conn
+      |> auth_with_account(account)
+      |> get(api_v1_media_search_path(conn, :index), %{
+        source: "favorites",
+        user: account.account_id |> Integer.to_string()
+      })
+      |> json_response(200)
+
+    # There should be no entries
+    assert resp["entries"] == []
+  end
+
+  test "Search for another user's favorites should return a 401", %{
+    conn: conn,
+    account_1: account,
+    account_2: account_2
+  } do
+    conn
+    |> auth_with_account(account)
+    |> get(api_v1_media_search_path(conn, :index), %{
+      source: "favorites",
+      user: account_2.account_id |> Integer.to_string()
     })
     |> response(401)
   end
