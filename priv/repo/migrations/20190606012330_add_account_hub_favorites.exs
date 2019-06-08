@@ -5,7 +5,7 @@ defmodule Ret.Repo.Migrations.AddAccountHubFavorites do
     create table(:account_favorites, prefix: "ret0", primary_key: false) do
       add(:account_favorite_id, :bigint, default: fragment("ret0.next_id()"), primary_key: true)
       add(:account_id, references(:accounts, column: :account_id), null: false)
-      add(:hub_id, references(:hubs, column: :hub_id), null: false)
+      add(:hub_id, references(:hubs, column: :hub_id))
       add(:last_activated_at, :utc_datetime)
 
       timestamps()
