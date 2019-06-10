@@ -90,7 +90,7 @@ defmodule RetWeb.PageController do
     hub = Hub |> Repo.get_by(hub_sid: hub_sid)
 
     if embed_token && hub.embed_token != embed_token do
-      conn |> send_resp(404, "")
+      conn |> send_resp(404, "Invalid embed token.")
     else
       conn =
         if embed_token do
@@ -105,7 +105,7 @@ defmodule RetWeb.PageController do
   end
 
   def render_hub_content(conn, nil, _) do
-    conn |> send_resp(404, "Invalid embed token.")
+    conn |> send_resp(404, "Invalid URL.")
   end
 
   def render_hub_content(conn, hub, "objects.gltf") do
