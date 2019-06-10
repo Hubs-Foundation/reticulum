@@ -3,7 +3,7 @@ defmodule RetWeb.PageController do
   alias Ret.{Repo, Hub, Scene, SceneListing, Avatar, AvatarListing}
 
   def call(conn, _params) do
-    render_for_path(conn.request_path, conn)
+    render_for_path(conn.request_path, conn.query_params, conn)
   end
 
   defp render_scene_content(%t{} = scene, conn) when t in [Scene, SceneListing] do
@@ -40,9 +40,9 @@ defmodule RetWeb.PageController do
     conn |> send_resp(404, "")
   end
 
-  def render_for_path("/", conn), do: conn |> render_page("index.html")
+  def render_for_path("/", _params, conn), do: conn |> render_page("index.html")
 
-  def render_for_path("/scenes/" <> path, conn) do
+  def render_for_path("/scenes/" <> path, _params, conn) do
     path
     |> String.split("/")
     |> Enum.at(0)
@@ -51,7 +51,7 @@ defmodule RetWeb.PageController do
     |> render_scene_content(conn)
   end
 
-  def render_for_path("/avatars/" <> path, conn) do
+  def render_for_path("/avatars/" <> path, _params, conn) do
     path
     |> String.split("/")
     |> Enum.at(0)
@@ -60,37 +60,52 @@ defmodule RetWeb.PageController do
     |> render_avatar_content(conn)
   end
 
-  def render_for_path("/link", conn), do: conn |> render_page("link.html")
-  def render_for_path("/link/", conn), do: conn |> render_page("link.html")
+  def render_for_path("/link", _params, conn), do: conn |> render_page("link.html")
+  def render_for_path("/link/", _params, conn), do: conn |> render_page("link.html")
 
-  def render_for_path("/link/" <> hub_identifier_and_slug, conn) do
+  def render_for_path("/link/" <> hub_identifier_and_slug, _params, conn) do
     hub_identifier = hub_identifier_and_slug |> String.split("/") |> List.first()
     conn |> redirect_to_hub_identifier(hub_identifier)
   end
 
-  def render_for_path("/discord", conn), do: conn |> render_page("discord.html")
-  def render_for_path("/discord/", conn), do: conn |> render_page("discord.html")
+  def render_for_path("/discord", _params, conn), do: conn |> render_page("discord.html")
+  def render_for_path("/discord/", _params, conn), do: conn |> render_page("discord.html")
 
-  def render_for_path("/spoke", conn), do: conn |> render_page("index.html", :spoke)
-  def render_for_path("/spoke/" <> _path, conn), do: conn |> render_page("index.html", :spoke)
+  def render_for_path("/spoke", _params, conn), do: conn |> render_page("index.html", :spoke)
+  def render_for_path("/spoke/" <> _path, _params, conn), do: conn |> render_page("index.html", :spoke)
 
-  def render_for_path("/whats-new", conn), do: conn |> render_page("whats-new.html")
-  def render_for_path("/whats-new/", conn), do: conn |> render_page("whats-new.html")
+  def render_for_path("/whats-new", _params, conn), do: conn |> render_page("whats-new.html")
+  def render_for_path("/whats-new/", _params, conn), do: conn |> render_page("whats-new.html")
 
-  def render_for_path("/hub.service.js", conn), do: conn |> render_page("hub.service.js")
-  def render_for_path("/manifest.webmanifest", conn), do: conn |> render_page("manifest.webmanifest")
+  def render_for_path("/hub.service.js", _params, conn), do: conn |> render_page("hub.service.js")
+  def render_for_path("/manifest.webmanifest", _params, conn), do: conn |> render_page("manifest.webmanifest")
 
-  def render_for_path("/admin", conn), do: conn |> render_page("admin.html")
+  def render_for_path("/admin", _params, conn), do: conn |> render_page("admin.html")
 
-  def render_for_path("/" <> path, conn) do
+  def render_for_path("/" <> path, params, conn) do
+    embed_token = params["embed_token"]
+
     [hub_sid | subresource] = path |> String.split("/")
 
     hub = Hub |> Repo.get_by(hub_sid: hub_sid)
-    render_hub_content(conn, hub, subresource |> Enum.at(0))
+
+    if embed_token && hub.embed_token != embed_token do
+      conn |> send_resp(404, "")
+    else
+      conn =
+        if embed_token do
+          # Allow iframe embedding
+          conn |> delete_resp_header("x-frame-options")
+        else
+          conn
+        end
+
+      render_hub_content(conn, hub, subresource |> Enum.at(0))
+    end
   end
 
   def render_hub_content(conn, nil, _) do
-    conn |> send_resp(404, "")
+    conn |> send_resp(404, "Invalid embed token.")
   end
 
   def render_hub_content(conn, hub, "objects.gltf") do

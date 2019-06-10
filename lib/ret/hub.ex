@@ -31,6 +31,8 @@ defmodule Ret.Hub do
     field(:entry_code_expires_at, :utc_datetime)
     field(:last_active_at, :utc_datetime)
     field(:creator_assignment_token, :string)
+    field(:embed_token, :string)
+    field(:embedded, :boolean)
     field(:default_environment_gltf_bundle_url, :string)
     field(:slug, HubSlug.Type)
     field(:max_occupant_count, :integer, default: 0)
@@ -69,7 +71,7 @@ defmodule Ret.Hub do
     |> cast(attrs, [:default_environment_gltf_bundle_url])
     |> add_name_to_changeset(attrs)
     |> add_hub_sid_to_changeset
-    |> add_creator_assignment_token_to_changeset
+    |> add_generated_tokens_to_changeset
     |> add_entry_code_to_changeset
     |> unique_constraint(:hub_sid)
     |> unique_constraint(:entry_code)
@@ -91,6 +93,8 @@ defmodule Ret.Hub do
     |> maybe_add_last_active_at_to_changeset(occupant_count)
     |> validate_required([:max_occupant_count])
   end
+
+  def changeset_for_seen_embedded_hub(%Hub{} = hub), do: hub |> cast(%{embedded: true}, [:embedded])
 
   # NOTE occupant_count is 1 when there is 1 *other* user in the room with you, so active is when >= 1.
   defp maybe_add_last_active_at_to_changeset(changeset, occupant_count) when occupant_count >= 1,
@@ -236,9 +240,13 @@ defmodule Ret.Hub do
     changeset |> put_change(:hub_sid, hub_sid)
   end
 
-  defp add_creator_assignment_token_to_changeset(changeset) do
+  defp add_generated_tokens_to_changeset(changeset) do
     creator_assignment_token = SecureRandom.hex()
-    changeset |> put_change(:creator_assignment_token, creator_assignment_token)
+    embed_token = SecureRandom.hex()
+
+    changeset
+    |> put_change(:creator_assignment_token, creator_assignment_token)
+    |> put_change(:embed_token, embed_token)
   end
 
   defp add_entry_code_to_changeset(changeset) do
@@ -276,6 +284,7 @@ defmodule Ret.Hub do
       join_hub: account |> can?(join_hub(hub)),
       update_hub: account |> can?(update_hub(hub)),
       close_hub: account |> can?(close_hub(hub)),
+      embed_hub: account |> can?(embed_hub(hub)),
       kick_users: account |> can?(kick_users(hub)),
       mute_users: account |> can?(mute_users(hub))
     }
@@ -307,12 +316,16 @@ defimpl Canada.Can, for: Ret.Account do
     hub_bindings |> Enum.any?(&(account |> Ret.HubBinding.can_moderate_users?(&1)))
   end
 
+  def can?(%Ret.Account{}, action, %Ret.Hub{hub_bindings: hub_bindings})
+      when hub_bindings |> length > 0 and action in [:embed_hub],
+      do: false
+
   # Anyone can join an unbound hub
   def can?(_, :join_hub, %Ret.Hub{hub_bindings: []}), do: true
 
   # Creators of unbound hubs can perform special actions
   def can?(%Ret.Account{account_id: account_id}, action, %Ret.Hub{created_by_account_id: account_id})
-      when account_id != nil and action in [:update_hub, :close_hub, :kick_users, :mute_users],
+      when account_id != nil and action in [:update_hub, :close_hub, :embed_hub, :kick_users, :mute_users],
       do: true
 
   def can?(_, _, _), do: false
@@ -324,8 +337,9 @@ defimpl Canada.Can, for: Ret.OAuthProvider do
   def can?(%Ret.OAuthProvider{}, :join_hub, %Ret.Hub{entry_mode: :deny}), do: false
 
   # OAuthProvider users cannot perform special actions
-  def can?(%Ret.OAuthProvider{}, action, %Ret.Hub{}) when action in [:update_hub, :close_hub, :kick_users, :mute_users],
-    do: false
+  def can?(%Ret.OAuthProvider{}, action, %Ret.Hub{})
+      when action in [:update_hub, :close_hub, :embed_hub, :kick_users, :mute_users],
+      do: false
 
   def can?(%Ret.OAuthProvider{} = oauth_provider, :join_hub, %Ret.Hub{hub_bindings: hub_bindings})
       when hub_bindings |> length > 0 do
