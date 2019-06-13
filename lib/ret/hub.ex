@@ -279,6 +279,34 @@ defmodule Ret.Hub do
     end
   end
 
+  @hub_perms %{
+    0x0000_0001 => :spawn_and_manipulate_media,
+    0x0000_0002 => :spawn_camera,
+    0x0000_0004 => :spawn_drawing,
+    0x0000_0008 => :pin_own_object,
+    0x0000_0010 => :pin_any_object,
+    0x0000_0020 => :manipulate_any_object
+  }
+
+  @hub_perms_keys @hub_perms |> Map.values()
+
+  def hub_perms_to_int!(%{} = perms) do
+    invalid_perms = perms |> Map.drop(@hub_perms_keys) |> Map.keys()
+
+    if invalid_perms |> Enum.count() > 0 do
+      raise ArgumentError, "Invalid permissions #{invalid_perms |> Enum.join(", ")}"
+    end
+
+    @hub_perms |> Enum.reduce(0, fn {val, perm}, acc -> if(perms[perm], do: 1, else: 0) * val + acc end)
+  end
+
+  def hub_has_perm!(hub_perms_bit_field, perm) do
+    case @hub_perms |> Enum.find(fn {_, perm_name} -> perm_name == perm end) do
+      nil -> raise ArgumentError, "Invalid permission #{perm}"
+      {val, _} -> (hub_perms_bit_field &&& val) > 0
+    end
+  end
+
   def perms_for_account(%Ret.Hub{} = hub, account) do
     %{
       join_hub: account |> can?(join_hub(hub)),
