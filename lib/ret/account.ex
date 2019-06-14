@@ -51,8 +51,10 @@ defmodule Ret.Account do
     email |> String.downcase() |> Ret.Crypto.hash()
   end
 
-  def add_global_perms_for_account(perms, %Ret.Account{is_admin: true}) do
-    perms |> Map.put(:postgrest_role, :ret_admin)
+  def add_global_perms_for_account(perms, %Ret.Account{is_admin: true} = account) do
+    perms
+    |> Map.put(:postgrest_role, :ret_admin)
+    |> Map.put(:tweet, !!oauth_provider_for_source(account, :twitter))
   end
 
   def add_global_perms_for_account(perms, _), do: perms
@@ -64,6 +66,13 @@ defmodule Ret.Account do
     account.oauth_providers
     |> Enum.filter(fn provider ->
       hub.hub_bindings |> Enum.any?(&(&1.type == provider.source))
+    end)
+  end
+
+  def oauth_provider_for_source(%Ret.Account{} = account, oauth_provider_source) when is_atom(oauth_provider_source) do
+    account.oauth_providers
+    |> Enum.find(fn provider ->
+      provider.source == oauth_provider_source
     end)
   end
 end
