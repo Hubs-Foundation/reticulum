@@ -1,6 +1,6 @@
 defmodule RetWeb.PageController do
   use RetWeb, :controller
-  alias Ret.{Repo, Hub, Scene, SceneListing, Avatar, AvatarListing}
+  alias Ret.{Repo, Hub, Scene, SceneListing, Avatar, AvatarListing, PageOriginWarmer}
 
   def call(conn, _params) do
     render_for_path(conn.request_path, conn.query_params, conn)
@@ -160,7 +160,14 @@ defmodule RetWeb.PageController do
   end
 
   defp chunks_for_page(page, source) do
-    with {:ok, chunks} <- Cachex.get(:page_chunks, {source, page}) do
+    res =
+      if module_config(:skip_cache) do
+        PageOriginWarmer.chunks_for_page(source, page)
+      else
+        Cachex.get(:page_chunks, {source, page})
+      end
+
+    with {:ok, chunks} <- res do
       chunks
     else
       _ -> nil
@@ -178,5 +185,9 @@ defmodule RetWeb.PageController do
     conn
     |> put_resp_header("content-type", content_type)
     |> send_resp(200, chunks)
+  end
+
+  defp module_config(key) do
+    Application.get_env(:ret, __MODULE__)[key]
   end
 end
