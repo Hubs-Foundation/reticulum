@@ -16,8 +16,15 @@ defmodule Ret.HttpUtils do
   end
 
   def retry_until_success(verb, url, body \\ "", headers \\ []) do
+    hackney_options =
+      if module_config(:insecure_ssl) == true do
+        [:insecure]
+      else
+        []
+      end
+
     retry with: exp_backoff() |> randomize |> cap(5_000) |> expiry(10_000) do
-      case HTTPoison.request(verb, url, body, headers, follow_redirect: true) do
+      case HTTPoison.request(verb, url, body, headers, follow_redirect: true, hackney: hackney_options) do
         {:ok, %HTTPoison.Response{status_code: status_code} = resp}
         when status_code >= 200 and status_code < 300 ->
           resp
@@ -38,5 +45,9 @@ defmodule Ret.HttpUtils do
     else
       error -> error
     end
+  end
+
+  defp module_config(key) do
+    Application.get_env(:ret, __MODULE__)[key]
   end
 end

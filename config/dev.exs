@@ -180,3 +180,5 @@ config :ret, Ret.JanusLoadStatus, default_janus_host: dev_janus_host
 config :ret, Ret.RoomAssigner, balancer_weights: [{600, 1}, {300, 50}, {0, 500}]
 
 config :ret, RetWeb.PageController, skip_cache: true
+
+config :ret, Ret.HttpUtils, insecure_ssl: true
