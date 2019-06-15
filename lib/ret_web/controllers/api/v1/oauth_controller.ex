@@ -1,7 +1,7 @@
 defmodule RetWeb.Api.V1.OAuthController do
   use RetWeb, :controller
 
-  alias Ret.{Repo, OAuthToken, OAuthProvider, DiscordClient, Hub, Account, PermsToken}
+  alias Ret.{Repo, OAuthToken, OAuthProvider, DiscordClient, TwitterClient, Hub, Account, PermsToken}
 
   plug(RetWeb.Plugs.RateLimit when action in [:show])
 
@@ -37,16 +37,24 @@ defmodule RetWeb.Api.V1.OAuthController do
     |> send_resp(307, "")
   end
 
-  def show(conn, %{"type" => "twitter", "state" => state}) do
-    %{claims: %{"hub_sid" => hub_sid}} = OAuthToken.peek(state)
+  def show(conn, %{
+        "type" => "twitter",
+        "state" => state,
+        "oauth_token" => _oauth_token,
+        "oauth_verifier" => oauth_verifier
+      }) do
+    %{claims: %{"hub_sid" => hub_sid, "account_id" => account_id}} = OAuthToken.peek(state)
+
     hub = Hub |> Repo.get_by(hub_sid: hub_sid)
+    account = Account |> Repo.get_by(account_id: account_id |> Integer.parse() |> elem(0))
 
     case OAuthToken.decode_and_verify(state) do
       {:ok, _} ->
-        hub = hub |> Repo.preload(:hub_bindings)
+        %{"user_id" => twitter_user_id, "oauth_token" => access_token} =
+          TwitterClient.get_access_token_and_user_info(oauth_verifier)
 
         conn
-        # |> process_discord_oauth(discord_user_id, verified, email, hub)
+        |> process_twitter_oauth(account, access_token, twitter_user_id)
         |> put_resp_header("location", hub |> Hub.url_for())
         |> send_resp(307, "")
 
@@ -87,6 +95,26 @@ defmodule RetWeb.Api.V1.OAuthController do
       |> PermsToken.token_for_perms()
 
     conn |> put_short_lived_cookie("ret-oauth-flow-perms-token", perms_token)
+  end
+
+  defp process_twitter_oauth(conn, account, access_token, twitter_user_id) do
+    # TODO deal with case where we get a user's email and may create an account
+
+    oauth_provider =
+      OAuthProvider
+      |> Repo.get_by(source: :twitter, provider_account_id: twitter_user_id)
+      |> Repo.preload(:account)
+
+    if !oauth_provider || oauth_provider.account.account_id != account.account_id do
+      (OAuthProvider |> Repo.get_by(source: :twitter, account_id: account) ||
+         %OAuthProvider{source: :twitter, account: account})
+      |> Ecto.Changeset.change(provider_access_token: access_token, provider_account_id: twitter_user_id)
+      |> Repo.insert_or_update()
+
+      conn
+    else
+      conn |> send_resp(401, "Another account is already connected to this twitter account.")
+    end
   end
 
   # If an oauthprovider exists for the given discord_user_id, return the associated account, updating the email

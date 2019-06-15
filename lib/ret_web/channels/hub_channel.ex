@@ -376,8 +376,15 @@ defmodule RetWeb.HubChannel do
 
   def handle_in("oauth", %{"type" => "twitter"}, socket) do
     hub = socket |> hub_for_socket
-    url = Ret.TwitterClient.get_oauth_url(hub.hub_sid)
-    {:reply, {:ok, %{oauth_url: url}}, socket}
+
+    case Guardian.Phoenix.Socket.current_resource(socket) do
+      %Account{} = account ->
+        url = Ret.TwitterClient.get_oauth_url(hub.hub_sid, account.account_id)
+        {:reply, {:ok, %{oauth_url: url}}, socket}
+
+      _ ->
+        {:reply, :error, socket}
+    end
   end
 
   def handle_in(_message, _payload, socket) do

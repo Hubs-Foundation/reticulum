@@ -23,6 +23,20 @@ defmodule Ret.OAuthToken do
 
     token
   end
+
+  def token_for_hub_and_account(hub_sid, account_id) do
+    {:ok, token, _claims} =
+      Ret.OAuthToken.encode_and_sign(
+        # OAuthTokens do not have a resource associated with them
+        nil,
+        %{hub_sid: hub_sid, account_id: account_id |> to_string, aud: :ret_oauth},
+        allowed_algos: ["HS512"],
+        ttl: {10, :minutes},
+        allowed_drift: 60 * 1000
+      )
+
+    token
+  end
 end
 
 defmodule Ret.OAuthTokenSecretFetcher do
