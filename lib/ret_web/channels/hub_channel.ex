@@ -374,6 +374,12 @@ defmodule RetWeb.HubChannel do
   def handle_in("block_naf", _payload, socket), do: {:noreply, socket |> assign(:block_naf, true)}
   def handle_in("unblock_naf", _payload, socket), do: {:noreply, socket |> assign(:block_naf, false)}
 
+  def handle_in("oauth", %{"type" => "twitter"}, socket) do
+    hub = socket |> hub_for_socket
+    url = Ret.TwitterClient.get_oauth_url(hub.hub_sid)
+    {:reply, {:ok, %{oauth_url: url}}, socket}
+  end
+
   def handle_in(_message, _payload, socket) do
     {:noreply, socket}
   end

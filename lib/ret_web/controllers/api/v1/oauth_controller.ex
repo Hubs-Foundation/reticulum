@@ -37,6 +37,26 @@ defmodule RetWeb.Api.V1.OAuthController do
     |> send_resp(307, "")
   end
 
+  def show(conn, %{"type" => "twitter", "state" => state}) do
+    %{claims: %{"hub_sid" => hub_sid}} = OAuthToken.peek(state)
+    hub = Hub |> Repo.get_by(hub_sid: hub_sid)
+
+    case OAuthToken.decode_and_verify(state) do
+      {:ok, _} ->
+        hub = hub |> Repo.preload(:hub_bindings)
+
+        conn
+        # |> process_discord_oauth(discord_user_id, verified, email, hub)
+        |> put_resp_header("location", hub |> Hub.url_for())
+        |> send_resp(307, "")
+
+      {:error, :token_expired} ->
+        conn
+        |> put_resp_header("location", hub |> Hub.url_for())
+        |> send_resp(307, "")
+    end
+  end
+
   # Discord user has a verified email, so we create a Hubs account for them associate it with their discord user id.
   defp process_discord_oauth(conn, discord_user_id, true = _verified, email, _hub) do
     oauth_provider =
