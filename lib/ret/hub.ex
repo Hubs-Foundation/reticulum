@@ -14,7 +14,7 @@ defmodule Ret.Hub do
   import Ecto.Query
   import Canada, only: [can?: 2]
 
-  alias Ret.{Account, Hub, Repo, Scene, SceneListing, WebPushSubscription, RoomAssigner}
+  alias Ret.{Account, Hub, Repo, Scene, SceneListing, WebPushSubscription, RoomAssigner, BitFieldUtils}
   alias Ret.Hub.{HubSlug}
 
   @schema_prefix "ret0"
@@ -33,6 +33,7 @@ defmodule Ret.Hub do
     field(:creator_assignment_token, :string)
     field(:embed_token, :string)
     field(:embedded, :boolean)
+    field(:permissions, :integer)
     field(:default_environment_gltf_bundle_url, :string)
     field(:slug, HubSlug.Type)
     field(:max_occupant_count, :integer, default: 0)
@@ -305,6 +306,10 @@ defmodule Ret.Hub do
       nil -> raise ArgumentError, "Invalid permission #{perm}"
       {val, _} -> (hub_perms_bit_field &&& val) > 0
     end
+  end
+
+  def perms_for_hub(%Hub{} = hub) do
+    hub.permissions |> BitFieldUtils.permissions_to_map(@hub_perms)
   end
 
   def perms_for_account(%Ret.Hub{} = hub, account) do

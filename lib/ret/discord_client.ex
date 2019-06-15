@@ -1,5 +1,6 @@
 defmodule Ret.DiscordClient do
   use Bitwise
+  alias Ret.{BitFieldUtils}
 
   @oauth_scope "identify email"
   @discord_api_base "https://discordapp.com/api/v6"
@@ -126,12 +127,8 @@ defmodule Ret.DiscordClient do
     0x8000_0000 => :unused
   }
 
-  # Convert a permissions bit field integer into a {:permission_name => boolean} map
-  defp permissions_to_map(permissions) do
-    0..31
-    |> Enum.map(&bsl(1, &1))
-    |> Enum.map(&{@permissions[&1], (permissions &&& &1) == &1})
-    |> Map.new()
+  defp permissions_to_map(bit_field) do
+    bit_field |> BitFieldUtils.permissions_to_map(@permissions)
   end
 
   # compute_base_permissions and compute_overwrites based on pseudo-code at 
