@@ -40,7 +40,7 @@ defmodule RetWeb.Api.V1.OAuthController do
   def show(conn, %{
         "type" => "twitter",
         "state" => state,
-        "oauth_token" => _oauth_token,
+        "oauth_token" => oauth_token,
         "oauth_verifier" => oauth_verifier
       }) do
     %{claims: %{"hub_sid" => hub_sid, "account_id" => account_id}} = OAuthToken.peek(state)
@@ -51,7 +51,7 @@ defmodule RetWeb.Api.V1.OAuthController do
     case OAuthToken.decode_and_verify(state) do
       {:ok, _} ->
         %{"user_id" => twitter_user_id, "oauth_token" => access_token} =
-          TwitterClient.get_access_token_and_user_info(oauth_verifier)
+          TwitterClient.get_access_token_and_user_info(oauth_verifier, oauth_token)
 
         conn
         |> process_twitter_oauth(account, access_token, twitter_user_id)
@@ -106,7 +106,7 @@ defmodule RetWeb.Api.V1.OAuthController do
       |> Repo.preload(:account)
 
     if !oauth_provider || oauth_provider.account.account_id != account.account_id do
-      (OAuthProvider |> Repo.get_by(source: :twitter, account_id: account) ||
+      (OAuthProvider |> Repo.get_by(source: :twitter, account_id: account.account_id) ||
          %OAuthProvider{source: :twitter, account: account})
       |> Ecto.Changeset.change(provider_access_token: access_token, provider_account_id: twitter_user_id)
       |> Repo.insert_or_update()

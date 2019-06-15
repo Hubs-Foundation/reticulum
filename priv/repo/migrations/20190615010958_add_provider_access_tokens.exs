@@ -3,7 +3,7 @@ defmodule Ret.Repo.Migrations.AddProviderAccessTokens do
 
   def change do
     alter table("oauth_providers") do
-      add(:provider_access_token, :string)
+      add(:provider_access_token, :binary)
     end
   end
 end
