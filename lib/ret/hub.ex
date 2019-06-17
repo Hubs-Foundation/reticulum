@@ -284,9 +284,7 @@ defmodule Ret.Hub do
     0x0000_0001 => :spawn_and_manipulate_media,
     0x0000_0002 => :spawn_camera,
     0x0000_0004 => :spawn_drawing,
-    0x0000_0008 => :pin_own_object,
-    0x0000_0010 => :pin_any_object,
-    0x0000_0020 => :manipulate_any_object
+    0x0000_0008 => :pin_objects
   }
 
   @hub_perms_keys @hub_perms |> Map.values()
