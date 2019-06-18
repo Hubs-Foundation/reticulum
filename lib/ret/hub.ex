@@ -86,6 +86,13 @@ defmodule Ret.Hub do
     |> HubSlug.maybe_generate_slug()
   end
 
+  def add_perms_to_changeset(changeset, attrs) do
+    permissions_bit_field = attrs["perms"] |> Map.new(fn {k, v} -> {String.to_atom(k), v} end) |> hub_perms_to_int!
+
+    changeset
+    |> put_change(:permissions, permissions_bit_field)
+  end
+
   def changeset_for_new_seen_occupant_count(%Hub{} = hub, occupant_count) do
     new_max_occupant_count = max(hub.max_occupant_count, occupant_count)
 
