@@ -5,7 +5,7 @@ defmodule RetWeb.Api.V1.TwitterController do
   use RetWeb, :controller
   alias Ret.{TwitterClient, Account}
 
-  def tweet(conn, params) do
+  def tweets(conn, params) do
     account = Guardian.Plug.current_resource(conn)
     oauth_provider = Account.oauth_provider_for_source(account, :twitter)
     token = oauth_provider.provider_access_token

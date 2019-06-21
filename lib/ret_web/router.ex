@@ -80,7 +80,7 @@ defmodule RetWeb.Router do
       resources("/avatars", Api.V1.AvatarController, only: [:create, :update, :delete])
       resources("/hubs", Api.V1.HubController, only: [:update])
       resources("/assets", Api.V1.AssetsController, only: [:create, :delete])
-      get("/twitter/tweet", Api.V1.TwitterController, :users)
+      get("/twitter/tweets", Api.V1.TwitterController, :tweet)
 
       resources("/projects", Api.V1.ProjectController, only: [:index, :show, :create, :update, :delete]) do
         resources("/assets", Api.V1.ProjectAssetsController, only: [:index, :create, :delete])
