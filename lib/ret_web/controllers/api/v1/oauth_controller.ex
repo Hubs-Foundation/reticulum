@@ -50,11 +50,11 @@ defmodule RetWeb.Api.V1.OAuthController do
 
     case OAuthToken.decode_and_verify(state) do
       {:ok, _} ->
-        %{"user_id" => twitter_user_id, "oauth_token" => access_token} =
+        %{"user_id" => twitter_user_id, "oauth_token" => access_token, "oauth_token_secret" => access_token_secret} =
           TwitterClient.get_access_token_and_user_info(oauth_verifier, oauth_token)
 
         conn
-        |> process_twitter_oauth(account, access_token, twitter_user_id)
+        |> process_twitter_oauth(account, access_token, access_token_secret, twitter_user_id)
         |> put_resp_header("location", hub |> Hub.url_for())
         |> send_resp(307, "")
 
@@ -97,7 +97,7 @@ defmodule RetWeb.Api.V1.OAuthController do
     conn |> put_short_lived_cookie("ret-oauth-flow-perms-token", perms_token)
   end
 
-  defp process_twitter_oauth(conn, account, access_token, twitter_user_id) do
+  defp process_twitter_oauth(conn, account, access_token, access_token_secret, twitter_user_id) do
     # TODO deal with case where we get a user's email and may create an account
 
     oauth_provider =
@@ -108,7 +108,11 @@ defmodule RetWeb.Api.V1.OAuthController do
     if !oauth_provider || oauth_provider.account.account_id != account.account_id do
       (OAuthProvider |> Repo.get_by(source: :twitter, account_id: account.account_id) ||
          %OAuthProvider{source: :twitter, account: account})
-      |> Ecto.Changeset.change(provider_access_token: access_token, provider_account_id: twitter_user_id)
+      |> Ecto.Changeset.change(
+        provider_access_token: access_token,
+        provider_access_token_secret: access_token_secret,
+        provider_account_id: twitter_user_id
+      )
       |> Repo.insert_or_update()
 
       conn

@@ -14,7 +14,7 @@ defmodule Ret.TwitterClient do
 
     token = Ret.OAuthToken.token_for_hub_and_account(hub_sid, account_id)
     callback_url = "#{get_redirect_uri()}?state=#{token}"
-    res = oauth_post("/request_token", [{"oauth_callback", callback_url}], creds)
+    res = post("/oauth/request_token", [{"oauth_callback", callback_url}], creds)
     "#{@twitter_api_base}/oauth/authorize?" <> URI.encode_query(%{oauth_token: res["oauth_token"]})
   end
 
@@ -26,11 +26,23 @@ defmodule Ret.TwitterClient do
         token: request_token
       )
 
-    oauth_post("/access_token", [{"oauth_verifier", oauth_verifier}], creds)
+    post("/oauth/access_token", [{"oauth_verifier", oauth_verifier}], creds)
   end
 
-  defp oauth_post(path, params, creds) do
-    url = "#{@twitter_api_base}/oauth/#{path}"
+  defp get(path, params, creds) do
+    url = "#{@twitter_api_base}#{path}"
+
+    oauther_params = OAuther.sign("get", url, params, creds)
+    encoded_params = URI.encode_query(oauther_params)
+    request_url = "#{url}?#{encoded_params}"
+
+    retry_get_until_success(request_url)
+    |> Map.get(:body)
+    |> Poison.decode!()
+  end
+
+  defp post(path, params, creds) do
+    url = "#{@twitter_api_base}/#{path}"
 
     params = OAuther.sign("post", url, params, creds)
     encoded_params = URI.encode_query(params)
