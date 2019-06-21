@@ -139,11 +139,11 @@ config :ret, RetWeb.AddCSPPlug,
   content_security_policy:
     "default-src 'none'; script-src 'self' #{script_shas} #{asset_hosts} https://cdn.rawgit.com https://aframe.io https://www.google-analytics.com 'unsafe-eval'; worker-src 'self' blob:; font-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://cdn.aframe.io #{
       asset_hosts
-    }; style-src 'self' https://fonts.googleapis.com #{asset_hosts} 'unsafe-inline'; connect-src 'self' https://sentry.prod.mozaws.net https://dpdb.webvr.rocks #{
+    }; style-src 'self' https://fonts.googleapis.com https://cdn.jsdelivr.net #{asset_hosts} 'unsafe-inline'; connect-src 'self' https://sentry.prod.mozaws.net https://dpdb.webvr.rocks #{
       asset_hosts
-    } #{websocket_hosts} https://cdn.aframe.io https://www.mozilla.org data: blob:; img-src 'self' #{asset_hosts} https://cdn.aframe.io data: blob:; media-src 'self' #{
+    } #{websocket_hosts} https://cdn.aframe.io https://www.mozilla.org data: blob:; img-src 'self' #{
       asset_hosts
-    } data: blob:; frame-src 'self'; base-uri 'none'; form-action 'self';"
+    } https://cdn.aframe.io https://cdn.jsdelivr.net data: blob:; media-src 'self' #{asset_hosts} data: blob:; frame-src 'self'; base-uri 'none'; form-action 'self';"
 
 config :ret, Ret.Mailer, adapter: Bamboo.LocalAdapter
 

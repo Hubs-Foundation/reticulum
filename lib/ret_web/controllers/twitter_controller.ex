@@ -11,8 +11,9 @@ defmodule RetWeb.Api.V1.TwitterController do
     token = oauth_provider.provider_access_token
     token_secret = oauth_provider.provider_access_token_secret
     # result = TwitterClient.tweet(params["tweet"], token, token_secret)
-    IO.inspect(result)
+    # IO.inspect(result)
 
-    conn |> send_resp(200, result |> Poison.encode!())
+    # conn |> send_resp(200, result |> Poison.encode!())
+    conn
   end
 end
