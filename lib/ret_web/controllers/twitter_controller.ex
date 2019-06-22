@@ -26,7 +26,7 @@ defmodule RetWeb.Api.V1.TwitterController do
              ) do
           media_id when is_binary(media_id) ->
             res = TwitterClient.tweet(body, token, token_secret, media_id)
-            conn |> send_resp(200, res)
+            conn |> send_resp(200, res |> Poison.encode!())
 
           _ ->
             conn |> send_resp(400, "Failed uploading")

@@ -65,7 +65,8 @@ defmodule Ret.TwitterClient do
         case media_init_res do
           %{"media_id_string" => media_id} ->
             upload_media_chunks(creds, stream, media_id)
-            post(url, [{"command", "FINALIZE"}, {"media_id", media_id}], creds)
+            post(url, [{"command", "FINALIZE"}, {"media_id", media_id}], creds, :json)
+            media_id
 
           _ ->
             nil
@@ -87,7 +88,7 @@ defmodule Ret.TwitterClient do
         token_secret: token_secret
       )
 
-    post(url, [{"status", body}, {"media_ids", "#{media_id}"}], creds)
+    post(url, [{"status", body}, {"media_ids", "#{media_id}"}], creds, :json)
   end
 
   defp post(url, params, creds, response_type \\ :urlencoded, cap_ms \\ 5_000, expiry_ms \\ 10_000) do
@@ -107,7 +108,8 @@ defmodule Ret.TwitterClient do
 
     case response_type do
       :urlencoded -> body |> URI.decode_query()
-      _ -> body |> Poison.decode!()
+      :json -> body |> Poison.decode!()
+      _ -> body
     end
   end
 
@@ -122,7 +124,7 @@ defmodule Ret.TwitterClient do
           {"segment_index", chunk_idx}
         ],
         creds,
-        :json,
+        :text,
         60_000,
         120_000
       )
