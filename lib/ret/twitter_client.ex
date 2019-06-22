@@ -4,7 +4,7 @@ defmodule Ret.TwitterClient do
   @twitter_api_base "https://api.twitter.com"
   @twitter_upload_api_base "https://upload.twitter.com"
 
-  alias Ret.{Storage}
+  alias Ret.{OwnedFile, Storage}
 
   def get_oauth_url(hub_sid, account_id) do
     creds =
@@ -32,7 +32,7 @@ defmodule Ret.TwitterClient do
     post("#{@twitter_api_base}/oauth/access_token", [{"oauth_verifier", oauth_verifier}], creds)
   end
 
-  def upload_stored_file_as_media(stored_file_id, stored_file_access_token, token, token_secret) do
+  def upload_stored_file_as_media(stored_file_uuid, stored_file_access_token, account, token, token_secret) do
     url = "#{@twitter_upload_api_base}/1.1/media/upload.json"
 
     creds =
@@ -43,17 +43,27 @@ defmodule Ret.TwitterClient do
         token_secret: token_secret
       )
 
-    case Storage.fetch(stored_file_id, stored_file_access_token) do
+    storage_result =
+      case OwnedFile.get_by_uuid_and_account(stored_file_uuid, account.account_id) do
+        %OwnedFile{} = owned_file ->
+          Storage.fetch(owned_file)
+
+        _ ->
+          Storage.fetch(stored_file_uuid, stored_file_access_token)
+      end
+
+    case storage_result do
       {:ok, %{"content_length" => total_bytes, "content_type" => media_type}, stream} ->
         media_init_res =
           post(
             url,
             [{"command", "INIT"}, {"total_bytes", total_bytes}, {"media_type", media_type}],
-            creds
+            creds,
+            :json
           )
 
         case media_init_res do
-          %{"media_id" => media_id} ->
+          %{"media_id_string" => media_id} ->
             upload_media_chunks(creds, stream, media_id)
             post(url, [{"command", "FINALIZE"}, {"media_id", media_id}], creds)
 
@@ -66,14 +76,39 @@ defmodule Ret.TwitterClient do
     end
   end
 
-  defp post(url, params, creds) do
+  def tweet(body, token, token_secret, media_id \\ nil) do
+    url = "#{@twitter_api_base}/1.1/statuses/update.json"
+
+    creds =
+      OAuther.credentials(
+        consumer_key: module_config(:consumer_key),
+        consumer_secret: module_config(:consumer_secret),
+        token: token,
+        token_secret: token_secret
+      )
+
+    post(url, [{"status", body}, {"media_ids", "#{media_id}"}], creds)
+  end
+
+  defp post(url, params, creds, response_type \\ :urlencoded, cap_ms \\ 5_000, expiry_ms \\ 10_000) do
     params = OAuther.sign("post", url, params, creds)
     encoded_params = URI.encode_query(params)
 
-    retry_post_until_success(url, encoded_params, [{"content-type", "application/x-www-form-urlencoded"}])
-    |> Map.get(:body)
-    |> to_string
-    |> URI.decode_query()
+    body =
+      retry_post_until_success(
+        url,
+        encoded_params,
+        [{"content-type", "application/x-www-form-urlencoded"}],
+        cap_ms,
+        expiry_ms
+      )
+      |> Map.get(:body)
+      |> to_string
+
+    case response_type do
+      :urlencoded -> body |> URI.decode_query()
+      _ -> body |> Poison.decode!()
+    end
   end
 
   defp upload_media_chunks(creds, stream, media_id) do
@@ -86,7 +121,10 @@ defmodule Ret.TwitterClient do
           {"media_data", Base.encode64(chunk)},
           {"segment_index", chunk_idx}
         ],
-        creds
+        creds,
+        :json,
+        60_000,
+        120_000
       )
 
       chunk_idx + 1
