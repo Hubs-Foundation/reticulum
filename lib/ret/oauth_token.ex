@@ -19,7 +19,7 @@ defmodule Ret.OAuthToken do
 
     data =
       if account_id do
-        data |> Map.put(:account_id, account_id)
+        data |> Map.put(:account_id, account_id |> to_string)
       else
         data
       end
