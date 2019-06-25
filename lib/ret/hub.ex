@@ -74,6 +74,7 @@ defmodule Ret.Hub do
     |> add_hub_sid_to_changeset
     |> add_generated_tokens_to_changeset
     |> add_entry_code_to_changeset
+    |> add_default_perms_to_changeset
     |> unique_constraint(:hub_sid)
     |> unique_constraint(:entry_code)
   end
@@ -287,14 +288,29 @@ defmodule Ret.Hub do
     end
   end
 
+  defp add_default_perms_to_changeset(changeset) do
+    default_perms = %{
+      create_media: true,
+      create_camera: true,
+      create_drawing: true,
+      pin_objects: true
+    }
+
+    changeset |> put_change(:permissions, default_perms |> hub_perms_to_int!)
+  end
+
   @hub_perms %{
-    0x0000_0001 => :spawn_and_manipulate_media,
+    0x0000_0001 => :spawn_and_move_media,
     0x0000_0002 => :spawn_camera,
     0x0000_0004 => :spawn_drawing,
     0x0000_0008 => :pin_objects
   }
 
   @hub_perms_keys @hub_perms |> Map.values()
+
+  def hub_perms_keys do
+    @hub_perms_keys
+  end
 
   def hub_perms_to_int!(%{} = perms) do
     invalid_perms = perms |> Map.drop(@hub_perms_keys) |> Map.keys()
@@ -306,7 +322,7 @@ defmodule Ret.Hub do
     @hub_perms |> Enum.reduce(0, fn {val, perm}, acc -> if(perms[perm], do: 1, else: 0) * val + acc end)
   end
 
-  def hub_has_perm!(hub_perms_bit_field, perm) do
+  def has_perm!(%Hub{permissions: hub_perms_bit_field}, perm) do
     case @hub_perms |> Enum.find(fn {_, perm_name} -> perm_name == perm end) do
       nil -> raise ArgumentError, "Invalid permission #{perm}"
       {val, _} -> (hub_perms_bit_field &&& val) > 0
@@ -317,6 +333,7 @@ defmodule Ret.Hub do
     hub.permissions |> BitFieldUtils.permissions_to_map(@hub_perms)
   end
 
+  # The account argument here can be a Ret.Account, a Ret.OAuthProvider or nil.
   def perms_for_account(%Ret.Hub{} = hub, account) do
     %{
       join_hub: account |> can?(join_hub(hub)),
@@ -324,7 +341,11 @@ defmodule Ret.Hub do
       close_hub: account |> can?(close_hub(hub)),
       embed_hub: account |> can?(embed_hub(hub)),
       kick_users: account |> can?(kick_users(hub)),
-      mute_users: account |> can?(mute_users(hub))
+      mute_users: account |> can?(mute_users(hub)),
+      spawn_camera: account |> can?(spawn_camera(hub)),
+      spawn_drawing: account |> can?(spawn_drawing(hub)),
+      spawn_and_move_media: account |> can?(spawn_and_move_media(hub)),
+      pin_objects: account |> can?(pin_objects(hub))
     }
   end
 
@@ -336,41 +357,75 @@ defmodule Ret.Hub do
 end
 
 defimpl Canada.Can, for: Ret.Account do
+  alias Ret.{Hub}
+
   # Always deny access to non-enterable hubs
   def can?(%Ret.Account{}, :join_hub, %Ret.Hub{entry_mode: :deny}), do: false
 
+  # Bound hubs - Join perm
   def can?(%Ret.Account{} = account, :join_hub, %Ret.Hub{hub_bindings: hub_bindings})
       when hub_bindings |> length > 0 do
     hub_bindings |> Enum.any?(&(account |> Ret.HubBinding.member_of_channel?(&1)))
   end
 
+  # Bound hubs - Manage actions
   def can?(%Ret.Account{} = account, action, %Ret.Hub{hub_bindings: hub_bindings})
       when action in [:update_hub, :close_hub] and hub_bindings |> length > 0 do
     hub_bindings |> Enum.any?(&(account |> Ret.HubBinding.can_manage_channel?(&1)))
   end
 
-  def can?(%Ret.Account{} = account, action, %Ret.Hub{hub_bindings: hub_bindings})
-      when hub_bindings |> length > 0 and action in [:kick_users, :mute_users] do
-    hub_bindings |> Enum.any?(&(account |> Ret.HubBinding.can_moderate_users?(&1)))
+  # Bound hubs - Moderator and object actions
+  def can?(%Ret.Account{} = account, action, %Ret.Hub{hub_bindings: hub_bindings} = hub)
+      when hub_bindings |> length > 0 and
+             action in [:kick_users, :mute_users, :spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects] do
+    is_moderator = hub_bindings |> Enum.any?(&(account |> Ret.HubBinding.can_moderate_users?(&1)))
+
+    if !is_moderator and action in [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects] do
+      is_member = hub_bindings |> Enum.any?(&(account |> Ret.HubBinding.member_of_channel?(&1)))
+      is_member and hub |> Hub.has_perm!(action)
+    else
+      is_moderator
+    end
   end
 
+  # Bound hubs - Always prevent embedding
   def can?(%Ret.Account{}, action, %Ret.Hub{hub_bindings: hub_bindings})
       when hub_bindings |> length > 0 and action in [:embed_hub],
       do: false
 
-  # Anyone can join an unbound hub
-  def can?(_, :join_hub, %Ret.Hub{hub_bindings: []}), do: true
+  # Unbound hubs - Anyone can join an unbound hub
+  def can?(_account, :join_hub, %Ret.Hub{hub_bindings: []}), do: true
 
-  # Creators of unbound hubs can perform special actions
+  # Unbound hubs - Creators can perform special actions
   def can?(%Ret.Account{account_id: account_id}, action, %Ret.Hub{created_by_account_id: account_id})
-      when account_id != nil and action in [:update_hub, :close_hub, :embed_hub, :kick_users, :mute_users],
+      when account_id != nil and
+             action in [
+               :update_hub,
+               :close_hub,
+               :embed_hub,
+               :kick_users,
+               :mute_users,
+               :spawn_and_move_media,
+               :spawn_camera,
+               :spawn_drawing,
+               :pin_objects
+             ],
       do: true
 
+  # Unbound hubs - Object permissions for regular users are based on perms settings
+  def can?(_account, action, hub)
+      when action in [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects] do
+    hub |> Hub.has_perm!(action)
+  end
+
+  # Deny permissions for any other case that falls through
   def can?(_, _, _), do: false
 end
 
 # Perms for oauth users that do not have a hubs account
 defimpl Canada.Can, for: Ret.OAuthProvider do
+  alias Ret.{Hub}
+
   # Always deny access to non-enterable hubs
   def can?(%Ret.OAuthProvider{}, :join_hub, %Ret.Hub{entry_mode: :deny}), do: false
 
@@ -384,16 +439,28 @@ defimpl Canada.Can, for: Ret.OAuthProvider do
     hub_bindings |> Enum.any?(&(oauth_provider |> Ret.HubBinding.member_of_channel?(&1)))
   end
 
+  # Object permissions for OAuthProvider users are based on perms settings
+  def can?(_account, action, hub) when action in [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects] do
+    hub |> Hub.has_perm!(action)
+  end
+
   def can?(_, _, _), do: false
 end
 
 # Permissions for un-authenticated clients
 defimpl Canada.Can, for: Atom do
+  alias Ret.{Hub}
+
   # Always deny access to non-enterable hubs
   def can?(_, :join_hub, %Ret.Hub{entry_mode: :deny}), do: false
 
   # Anyone can join an unbound hub
   def can?(_, :join_hub, %Ret.Hub{hub_bindings: []}), do: true
+
+  # Object permissions for anonymous users are based on perms settings
+  def can?(_account, action, hub) when action in [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects] do
+    hub |> Hub.has_perm!(action)
+  end
 
   def can?(_, _, _), do: false
 end
