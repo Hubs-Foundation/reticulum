@@ -290,9 +290,9 @@ defmodule Ret.Hub do
 
   defp add_default_perms_to_changeset(changeset) do
     default_perms = %{
-      create_media: true,
-      create_camera: true,
-      create_drawing: true,
+      spawn_and_move_media: true,
+      spawn_camera: true,
+      spawn_drawing: true,
       pin_objects: true
     }
 
