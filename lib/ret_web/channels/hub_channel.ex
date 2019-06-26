@@ -149,14 +149,13 @@ defmodule RetWeb.HubChannel do
         "#interactable-media" -> account |> can?(spawn_and_move_media(hub))
         "#static-media" -> account |> can?(spawn_and_move_media(hub))
         "#static-controlled-media" -> account |> can?(spawn_and_move_media(hub))
-        "#interactable-media" -> account |> can?(spawn_and_move_media(hub))
         "#interactable-camera" -> account |> can?(spawn_camera(hub))
         "#interactable-drawing" -> account |> can?(spawn_drawing(hub))
         "#pen-interactable" -> account |> can?(spawn_drawing(hub))
         _ -> true
       end
 
-    if shoud_broadcast do
+    if should_broadcast do
       data =
         payload["data"]
         |> Map.put("creator", socket.assigns.session_id)
