@@ -269,15 +269,23 @@ defmodule RetWeb.HubChannel do
         socket
       ) do
     with_account(socket, fn account ->
-      perform_pin!(object_id, gltf_node, account, socket)
-      Storage.promote(file_id, file_access_token, promotion_token, account)
-      OwnedFile.set_active(file_id, account.account_id)
+      hub = socket |> hub_for_socket
+
+      if account |> can?(pin_objects(hub)) do
+        perform_pin!(object_id, gltf_node, account, socket)
+        Storage.promote(file_id, file_access_token, promotion_token, account)
+        OwnedFile.set_active(file_id, account.account_id)
+      end
     end)
   end
 
   def handle_in("pin", %{"id" => object_id, "gltf_node" => gltf_node}, socket) do
     with_account(socket, fn account ->
-      perform_pin!(object_id, gltf_node, account, socket)
+      hub = socket |> hub_for_socket
+
+      if account |> can?(pin_objects(hub)) do
+        perform_pin!(object_id, gltf_node, account, socket)
+      end
     end)
   end
 
