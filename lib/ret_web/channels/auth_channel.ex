@@ -20,7 +20,7 @@ defmodule RetWeb.AuthChannel do
 
   def handle_in("auth_request", %{"email" => email, "origin" => origin}, socket) do
     if !Map.get(socket.assigns, :used) do
-      socket = socket |> assign(:used, true)
+      socket = socket |> assign(:used, true) |> assign(:email, email)
 
       # Create token + send email
       token = LoginToken.new_token_for_email(email)
@@ -65,6 +65,12 @@ defmodule RetWeb.AuthChannel do
   def handle_out("auth_credentials" = event, payload, socket) do
     Process.send_after(self(), :close_channel, 1000 * 5)
     push(socket, event, payload)
+
+    # Send the email address over for all connected processes to use as well
+    if socket.assigns |> Map.has_key?(:email) do
+      broadcast!(socket, "auth_email", %{email: socket.assigns.email})
+    end
+
     {:noreply, socket}
   end
 

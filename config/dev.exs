@@ -1,6 +1,10 @@
 use Mix.Config
 
 host = "hubs.local"
+
+# To run reticulum across a LAN for local testing, uncomment and change the line below to the LAN IP
+# host = "192.168.1.27"
+
 dev_janus_host = "dev-janus.reticulum.io"
 
 # For development, we disable any cache and enable
@@ -130,7 +134,7 @@ asset_hosts =
 websocket_hosts =
   "https://localhost:4000 https://localhost:8080 wss://localhost:4000 " <>
     "https://#{host}:4000 https://#{host}:8080 wss://#{host}:4000 wss://#{host}:8080 wss://#{host}:9090 " <>
-    "wss://#{dev_janus_host} wss://prod-janus.reticulum.io wss://hubs.local:4000"
+    "wss://#{dev_janus_host} wss://prod-janus.reticulum.io wss://#{host}:4000 wss://#{host}:8080"
 
 script_shas =
   "'sha256-hsbRcgUBASABDq7qVGVTpbnWq/ns7B+ToTctZFJXYi8=' 'sha256-MIpWPgYj31kCgSUFc0UwHGQrV87W6N5ozotqfxxQG0w=' 'sha256-/S6PM16MxkmUT7zJN2lkEKFgvXR7yL4Z8PCrRrFu4Q8='"
@@ -139,7 +143,7 @@ config :ret, RetWeb.AddCSPPlug,
   content_security_policy:
     "default-src 'none'; script-src 'self' #{script_shas} #{asset_hosts} https://cdn.rawgit.com https://aframe.io https://www.google-analytics.com 'unsafe-eval'; worker-src 'self' blob:; font-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://cdn.aframe.io #{
       asset_hosts
-    }; style-src 'self' https://fonts.googleapis.com #{asset_hosts} 'unsafe-inline'; connect-src 'self' https://sentry.prod.mozaws.net https://dpdb.webvr.rocks #{
+    }; style-src 'self' https://fonts.googleapis.com #{asset_hosts} 'unsafe-inline'; connect-src 'self' https://#{host}:8080 https://sentry.prod.mozaws.net https://dpdb.webvr.rocks #{
       asset_hosts
     } #{websocket_hosts} https://cdn.aframe.io https://www.mozilla.org data: blob:; img-src 'self' #{asset_hosts} https://cdn.aframe.io data: blob:; media-src 'self' #{
       asset_hosts
