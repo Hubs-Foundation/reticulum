@@ -141,7 +141,7 @@ defmodule Ret.HubTest do
   end
 
   test "hub permissions map can be converted to bit field integer" do
-    hub_perms = %{spawn_media: true}
+    hub_perms = %{spawn_and_move_media: true}
     bit_field = hub_perms |> Hub.hub_perms_to_int!()
     assert bit_field == 1
   end
@@ -153,11 +153,11 @@ defmodule Ret.HubTest do
 
   test "hub permissions bit field integer can be queried for a permission" do
     bit_field = 1
-    assert Hub.hub_has_perm!(bit_field, :spawn_media)
+    assert Hub.has_perm!(%Hub{permissions: bit_field}, :spawn_and_move_media)
   end
 
   test "hub permissions bit field integer cannot be queried with an invalid permission" do
     bit_field = 1
-    assert_raise ArgumentError, fn -> Hub.hub_has_perm!(bit_field, :fake_permission) end
+    assert_raise ArgumentError, fn -> Hub.has_perm!(%Hub{permissions: bit_field}, :fake_permission) end
   end
 end
