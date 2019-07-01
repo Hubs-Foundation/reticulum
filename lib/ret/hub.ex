@@ -354,6 +354,8 @@ end
 
 defimpl Canada.Can, for: Ret.Account do
   alias Ret.{Hub}
+  @object_actions [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects]
+  @special_actions [:update_hub, :close_hub, :embed_hub, :kick_users, :mute_users] ++ @object_actions
 
   # Always deny access to non-enterable hubs
   def can?(%Ret.Account{}, :join_hub, %Ret.Hub{entry_mode: :deny}), do: false
@@ -370,17 +372,22 @@ defimpl Canada.Can, for: Ret.Account do
     hub_bindings |> Enum.any?(&(account |> Ret.HubBinding.can_manage_channel?(&1)))
   end
 
-  # Bound hubs - Moderator and object actions
+  # Bound hubs - Moderator actions
+  def can?(%Ret.Account{} = account, action, %Ret.Hub{hub_bindings: hub_bindings})
+      when hub_bindings |> length > 0 and action in [:kick_users, :mute_users] do
+    hub_bindings |> Enum.any?(&(account |> Ret.HubBinding.can_moderate_users?(&1)))
+  end
+
+  # Bound hubs - Object permissions
   def can?(%Ret.Account{} = account, action, %Ret.Hub{hub_bindings: hub_bindings} = hub)
-      when hub_bindings |> length > 0 and
-             action in [:kick_users, :mute_users, :spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects] do
+      when hub_bindings |> length > 0 and action in @object_actions do
     is_moderator = hub_bindings |> Enum.any?(&(account |> Ret.HubBinding.can_moderate_users?(&1)))
 
-    if !is_moderator and action in [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects] do
+    if is_moderator do
+      true
+    else
       is_member = hub_bindings |> Enum.any?(&(account |> Ret.HubBinding.member_of_channel?(&1)))
       is_member and hub |> Hub.has_perm!(action)
-    else
-      is_moderator
     end
   end
 
@@ -394,23 +401,11 @@ defimpl Canada.Can, for: Ret.Account do
 
   # Unbound hubs - Creators can perform special actions
   def can?(%Ret.Account{account_id: account_id}, action, %Ret.Hub{created_by_account_id: account_id})
-      when account_id != nil and
-             action in [
-               :update_hub,
-               :close_hub,
-               :embed_hub,
-               :kick_users,
-               :mute_users,
-               :spawn_and_move_media,
-               :spawn_camera,
-               :spawn_drawing,
-               :pin_objects
-             ],
+      when account_id != nil and action in @special_actions,
       do: true
 
   # Unbound hubs - Object permissions for regular users are based on perms settings
-  def can?(_account, action, hub)
-      when action in [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects] do
+  def can?(_account, action, hub) when action in @object_actions do
     hub |> Hub.has_perm!(action)
   end
 
