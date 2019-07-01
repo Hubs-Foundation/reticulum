@@ -308,10 +308,6 @@ defmodule Ret.Hub do
 
   @hub_perms_keys @hub_perms |> Map.values()
 
-  def hub_perms_keys do
-    @hub_perms_keys
-  end
-
   def hub_perms_to_int!(%{} = perms) do
     invalid_perms = perms |> Map.drop(@hub_perms_keys) |> Map.keys()
 
