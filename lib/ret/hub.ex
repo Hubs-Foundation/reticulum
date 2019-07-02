@@ -120,6 +120,8 @@ defmodule Ret.Hub do
     hub
     |> cast(%{default_environment_gltf_bundle_url: url}, [:default_environment_gltf_bundle_url])
     |> validate_required([:default_environment_gltf_bundle_url])
+    |> put_change(:scene_id, nil)
+    |> put_change(:scene_listing_id, nil)
   end
 
   def changeset_for_new_spawned_object_type(%Hub{} = hub, object_type)
