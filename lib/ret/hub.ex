@@ -431,7 +431,8 @@ defimpl Canada.Can, for: Ret.OAuthProvider do
   end
 
   # Object permissions for OAuthProvider users are based on perms settings
-  def can?(_account, action, hub) when action in [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects] do
+  def can?(%Ret.OAuthProvider{} = oauth_provider, action, %Ret.Hub{hub_bindings: hub_bindings} = hub)
+      when action in [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects] do
     is_member = hub_bindings |> Enum.any?(&(oauth_provider |> Ret.HubBinding.member_of_channel?(&1)))
     is_member and hub |> Hub.has_perm!(action)
   end
