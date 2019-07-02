@@ -3,13 +3,10 @@
 # of interface
 defmodule RetWeb.Api.V1.TwitterController do
   use RetWeb, :controller
-  alias Ret.{TwitterClient, Account}
+  alias Ret.{TwitterClient}
 
   def tweets(conn, %{"media_stored_file_url" => media_stored_file_url, "body" => body}) do
     account = Guardian.Plug.current_resource(conn)
-    oauth_provider = Account.oauth_provider_for_source(account, :twitter)
-    token = oauth_provider.provider_access_token
-    token_secret = oauth_provider.provider_access_token_secret
 
     case media_stored_file_url |> URI.parse() do
       %URI{path: "/files/" <> filename, query: query} ->
@@ -20,16 +17,14 @@ defmodule RetWeb.Api.V1.TwitterController do
         case TwitterClient.upload_stored_file_as_media(
                stored_file_uuid,
                stored_file_access_token,
-               account,
-               token,
-               token_secret
+               account
              ) do
           media_id when is_binary(media_id) ->
-            res = TwitterClient.tweet(body, token, token_secret, media_id)
+            res = TwitterClient.tweet(body, account, media_id)
             conn |> send_resp(200, res |> Poison.encode!())
 
           _ ->
-            conn |> send_resp(400, "Failed uploading")
+            conn |> send_resp(400, %{error: "Failed uploading"} |> Poison.encode!())
         end
 
       _ ->

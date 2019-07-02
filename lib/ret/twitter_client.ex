@@ -4,7 +4,7 @@ defmodule Ret.TwitterClient do
   @twitter_api_base "https://api.twitter.com"
   @twitter_upload_api_base "https://upload.twitter.com"
 
-  alias Ret.{OwnedFile, Storage}
+  alias Ret.{Account, OwnedFile, Storage}
 
   def get_oauth_url(hub_sid, account_id) do
     creds =
@@ -32,15 +32,16 @@ defmodule Ret.TwitterClient do
     post("#{@twitter_api_base}/oauth/access_token", [{"oauth_verifier", oauth_verifier}], creds)
   end
 
-  def upload_stored_file_as_media(stored_file_uuid, stored_file_access_token, account, token, token_secret) do
+  def upload_stored_file_as_media(stored_file_uuid, stored_file_access_token, account) do
+    oauth_provider = Account.oauth_provider_for_source(account, :twitter)
     url = "#{@twitter_upload_api_base}/1.1/media/upload.json"
 
     creds =
       OAuther.credentials(
         consumer_key: module_config(:consumer_key),
         consumer_secret: module_config(:consumer_secret),
-        token: token,
-        token_secret: token_secret
+        token: oauth_provider.provider_access_token,
+        token_secret: oauth_provider.provider_access_token_secret
       )
 
     storage_result =
@@ -77,15 +78,16 @@ defmodule Ret.TwitterClient do
     end
   end
 
-  def tweet(body, token, token_secret, media_id \\ nil) do
+  def tweet(body, account, media_id \\ nil) do
     url = "#{@twitter_api_base}/1.1/statuses/update.json"
+    oauth_provider = Account.oauth_provider_for_source(account, :twitter)
 
     creds =
       OAuther.credentials(
         consumer_key: module_config(:consumer_key),
         consumer_secret: module_config(:consumer_secret),
-        token: token,
-        token_secret: token_secret
+        token: oauth_provider.provider_access_token,
+        token_secret: oauth_provider.provider_access_token_secret
       )
 
     post(url, [{"status", body}, {"media_ids", "#{media_id}"}], creds, :json)

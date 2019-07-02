@@ -105,15 +105,14 @@ defmodule RetWeb.Api.V1.OAuthController do
       |> Repo.get_by(source: :twitter, provider_account_id: twitter_user_id)
       |> Repo.preload(:account)
 
-    if !oauth_provider || oauth_provider.account.account_id != account.account_id do
-      (OAuthProvider |> Repo.get_by(source: :twitter, account_id: account.account_id) ||
-         %OAuthProvider{source: :twitter, account: account})
+    if !oauth_provider || oauth_provider.account.account_id == account.account_id do
+      (oauth_provider || %OAuthProvider{source: :twitter, account: account})
       |> Ecto.Changeset.change(
         provider_access_token: access_token,
         provider_access_token_secret: access_token_secret,
         provider_account_id: twitter_user_id
       )
-      |> Repo.insert_or_update()
+      |> Repo.insert_or_update!()
 
       conn
     else

@@ -57,7 +57,9 @@ defmodule Ret.Account do
     |> Map.put(:tweet, !!oauth_provider_for_source(account, :twitter))
   end
 
-  def add_global_perms_for_account(perms, _), do: perms
+  def add_global_perms_for_account(perms, account) do
+    perms |> Map.put(:tweet, !!oauth_provider_for_source(account, :twitter))
+  end
 
   def matching_oauth_providers(nil, _), do: []
   def matching_oauth_providers(_, nil), do: []
