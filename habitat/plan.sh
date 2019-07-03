@@ -49,6 +49,7 @@ do_build() {
 }
 
 do_install() {
+    rm -rf _build
     mix release --env=prod
     cp -a _build/prod/rel/ret/* ${pkg_prefix}
 
