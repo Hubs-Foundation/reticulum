@@ -28,6 +28,10 @@ defmodule Ret.PageOriginWarmer do
     end
   end
 
+  def chunks_for_page(source, page) do
+    {:ok, page_to_cache_entry(source, page) |> elem(1)}
+  end
+
   defp page_to_cache_entry(source, page) do
     config_key =
       if source == :hubs do
