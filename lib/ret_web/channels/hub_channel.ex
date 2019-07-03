@@ -140,6 +140,11 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
+  def handle_in("events:begin_recording", _payload, socket), do: socket |> set_presence_flag(:recording, true)
+  def handle_in("events:end_recording", _payload, socket), do: socket |> set_presence_flag(:recording, false)
+  def handle_in("events:begin_streaming", _payload, socket), do: socket |> set_presence_flag(:streaming, true)
+  def handle_in("events:end_streaming", _payload, socket), do: socket |> set_presence_flag(:streaming, false)
+
   def handle_in("naf" = event, %{"data" => %{"isFirstSync" => true}} = payload, socket) do
     data =
       payload["data"] |> Map.put("creator", socket.assigns.session_id) |> Map.put("owner", socket.assigns.session_id)
@@ -450,6 +455,11 @@ defmodule RetWeb.HubChannel do
     :ok
   end
 
+  defp set_presence_flag(socket, flag, value) do
+    socket = socket |> assign(flag, value) |> broadcast_presence_update
+    {:noreply, socket}
+  end
+
   defp broadcast_presence_update(socket) do
     Presence.update(socket, socket.assigns.session_id, socket |> presence_meta_for_socket)
     socket
@@ -485,7 +495,7 @@ defmodule RetWeb.HubChannel do
     socket.assigns
     |> maybe_override_display_name(account)
     |> Map.put(:roles, hub |> Hub.roles_for_account(account))
-    |> Map.take([:presence, :profile, :context, :roles])
+    |> Map.take([:presence, :profile, :context, :roles, :streaming, :recording])
   end
 
   # Hubs Bot can set their own display name.
