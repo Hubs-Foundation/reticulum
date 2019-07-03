@@ -204,13 +204,17 @@ defmodule Ret.MediaResolver do
       %HTTPoison.Response{headers: headers} ->
         content_type = headers |> content_type_from_headers
 
-        if !is_local_url && photomnemonic_endpoint && content_type |> String.starts_with?("text/html") do
-          case uri |> screenshot_commit_for_uri(content_type) do
-            :error -> uri |> og_tag_commit_for_uri()
-            commit -> commit
+        if content_type |> String.starts_with?("text/html") do
+          if !is_local_url && photomnemonic_endpoint do
+            case uri |> screenshot_commit_for_uri(content_type) do
+              :error -> uri |> og_tag_commit_for_uri()
+              commit -> commit
+            end
+          else
+            uri |> og_tag_commit_for_uri()
           end
         else
-          uri |> og_tag_commit_for_uri()
+          {:commit, uri |> resolved(%{expected_content_type: content_type})}
         end
     end
   end
@@ -397,11 +401,11 @@ defmodule Ret.MediaResolver do
   end
 
   defp media_url_from_ytdl_headers(headers) do
-    headers |> List.keyfind("Location", 0) |> elem(1)
+    headers |> Enum.find(fn h -> h |> elem(0) |> String.downcase() === "location" end) |> elem(1)
   end
 
   defp content_type_from_headers(headers) do
-    headers |> List.keyfind("Content-Type", 0) |> elem(1)
+    headers |> Enum.find(fn h -> h |> elem(0) |> String.downcase() === "content-type" end) |> elem(1)
   end
 
   defp get_imgur_headers() do
