@@ -37,6 +37,7 @@ defmodule RetWeb.HubChannel do
     |> assign(:profile, profile)
     |> assign(:context, context)
     |> assign(:block_naf, false)
+    |> assign(:created_objects, [])
     |> perform_join(
       hub_sid,
       context,
@@ -140,7 +141,11 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
-  def handle_in("naf" = event, %{"data" => %{"isFirstSync" => true, "template" => naf_template}} = payload, socket) do
+  def handle_in(
+        "naf" = event,
+        %{"data" => %{"isFirstSync" => true, "template" => naf_template, "networkId" => network_id}} = payload,
+        socket
+      ) do
     account = Guardian.Phoenix.Socket.current_resource(socket)
     hub = socket |> hub_for_socket
 
@@ -163,10 +168,14 @@ defmodule RetWeb.HubChannel do
 
       payload = payload |> Map.put("data", data)
 
-      broadcast_from!(socket, event, payload)
-    end
+      socket = socket |> assign(:created_objects, [network_id | socket.assigns.created_objects])
 
-    {:noreply, socket}
+      broadcast_from!(socket, event, payload)
+
+      {:noreply, socket}
+    else
+      {:noreply, socket}
+    end
   end
 
   def handle_in("naf" = event, %{"dataType" => "u"} = payload, socket) do
@@ -184,6 +193,18 @@ defmodule RetWeb.HubChannel do
 
     if filtered_updates |> length > 0 do
       payload = payload |> Map.put("data", payload["data"] |> Map.put("d", filtered_updates))
+      broadcast_from!(socket, event, payload)
+    end
+
+    {:noreply, socket}
+  end
+
+  def handle_in("naf" = event, %{"dataType" => "r", "data" => %{"networkId" => network_id}} = payload, socket) do
+    account = Guardian.Phoenix.Socket.current_resource(socket)
+    hub = socket |> hub_for_socket
+    is_creator = socket.assigns.created_objects |> Enum.member?(network_id)
+
+    if account |> can?(spawn_and_move_media(hub)) or is_creator do
       broadcast_from!(socket, event, payload)
     end
 
@@ -448,10 +469,10 @@ defmodule RetWeb.HubChannel do
 
   def handle_out("mute", _payload, socket), do: {:noreply, socket}
 
-  defp should_broadcast(%{"creator" => naf_creator, "template" => naf_template}, socket) do
+  defp should_broadcast(%{"networkId" => network_id, "template" => naf_template}, socket) do
     account = Guardian.Phoenix.Socket.current_resource(socket)
     hub = socket |> hub_for_socket
-    is_creator = naf_creator == socket.assigns.session_id
+    is_creator = socket.assigns.created_objects |> Enum.member?(network_id)
 
     case naf_template do
       "#interactable-media" -> is_creator or account |> can?(spawn_and_move_media(hub))
