@@ -169,6 +169,28 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
+  def handle_in("naf" = event, %{"dataType" => "u"} = payload, socket) do
+    if payload["data"] |> should_broadcast(socket) do
+      broadcast_from!(socket, event, payload)
+    end
+
+    {:noreply, socket}
+  end
+
+  def handle_in("naf" = event, %{"dataType" => "um"} = payload, socket) do
+    %{"data" => %{"d" => updates}} = payload
+
+    filtered_updates = updates |> Enum.filter(&(&1 |> should_broadcast(socket)))
+
+    if filtered_updates |> length > 0 do
+      payload = payload |> Map.put("data", payload["data"] |> Map.put("d", filtered_updates))
+      broadcast_from!(socket, event, payload)
+    end
+
+    {:noreply, socket}
+  end
+
+  # Fallthrough for all other dataTypes.
   def handle_in("naf" = event, payload, socket) do
     broadcast_from!(socket, event, payload)
     {:noreply, socket}
@@ -425,6 +447,19 @@ defmodule RetWeb.HubChannel do
   end
 
   def handle_out("mute", _payload, socket), do: {:noreply, socket}
+
+  defp should_broadcast(%{"creator" => naf_creator, "template" => naf_template}, socket) do
+    account = Guardian.Phoenix.Socket.current_resource(socket)
+    hub = socket |> hub_for_socket
+    is_creator = naf_creator == socket.assigns.session_id
+
+    case naf_template do
+      "#interactable-media" -> is_creator or account |> can?(spawn_and_move_media(hub))
+      "#interactable-camera" -> account |> can?(spawn_camera(hub))
+      "#pen-interactable" -> account |> can?(spawn_drawing(hub))
+      _ -> true
+    end
+  end
 
   defp handle_entry_mode_change(socket, entry_mode) do
     hub = socket |> hub_for_socket
