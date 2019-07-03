@@ -109,6 +109,8 @@ config :ret, Ret.PageOriginWarmer,
   spoke_page_origin: "https://#{host}:9090",
   insecure_ssl: true
 
+config :ret, Ret.HttpUtils, insecure_ssl: true
+
 config :ret, Ret.MediaResolver,
   giphy_api_key: nil,
   deviantart_client_id: nil,
