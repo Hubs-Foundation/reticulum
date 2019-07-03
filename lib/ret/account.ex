@@ -77,4 +77,6 @@ defmodule Ret.Account do
       provider.source == oauth_provider_source
     end)
   end
+
+  def oauth_provider_for_source(nil, _source), do: nil
 end
