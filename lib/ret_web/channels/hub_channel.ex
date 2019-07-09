@@ -157,11 +157,12 @@ defmodule RetWeb.HubChannel do
 
     should_broadcast =
       cond do
+        naf_template |> String.ends_with?("-avatar") -> true
         naf_template |> String.ends_with?("-media") -> account |> can?(spawn_and_move_media(hub))
         naf_template |> String.ends_with?("-camera") -> account |> can?(spawn_camera(hub))
         naf_template |> String.ends_with?("-drawing") -> account |> can?(spawn_drawing(hub))
         naf_template |> String.ends_with?("-pen") -> account |> can?(spawn_drawing(hub))
-        true -> true
+        true -> false
       end
 
     if should_broadcast do
@@ -490,10 +491,11 @@ defmodule RetWeb.HubChannel do
     is_creator = socket.assigns.created_objects |> Enum.member?(network_id)
 
     cond do
+      naf_template |> String.ends_with?("-avatar") -> true
       naf_template |> String.ends_with?("-media") -> is_creator or account |> can?(spawn_and_move_media(hub))
       naf_template |> String.ends_with?("-camera") -> account |> can?(spawn_camera(hub))
       naf_template |> String.ends_with?("-pen") -> account |> can?(spawn_drawing(hub))
-      true -> true
+      true -> false
     end
   end
 
