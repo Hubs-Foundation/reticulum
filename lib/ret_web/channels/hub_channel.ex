@@ -388,7 +388,7 @@ defmodule RetWeb.HubChannel do
     if account |> can?(update_hub(hub)) do
       hub
       |> Hub.add_name_to_changeset(payload)
-      |> Hub.add_perms_to_changeset(payload)
+      |> Hub.add_member_permissions_to_changeset(payload)
       |> Repo.update!()
       |> Repo.preload(@hub_preloads)
       |> broadcast_hub_refresh!(socket, stale_fields)
