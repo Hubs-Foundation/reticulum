@@ -29,17 +29,17 @@ defmodule Ret.Crypto do
     end
   end
 
-  def encrypt(plaintext) do
+  def encrypt(plaintext, key \\ default_secret_key()) do
     iv = :crypto.strong_rand_bytes(16)
-    key = :crypto.hash(:sha256, Application.get_env(:ret, RetWeb.Endpoint)[:secret_key_base])
-    {ciphertext, tag} = :crypto.block_encrypt(:aes_gcm, key, iv, {"AES256GCM", plaintext |> to_string(), 16})
+    hashed_key = :crypto.hash(:sha256, key)
+    {ciphertext, tag} = :crypto.block_encrypt(:aes_gcm, hashed_key, iv, {"AES256GCM", plaintext |> to_string(), 16})
     iv <> tag <> ciphertext
   end
 
-  def decrypt(ciphertext) do
+  def decrypt(ciphertext, key \\ default_secret_key()) do
     <<iv::binary-16, tag::binary-16, ciphertext::binary>> = ciphertext
-    key = :crypto.hash(:sha256, Application.get_env(:ret, RetWeb.Endpoint)[:secret_key_base])
-    :crypto.block_decrypt(:aes_gcm, key, iv, {"AES256GCM", ciphertext, tag})
+    hashed_key = :crypto.hash(:sha256, key)
+    :crypto.block_decrypt(:aes_gcm, hashed_key, iv, {"AES256GCM", ciphertext, tag})
   end
 
   # Given the source path and the user-specified decryption key, return
@@ -85,10 +85,8 @@ defmodule Ret.Crypto do
     end
   end
 
-  def hash(plaintext) do
-    secret = Application.get_env(:ret, RetWeb.Endpoint)[:secret_key_base]
-
-    :crypto.hash(:sha256, plaintext <> :crypto.hash(:sha256, plaintext <> secret))
+  def hash(plaintext, key \\ default_secret_key()) do
+    :crypto.hash(:sha256, plaintext <> :crypto.hash(:sha256, plaintext <> key))
     |> :base64.encode()
   end
 
@@ -130,4 +128,6 @@ defmodule Ret.Crypto do
 
     {decrypted_bytes + byte_size(plaintext), total_bytes, state, plaintext}
   end
+
+  defp default_secret_key(), do: Application.get_env(:ret, RetWeb.Endpoint)[:secret_key_base]
 end

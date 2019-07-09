@@ -11,6 +11,7 @@ defmodule Ret.LoginToken do
 
   schema "login_tokens" do
     field(:token, :string)
+    field(:payload_key, :string)
     field(:identifier_hash, :string)
 
     timestamps()
@@ -23,18 +24,18 @@ defmodule Ret.LoginToken do
     login_token
     |> cast(%{}, [])
     |> put_change(:token, token)
+    |> put_change(:payload_key, SecureRandom.hex())
     |> put_change(:identifier_hash, email |> Account.identifier_hash_for_email())
     |> validate_required([:token, :identifier_hash])
   end
 
-  def new_token_for_email(email) do
+  def new_login_token_for_email(email) do
     %Ret.LoginToken{}
     |> changeset_for_email(email)
     |> Repo.insert!()
-    |> Map.get(:token)
   end
 
-  def identifier_hash_for_token(token) do
+  def lookup_by_token(token) do
     login_token =
       Ret.LoginToken
       |> where([t], t.token == ^token)
@@ -45,7 +46,7 @@ defmodule Ret.LoginToken do
       |> Repo.one()
 
     if login_token do
-      login_token.identifier_hash
+      login_token
     else
       nil
     end
