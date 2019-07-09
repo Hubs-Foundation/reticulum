@@ -300,10 +300,10 @@ defmodule Ret.Hub do
   end
 
   @hub_perms %{
-    0x0000_0001 => :spawn_and_move_media,
-    0x0000_0002 => :spawn_camera,
-    0x0000_0004 => :spawn_drawing,
-    0x0000_0008 => :pin_objects
+    (1 <<< 0) => :spawn_and_move_media,
+    (1 <<< 1) => :spawn_camera,
+    (1 <<< 2) => :spawn_drawing,
+    (1 <<< 3) => :pin_objects
   }
 
   @hub_perms_keys @hub_perms |> Map.values()
