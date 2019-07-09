@@ -141,6 +141,7 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
+  # Captures all inbound NAF messages that result in spawned objects.
   def handle_in(
         "naf" = event,
         %{"data" => %{"isFirstSync" => true, "template" => naf_template, "networkId" => network_id}} = payload,
@@ -178,6 +179,7 @@ defmodule RetWeb.HubChannel do
     end
   end
 
+  # Captures inbound NAF update messages
   def handle_in("naf" = event, %{"dataType" => "u"} = payload, socket) do
     if payload["data"] |> should_broadcast(socket) do
       broadcast_from!(socket, event, payload)
@@ -186,6 +188,7 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
+  # Captures inbound NAF multi update messages
   def handle_in("naf" = event, %{"dataType" => "um"} = payload, socket) do
     %{"data" => %{"d" => updates}} = payload
 
@@ -199,6 +202,7 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
+  # Captures inbound NAF removal messages
   def handle_in("naf" = event, %{"dataType" => "r", "data" => %{"networkId" => network_id}} = payload, socket) do
     account = Guardian.Phoenix.Socket.current_resource(socket)
     hub = socket |> hub_for_socket
@@ -211,7 +215,7 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
-  # Fallthrough for all other dataTypes.
+  # Fallthrough for all other dataTypes
   def handle_in("naf" = event, payload, socket) do
     broadcast_from!(socket, event, payload)
     {:noreply, socket}
