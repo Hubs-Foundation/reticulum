@@ -405,12 +405,12 @@ defimpl Canada.Can, for: Ret.Account do
   def can?(_account, :join_hub, %Ret.Hub{hub_bindings: []}), do: true
 
   # Unbound hubs - Owners can perform special actions
-  def can?(%Ret.Account{account_id: account_id}, action, %Ret.Hub{created_by_account_id: account_id})
+  def can?(%Ret.Account{account_id: account_id}, action, %Ret.Hub{created_by_account_id: account_id, hub_bindings: []})
       when account_id != nil and action in @special_actions,
       do: true
 
   # Unbound hubs - Object permissions for regular users are based on member permission settings
-  def can?(_account, action, hub) when action in @object_actions do
+  def can?(_account, action, %Hub{hub_bindings: []} = hub) when action in @object_actions do
     hub |> Hub.has_member_permission(action)
   end
 
