@@ -404,7 +404,7 @@ defimpl Canada.Can, for: Ret.Account do
   # Unbound hubs - Anyone can join an unbound hub
   def can?(_account, :join_hub, %Ret.Hub{hub_bindings: []}), do: true
 
-  # Unbound hubs - Creators can perform special actions
+  # Unbound hubs - Owners can perform special actions
   def can?(%Ret.Account{account_id: account_id}, action, %Ret.Hub{created_by_account_id: account_id})
       when account_id != nil and action in @special_actions,
       do: true
