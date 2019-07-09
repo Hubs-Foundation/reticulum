@@ -151,14 +151,12 @@ defmodule RetWeb.HubChannel do
     hub = socket |> hub_for_socket
 
     should_broadcast =
-      case naf_template do
-        "#interactable-media" -> account |> can?(spawn_and_move_media(hub))
-        "#static-media" -> account |> can?(spawn_and_move_media(hub))
-        "#static-controlled-media" -> account |> can?(spawn_and_move_media(hub))
-        "#interactable-camera" -> account |> can?(spawn_camera(hub))
-        "#interactable-drawing" -> account |> can?(spawn_drawing(hub))
-        "#pen-interactable" -> account |> can?(spawn_drawing(hub))
-        _ -> true
+      cond do
+        naf_template |> String.ends_with?("-media") -> account |> can?(spawn_and_move_media(hub))
+        naf_template |> String.ends_with?("-camera") -> account |> can?(spawn_camera(hub))
+        naf_template |> String.ends_with?("-drawing") -> account |> can?(spawn_drawing(hub))
+        naf_template |> String.ends_with?("-pen") -> account |> can?(spawn_drawing(hub))
+        true -> true
       end
 
     if should_broadcast do
@@ -482,11 +480,11 @@ defmodule RetWeb.HubChannel do
     hub = socket |> hub_for_socket
     is_creator = socket.assigns.created_objects |> Enum.member?(network_id)
 
-    case naf_template do
-      "#interactable-media" -> is_creator or account |> can?(spawn_and_move_media(hub))
-      "#interactable-camera" -> account |> can?(spawn_camera(hub))
-      "#pen-interactable" -> account |> can?(spawn_drawing(hub))
-      _ -> true
+    cond do
+      naf_template |> String.ends_with?("-media") -> is_creator or account |> can?(spawn_and_move_media(hub))
+      naf_template |> String.ends_with?("-camera") -> account |> can?(spawn_camera(hub))
+      naf_template |> String.ends_with?("-pen") -> account |> can?(spawn_drawing(hub))
+      true -> true
     end
   end
 
