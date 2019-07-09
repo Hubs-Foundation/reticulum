@@ -344,8 +344,10 @@ defmodule RetWeb.HubChannel do
 
     case Guardian.Phoenix.Socket.current_resource(socket) do
       %Account{} = account ->
-        RoomObject.perform_unpin(hub, object_id)
-        OwnedFile.set_inactive(file_id, account.account_id)
+        if account |> can?(pin_objects(hub)) do
+          RoomObject.perform_unpin(hub, object_id)
+          OwnedFile.set_inactive(file_id, account.account_id)
+        end
 
       _ ->
         nil
@@ -358,8 +360,10 @@ defmodule RetWeb.HubChannel do
     hub = socket |> hub_for_socket
 
     case Guardian.Phoenix.Socket.current_resource(socket) do
-      %Account{} = _account ->
-        RoomObject.perform_unpin(hub, object_id)
+      %Account{} = account ->
+        if account |> can?(pin_objects(hub)) do
+          RoomObject.perform_unpin(hub, object_id)
+        end
 
       _ ->
         nil
