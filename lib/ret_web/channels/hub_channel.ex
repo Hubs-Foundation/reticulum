@@ -372,7 +372,7 @@ defmodule RetWeb.HubChannel do
 
     name_changed = hub.name != payload["name"]
 
-    stale_fields = if name_changed, do: ["perms", "name"], else: ["perms"]
+    stale_fields = if name_changed, do: ["member_permissions", "name"], else: ["member_permissions"]
 
     if account |> can?(update_hub(hub)) do
       hub

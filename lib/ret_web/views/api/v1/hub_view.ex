@@ -42,7 +42,7 @@ defmodule RetWeb.Api.V1.HubView do
             else
               nil
             end,
-          perms: hub |> Hub.perms_for_hub()
+          member_permissions: hub |> Hub.member_permissions_for_hub()
         }
       ]
     }

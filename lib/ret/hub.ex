@@ -33,7 +33,7 @@ defmodule Ret.Hub do
     field(:creator_assignment_token, :string)
     field(:embed_token, :string)
     field(:embedded, :boolean)
-    field(:permissions, :integer)
+    field(:member_permissions, :integer)
     field(:default_environment_gltf_bundle_url, :string)
     field(:slug, HubSlug.Type)
     field(:max_occupant_count, :integer, default: 0)
@@ -74,7 +74,7 @@ defmodule Ret.Hub do
     |> add_hub_sid_to_changeset
     |> add_generated_tokens_to_changeset
     |> add_entry_code_to_changeset
-    |> add_default_perms_to_changeset
+    |> add_default_member_permissions_to_changeset
     |> unique_constraint(:hub_sid)
     |> unique_constraint(:entry_code)
   end
@@ -88,10 +88,11 @@ defmodule Ret.Hub do
   end
 
   def add_perms_to_changeset(changeset, attrs) do
-    permissions_bit_field = attrs["perms"] |> Map.new(fn {k, v} -> {String.to_atom(k), v} end) |> hub_perms_to_int!
+    member_permissions =
+      attrs["member_permissions"] |> Map.new(fn {k, v} -> {String.to_atom(k), v} end) |> member_permissions_to_int
 
     changeset
-    |> put_change(:permissions, permissions_bit_field)
+    |> put_change(:member_permissions, member_permissions)
   end
 
   def changeset_for_new_seen_occupant_count(%Hub{} = hub, occupant_count) do
@@ -288,45 +289,49 @@ defmodule Ret.Hub do
     end
   end
 
-  defp add_default_perms_to_changeset(changeset) do
-    default_perms = %{
+  defp add_default_member_permissions_to_changeset(changeset) do
+    default_member_permissions = %{
       spawn_and_move_media: true,
       spawn_camera: true,
       spawn_drawing: true,
       pin_objects: true
     }
 
-    changeset |> put_change(:permissions, default_perms |> hub_perms_to_int!)
+    changeset |> put_change(:member_permissions, default_member_permissions |> member_permissions_to_int)
   end
 
-  @hub_perms %{
+  @member_permissions %{
     (1 <<< 0) => :spawn_and_move_media,
     (1 <<< 1) => :spawn_camera,
     (1 <<< 2) => :spawn_drawing,
     (1 <<< 3) => :pin_objects
   }
 
-  @hub_perms_keys @hub_perms |> Map.values()
+  @member_permissions_keys @member_permissions |> Map.values()
 
-  def hub_perms_to_int!(%{} = perms) do
-    invalid_perms = perms |> Map.drop(@hub_perms_keys) |> Map.keys()
+  def member_permissions_to_int(%{} = member_permissions) do
+    invalid_member_permissions = member_permissions |> Map.drop(@member_permissions_keys) |> Map.keys()
 
-    if invalid_perms |> Enum.count() > 0 do
-      raise ArgumentError, "Invalid permissions #{invalid_perms |> Enum.join(", ")}"
+    if invalid_member_permissions |> Enum.count() > 0 do
+      raise ArgumentError, "Invalid permissions #{invalid_member_permissions |> Enum.join(", ")}"
     end
 
-    @hub_perms |> Enum.reduce(0, fn {val, perm}, acc -> if(perms[perm], do: 1, else: 0) * val + acc end)
+    @member_permissions
+    |> Enum.reduce(0, fn {val, member_permission}, acc ->
+      if(member_permissions[member_permission], do: 1, else: 0) * val + acc
+    end)
   end
 
-  def has_perm!(%Hub{permissions: hub_perms_bit_field}, perm) do
-    case @hub_perms |> Enum.find(fn {_, perm_name} -> perm_name == perm end) do
-      nil -> raise ArgumentError, "Invalid permission #{perm}"
-      {val, _} -> (hub_perms_bit_field &&& val) > 0
+  def has_member_permission(%Hub{} = hub, member_permission) do
+    case @member_permissions
+         |> Enum.find(fn {_, member_permission_name} -> member_permission_name == member_permission end) do
+      nil -> raise ArgumentError, "Invalid permission #{member_permission}"
+      {val, _} -> (hub.member_permissions &&& val) > 0
     end
   end
 
-  def perms_for_hub(%Hub{} = hub) do
-    hub.permissions |> BitFieldUtils.permissions_to_map(@hub_perms)
+  def member_permissions_for_hub(%Hub{} = hub) do
+    hub.member_permissions |> BitFieldUtils.permissions_to_map(@member_permissions)
   end
 
   # The account argument here can be a Ret.Account, a Ret.OAuthProvider or nil.
@@ -387,7 +392,7 @@ defimpl Canada.Can, for: Ret.Account do
       true
     else
       is_member = hub_bindings |> Enum.any?(&(account |> Ret.HubBinding.member_of_channel?(&1)))
-      is_member and hub |> Hub.has_perm!(action)
+      is_member and hub |> Hub.has_member_permission(action)
     end
   end
 
@@ -404,9 +409,9 @@ defimpl Canada.Can, for: Ret.Account do
       when account_id != nil and action in @special_actions,
       do: true
 
-  # Unbound hubs - Object permissions for regular users are based on perms settings
+  # Unbound hubs - Object permissions for regular users are based on member permission settings
   def can?(_account, action, hub) when action in @object_actions do
-    hub |> Hub.has_perm!(action)
+    hub |> Hub.has_member_permission(action)
   end
 
   # Deny permissions for any other case that falls through
@@ -430,11 +435,11 @@ defimpl Canada.Can, for: Ret.OAuthProvider do
     hub_bindings |> Enum.any?(&(oauth_provider |> Ret.HubBinding.member_of_channel?(&1)))
   end
 
-  # Object permissions for OAuthProvider users are based on perms settings
+  # Object permissions for OAuthProvider users are based on member permission settings
   def can?(%Ret.OAuthProvider{} = oauth_provider, action, %Ret.Hub{hub_bindings: hub_bindings} = hub)
       when action in [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects] do
     is_member = hub_bindings |> Enum.any?(&(oauth_provider |> Ret.HubBinding.member_of_channel?(&1)))
-    is_member and hub |> Hub.has_perm!(action)
+    is_member and hub |> Hub.has_member_permission(action)
   end
 
   def can?(_, _, _), do: false
@@ -450,9 +455,9 @@ defimpl Canada.Can, for: Atom do
   # Anyone can join an unbound hub
   def can?(_, :join_hub, %Ret.Hub{hub_bindings: []}), do: true
 
-  # Object permissions for anonymous users are based on perms settings
+  # Object permissions for anonymous users are based on member permission settings
   def can?(_account, action, hub) when action in [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects] do
-    hub |> Hub.has_perm!(action)
+    hub |> Hub.has_member_permission(action)
   end
 
   def can?(_, _, _), do: false
