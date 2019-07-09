@@ -109,6 +109,8 @@ config :ret, Ret.PageOriginWarmer,
   spoke_page_origin: "https://#{host}:9090",
   insecure_ssl: true
 
+config :ret, Ret.HttpUtils, insecure_ssl: true
+
 config :ret, Ret.MediaResolver,
   giphy_api_key: nil,
   deviantart_client_id: nil,
@@ -182,3 +184,5 @@ config :ret, Ret.Habitat, ip: "127.0.0.1", http_port: 9631
 config :ret, Ret.JanusLoadStatus, default_janus_host: dev_janus_host
 
 config :ret, Ret.RoomAssigner, balancer_weights: [{600, 1}, {300, 50}, {0, 500}]
+
+config :ret, RetWeb.PageController, skip_cache: true
