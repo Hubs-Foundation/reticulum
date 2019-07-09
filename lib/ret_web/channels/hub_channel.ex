@@ -370,13 +370,17 @@ defmodule RetWeb.HubChannel do
     hub = socket |> hub_for_socket
     account = Guardian.Phoenix.Socket.current_resource(socket)
 
+    name_changed = hub.name != payload["name"]
+
+    stale_fields = if name_changed, do: ["perms", "name"], else: ["perms"]
+
     if account |> can?(update_hub(hub)) do
       hub
       |> Hub.add_name_to_changeset(payload)
       |> Hub.add_perms_to_changeset(payload)
       |> Repo.update!()
       |> Repo.preload(@hub_preloads)
-      |> broadcast_hub_refresh!(socket, ["name"])
+      |> broadcast_hub_refresh!(socket, stale_fields)
     end
 
     {:noreply, socket}
