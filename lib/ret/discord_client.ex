@@ -89,8 +89,8 @@ defmodule Ret.DiscordClient do
     |> Poison.decode!()
   end
 
-  @none 0
-  @all (1 <<< 32) - 1
+  @none 0x0000_0000
+  @all 0xFFFF_FFFF
   @administrator 1 <<< 3
   @permissions %{
     (1 <<< 0) => :create_instant_invite,
