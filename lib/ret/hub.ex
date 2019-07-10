@@ -177,11 +177,11 @@ defmodule Ret.Hub do
     "#{RetWeb.Endpoint.url()}/hub-preview.png"
   end
 
-  def image_url_for(%Hub{scene: scene}) do
+  def image_url_for(%Hub{scene: scene}) when scene != nil do
     scene.screenshot_owned_file |> Ret.OwnedFile.uri_for() |> URI.to_string()
   end
 
-  def image_url_for(%Hub{scene_listing: scene_listing}) do
+  def image_url_for(%Hub{scene_listing: scene_listing}) when scene_listing != nil do
     scene_listing.screenshot_owned_file |> Ret.OwnedFile.uri_for() |> URI.to_string()
   end
 
