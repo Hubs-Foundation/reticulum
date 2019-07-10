@@ -46,12 +46,17 @@ defmodule RetWeb.AuthChannel do
     # Slow down token guessing
     :timer.sleep(500)
 
-    %LoginToken{identifier_hash: identifier_hash, payload_key: payload_key} = LoginToken.lookup_by_token(token)
-    decrypted_payload = auth_payload |> :base64.decode() |> Ret.Crypto.decrypt(payload_key) |> Poison.decode!()
+    case LoginToken.lookup_by_token(token) do
+      %LoginToken{identifier_hash: identifier_hash, payload_key: payload_key} ->
+        decrypted_payload = auth_payload |> :base64.decode() |> Ret.Crypto.decrypt(payload_key) |> Poison.decode!()
 
-    broadcast_credentials_and_payload(identifier_hash, decrypted_payload, socket)
+        broadcast_credentials_and_payload(identifier_hash, decrypted_payload, socket)
 
-    LoginToken.expire(token)
+        LoginToken.expire(token)
+
+      _ ->
+        GenServer.cast(self(), :close)
+    end
 
     {:noreply, socket}
   end
