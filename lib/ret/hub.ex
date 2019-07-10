@@ -173,12 +173,16 @@ defmodule Ret.Hub do
     "#{RetWeb.Endpoint.url()}/#{hub.hub_sid}/#{hub.slug}"
   end
 
-  def image_url_for(%Hub{scene: nil}) do
+  def image_url_for(%Hub{scene: nil, scene_listing: nil}) do
     "#{RetWeb.Endpoint.url()}/hub-preview.png"
   end
 
   def image_url_for(%Hub{scene: scene}) do
     scene.screenshot_owned_file |> Ret.OwnedFile.uri_for() |> URI.to_string()
+  end
+
+  def image_url_for(%Hub{scene_listing: scene_listing}) do
+    scene_listing.screenshot_owned_file |> Ret.OwnedFile.uri_for() |> URI.to_string()
   end
 
   defp changeset_for_new_entry_code(%Hub{} = hub) do
