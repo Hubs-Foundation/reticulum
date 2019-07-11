@@ -55,18 +55,19 @@ defmodule Ret.TwitterClient do
 
     case storage_result do
       {:ok, %{"content_length" => total_bytes, "content_type" => media_type}, stream} ->
-        media_init_res =
-          post(
-            url,
+        params =
+          if media_type |> String.contains?("video") do
             [
               {"command", "INIT"},
               {"total_bytes", total_bytes},
               {"media_type", media_type},
               {"media_category", "tweet_video"}
-            ],
-            creds,
-            :json
-          )
+            ]
+          else
+            [{"command", "INIT"}, {"total_bytes", total_bytes}, {"media_type", media_type}]
+          end
+
+        media_init_res = post(url, params, creds, :json)
 
         case media_init_res do
           %{"media_id_string" => media_id} ->
@@ -90,6 +91,7 @@ defmodule Ret.TwitterClient do
       status = get(url, [{"command", "STATUS"}, {"media_id", media_id}], creds)
 
       if status["progress_percent"] != 100 do
+        :timer.sleep(1000)
         wait_for_upload_finished(media_id, creds, iteration + 1)
       else
         media_id
