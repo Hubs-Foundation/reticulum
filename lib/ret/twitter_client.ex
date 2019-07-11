@@ -3,6 +3,7 @@ defmodule Ret.TwitterClient do
 
   @twitter_api_base "https://api.twitter.com"
   @twitter_upload_api_base "https://upload.twitter.com"
+  @max_video_upload_size 64 * 1024 * 1024
 
   alias Ret.{Account, OwnedFile, Storage}
 
@@ -54,7 +55,8 @@ defmodule Ret.TwitterClient do
       end
 
     case storage_result do
-      {:ok, %{"content_length" => total_bytes, "content_type" => media_type}, stream} ->
+      {:ok, %{"content_length" => total_bytes, "content_type" => media_type}, stream}
+      when total_bytes <= @max_video_upload_size ->
         params =
           if media_type |> String.contains?("video") do
             [
@@ -90,7 +92,7 @@ defmodule Ret.TwitterClient do
       url = "#{@twitter_upload_api_base}/1.1/media/upload.json"
       status = get(url, [{"command", "STATUS"}, {"media_id", media_id}], creds)
 
-      if status["progress_percent"] != 100 do
+      if status["processing_info"]["progress_percent"] != 100 do
         :timer.sleep(1000)
         wait_for_upload_finished(media_id, creds, iteration + 1)
       else
