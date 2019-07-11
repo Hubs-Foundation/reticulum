@@ -53,20 +53,6 @@ defmodule Ret.TwitterClient do
           Storage.fetch(stored_file_uuid, stored_file_access_token)
       end
 
-    wait_for_finished = fn media_id, iteration ->
-      if iteration < 10 do
-        status = get(url, [{"command", "STATUS"}, {"media_id", media_id}], creds)
-
-        if status["progress_percent"] != 100 do
-          wait_for_finished.(media_id, iteration + 1)
-        else
-          media_id
-        end
-      else
-        nil
-      end
-    end
-
     case storage_result do
       {:ok, %{"content_length" => total_bytes, "content_type" => media_type}, stream} ->
         media_init_res =
@@ -87,7 +73,7 @@ defmodule Ret.TwitterClient do
             upload_media_chunks(creds, stream, media_id)
             post(url, [{"command", "FINALIZE"}, {"media_id", media_id}], creds, :json)
 
-            wait_for_finished.(media_id, 0)
+            wait_for_upload_finished(media_id)
 
           _ ->
             nil
@@ -95,6 +81,20 @@ defmodule Ret.TwitterClient do
 
       _ ->
         nil
+    end
+  end
+
+  defp wait_for_upload_finished(media_id, iteration \\ 0) do
+    if iteration < 10 do
+      status = get(url, [{"command", "STATUS"}, {"media_id", media_id}], creds)
+
+      if status["progress_percent"] != 100 do
+        wait_for_upload_finished(media_id, iteration + 1)
+      else
+        media_id
+      end
+    else
+      nil
     end
   end
 
