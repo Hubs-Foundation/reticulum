@@ -73,7 +73,7 @@ defmodule Ret.TwitterClient do
             upload_media_chunks(creds, stream, media_id)
             post(url, [{"command", "FINALIZE"}, {"media_id", media_id}], creds, :json)
 
-            wait_for_upload_finished(media_id)
+            wait_for_upload_finished(media_id, creds)
 
           _ ->
             nil
@@ -84,12 +84,13 @@ defmodule Ret.TwitterClient do
     end
   end
 
-  defp wait_for_upload_finished(media_id, iteration \\ 0) do
+  defp wait_for_upload_finished(media_id, creds, iteration \\ 0) do
     if iteration < 10 do
+      url = "#{@twitter_upload_api_base}/1.1/media/upload.json"
       status = get(url, [{"command", "STATUS"}, {"media_id", media_id}], creds)
 
       if status["progress_percent"] != 100 do
-        wait_for_upload_finished(media_id, iteration + 1)
+        wait_for_upload_finished(media_id, creds, iteration + 1)
       else
         media_id
       end
