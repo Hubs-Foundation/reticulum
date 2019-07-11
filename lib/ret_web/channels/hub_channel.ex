@@ -215,6 +215,28 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
+  # Captures inbound NAF drawing buffer updates
+  # Drawings are special since we implemented our own networking code, their data type is actually an identifier
+  # for a particular instance of a networked drawing.
+  def handle_in("naf" = event, %{"dataType" => "drawing-" <> drawing_network_id} = payload, socket) do
+    account = Guardian.Phoenix.Socket.current_resource(socket)
+    hub = socket |> hub_for_socket
+
+    created_object = socket.assigns.created_objects |> Enum.find(&(&1.network_id == drawing_network_id))
+
+    # if created_objects is nil,  we've received a message for a drawing that has not received a first sync yet,
+    # or was denied creation. so just ignore it.
+    if created_object != nil do
+      is_creator = created_object.creator == socket.assigns.session_id
+
+      if is_creator or account |> can?(spawn_drawing(hub)) do
+        broadcast_from!(socket, event, payload)
+      end
+    end
+
+    {:noreply, socket}
+  end
+
   # Fallthrough for all other dataTypes
   def handle_in("naf" = event, payload, socket) do
     broadcast_from!(socket, event, payload)
@@ -504,8 +526,8 @@ defmodule RetWeb.HubChannel do
     created_object = socket.assigns.created_objects |> Enum.find(&(&1.network_id == network_id))
 
     if created_object == nil do
-      # It seems we've received an object manipulation message for an object that has not received a first sync yet!
-      # Just ignore it.
+      # It seems we've received an object manipulation message for an object that has not received a first sync yet, 
+      # or was denied creation, so just ignore it.
       false
     else
       is_creator = created_object.creator == socket.assigns.session_id
