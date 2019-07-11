@@ -157,12 +157,24 @@ defmodule RetWeb.HubChannel do
 
     should_broadcast =
       cond do
-        template |> String.ends_with?("-avatar") -> true
-        template |> String.ends_with?("-media") -> account |> can?(spawn_and_move_media(hub))
-        template |> String.ends_with?("-camera") -> account |> can?(spawn_camera(hub))
-        template |> String.ends_with?("-drawing") -> account |> can?(spawn_drawing(hub))
-        template |> String.ends_with?("-pen") -> account |> can?(spawn_drawing(hub))
-        true -> false
+        template |> String.ends_with?("-avatar") ->
+          true
+
+        template |> String.ends_with?("-media") ->
+          account |> can?(spawn_and_move_media(hub))
+
+        template |> String.ends_with?("-camera") ->
+          account |> can?(spawn_camera(hub))
+
+        template |> String.ends_with?("-drawing") ->
+          account |> can?(spawn_drawing(hub))
+
+        template |> String.ends_with?("-pen") ->
+          account |> can?(spawn_drawing(hub))
+
+        true ->
+          # We want to forbid messages if they fall through the above list of template suffixes
+          false
       end
 
     if should_broadcast do
@@ -539,11 +551,24 @@ defmodule RetWeb.HubChannel do
       template = created_object.template
 
       cond do
-        template |> String.ends_with?("-avatar") -> true
-        template |> String.ends_with?("-media") -> is_creator or account |> can?(spawn_and_move_media(hub))
-        template |> String.ends_with?("-camera") -> is_creator or account |> can?(spawn_camera(hub))
-        template |> String.ends_with?("-pen") -> is_creator or account |> can?(spawn_drawing(hub))
-        true -> false
+        template |> String.ends_with?("-avatar") ->
+          true
+
+        template |> String.ends_with?("-media") ->
+          is_pinned = Repo.get_by(RoomObject, object_id: network_id) != nil
+
+          (!is_pinned or account |> can?(pin_objects(hub))) and
+            (is_creator or account |> can?(spawn_and_move_media(hub)))
+
+        template |> String.ends_with?("-camera") ->
+          is_creator or account |> can?(spawn_camera(hub))
+
+        template |> String.ends_with?("-pen") ->
+          is_creator or account |> can?(spawn_drawing(hub))
+
+        true ->
+          # We want to forbid messages if they fall through the above list of template suffixes
+          false
       end
     end
   end
