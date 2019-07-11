@@ -149,7 +149,7 @@ defmodule RetWeb.HubChannel do
   # Captures all inbound NAF messages that result in spawned objects.
   def handle_in(
         "naf" = event,
-        %{"data" => %{"isFirstSync" => true, "template" => naf_template, "networkId" => network_id}} = payload,
+        %{"data" => %{"isFirstSync" => true, "template" => template}} = payload,
         socket
       ) do
     account = Guardian.Phoenix.Socket.current_resource(socket)
@@ -157,11 +157,11 @@ defmodule RetWeb.HubChannel do
 
     should_broadcast =
       cond do
-        naf_template |> String.ends_with?("-avatar") -> true
-        naf_template |> String.ends_with?("-media") -> account |> can?(spawn_and_move_media(hub))
-        naf_template |> String.ends_with?("-camera") -> account |> can?(spawn_camera(hub))
-        naf_template |> String.ends_with?("-drawing") -> account |> can?(spawn_drawing(hub))
-        naf_template |> String.ends_with?("-pen") -> account |> can?(spawn_drawing(hub))
+        template |> String.ends_with?("-avatar") -> true
+        template |> String.ends_with?("-media") -> account |> can?(spawn_and_move_media(hub))
+        template |> String.ends_with?("-camera") -> account |> can?(spawn_camera(hub))
+        template |> String.ends_with?("-drawing") -> account |> can?(spawn_drawing(hub))
+        template |> String.ends_with?("-pen") -> account |> can?(spawn_drawing(hub))
         true -> false
       end
 
@@ -173,7 +173,7 @@ defmodule RetWeb.HubChannel do
 
       payload = payload |> Map.put("data", data)
 
-      socket = socket |> assign(:created_objects, [network_id | socket.assigns.created_objects])
+      socket = socket |> store_created_object(payload)
 
       broadcast_from!(socket, event, payload)
 
@@ -185,7 +185,7 @@ defmodule RetWeb.HubChannel do
 
   # Captures inbound NAF update messages
   def handle_in("naf" = event, %{"dataType" => "u"} = payload, socket) do
-    if payload["data"] |> should_broadcast(socket) do
+    if payload["data"] |> should_broadcast_object_manipulation(socket) do
       broadcast_from!(socket, event, payload)
     end
 
@@ -196,7 +196,7 @@ defmodule RetWeb.HubChannel do
   def handle_in("naf" = event, %{"dataType" => "um"} = payload, socket) do
     %{"data" => %{"d" => updates}} = payload
 
-    filtered_updates = updates |> Enum.filter(&(&1 |> should_broadcast(socket)))
+    filtered_updates = updates |> Enum.filter(&(&1 |> should_broadcast_object_manipulation(socket)))
 
     if filtered_updates |> length > 0 do
       payload = payload |> Map.put("data", payload["data"] |> Map.put("d", filtered_updates))
@@ -208,9 +208,7 @@ defmodule RetWeb.HubChannel do
 
   # Captures inbound NAF removal messages
   def handle_in("naf" = event, %{"dataType" => "r"} = payload, socket) do
-    account = Guardian.Phoenix.Socket.current_resource(socket)
-
-    if payload["data"] |> should_broadcast(socket) do
+    if payload["data"] |> should_broadcast_object_manipulation(socket) do
       broadcast_from!(socket, event, payload)
     end
 
@@ -473,6 +471,8 @@ defmodule RetWeb.HubChannel do
   end
 
   def handle_out("naf" = event, payload, socket) do
+    socket = socket |> store_created_object(payload)
+
     # Sockets can block NAF as an optimization, eg iframe embeds do not need NAF messages until user clicks load
     if !socket.assigns.block_naf do
       push(socket, event, payload)
@@ -483,17 +483,41 @@ defmodule RetWeb.HubChannel do
 
   def handle_out("mute", _payload, socket), do: {:noreply, socket}
 
-  defp should_broadcast(%{"networkId" => network_id, "template" => naf_template}, socket) do
+  defp store_created_object(socket, payload) do
+    case payload do
+      %{"data" => %{"isFirstSync" => true, "networkId" => network_id, "creator" => creator, "template" => template}} ->
+        socket
+        |> assign(:created_objects, [
+          %{creator: creator, network_id: network_id, template: template} | socket.assigns.created_objects
+        ])
+
+      _ ->
+        # This is not a first sync message, so we don't need to do anything.
+        socket
+    end
+  end
+
+  defp should_broadcast_object_manipulation(%{"networkId" => network_id}, socket) do
     account = Guardian.Phoenix.Socket.current_resource(socket)
     hub = socket |> hub_for_socket
-    is_creator = socket.assigns.created_objects |> Enum.member?(network_id)
 
-    cond do
-      naf_template |> String.ends_with?("-avatar") -> true
-      naf_template |> String.ends_with?("-media") -> is_creator or account |> can?(spawn_and_move_media(hub))
-      naf_template |> String.ends_with?("-camera") -> account |> can?(spawn_camera(hub))
-      naf_template |> String.ends_with?("-pen") -> account |> can?(spawn_drawing(hub))
-      true -> false
+    created_object = socket.assigns.created_objects |> Enum.find(&(&1.network_id == network_id))
+
+    if created_object == nil do
+      # It seems we've received an object manipulation message for an object that has not received a first sync yet!
+      # Just ignore it.
+      false
+    else
+      is_creator = created_object.creator == socket.assigns.session_id
+      template = created_object.template
+
+      cond do
+        template |> String.ends_with?("-avatar") -> true
+        template |> String.ends_with?("-media") -> is_creator or account |> can?(spawn_and_move_media(hub))
+        template |> String.ends_with?("-camera") -> is_creator or account |> can?(spawn_camera(hub))
+        template |> String.ends_with?("-pen") -> is_creator or account |> can?(spawn_drawing(hub))
+        true -> false
+      end
     end
   end
 
