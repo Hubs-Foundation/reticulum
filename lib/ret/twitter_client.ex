@@ -53,12 +53,31 @@ defmodule Ret.TwitterClient do
           Storage.fetch(stored_file_uuid, stored_file_access_token)
       end
 
+    wait_for_finished = fn media_id, iteration ->
+      if iteration < 10 do
+        status = get(url, [{"command", "STATUS"}, {"media_id", media_id}], creds)
+
+        if status["progress_percent"] != 100 do
+          wait_for_finished.(media_id, iteration + 1)
+        else
+          media_id
+        end
+      else
+        nil
+      end
+    end
+
     case storage_result do
       {:ok, %{"content_length" => total_bytes, "content_type" => media_type}, stream} ->
         media_init_res =
           post(
             url,
-            [{"command", "INIT"}, {"total_bytes", total_bytes}, {"media_type", media_type}],
+            [
+              {"command", "INIT"},
+              {"total_bytes", total_bytes},
+              {"media_type", media_type},
+              {"media_category", "tweet_video"}
+            ],
             creds,
             :json
           )
@@ -67,7 +86,8 @@ defmodule Ret.TwitterClient do
           %{"media_id_string" => media_id} ->
             upload_media_chunks(creds, stream, media_id)
             post(url, [{"command", "FINALIZE"}, {"media_id", media_id}], creds, :json)
-            media_id
+
+            wait_for_finished.(media_id, 0)
 
           _ ->
             nil
@@ -137,16 +157,15 @@ defmodule Ret.TwitterClient do
 
   defp get_redirect_uri(), do: RetWeb.Endpoint.url() <> "/api/v1/oauth/twitter"
 
-  # Unused for now
-  # defp get(url, params, creds) do
-  #   oauther_params = OAuther.sign("get", url, params, creds)
-  #   encoded_params = URI.encode_query(oauther_params)
-  #   request_url = "#{url}?#{encoded_params}"
+  defp get(url, params, creds) do
+    oauther_params = OAuther.sign("get", url, params, creds)
+    encoded_params = URI.encode_query(oauther_params)
+    request_url = "#{url}?#{encoded_params}"
 
-  #   retry_get_until_success(request_url)
-  #   |> Map.get(:body)
-  #   |> Poison.decode!()
-  # end
+    retry_get_until_success(request_url)
+    |> Map.get(:body)
+    |> Poison.decode!()
+  end
 
   defp module_config(key) do
     Application.get_env(:ret, __MODULE__)[key]
