@@ -243,8 +243,13 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
-  def handle_in("message" = event, payload, socket) do
-    broadcast!(socket, event, payload |> Map.put(:session_id, socket.assigns.session_id))
+  def handle_in("message" = event, %{"type" => type} = payload, socket) do
+    account = Guardian.Phoenix.Socket.current_resource(socket)
+    hub = socket |> hub_for_socket
+
+    if type != "photo" or account |> can?(spawn_camera(hub)) do
+      broadcast!(socket, event, payload |> Map.put(:session_id, socket.assigns.session_id))
+    end
 
     {:noreply, socket}
   end
