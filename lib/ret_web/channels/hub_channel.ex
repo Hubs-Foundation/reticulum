@@ -207,12 +207,10 @@ defmodule RetWeb.HubChannel do
   end
 
   # Captures inbound NAF removal messages
-  def handle_in("naf" = event, %{"dataType" => "r", "data" => %{"networkId" => network_id}} = payload, socket) do
+  def handle_in("naf" = event, %{"dataType" => "r"} = payload, socket) do
     account = Guardian.Phoenix.Socket.current_resource(socket)
-    hub = socket |> hub_for_socket
-    is_creator = socket.assigns.created_objects |> Enum.member?(network_id)
 
-    if account |> can?(spawn_and_move_media(hub)) or is_creator do
+    if payload["data"] |> should_broadcast(socket) do
       broadcast_from!(socket, event, payload)
     end
 
