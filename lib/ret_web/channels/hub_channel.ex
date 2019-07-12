@@ -236,7 +236,7 @@ defmodule RetWeb.HubChannel do
 
     created_object = socket.assigns.created_objects |> Enum.find(&(&1.network_id == drawing_network_id))
 
-    # if created_objects is nil,  we've received a message for a drawing that has not received a first sync yet,
+    # If created_object is nil, we've received a message for a drawing that has not received a first sync yet,
     # or was denied creation. so just ignore it.
     if created_object != nil do
       is_creator = created_object.creator == socket.assigns.session_id
