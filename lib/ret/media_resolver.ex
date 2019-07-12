@@ -12,6 +12,8 @@ defmodule Ret.MediaResolver do
   use Retry
   import Ret.HttpUtils
 
+  require Logger
+
   alias Ret.{CachedFile, MediaResolverQuery, Statix}
 
   @ytdl_valid_status_codes [200, 302, 500]
@@ -50,6 +52,12 @@ defmodule Ret.MediaResolver do
   def resolve_with_ytdl(%URI{} = uri, root_host, ytdl_format) do
     with ytdl_host when is_binary(ytdl_host) <- module_config(:ytdl_host) do
       encoded_url = uri |> URI.to_string() |> URI.encode()
+
+      # NOTE we are temporarily logging youtube URL resolutions because of an unexplained
+      # load/traffic spike on yt-dl
+      if root_host |> String.downcase() |> String.contains?("youtube.com") do
+        Logger.info("Resolving YouTube URL: #{uri |> URI.to_string()}")
+      end
 
       ytdl_resp =
         "#{ytdl_host}/api/play?format=#{URI.encode(ytdl_format)}&url=#{encoded_url}"
