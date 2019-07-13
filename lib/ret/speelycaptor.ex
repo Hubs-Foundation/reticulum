@@ -18,7 +18,7 @@ defmodule Ret.Speelycaptor do
         resp ->
           upload_url = resp.body |> Poison.decode!() |> Map.get("uploadUrl")
 
-          case retry_post_until_success(upload_url, {:file, path}, [], 30_000, 120_000) do
+          case retry_put_until_success(upload_url, {:file, path}, [], 30_000, 120_000) do
             :error ->
               nil
 

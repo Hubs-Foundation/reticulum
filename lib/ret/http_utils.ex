@@ -10,6 +10,9 @@ defmodule Ret.HttpUtils do
   def retry_post_until_success(url, body, headers \\ [], cap_ms \\ 5_000, expiry_ms \\ 10_000),
     do: retry_until_success(:post, url, body, headers, cap_ms, expiry_ms)
 
+  def retry_put_until_success(url, body, headers \\ [], cap_ms \\ 5_000, expiry_ms \\ 10_000),
+    do: retry_until_success(:put, url, body, headers, cap_ms, expiry_ms)
+
   def retry_head_then_get_until_success(url, headers \\ [], cap_ms \\ 5_000, expiry_ms \\ 10_000) do
     case url |> retry_head_until_success(headers, cap_ms, expiry_ms) do
       :error ->
