@@ -1,6 +1,5 @@
 defmodule RetWeb.HealthController do
   use RetWeb, :controller
-  import ExUnit.Assertions
   import Ecto.Query
 
   def index(conn, _params) do
