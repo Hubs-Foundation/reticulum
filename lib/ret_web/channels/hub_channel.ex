@@ -33,29 +33,34 @@ defmodule RetWeb.HubChannel do
   ]
 
   def join("hub:" <> hub_sid, %{"profile" => profile, "context" => context} = params, socket) do
+    hub =
+      Hub
+      |> Repo.get_by(hub_sid: hub_sid)
+      |> Repo.preload(@hub_preloads)
+
     socket
     |> assign(:profile, profile)
     |> assign(:context, context)
     |> assign(:block_naf, false)
-    |> assign(:created_objects, [])
+    # Pre-populate created_objects with all the pinned objects in the room
+    |> assign(:created_objects, hub |> RoomObject.objects_for_hub() |> Enum.map(&created_object_from_room_object/1))
     |> perform_join(
-      hub_sid,
+      hub,
       context,
       params |> Map.take(["push_subscription_endpoint", "auth_token", "perms_token", "bot_access_key"])
     )
   end
 
-  defp perform_join(socket, hub_sid, context, params) do
+  defp created_object_from_room_object(room_object) do
+    %{creator: "scene", network_id: room_object.object_id, template: "#interactable-media"}
+  end
+
+  defp perform_join(socket, hub, context, params) do
     account =
       case Ret.Guardian.resource_from_token(params["auth_token"]) do
         {:ok, %Account{} = account, _claims} -> account
         _ -> nil
       end
-
-    hub =
-      Hub
-      |> Repo.get_by(hub_sid: hub_sid)
-      |> Repo.preload(@hub_preloads)
 
     hub_requires_oauth = hub.hub_bindings |> Enum.empty?() |> Kernel.not()
 
@@ -197,7 +202,7 @@ defmodule RetWeb.HubChannel do
 
   # Captures inbound NAF update messages
   def handle_in("naf" = event, %{"dataType" => "u"} = payload, socket) do
-    if payload["data"] |> should_broadcast_object_manipulation(socket) do
+    if payload["data"] |> should_broadcast_object_manipulation(:update, socket) do
       broadcast_from!(socket, event, payload)
     end
 
@@ -208,7 +213,7 @@ defmodule RetWeb.HubChannel do
   def handle_in("naf" = event, %{"dataType" => "um"} = payload, socket) do
     %{"data" => %{"d" => updates}} = payload
 
-    filtered_updates = updates |> Enum.filter(&(&1 |> should_broadcast_object_manipulation(socket)))
+    filtered_updates = updates |> Enum.filter(&(&1 |> should_broadcast_object_manipulation(:update, socket)))
 
     if filtered_updates |> length > 0 do
       payload = payload |> Map.put("data", payload["data"] |> Map.put("d", filtered_updates))
@@ -220,7 +225,7 @@ defmodule RetWeb.HubChannel do
 
   # Captures inbound NAF removal messages
   def handle_in("naf" = event, %{"dataType" => "r"} = payload, socket) do
-    if payload["data"] |> should_broadcast_object_manipulation(socket) do
+    if payload["data"] |> should_broadcast_object_manipulation(:remove, socket) do
       broadcast_from!(socket, event, payload)
     end
 
@@ -536,7 +541,7 @@ defmodule RetWeb.HubChannel do
     end
   end
 
-  defp should_broadcast_object_manipulation(%{"networkId" => network_id}, socket) do
+  defp should_broadcast_object_manipulation(%{"networkId" => network_id}, type, socket) do
     account = Guardian.Phoenix.Socket.current_resource(socket)
     hub = socket |> hub_for_socket
 
@@ -553,6 +558,9 @@ defmodule RetWeb.HubChannel do
       cond do
         template |> String.ends_with?("-avatar") ->
           true
+
+        template |> String.ends_with?("static-controlled-media") ->
+          type == :update
 
         template |> String.ends_with?("-media") ->
           is_pinned = Repo.get_by(RoomObject, object_id: network_id) != nil
