@@ -43,16 +43,19 @@ defmodule RetWeb.Api.V1.MediaController do
          convert_to_content_type,
          promotion_token
        ) do
-    converted_upload =
-      case Ret.Speelycaptor.convert(upload, convert_to_content_type) do
-        {:ok, converted_path} when is_binary(converted_path) ->
-          %Plug.Upload{path: converted_path, filename: upload.filename, content_type: convert_to_content_type}
+    case Ret.Speelycaptor.convert(upload, convert_to_content_type) do
+      {:ok, converted_path} ->
+        converted_upload = %Plug.Upload{
+          path: converted_path,
+          filename: upload.filename,
+          content_type: convert_to_content_type
+        }
 
-        _ ->
-          upload
-      end
+        store_and_render_upload(conn, converted_upload, convert_to_content_type, promotion_token)
 
-    store_and_render_upload(conn, converted_upload, content_type, promotion_token)
+      _ ->
+        store_and_render_upload(conn, upload, content_type, promotion_token)
+    end
   end
 
   defp store_and_render_upload(conn, %Plug.Upload{} = upload, content_type, promotion_token) do

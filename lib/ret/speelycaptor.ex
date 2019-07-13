@@ -16,17 +16,26 @@ defmodule Ret.Speelycaptor do
           nil
 
         resp ->
-          upload_url = resp.body |> Poison.decode!() |> Map.get("uploadUrl")
+          resp_body = resp.body |> Poison.decode!()
+          upload_url = resp_body |> Map.get("uploadUrl")
+          key = resp_body |> Map.get("key")
 
           case retry_put_until_success(upload_url, {:file, path}, [], 30_000, 120_000) do
             :error ->
               nil
 
-            upload_resp ->
-              IO.inspect(upload_resp)
-          end
+            _upload_resp ->
+              case retry_get_until_success("#{speelycaptor_endpoint}/convert?key=#{key}&args=-f%20mp4") do
+                :error ->
+                  nil
 
-          nil
+                convert_resp ->
+                  url = convert_resp.body |> Poison.decode!() |> Map.get("url")
+                  {:ok, download_path} = Temp.path()
+                  Download.from(url, path: download_path)
+                  {:ok, download_path}
+              end
+          end
       end
     else
       _ -> nil
