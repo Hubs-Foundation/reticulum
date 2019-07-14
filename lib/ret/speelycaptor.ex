@@ -1,15 +1,7 @@
 defmodule Ret.Speelycaptor do
   import Ret.HttpUtils
 
-  def convert(%Plug.Upload{path: path, content_type: content_type}, convert_to_content_type) do
-    if content_type |> String.downcase() |> String.starts_with?(convert_to_content_type) do
-      nil
-    else
-      convert(path, convert_to_content_type)
-    end
-  end
-
-  def convert(path, "video/mp4") do
+  def convert(%Plug.Upload{path: path, content_type: "video/" <> _tail}, "video/mp4") do
     with speelycaptor_endpoint when is_binary(speelycaptor_endpoint) <- module_config(:speelycaptor_endpoint) do
       case retry_get_until_success("#{speelycaptor_endpoint}/init") do
         :error ->
