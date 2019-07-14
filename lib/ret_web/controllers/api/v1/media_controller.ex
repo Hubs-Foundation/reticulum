@@ -12,9 +12,7 @@ defmodule RetWeb.Api.V1.MediaController do
 
   def create(
         conn,
-        %{
-          "media" => %Plug.Upload{filename: filename, content_type: "application/octet-stream"} = upload
-        } = params
+        %{"media" => %Plug.Upload{filename: filename, content_type: "application/octet-stream"} = upload} = params
       ) do
     convert_to_content_type = params |> Map.get("convert_to")
     promotion_token = params |> promotion_token_for_params
@@ -22,27 +20,21 @@ defmodule RetWeb.Api.V1.MediaController do
     store_and_render_upload(conn, upload, MIME.from_path(filename), convert_to_content_type, promotion_token)
   end
 
-  def create(
-        conn,
-        %{
-          "media" => %Plug.Upload{content_type: content_type} = upload
-        } = params
-      ) do
+  def create(conn, %{"media" => %Plug.Upload{content_type: content_type} = upload} = params) do
     convert_to_content_type = params |> Map.get("convert_to")
     promotion_token = params |> promotion_token_for_params
+
     store_and_render_upload(conn, upload, content_type, convert_to_content_type, promotion_token)
   end
 
   defp promotion_token_for_params(%{"promotion_mode" => "with_token"}), do: SecureRandom.hex()
   defp promotion_token_for_params(_params), do: nil
 
-  defp store_and_render_upload(
-         conn,
-         %Plug.Upload{} = upload,
-         content_type,
-         convert_to_content_type,
-         promotion_token
-       ) do
+  defp store_and_render_upload(conn, upload, content_type, nil, promotion_token) do
+    store_and_render_upload(conn, upload, content_type, promotion_token)
+  end
+
+  defp store_and_render_upload(conn, upload, content_type, convert_to_content_type, promotion_token) do
     case Ret.Speelycaptor.convert(upload, convert_to_content_type) do
       {:ok, converted_path} ->
         converted_upload = %Plug.Upload{
@@ -58,7 +50,7 @@ defmodule RetWeb.Api.V1.MediaController do
     end
   end
 
-  defp store_and_render_upload(conn, %Plug.Upload{} = upload, content_type, promotion_token) do
+  defp store_and_render_upload(conn, upload, content_type, promotion_token) do
     access_token = SecureRandom.hex()
 
     case Ret.Storage.store(upload, content_type, access_token, promotion_token) do
