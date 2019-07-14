@@ -30,7 +30,8 @@ defmodule RetWeb.Api.V1.MediaController do
   defp promotion_token_for_params(%{"promotion_mode" => "with_token"}), do: SecureRandom.hex()
   defp promotion_token_for_params(_params), do: nil
 
-  defp store_and_render_upload(conn, upload, content_type, nil, promotion_token) do
+  defp store_and_render_upload(conn, upload, content_type, convert_to_content_type, promotion_token)
+       when is_nil(convert_to_content_type) do
     store_and_render_upload(conn, upload, content_type, promotion_token)
   end
 
