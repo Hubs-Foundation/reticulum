@@ -88,7 +88,7 @@ defmodule Ret.TwitterClient do
   end
 
   defp wait_for_upload_finished(media_id, creds, iteration \\ 0) do
-    if iteration < 10 do
+    if iteration < 60 do
       url = "#{@twitter_upload_api_base}/1.1/media/upload.json"
       status = get(url, [{"command", "STATUS"}, {"media_id", media_id}], creds)
 
