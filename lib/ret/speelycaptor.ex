@@ -4,30 +4,30 @@ defmodule Ret.Speelycaptor do
   def convert(%Plug.Upload{path: path, content_type: "video/" <> _tail}, "video/mp4") do
     with speelycaptor_endpoint when is_binary(speelycaptor_endpoint) <- module_config(:speelycaptor_endpoint) do
       case retry_get_until_success("#{speelycaptor_endpoint}/init") do
-        :error ->
-          nil
-
-        resp ->
-          resp_body = resp.body |> Poison.decode!()
+        %HTTPoison.Response{body: body} = resp ->
+          resp_body = body |> Poison.decode!()
           upload_url = resp_body |> Map.get("uploadUrl")
           key = resp_body |> Map.get("key")
 
           case retry_put_until_success(upload_url, {:file, path}, [], 30_000, 120_000) do
-            :error ->
-              nil
-
-            _upload_resp ->
+            %HTTPoison.Response{} ->
               case retry_get_until_success("#{speelycaptor_endpoint}/convert?key=#{key}&args=-f%20mp4") do
-                :error ->
-                  nil
-
-                convert_resp ->
-                  url = convert_resp.body |> Poison.decode!() |> Map.get("url")
+                %HTTPoison.Response{body: body} ->
+                  url = body |> Poison.decode!() |> Map.get("url")
                   {:ok, download_path} = Temp.path()
                   Download.from(url, path: download_path)
                   {:ok, download_path}
+
+                :error ->
+                  nil
               end
+
+            :error ->
+              nil
           end
+
+        :error ->
+          nil
       end
     else
       _ -> nil
