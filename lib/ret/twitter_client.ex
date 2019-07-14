@@ -57,16 +57,14 @@ defmodule Ret.TwitterClient do
     case storage_result do
       {:ok, %{"content_length" => total_bytes, "content_type" => media_type}, stream}
       when total_bytes <= @max_video_upload_size ->
+        params = [{"command", "INIT"}, {"total_bytes", total_bytes}, {"media_type", media_type}]
+        is_video = media_type |> String.contains?("video")
+
         params =
-          if media_type |> String.contains?("video") do
-            [
-              {"command", "INIT"},
-              {"total_bytes", total_bytes},
-              {"media_type", media_type},
-              {"media_category", "tweet_video"}
-            ]
+          if is_video do
+            params ++ [{"media_category", "tweet_video"}]
           else
-            [{"command", "INIT"}, {"total_bytes", total_bytes}, {"media_type", media_type}]
+            params
           end
 
         media_init_res = post(url, params, creds, :json)
@@ -76,7 +74,11 @@ defmodule Ret.TwitterClient do
             upload_media_chunks(creds, stream, media_id)
             post(url, [{"command", "FINALIZE"}, {"media_id", media_id}], creds, :json)
 
-            wait_for_upload_finished(media_id, creds)
+            if is_video do
+              wait_for_upload_finished(media_id, creds)
+            else
+              media_id
+            end
 
           _ ->
             nil
