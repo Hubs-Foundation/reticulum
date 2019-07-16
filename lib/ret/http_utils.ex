@@ -32,7 +32,12 @@ defmodule Ret.HttpUtils do
       end
 
     retry with: exp_backoff() |> randomize |> cap(cap_ms) |> expiry(expiry_ms) do
-      case HTTPoison.request(verb, url, body, headers, follow_redirect: true, hackney: hackney_options) do
+      case HTTPoison.request(verb, url, body, headers,
+             follow_redirect: true,
+             timeout: cap_ms,
+             recv_timeout: cap_ms,
+             hackney: hackney_options
+           ) do
         {:ok, %HTTPoison.Response{status_code: status_code} = resp}
         when status_code >= 200 and status_code < 300 ->
           resp

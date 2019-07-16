@@ -9,9 +9,19 @@ defmodule Ret.Speelycaptor do
           upload_url = resp_body |> Map.get("uploadUrl")
           key = resp_body |> Map.get("key")
 
+          query = %{
+            key: key,
+            args: "-f mp4 -vcodec libx264 -preset fast -profile:v main -acodec aac"
+          }
+
           case retry_put_until_success(upload_url, {:file, path}, [], 30_000, 120_000) do
             %HTTPoison.Response{} ->
-              case retry_get_until_success("#{speelycaptor_endpoint}/convert?key=#{key}&args=-f%20mp4") do
+              case retry_get_until_success(
+                     "#{speelycaptor_endpoint}/convert?#{URI.encode_query(query)}",
+                     [],
+                     30_000,
+                     120_000
+                   ) do
                 %HTTPoison.Response{body: body} ->
                   url = body |> Poison.decode!() |> Map.get("url")
                   {:ok, download_path} = Temp.path()
