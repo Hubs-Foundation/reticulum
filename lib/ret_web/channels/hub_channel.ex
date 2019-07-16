@@ -168,7 +168,7 @@ defmodule RetWeb.HubChannel do
     account = Guardian.Phoenix.Socket.current_resource(socket)
     hub = socket |> hub_for_socket
     created_object = socket.assigns.created_objects |> Enum.find(&(&1.network_id == network_id))
-    secure_template = created_object.template
+    secure_template = if created_object, do: created_object.template, else: ""
 
     should_broadcast =
       cond do
@@ -205,7 +205,7 @@ defmodule RetWeb.HubChannel do
 
       payload = payload |> Map.put("data", data)
 
-      socket = socket |> store_created_object(payload)
+      socket = socket |> maybe_store_created_object(payload)
 
       broadcast_from!(socket, event, payload)
 
@@ -530,7 +530,7 @@ defmodule RetWeb.HubChannel do
   end
 
   def handle_out("naf" = event, payload, socket) do
-    socket = socket |> store_created_object(payload)
+    socket = socket |> maybe_store_created_object(payload)
 
     # Sockets can block NAF as an optimization, eg iframe embeds do not need NAF messages until user clicks load
     if !socket.assigns.block_naf do
@@ -542,23 +542,23 @@ defmodule RetWeb.HubChannel do
 
   def handle_out("mute", _payload, socket), do: {:noreply, socket}
 
-  defp store_created_object(socket, %{"networkId" => network_id} = payload) do
-    created_object = socket.assigns.created_objects |> Enum.find(&(&1.network_id == network_id))
+  defp maybe_store_created_object(socket, payload) do
+    case payload do
+      %{"data" => %{"isFirstSync" => true, "creator" => creator, "template" => template, "networkId" => network_id}} ->
+        created_object = socket.assigns.created_objects |> Enum.find(&(&1.network_id == network_id))
 
-    if created_object == nil do
-      case payload do
-        %{"data" => %{"isFirstSync" => true, "creator" => creator, "template" => template}} ->
+        if created_object == nil do
           socket
           |> assign(:created_objects, [
             %{creator: creator, network_id: network_id, template: template} | socket.assigns.created_objects
           ])
-
-        _ ->
-          # This is not a first sync message, so we don't need to do anything.
+        else
           socket
-      end
-    else
-      socket
+        end
+
+      _ ->
+        # This is not a first sync message, so we don't need to do anything.
+        socket
     end
   end
 

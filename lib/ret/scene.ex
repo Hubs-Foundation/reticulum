@@ -87,32 +87,24 @@ defmodule Ret.Scene do
     put_change(changeset, :scene_sid, scene_sid)
   end
 
-  def static_controlled_media_for_scene(nil) do
+  def networked_objects_for_scene(nil) do
     []
   end
 
   def networked_objects_for_scene(%Scene{model_owned_file: model_owned_file}) do
     case Storage.fetch(model_owned_file) do
       {:ok, _meta, stream} ->
-        json =
-          stream
-          |> Enum.join("")
-
-        IO.inspect(["BPDEBUG json", json])
-
-        networked_objects =
-          json
-          |> Poison.decode!()
-          |> Map.get("nodes")
-          |> Enum.filter(fn node ->
-            node["extras"]["gltfExtensions"]["MOZ_hubs_components"]["networked"]["id"] != nil
-          end)
-          |> Enum.map(fn node ->
-            node["extras"]["gltfExtensions"]["MOZ_hubs_components"]
-          end)
-
-        IO.inspect(["BPDEBUG networked_objects", networked_objects])
-        networked_objects
+        stream
+        |> Enum.join("")
+        |> Ret.GLTFUtils.json_from_glb()
+        |> Poison.decode!()
+        |> Map.get("nodes")
+        |> Enum.filter(fn node ->
+          node["extras"]["gltfExtensions"]["MOZ_hubs_components"]["networked"]["id"] != nil
+        end)
+        |> Enum.map(fn node ->
+          node["extras"]["gltfExtensions"]["MOZ_hubs_components"]
+        end)
 
       {:error, _} ->
         []
