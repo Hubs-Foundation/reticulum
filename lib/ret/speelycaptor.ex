@@ -11,7 +11,7 @@ defmodule Ret.Speelycaptor do
 
           query = %{
             key: key,
-            args: "-f mp4 -r 24"
+            args: "-f mp4 -vcodec libx264 -preset fast -profile:v main -r 24 -acodec aac"
           }
 
           case retry_put_until_success(upload_url, {:file, path}, [], 30_000, 120_000) do
