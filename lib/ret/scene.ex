@@ -10,7 +10,7 @@ defmodule Ret.Scene do
   use Ecto.Schema
   import Ecto.Changeset
 
-  alias Ret.{Repo, Scene, SceneListing}
+  alias Ret.{Repo, Scene, SceneListing, Storage}
   alias Ret.Scene.{SceneSlug}
 
   @schema_prefix "ret0"
@@ -85,5 +85,37 @@ defmodule Ret.Scene do
   defp maybe_add_scene_sid_to_changeset(changeset) do
     scene_sid = changeset |> get_field(:scene_sid) || Ret.Sids.generate_sid()
     put_change(changeset, :scene_sid, scene_sid)
+  end
+
+  def static_controlled_media_for_scene(nil) do
+    []
+  end
+
+  def networked_objects_for_scene(%Scene{model_owned_file: model_owned_file}) do
+    case Storage.fetch(model_owned_file) do
+      {:ok, _meta, stream} ->
+        json =
+          stream
+          |> Enum.join("")
+
+        IO.inspect(["BPDEBUG json", json])
+
+        networked_objects =
+          json
+          |> Poison.decode!()
+          |> Map.get("nodes")
+          |> Enum.filter(fn node ->
+            node["extras"]["gltfExtensions"]["MOZ_hubs_components"]["networked"]["id"] != nil
+          end)
+          |> Enum.map(fn node ->
+            node["extras"]["gltfExtensions"]["MOZ_hubs_components"]
+          end)
+
+        IO.inspect(["BPDEBUG networked_objects", networked_objects])
+        networked_objects
+
+      {:error, _} ->
+        []
+    end
   end
 end

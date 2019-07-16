@@ -42,8 +42,8 @@ defmodule RetWeb.HubChannel do
     |> assign(:profile, profile)
     |> assign(:context, context)
     |> assign(:block_naf, false)
-    # Pre-populate created_objects with all the pinned objects in the room
-    |> assign(:created_objects, hub |> RoomObject.objects_for_hub() |> Enum.map(&created_object_from_room_object/1))
+    # Pre-populate created_objects with all the pinned and scene objects in the room
+    |> assign(:created_objects, hub |> objects_for_hub() |> Enum.map(&created_object_from_hub_object/1))
     |> perform_join(
       hub,
       context,
@@ -51,8 +51,16 @@ defmodule RetWeb.HubChannel do
     )
   end
 
-  defp created_object_from_room_object(room_object) do
+  defp objects_for_hub(hub) do
+    RoomObject.objects_for_hub(hub) ++ Scene.networked_objects_for_scene(hub.scene)
+  end
+
+  defp created_object_from_hub_object(%RoomObject{} = room_object) do
     %{creator: "scene", network_id: room_object.object_id, template: "#interactable-media"}
+  end
+
+  defp created_object_from_hub_object(spoke_networked_object) do
+    %{creator: "scene", network_id: spoke_networked_object["networked"]["id"], template: "#static-controlled-media"}
   end
 
   defp perform_join(socket, hub, context, params) do
@@ -154,15 +162,22 @@ defmodule RetWeb.HubChannel do
   # Captures all inbound NAF messages that result in spawned objects.
   def handle_in(
         "naf" = event,
-        %{"data" => %{"isFirstSync" => true, "template" => template}} = payload,
+        %{"data" => %{"isFirstSync" => true, "template" => template, "networkId" => network_id}} = payload,
         socket
       ) do
     account = Guardian.Phoenix.Socket.current_resource(socket)
     hub = socket |> hub_for_socket
+    created_object = socket.assigns.created_objects |> Enum.find(&(&1.network_id == network_id))
+    secure_template = created_object.template
 
     should_broadcast =
       cond do
         template |> String.ends_with?("-avatar") ->
+          true
+
+        # If we have a secure_template for this object, and it's a static-controlled-media, that means it was part
+        # of the Spoke scene and we want to allow anyone to firstSync it.
+        secure_template |> String.ends_with?("static-controlled-media") ->
           true
 
         template |> String.ends_with?("-media") ->
@@ -527,17 +542,23 @@ defmodule RetWeb.HubChannel do
 
   def handle_out("mute", _payload, socket), do: {:noreply, socket}
 
-  defp store_created_object(socket, payload) do
-    case payload do
-      %{"data" => %{"isFirstSync" => true, "networkId" => network_id, "creator" => creator, "template" => template}} ->
-        socket
-        |> assign(:created_objects, [
-          %{creator: creator, network_id: network_id, template: template} | socket.assigns.created_objects
-        ])
+  defp store_created_object(socket, %{"networkId" => network_id} = payload) do
+    created_object = socket.assigns.created_objects |> Enum.find(&(&1.network_id == network_id))
 
-      _ ->
-        # This is not a first sync message, so we don't need to do anything.
-        socket
+    if created_object == nil do
+      case payload do
+        %{"data" => %{"isFirstSync" => true, "creator" => creator, "template" => template}} ->
+          socket
+          |> assign(:created_objects, [
+            %{creator: creator, network_id: network_id, template: template} | socket.assigns.created_objects
+          ])
+
+        _ ->
+          # This is not a first sync message, so we don't need to do anything.
+          socket
+      end
+    else
+      socket
     end
   end
 
