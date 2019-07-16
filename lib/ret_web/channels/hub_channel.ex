@@ -42,8 +42,8 @@ defmodule RetWeb.HubChannel do
     |> assign(:profile, profile)
     |> assign(:context, context)
     |> assign(:block_naf, false)
-    # Pre-populate created_objects with all the pinned and scene objects in the room
-    |> assign(:created_objects, hub |> objects_for_hub() |> Enum.map(&created_object_from_hub_object/1))
+    # Pre-populate secure_scene_objects with all the pinned and scene objects in the room.
+    |> assign(:secure_scene_objects, hub |> secure_scene_objects_for_hub())
     |> perform_join(
       hub,
       context,
@@ -51,16 +51,18 @@ defmodule RetWeb.HubChannel do
     )
   end
 
-  defp objects_for_hub(hub) do
-    RoomObject.objects_for_hub(hub) ++ Scene.networked_objects_for_scene(hub.scene)
-  end
+  defp secure_scene_objects_for_hub(hub) do
+    room_objects =
+      hub
+      |> RoomObject.room_objects_for_hub()
+      |> Enum.map(&%{creator: "scene", network_id: &1.object_id, template: "#interactable-media"})
 
-  defp created_object_from_hub_object(%RoomObject{} = room_object) do
-    %{creator: "scene", network_id: room_object.object_id, template: "#interactable-media"}
-  end
+    scene_objects =
+      hub.scene
+      |> Scene.networked_objects_for_scene()
+      |> Enum.map(&%{creator: "scene", network_id: &1["networked"]["id"], template: "#static-controlled-media"})
 
-  defp created_object_from_hub_object(spoke_networked_object) do
-    %{creator: "scene", network_id: spoke_networked_object["networked"]["id"], template: "#static-controlled-media"}
+    room_objects ++ scene_objects
   end
 
   defp perform_join(socket, hub, context, params) do
@@ -167,45 +169,47 @@ defmodule RetWeb.HubChannel do
       ) do
     account = Guardian.Phoenix.Socket.current_resource(socket)
     hub = socket |> hub_for_socket
-    created_object = socket.assigns.created_objects |> Enum.find(&(&1.network_id == network_id))
-    secure_template = if created_object, do: created_object.template, else: ""
+    secure_scene_object = socket.assigns.secure_scene_objects |> Enum.find(&(&1.network_id == network_id))
+    secure_template = if secure_scene_object, do: secure_scene_object.template, else: ""
 
-    should_broadcast =
+    data = payload["data"]
+
+    authorized_broadcast =
       cond do
         template |> String.ends_with?("-avatar") ->
-          true
+          data
 
         # If we have a secure_template for this object, and it's a static-controlled-media, that means it was part
         # of the Spoke scene and we want to allow anyone to firstSync it.
         secure_template |> String.ends_with?("static-controlled-media") ->
-          true
+          data
 
         template |> String.ends_with?("-media") ->
-          account |> can?(spawn_and_move_media(hub))
+          if account |> can?(spawn_and_move_media(hub)), do: data, else: data |> sanitize_data_for_ownership_transfer
 
         template |> String.ends_with?("-camera") ->
-          account |> can?(spawn_camera(hub))
+          if account |> can?(spawn_camera(hub)), do: data, else: nil
 
         template |> String.ends_with?("-drawing") ->
-          account |> can?(spawn_drawing(hub))
+          if account |> can?(spawn_drawing(hub)), do: data, else: nil
 
         template |> String.ends_with?("-pen") ->
-          account |> can?(spawn_drawing(hub))
+          if account |> can?(spawn_drawing(hub)), do: data, else: nil
 
         true ->
           # We want to forbid messages if they fall through the above list of template suffixes
-          false
+          nil
       end
 
-    if should_broadcast do
+    if authorized_broadcast != nil do
       data =
-        payload["data"]
+        authorized_broadcast
         |> Map.put("creator", socket.assigns.session_id)
         |> Map.put("owner", socket.assigns.session_id)
 
       payload = payload |> Map.put("data", data)
 
-      socket = socket |> maybe_store_created_object(payload)
+      socket = socket |> maybe_store_secure_scene_object(payload)
 
       broadcast_from!(socket, event, payload)
 
@@ -217,7 +221,10 @@ defmodule RetWeb.HubChannel do
 
   # Captures inbound NAF update messages
   def handle_in("naf" = event, %{"dataType" => "u"} = payload, socket) do
-    if payload["data"] |> should_broadcast_object_manipulation(:update, socket) do
+    authorized_data = payload["data"] |> authorize_object_manipulation(:remove, socket)
+
+    if authorized_data != nil do
+      payload = payload |> Map.put("data", authorized_data)
       broadcast_from!(socket, event, payload)
     end
 
@@ -228,7 +235,8 @@ defmodule RetWeb.HubChannel do
   def handle_in("naf" = event, %{"dataType" => "um"} = payload, socket) do
     %{"data" => %{"d" => updates}} = payload
 
-    filtered_updates = updates |> Enum.filter(&(&1 |> should_broadcast_object_manipulation(:update, socket)))
+    filtered_updates =
+      updates |> Enum.map(&(&1 |> authorize_object_manipulation(:update, socket))) |> Enum.filter(&(&1 != nil))
 
     if filtered_updates |> length > 0 do
       payload = payload |> Map.put("data", payload["data"] |> Map.put("d", filtered_updates))
@@ -240,7 +248,10 @@ defmodule RetWeb.HubChannel do
 
   # Captures inbound NAF removal messages
   def handle_in("naf" = event, %{"dataType" => "r"} = payload, socket) do
-    if payload["data"] |> should_broadcast_object_manipulation(:remove, socket) do
+    authorized_data = payload["data"] |> authorize_object_manipulation(:remove, socket)
+
+    if authorized_data != nil do
+      payload = payload |> Map.put("data", authorized_data)
       broadcast_from!(socket, event, payload)
     end
 
@@ -254,12 +265,12 @@ defmodule RetWeb.HubChannel do
     account = Guardian.Phoenix.Socket.current_resource(socket)
     hub = socket |> hub_for_socket
 
-    created_object = socket.assigns.created_objects |> Enum.find(&(&1.network_id == drawing_network_id))
+    secure_scene_object = socket.assigns.secure_scene_objects |> Enum.find(&(&1.network_id == drawing_network_id))
 
-    # If created_object is nil, we've received a message for a drawing that has not received a first sync yet,
+    # If secure_scene_object is nil, we've received a message for a drawing that has not received a first sync yet,
     # or was denied creation. so just ignore it.
-    if created_object != nil do
-      is_creator = created_object.creator == socket.assigns.session_id
+    if secure_scene_object != nil do
+      is_creator = secure_scene_object.creator == socket.assigns.session_id
 
       if is_creator or account |> can?(spawn_drawing(hub)) do
         broadcast_from!(socket, event, payload)
@@ -530,7 +541,7 @@ defmodule RetWeb.HubChannel do
   end
 
   def handle_out("naf" = event, payload, socket) do
-    socket = socket |> maybe_store_created_object(payload)
+    socket = socket |> maybe_store_secure_scene_object(payload)
 
     # Sockets can block NAF as an optimization, eg iframe embeds do not need NAF messages until user clicks load
     if !socket.assigns.block_naf do
@@ -542,15 +553,15 @@ defmodule RetWeb.HubChannel do
 
   def handle_out("mute", _payload, socket), do: {:noreply, socket}
 
-  defp maybe_store_created_object(socket, payload) do
+  defp maybe_store_secure_scene_object(socket, payload) do
     case payload do
       %{"data" => %{"isFirstSync" => true, "creator" => creator, "template" => template, "networkId" => network_id}} ->
-        created_object = socket.assigns.created_objects |> Enum.find(&(&1.network_id == network_id))
+        secure_scene_object = socket.assigns.secure_scene_objects |> Enum.find(&(&1.network_id == network_id))
 
-        if created_object == nil do
+        if secure_scene_object == nil do
           socket
-          |> assign(:created_objects, [
-            %{creator: creator, network_id: network_id, template: template} | socket.assigns.created_objects
+          |> assign(:secure_scene_objects, [
+            %{creator: creator, network_id: network_id, template: template} | socket.assigns.secure_scene_objects
           ])
         else
           socket
@@ -562,44 +573,52 @@ defmodule RetWeb.HubChannel do
     end
   end
 
-  defp should_broadcast_object_manipulation(%{"networkId" => network_id}, type, socket) do
+  defp authorize_object_manipulation(%{"networkId" => network_id} = data, type, socket) do
     account = Guardian.Phoenix.Socket.current_resource(socket)
     hub = socket |> hub_for_socket
 
-    created_object = socket.assigns.created_objects |> Enum.find(&(&1.network_id == network_id))
+    secure_scene_object = socket.assigns.secure_scene_objects |> Enum.find(&(&1.network_id == network_id))
 
-    if created_object == nil do
+    if secure_scene_object == nil do
       # It seems we've received an object manipulation message for an object that has not received a first sync yet, 
       # or was denied creation, so just ignore it.
-      false
+      nil
     else
-      is_creator = created_object.creator == socket.assigns.session_id
-      template = created_object.template
+      is_creator = secure_scene_object.creator == socket.assigns.session_id
+      secure_template = secure_scene_object.template
 
       cond do
-        template |> String.ends_with?("-avatar") ->
-          true
+        secure_template |> String.ends_with?("-avatar") ->
+          data
 
-        template |> String.ends_with?("static-controlled-media") ->
-          type == :update
+        secure_template |> String.ends_with?("static-controlled-media") ->
+          if type == :update, do: data, else: nil
 
-        template |> String.ends_with?("-media") ->
+        secure_template |> String.ends_with?("-media") ->
           is_pinned = Repo.get_by(RoomObject, object_id: network_id) != nil
 
-          (!is_pinned or account |> can?(pin_objects(hub))) and
-            (is_creator or account |> can?(spawn_and_move_media(hub)))
+          authorized =
+            (!is_pinned or account |> can?(pin_objects(hub))) and
+              (is_creator or account |> can?(spawn_and_move_media(hub)))
 
-        template |> String.ends_with?("-camera") ->
-          is_creator or account |> can?(spawn_camera(hub))
+          # We need to allow for ownership transfer on media 
+          if authorized, do: data, else: data |> sanitize_data_for_ownership_transfer
 
-        template |> String.ends_with?("-pen") ->
-          is_creator or account |> can?(spawn_drawing(hub))
+        secure_template |> String.ends_with?("-camera") ->
+          if is_creator or account |> can?(spawn_camera(hub)), do: data, else: nil
+
+        secure_template |> String.ends_with?("-pen") ->
+          if is_creator or account |> can?(spawn_drawing(hub)), do: data, else: nil
 
         true ->
           # We want to forbid messages if they fall through the above list of template suffixes
-          false
+          nil
       end
     end
+  end
+
+  defp sanitize_data_for_ownership_transfer(data) do
+    data |> Map.take(["lastOwnerTime", "networkId", "owner"]) |> Map.put("components", %{})
   end
 
   defp handle_entry_mode_change(socket, entry_mode) do

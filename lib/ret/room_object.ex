@@ -58,7 +58,7 @@ defmodule Ret.RoomObject do
     }
   end
 
-  def objects_for_hub(hub) do
+  def room_objects_for_hub(hub) do
     RoomObject
     |> where([o], o.hub_id == ^hub.hub_id)
     |> Repo.all()
