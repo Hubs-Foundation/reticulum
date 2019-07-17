@@ -406,6 +406,7 @@ defimpl Canada.Can, for: Ret.Account do
   alias Ret.{Hub}
   @object_actions [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects]
   @special_actions [:update_hub, :close_hub, :embed_hub, :kick_users, :mute_users] ++ @object_actions
+  @creator_actions [:update_roles]
 
   # Always deny access to non-enterable hubs
   def can?(%Ret.Account{}, :join_hub, %Ret.Hub{entry_mode: :deny}), do: false
@@ -441,13 +442,18 @@ defimpl Canada.Can, for: Ret.Account do
     end
   end
 
-  # Bound hubs - Always prevent embedding
+  # Bound hubs - Always prevent embedding and role assignment (since it's dictated by binding)
   def can?(%Ret.Account{}, action, %Ret.Hub{hub_bindings: hub_bindings})
-      when hub_bindings |> length > 0 and action in [:embed_hub],
+      when hub_bindings |> length > 0 and action in [:embed_hub, :update_roles],
       do: false
 
   # Unbound hubs - Anyone can join an unbound hub
   def can?(_account, :join_hub, %Ret.Hub{hub_bindings: []}), do: true
+
+  # Unbound hubs - Creator can perform creator actions
+  def can?(%Ret.Account{account_id: account_id}, action, %Ret.Hub{created_by_account_id: created_by_account_id} = hub)
+      when action in @creator_actions and created_by_account_id != nil and created_by_account_id = account_id,
+      do: hub |> Ret.Hub.is_owner?(account_id)
 
   # Unbound hubs - Owners can perform special actions
   def can?(%Ret.Account{account_id: account_id}, action, %Ret.Hub{} = hub)
