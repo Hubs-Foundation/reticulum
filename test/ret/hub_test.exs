@@ -2,7 +2,7 @@ defmodule Ret.HubTest do
   use Ret.DataCase
   import Ret.TestHelpers
 
-  alias Ret.{Hub, Repo}
+  alias Ret.{Hub, HubRoleMembership, Repo}
 
   setup [:create_account, :create_owned_file, :create_scene]
 
@@ -162,5 +162,63 @@ defmodule Ret.HubTest do
     assert_raise ArgumentError, fn ->
       Hub.has_member_permission(%Hub{member_permissions: bit_field}, :fake_permission)
     end
+  end
+
+  test "hubs can assign new owners", %{
+    account: account,
+    account2: account2,
+    scene: scene
+  } do
+    {:ok, hub} =
+      %Hub{}
+      |> Hub.changeset(scene, %{name: "Test Hub"})
+      |> Hub.add_account_to_changeset(account)
+      |> Repo.insert()
+
+    assert hub |> Hub.is_owner?(account.account_id) === true
+    assert hub |> Hub.is_owner?(account2.account_id) === false
+
+    hub = hub |> Hub.add_owner!(account2)
+
+    assert hub |> Hub.is_owner?(account.account_id) === true
+    assert hub |> Hub.is_owner?(account2.account_id) === true
+
+    hub = hub |> Hub.revoke_owner!(account2)
+
+    assert hub |> Hub.is_owner?(account.account_id) === true
+    assert hub |> Hub.is_owner?(account2.account_id) === false
+  end
+
+  test "adding creator as owner has no side effects", %{
+    account: account,
+    account2: account2,
+    scene: scene
+  } do
+    {:ok, hub} =
+      %Hub{}
+      |> Hub.changeset(scene, %{name: "Test Hub"})
+      |> Hub.add_account_to_changeset(account)
+      |> Repo.insert()
+
+    hub = hub |> Hub.add_owner!(account)
+    assert HubRoleMembership |> where(hub_id: hub.hub_id) |> Repo.count() === 0
+  end
+
+  test "double adding the same account doesn't fail", %{
+    account: account,
+    account2: account2,
+    scene: scene
+  } do
+    {:ok, hub} =
+      %Hub{}
+      |> Hub.changeset(scene, %{name: "Test Hub"})
+      |> Hub.add_account_to_changeset(account)
+      |> Repo.insert()
+
+    hub = hub |> Hub.add_owner!(account2)
+    hub = hub |> Hub.add_owner!(account2)
+    hub = hub |> Hub.add_owner!(account2)
+
+    assert HubRoleMembership |> where(hub_id: hub.hub_id) |> Repo.count() === 1
   end
 end

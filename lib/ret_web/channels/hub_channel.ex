@@ -29,7 +29,8 @@ defmodule RetWeb.HubChannel do
     scene_listing: [:model_owned_file, :screenshot_owned_file, :scene_owned_file, :scene],
     web_push_subscriptions: [],
     hub_bindings: [],
-    created_by_account: []
+    created_by_account: [],
+    hub_role_memberships: []
   ]
 
   def join("hub:" <> hub_sid, %{"profile" => profile, "context" => context} = params, socket) do

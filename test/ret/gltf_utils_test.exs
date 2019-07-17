@@ -136,7 +136,7 @@ defmodule Ret.GLTFUtilsTest do
   end
 
   setup _context do
-    account = create_account()
+    account = create_random_account()
 
     %{
       account: account,

@@ -44,6 +44,7 @@ defmodule Ret.Hub do
     has_many(:web_push_subscriptions, Ret.WebPushSubscription, foreign_key: :hub_id)
     belongs_to(:created_by_account, Ret.Account, references: :account_id)
     has_many(:hub_bindings, Ret.HubBinding, foreign_key: :hub_id)
+    has_many(:hub_role_memberships, Ret.HubRoleMembership, foreign_key: :hub_id)
 
     timestamps()
   end
@@ -302,6 +303,14 @@ defmodule Ret.Hub do
     changeset |> put_change(:member_permissions, default_member_permissions |> member_permissions_to_int)
   end
 
+  def is_owner?(%Hub{created_by_account_id: created_by_account_id}, account_id)
+      when created_by_account_id != nil and created_by_account_id === account_id,
+      do: true
+
+  def is_owner?(%Hub{} = hub, account_id) do
+    false
+  end
+
   @member_permissions %{
     (1 <<< 0) => :spawn_and_move_media,
     (1 <<< 1) => :spawn_camera,
@@ -407,9 +416,9 @@ defimpl Canada.Can, for: Ret.Account do
   def can?(_account, :join_hub, %Ret.Hub{hub_bindings: []}), do: true
 
   # Unbound hubs - Owners can perform special actions
-  def can?(%Ret.Account{account_id: account_id}, action, %Ret.Hub{created_by_account_id: account_id, hub_bindings: []})
-      when account_id != nil and action in @special_actions,
-      do: true
+  def can?(%Ret.Account{account_id: account_id}, action, %Ret.Hub{} = hub)
+      when action in @special_actions,
+      do: hub |> Ret.Hub.is_owner?(account_id)
 
   # Unbound hubs - Object permissions for regular users are based on member permission settings
   def can?(_account, action, %Hub{hub_bindings: []} = hub) when action in @object_actions do
