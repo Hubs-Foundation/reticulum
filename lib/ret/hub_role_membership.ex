@@ -18,6 +18,7 @@ defmodule Ret.HubRoleMembership do
   def changeset(%HubRoleMembership{} = membership, hub, account) do
     membership
     |> change()
+    |> unique_constraint(:hub_id, name: :hub_role_memberships_hub_id_account_id_index)
     |> put_assoc(:hub, hub)
     |> put_assoc(:account, account)
   end

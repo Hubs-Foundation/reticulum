@@ -14,7 +14,18 @@ defmodule Ret.Hub do
   import Ecto.Query
   import Canada, only: [can?: 2]
 
-  alias Ret.{Account, Hub, Repo, Scene, SceneListing, WebPushSubscription, RoomAssigner, BitFieldUtils}
+  alias Ret.{
+    Account,
+    Hub,
+    Repo,
+    Scene,
+    SceneListing,
+    WebPushSubscription,
+    RoomAssigner,
+    BitFieldUtils,
+    HubRoleMembership
+  }
+
   alias Ret.Hub.{HubSlug}
 
   @schema_prefix "ret0"
@@ -303,12 +314,35 @@ defmodule Ret.Hub do
     changeset |> put_change(:member_permissions, default_member_permissions |> member_permissions_to_int)
   end
 
+  def add_owner!(%Hub{created_by_account_id: created_by_account_id} = hub, %Account{account_id: account_id})
+      when created_by_account_id != nil and created_by_account_id === account_id,
+      do: hub
+
+  def add_owner!(%Hub{} = hub, %Account{} = account) do
+    Repo.get_by(HubRoleMembership, hub_id: hub.hub_id, account_id: account.account_id) ||
+      %HubRoleMembership{} |> HubRoleMembership.changeset(hub, account) |> Repo.insert!()
+
+    hub |> Repo.preload([hub_role_memberships: []], force: true)
+  end
+
+  def revoke_owner!(%Hub{} = hub, %Account{} = account) do
+    case Repo.get_by(HubRoleMembership, hub_id: hub.hub_id, account_id: account.account_id) do
+      %HubRoleMembership{} = membership ->
+        membership |> Repo.delete!()
+
+      _ ->
+        nil
+    end
+
+    hub |> Repo.preload([hub_role_memberships: []], force: true)
+  end
+
   def is_owner?(%Hub{created_by_account_id: created_by_account_id}, account_id)
       when created_by_account_id != nil and created_by_account_id === account_id,
       do: true
 
   def is_owner?(%Hub{} = hub, account_id) do
-    false
+    Repo.get_by(HubRoleMembership, hub_id: hub.hub_id, account_id: account_id) != nil
   end
 
   @member_permissions %{
