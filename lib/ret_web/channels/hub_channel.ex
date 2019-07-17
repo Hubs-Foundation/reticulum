@@ -44,6 +44,7 @@ defmodule RetWeb.HubChannel do
     |> assign(:block_naf, false)
     # Pre-populate secure_scene_objects with all the pinned and scene objects in the room.
     |> assign(:secure_scene_objects, hub |> secure_scene_objects_for_hub())
+    |> assign(:authorized_naf_schemas, params["authorized_naf_schemas"])
     |> perform_join(
       hub,
       context,
@@ -179,13 +180,13 @@ defmodule RetWeb.HubChannel do
         template |> String.ends_with?("-avatar") ->
           data
 
-        # If we have a secure_template for this object, and it's a static-controlled-media, that means it was part
-        # of the Spoke scene and we want to allow anyone to firstSync it.
-        secure_template |> String.ends_with?("static-controlled-media") ->
-          data
+        # If we have a secure_template for this object, it's a pinned or scene object for which we want to
+        # allow ownership transfer and syncing.
+        secure_template |> String.ends_with?("-media") ->
+          data |> sanitize_with_authorized_schemas(secure_template, socket)
 
         template |> String.ends_with?("-media") ->
-          if account |> can?(spawn_and_move_media(hub)), do: data, else: data |> sanitize_data_for_ownership_transfer
+          if account |> can?(spawn_and_move_media(hub)), do: data, else: nil
 
         template |> String.ends_with?("-camera") ->
           if account |> can?(spawn_camera(hub)), do: data, else: nil
@@ -580,7 +581,7 @@ defmodule RetWeb.HubChannel do
     secure_scene_object = socket.assigns.secure_scene_objects |> Enum.find(&(&1.network_id == network_id))
 
     if secure_scene_object == nil do
-      # It seems we've received an object manipulation message for an object that has not received a first sync yet, 
+      # It seems we've received an object manipulation message for an object that has not received a first sync yet,
       # or was denied creation, so just ignore it.
       nil
     else
@@ -589,10 +590,7 @@ defmodule RetWeb.HubChannel do
 
       cond do
         secure_template |> String.ends_with?("-avatar") ->
-          data
-
-        secure_template |> String.ends_with?("static-controlled-media") ->
-          if type == :update, do: data, else: nil
+          if is_creator, do: data, else: nil
 
         secure_template |> String.ends_with?("-media") ->
           is_pinned = Repo.get_by(RoomObject, object_id: network_id) != nil
@@ -601,8 +599,12 @@ defmodule RetWeb.HubChannel do
             (!is_pinned or account |> can?(pin_objects(hub))) and
               (is_creator or account |> can?(spawn_and_move_media(hub)))
 
-          # We need to allow for ownership transfer on media 
-          if authorized, do: data, else: data |> sanitize_data_for_ownership_transfer
+          if authorized do
+            data
+          else
+            # We need to allow for syncing and ownership transfer on media
+            if type == :update, do: data |> sanitize_with_authorized_schemas(secure_template, socket), else: nil
+          end
 
         secure_template |> String.ends_with?("-camera") ->
           if is_creator or account |> can?(spawn_camera(hub)), do: data, else: nil
@@ -617,8 +619,45 @@ defmodule RetWeb.HubChannel do
     end
   end
 
-  defp sanitize_data_for_ownership_transfer(data) do
-    data |> Map.take(["lastOwnerTime", "networkId", "owner"]) |> Map.put("components", %{})
+  defp sanitize_with_authorized_schemas(data, template, socket) do
+    authorized_components = socket.assigns.authorized_naf_schemas[template]
+
+    authorized_indices =
+      authorized_components |> Enum.flat_map(& &1["indices"]) |> Enum.map(&(&1 |> Integer.to_string()))
+
+    index_to_authorized_properties =
+      authorized_components
+      |> Enum.flat_map(fn component ->
+        component["indices"]
+        |> Enum.map(
+          &{
+            &1 |> Integer.to_string(),
+            component["properties"]
+          }
+        )
+      end)
+      |> Map.new()
+
+    # data["components"] has a structure like %{"1" => "bare value", "2" => %{"prop" => "value"}}
+    # We want to drop unauthorized indices and unauthorized props.
+    components =
+      data["components"]
+      |> Map.take(authorized_indices)
+      |> Map.new(fn {component_index, component_props} ->
+        component_props =
+          case component_props do
+            %{} -> component_props |> Map.take(index_to_authorized_properties[component_index])
+            # If it's just a bare property, allow it, since this component has already passed the authorized_indices filter.
+            _ -> component_props
+          end
+
+        {component_index, component_props}
+      end)
+
+    data
+    # Allow for ownership transfer
+    |> Map.take(["lastOwnerTime", "networkId", "owner"])
+    |> Map.put("components", components)
   end
 
   defp handle_entry_mode_change(socket, entry_mode) do
