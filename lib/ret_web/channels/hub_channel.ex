@@ -184,7 +184,9 @@ defmodule RetWeb.HubChannel do
         # If we have a secure_template for this object, it's a pinned or scene object for which we want to
         # allow ownership transfer and syncing.
         secure_template |> String.ends_with?("-media") ->
-          data |> sanitize_with_authorized_schemas(secure_template, socket)
+          if account |> can?(spawn_and_move_media(hub)),
+            do: data,
+            else: data |> sanitize_with_authorized_schemas(secure_template, socket)
 
         template |> String.ends_with?("-media") ->
           if account |> can?(spawn_and_move_media(hub)), do: data, else: nil
