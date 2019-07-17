@@ -453,7 +453,7 @@ defimpl Canada.Can, for: Ret.Account do
   # Unbound hubs - Creator can perform creator actions
   def can?(%Ret.Account{account_id: account_id}, action, %Ret.Hub{created_by_account_id: created_by_account_id} = hub)
       when action in @creator_actions and created_by_account_id != nil and created_by_account_id = account_id,
-      do: hub |> Ret.Hub.is_owner?(account_id)
+      do: true
 
   # Unbound hubs - Owners can perform special actions
   def can?(%Ret.Account{account_id: account_id}, action, %Ret.Hub{} = hub)
