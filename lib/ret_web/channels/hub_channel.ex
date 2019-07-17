@@ -31,6 +31,7 @@ defmodule RetWeb.HubChannel do
     hub_bindings: [],
     created_by_account: []
   ]
+  @drawing_confirm_connect 0
 
   def join("hub:" <> hub_sid, %{"profile" => profile, "context" => context} = params, socket) do
     hub =
@@ -273,7 +274,7 @@ defmodule RetWeb.HubChannel do
     if secure_scene_object != nil do
       is_creator = secure_scene_object.creator == socket.assigns.session_id
 
-      if is_creator or account |> can?(spawn_drawing(hub)) do
+      if payload["data"]["type"] == @drawing_confirm_connect or is_creator or account |> can?(spawn_drawing(hub)) do
         broadcast_from!(socket, event, payload)
       end
     end
