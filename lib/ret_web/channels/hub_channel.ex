@@ -31,7 +31,6 @@ defmodule RetWeb.HubChannel do
     hub_bindings: [],
     created_by_account: []
   ]
-  @drawing_confirm_connect 0
 
   def join("hub:" <> hub_sid, %{"profile" => profile, "context" => context} = params, socket) do
     hub =
@@ -43,6 +42,7 @@ defmodule RetWeb.HubChannel do
     |> assign(:profile, profile)
     |> assign(:context, context)
     |> assign(:block_naf, false)
+    |> assign(:secure_scene_objects, [])
     |> perform_join(
       hub,
       context,
@@ -153,39 +153,26 @@ defmodule RetWeb.HubChannel do
 
     data = payload["data"]
 
-    authorized_broadcast =
+    authorized =
       cond do
-        template |> String.ends_with?("-avatar") ->
-          data
-
-        template |> String.ends_with?("-media") ->
-          # Media authorization is done in handle_out
-          data
-
-        template |> String.ends_with?("-camera") ->
-          if account |> can?(spawn_camera(hub)), do: data, else: nil
-
-        template |> String.ends_with?("-drawing") ->
-          if account |> can?(spawn_drawing(hub)), do: data, else: nil
-
-        template |> String.ends_with?("-pen") ->
-          if account |> can?(spawn_drawing(hub)), do: data, else: nil
-
-        true ->
-          # We want to forbid messages if they fall through the above list of template suffixes
-          nil
+        template |> String.ends_with?("-avatar") -> true
+        template |> String.ends_with?("-media") -> account |> can?(spawn_and_move_media(hub))
+        template |> String.ends_with?("-camera") -> account |> can?(spawn_camera(hub))
+        template |> String.ends_with?("-drawing") -> account |> can?(spawn_drawing(hub))
+        template |> String.ends_with?("-pen") -> account |> can?(spawn_drawing(hub))
+        # We want to forbid messages if they fall through the above list of template suffixes
+        true -> false
       end
 
-    if authorized_broadcast != nil do
+    if authorized do
       data =
-        authorized_broadcast
+        data
         |> Map.put("creator", socket.assigns.session_id)
         |> Map.put("owner", socket.assigns.session_id)
 
-      payload =
-        payload
-        |> Map.put("data", data)
-        |> Map.put("sender_account_id", account && account.account_id)
+      payload = payload |> Map.put("data", data)
+
+      socket = socket |> store_secure_scene_object(payload)
 
       broadcast_from!(socket, event, payload)
 
@@ -196,13 +183,24 @@ defmodule RetWeb.HubChannel do
   end
 
   # Captures inbound NAF removal messages
-  def handle_in("naf" = event, %{"dataType" => "r"} = payload, socket) do
-    authorized_data = payload["data"] |> authorize_object_manipulation(socket)
+  def handle_in("naf" = event, %{"dataType" => "r", "data" => %{"networkId" => network_id}} = payload, socket) do
+    should_broadcast_remove = should_broadcast_remove?(network_id, socket)
 
-    if authorized_data != nil do
-      payload = payload |> Map.put("data", authorized_data)
-      broadcast_from!(socket, event, payload)
-    end
+    socket =
+      if should_broadcast_remove do
+        socket =
+          socket
+          |> assign(
+            :secure_scene_objects,
+            socket.assigns.secure_scene_objects |> Enum.reject(&(&1.network_id == network_id))
+          )
+
+        broadcast_from!(socket, event, payload)
+
+        socket
+      else
+        socket
+      end
 
     {:noreply, socket}
   end
@@ -478,30 +476,36 @@ defmodule RetWeb.HubChannel do
 
   def handle_out("mute", _payload, socket), do: {:noreply, socket}
 
-  defp authorize_object_manipulation(data, socket) do
+  defp store_secure_scene_object(socket, %{
+         "data" => %{"creator" => creator, "template" => template, "networkId" => network_id}
+       }) do
+    secure_scene_object = socket.assigns.secure_scene_objects |> Enum.find(&(&1.network_id == network_id))
+
+    if secure_scene_object == nil do
+      socket
+      |> assign(:secure_scene_objects, [
+        %{creator: creator, network_id: network_id, template: template} | socket.assigns.secure_scene_objects
+      ])
+    else
+      socket
+    end
+  end
+
+  defp should_broadcast_remove?(network_id, socket) do
     account = Guardian.Phoenix.Socket.current_resource(socket)
     hub = socket |> hub_for_socket
 
-    is_creator = secure_scene_object.creator == socket.assigns.session_id
-    secure_template = secure_scene_object.template
+    secure_scene_object = socket.assigns.secure_scene_objects |> Enum.find(&(&1.network_id == network_id))
+    is_creator = secure_scene_object != nil and secure_scene_object.creator == socket.assigns.session_id
+    secure_template = if secure_scene_object == nil, do: "", else: secure_scene_object.template
 
     cond do
-      secure_template |> String.ends_with?("-avatar") ->
-        if is_creator, do: data, else: nil
-
-      secure_template |> String.ends_with?("-media") ->
-        # Media authorization is done in handle_out
-        data
-
-      secure_template |> String.ends_with?("-camera") ->
-        if is_creator or account |> can?(spawn_camera(hub)), do: data, else: nil
-
-      secure_template |> String.ends_with?("-pen") ->
-        if is_creator or account |> can?(spawn_drawing(hub)), do: data, else: nil
-
-      true ->
-        # We want to forbid messages if they fall through the above list of template suffixes
-        nil
+      secure_template |> String.ends_with?("-avatar") -> is_creator
+      secure_template |> String.ends_with?("-media") -> is_creator or account |> can?(spawn_and_move_media(hub))
+      secure_template |> String.ends_with?("-camera") -> is_creator or account |> can?(spawn_camera(hub))
+      secure_template |> String.ends_with?("-pen") -> is_creator or account |> can?(spawn_drawing(hub))
+      # We want to forbid removal if it falls through the above list of template suffixes
+      true -> false
     end
   end
 
