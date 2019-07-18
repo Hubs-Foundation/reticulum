@@ -499,7 +499,7 @@ defmodule RetWeb.HubChannel do
     socket
   end
 
-  defp remove_secure_scene_object(socket, %{"networkId" => network_id}) do
+  defp remove_secure_scene_object(socket, %{"data" => %{"networkId" => network_id}}) do
     socket
     |> assign(
       :secure_scene_objects,
