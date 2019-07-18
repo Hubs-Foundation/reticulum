@@ -465,6 +465,8 @@ defmodule RetWeb.HubChannel do
       case payload["dataType"] do
         "u" -> socket |> maybe_store_secure_scene_object(payload)
         "r" -> socket |> remove_secure_scene_object(payload)
+        # Object creation never occurs on other data types, so we don't care about them
+        _ -> socket
       end
 
     # Sockets can block NAF as an optimization, eg iframe embeds do not need NAF messages until user clicks load
