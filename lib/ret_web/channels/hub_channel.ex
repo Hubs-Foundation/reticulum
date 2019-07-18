@@ -202,7 +202,7 @@ defmodule RetWeb.HubChannel do
       payload =
         payload
         |> Map.put("data", data)
-        |> Map.put("sender_account_id", account.account_id)
+        |> Map.put("sender_account_id", account && account.account_id)
 
       socket = socket |> maybe_store_secure_scene_object(payload)
 
@@ -224,7 +224,7 @@ defmodule RetWeb.HubChannel do
       payload =
         payload
         |> Map.put("data", authorized_data)
-        |> Map.put("sender_account_id", account)
+        |> Map.put("sender_account_id", account && account.account_id)
 
       broadcast_from!(socket, event, payload)
     end
@@ -244,7 +244,7 @@ defmodule RetWeb.HubChannel do
       payload =
         payload
         |> Map.put("data", payload["data"] |> Map.put("d", filtered_updates))
-        |> Map.put("sender_account_id", account.account_id)
+        |> Map.put("sender_account_id", account && account.account_id)
 
       broadcast_from!(socket, event, payload)
     end
@@ -547,50 +547,69 @@ defmodule RetWeb.HubChannel do
   end
 
   def handle_out("naf" = event, payload, socket) do
-    sender_account = Account |> Ret.Repo.get(payload["sender_account_id"])
+    sender_account = payload["sender_account_id"] && Account |> Ret.Repo.get(payload["sender_account_id"])
     hub = socket |> hub_for_socket
 
     {socket, payload, should_broadcast} =
       case payload do
         %{"data" => %{"isFirstSync" => true, "creator" => creator, "template" => template, "networkId" => network_id}} ->
-          secure_scene_object = socket.assigns.secure_scene_objects |> Enum.find(&(&1.network_id == network_id))
-          authorized = sender_account |> can?(spawn_and_move_media(hub))
+          if template |> String.ends_with?("-media") do
+            secure_scene_object = socket.assigns.secure_scene_objects |> Enum.find(&(&1.network_id == network_id))
+            authorized = sender_account |> can?(spawn_and_move_media(hub))
 
-          socket =
-            if authorized and secure_scene_object == nil do
-              socket
-              |> assign(:secure_scene_objects, [
-                %{creator: creator, network_id: network_id, template: template} | socket.assigns.secure_scene_objects
-              ])
-            else
-              socket
-            end
+            socket =
+              if authorized and secure_scene_object == nil do
+                socket
+                |> assign(:secure_scene_objects, [
+                  %{creator: creator, network_id: network_id, template: template} | socket.assigns.secure_scene_objects
+                ])
+              else
+                socket
+              end
 
-          {payload, sanitized} =
-            if !authorized and secure_scene_object != nil and
-                 secure_scene_object.template |> String.ends_with?("-media") do
-              payload =
-                payload
-                |> Map.put(
-                  "data",
-                  payload["data"] |> sanitize_with_authorized_schemas(secure_scene_object.template, socket)
-                )
+            {payload, sanitized} =
+              if !authorized do
+                payload =
+                  payload
+                  |> Map.put(
+                    "data",
+                    payload["data"] |> sanitize_with_authorized_schemas(template, socket)
+                  )
 
-              {payload, true}
-            else
-              {payload, false}
-            end
+                {payload, true}
+              else
+                {payload, false}
+              end
 
-          {socket, payload, authorized or sanitized}
+            {socket, payload, authorized or sanitized}
+          else
+            secure_scene_object = socket.assigns.secure_scene_objects |> Enum.find(&(&1.network_id == network_id))
+
+            socket =
+              if secure_scene_object == nil do
+                socket
+                |> assign(:secure_scene_objects, [
+                  %{creator: creator, network_id: network_id, template: template} | socket.assigns.secure_scene_objects
+                ])
+              else
+                socket
+              end
+
+            {socket, payload, true}
+          end
 
         %{"dataType" => "um"} ->
           %{"data" => %{"d" => updates}} = payload
-          updates = updates |> Enum.map(&(&1 |> authorize_or_sanitize_update(hub, sender_account, socket)))
+          updates = updates |> Enum.map(&(&1 |> authorize_or_sanitize_media_updates(hub, sender_account, socket)))
           payload = payload |> Map.put("data", payload["data"] |> Map.put("d", updates))
           {socket, payload, true}
 
         %{"dataType" => "u"} ->
-          {socket, payload |> authorize_or_sanitize_update(hub, sender_account, socket), true}
+          payload =
+            payload
+            |> Map.put("data", payload["data"] |> authorize_or_sanitize_media_updates(hub, sender_account, socket))
+
+          {socket, payload, true}
 
         %{"dataType" => "r", "data" => %{"networkId" => network_id}} ->
           socket =
@@ -617,26 +636,28 @@ defmodule RetWeb.HubChannel do
 
   def handle_out("mute", _payload, socket), do: {:noreply, socket}
 
-  defp authorize_or_sanitize_update(payload, hub, sender_account, socket) do
-    %{"networkId" => network_id} = payload["data"]
+  defp authorize_or_sanitize_media_updates(
+         %{"networkId" => network_id} = data,
+         hub,
+         sender_account,
+         socket
+       ) do
     secure_scene_object = socket.assigns.secure_scene_objects |> Enum.find(&(&1.network_id == network_id))
     secure_template = secure_scene_object.template
 
     if secure_template |> String.ends_with?("-media") do
-      is_creator = secure_scene_object.creator == socket.assigns.session_id
-      is_pinned = Repo.get_by(RoomObject, object_id: secure_scene_object.network_id) != nil
+      is_pinned = Repo.get_by(RoomObject, object_id: network_id) != nil
 
       authorized =
-        (!is_pinned or sender_account |> can?(pin_objects(hub))) and
-          (is_creator or sender_account |> can?(spawn_and_move_media(hub)))
+        (!is_pinned or sender_account |> can?(pin_objects(hub))) and sender_account |> can?(spawn_and_move_media(hub))
 
       if authorized do
-        payload
+        data
       else
-        payload |> Map.put("data", payload["data"] |> sanitize_with_authorized_schemas(secure_template, socket))
+        data |> sanitize_with_authorized_schemas(secure_template, socket)
       end
     else
-      payload
+      data
     end
   end
 
