@@ -172,7 +172,7 @@ defmodule RetWeb.HubChannel do
 
       payload = payload |> Map.put("data", data)
 
-      socket = socket |> store_secure_scene_object(payload)
+      socket = socket |> maybe_store_secure_scene_object(payload)
 
       broadcast_from!(socket, event, payload)
 
@@ -188,12 +188,7 @@ defmodule RetWeb.HubChannel do
 
     socket =
       if should_broadcast_remove do
-        socket =
-          socket
-          |> assign(
-            :secure_scene_objects,
-            socket.assigns.secure_scene_objects |> Enum.reject(&(&1.network_id == network_id))
-          )
+        socket = socket |> remove_secure_scene_object(payload)
 
         broadcast_from!(socket, event, payload)
 
@@ -466,6 +461,12 @@ defmodule RetWeb.HubChannel do
   end
 
   def handle_out("naf" = event, payload, socket) do
+    socket =
+      case payload["dataType"] do
+        "u" -> socket |> maybe_store_secure_scene_object(payload)
+        "r" -> socket |> remove_secure_scene_object(payload)
+      end
+
     # Sockets can block NAF as an optimization, eg iframe embeds do not need NAF messages until user clicks load
     if !socket.assigns.block_naf do
       push(socket, event, payload)
@@ -476,8 +477,8 @@ defmodule RetWeb.HubChannel do
 
   def handle_out("mute", _payload, socket), do: {:noreply, socket}
 
-  defp store_secure_scene_object(socket, %{
-         "data" => %{"creator" => creator, "template" => template, "networkId" => network_id}
+  defp maybe_store_secure_scene_object(socket, %{
+         "data" => %{"isFirstSync" => true, "creator" => creator, "template" => template, "networkId" => network_id}
        }) do
     secure_scene_object = socket.assigns.secure_scene_objects |> Enum.find(&(&1.network_id == network_id))
 
@@ -489,6 +490,19 @@ defmodule RetWeb.HubChannel do
     else
       socket
     end
+  end
+
+  # Let non-first-sync messages pass through
+  defp maybe_store_secure_scene_object(socket, _payload) do
+    socket
+  end
+
+  defp remove_secure_scene_object(socket, %{"networkId" => network_id}) do
+    socket
+    |> assign(
+      :secure_scene_objects,
+      socket.assigns.secure_scene_objects |> Enum.reject(&(&1.network_id == network_id))
+    )
   end
 
   defp should_broadcast_remove?(network_id, socket) do
