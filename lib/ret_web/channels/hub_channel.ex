@@ -516,12 +516,22 @@ defmodule RetWeb.HubChannel do
     secure_template = if secure_scene_object == nil, do: "", else: secure_scene_object.template
 
     cond do
-      secure_template |> String.ends_with?("-avatar") -> is_creator
-      secure_template |> String.ends_with?("-media") -> is_creator or account |> can?(spawn_and_move_media(hub))
-      secure_template |> String.ends_with?("-camera") -> is_creator or account |> can?(spawn_camera(hub))
-      secure_template |> String.ends_with?("-pen") -> is_creator or account |> can?(spawn_drawing(hub))
+      secure_template |> String.ends_with?("-avatar") ->
+        is_creator
+
+      secure_template |> String.ends_with?("-media") ->
+        is_pinned = Repo.get_by(RoomObject, object_id: network_id) != nil
+        (!is_pinned or account |> can?(pin_objects(hub))) and (is_creator or account |> can?(spawn_and_move_media(hub)))
+
+      secure_template |> String.ends_with?("-camera") ->
+        is_creator or account |> can?(spawn_camera(hub))
+
+      secure_template |> String.ends_with?("-pen") ->
+        is_creator or account |> can?(spawn_drawing(hub))
+
       # We want to forbid removal if it falls through the above list of template suffixes
-      true -> false
+      true ->
+        false
     end
   end
 
