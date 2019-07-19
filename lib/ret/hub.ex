@@ -465,7 +465,7 @@ defimpl Canada.Can, for: Ret.Account do
 
   # Unbound hubs - Object actions can be performed if granted in member permissions or if account is an owner
   def can?(%Ret.Account{account_id: account_id}, action, %Hub{hub_bindings: []} = hub) when action in @object_actions do
-    hub |> Hub.has_member_permission(action) || hub |> Ret.Hub.is_owner?(account_id)
+    hub |> Hub.has_member_permission?(action) || hub |> Ret.Hub.is_owner?(account_id)
   end
 
   # Deny permissions for any other case that falls through
