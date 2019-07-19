@@ -457,10 +457,10 @@ defmodule RetWeb.HubChannel do
   end
 
   def handle_out(event, %{"session_id" => session_id}, socket) when event in ["add_owner", "remove_owner"] do
-    if socket.assigns.session_id == session_id do
-      # Outgoing message has already had a permission check on the sender side, so perform the action
-      account = Guardian.Phoenix.Socket.current_resource(socket)
+    account = Guardian.Phoenix.Socket.current_resource(socket)
 
+    if account && socket.assigns.session_id == session_id do
+      # Outgoing message has already had a permission check on the sender side, so perform the action
       action =
         if event == "add_owner" do
           &Hub.add_owner!/2
