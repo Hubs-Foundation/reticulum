@@ -148,23 +148,9 @@ defmodule RetWeb.HubChannel do
 
   # Captures all inbound NAF messages that result in spawned objects.
   def handle_in("naf" = event, %{"data" => %{"isFirstSync" => true, "template" => template}} = payload, socket) do
-    account = Guardian.Phoenix.Socket.current_resource(socket)
-    hub = socket |> hub_for_socket
-
     data = payload["data"]
 
-    authorized =
-      cond do
-        template |> String.ends_with?("-avatar") -> true
-        template |> String.ends_with?("-media") -> account |> can?(spawn_and_move_media(hub))
-        template |> String.ends_with?("-camera") -> account |> can?(spawn_camera(hub))
-        template |> String.ends_with?("-drawing") -> account |> can?(spawn_drawing(hub))
-        template |> String.ends_with?("-pen") -> account |> can?(spawn_drawing(hub))
-        # We want to forbid messages if they fall through the above list of template suffixes
-        true -> false
-      end
-
-    if authorized do
+    if template |> spawn_permitted?(socket) do
       data =
         data
         |> Map.put("creator", socket.assigns.session_id)
@@ -184,10 +170,8 @@ defmodule RetWeb.HubChannel do
 
   # Captures inbound NAF removal messages
   def handle_in("naf" = event, %{"dataType" => "r", "data" => %{"networkId" => network_id}} = payload, socket) do
-    should_broadcast_remove = should_broadcast_remove?(network_id, socket)
-
     socket =
-      if should_broadcast_remove do
+      if network_id |> removal_permitted?(socket) do
         socket = socket |> remove_secure_scene_object(payload)
 
         broadcast_from!(socket, event, payload)
@@ -210,7 +194,7 @@ defmodule RetWeb.HubChannel do
     account = Guardian.Phoenix.Socket.current_resource(socket)
     hub = socket |> hub_for_socket
 
-    if type != "photo" or account |> can?(spawn_camera(hub)) do
+    if (type != "photo" and type != "video") or account |> can?(spawn_camera(hub)) do
       broadcast!(socket, event, payload |> Map.put(:session_id, socket.assigns.session_id))
     end
 
@@ -460,6 +444,8 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
+  def handle_out("mute", _payload, socket), do: {:noreply, socket}
+
   def handle_out("naf" = event, payload, socket) do
     socket =
       case payload["dataType"] do
@@ -476,8 +462,6 @@ defmodule RetWeb.HubChannel do
 
     {:noreply, socket}
   end
-
-  def handle_out("mute", _payload, socket), do: {:noreply, socket}
 
   defp maybe_store_secure_scene_object(socket, %{
          "data" => %{"isFirstSync" => true, "creator" => creator, "template" => template, "networkId" => network_id}
@@ -507,7 +491,22 @@ defmodule RetWeb.HubChannel do
     )
   end
 
-  defp should_broadcast_remove?(network_id, socket) do
+  defp spawn_permitted?(template, socket) do
+    account = Guardian.Phoenix.Socket.current_resource(socket)
+    hub = socket |> hub_for_socket
+
+    cond do
+      template |> String.ends_with?("-avatar") -> true
+      template |> String.ends_with?("-media") -> account |> can?(spawn_and_move_media(hub))
+      template |> String.ends_with?("-camera") -> account |> can?(spawn_camera(hub))
+      template |> String.ends_with?("-drawing") -> account |> can?(spawn_drawing(hub))
+      template |> String.ends_with?("-pen") -> account |> can?(spawn_drawing(hub))
+      # We want to forbid messages if they fall through the above list of template suffixes
+      true -> false
+    end
+  end
+
+  defp removal_permitted?(network_id, socket) do
     account = Guardian.Phoenix.Socket.current_resource(socket)
     hub = socket |> hub_for_socket
 
