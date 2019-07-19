@@ -123,6 +123,8 @@ config :ret, Ret.MediaResolver,
   ytdl_host: nil,
   photomnemonic_endpoint: "https://pyrkq22jjj.execute-api.us-west-1.amazonaws.com/public"
 
+config :ret, Ret.Speelycaptor, speelycaptor_endpoint: "https://1dhaogh2hd.execute-api.us-west-1.amazonaws.com/public"
+
 config :ret, Ret.Storage,
   storage_path: "storage/dev",
   ttl: 60 * 60 * 24

@@ -3,6 +3,7 @@ defmodule Ret.TwitterClient do
 
   @twitter_api_base "https://api.twitter.com"
   @twitter_upload_api_base "https://upload.twitter.com"
+  @max_video_upload_size 64 * 1024 * 1024
 
   alias Ret.{Account, OwnedFile, Storage}
 
@@ -54,20 +55,30 @@ defmodule Ret.TwitterClient do
       end
 
     case storage_result do
-      {:ok, %{"content_length" => total_bytes, "content_type" => media_type}, stream} ->
-        media_init_res =
-          post(
-            url,
-            [{"command", "INIT"}, {"total_bytes", total_bytes}, {"media_type", media_type}],
-            creds,
-            :json
-          )
+      {:ok, %{"content_length" => total_bytes, "content_type" => media_type}, stream}
+      when total_bytes <= @max_video_upload_size ->
+        params = [{"command", "INIT"}, {"total_bytes", total_bytes}, {"media_type", media_type}]
+        is_video = media_type |> String.contains?("video")
+
+        params =
+          if is_video do
+            params ++ [{"media_category", "tweet_video"}]
+          else
+            params
+          end
+
+        media_init_res = post(url, params, creds, :json)
 
         case media_init_res do
           %{"media_id_string" => media_id} ->
             upload_media_chunks(creds, stream, media_id)
             post(url, [{"command", "FINALIZE"}, {"media_id", media_id}], creds, :json)
-            media_id
+
+            if is_video do
+              wait_for_upload_finished(media_id, creds)
+            else
+              media_id
+            end
 
           _ ->
             nil
@@ -75,6 +86,22 @@ defmodule Ret.TwitterClient do
 
       _ ->
         nil
+    end
+  end
+
+  defp wait_for_upload_finished(media_id, creds, iteration \\ 0) do
+    if iteration < 60 do
+      url = "#{@twitter_upload_api_base}/1.1/media/upload.json"
+      status = get(url, [{"command", "STATUS"}, {"media_id", media_id}], creds)
+
+      if status["processing_info"]["progress_percent"] != 100 do
+        :timer.sleep(1000)
+        wait_for_upload_finished(media_id, creds, iteration + 1)
+      else
+        media_id
+      end
+    else
+      nil
     end
   end
 
@@ -137,16 +164,15 @@ defmodule Ret.TwitterClient do
 
   defp get_redirect_uri(), do: RetWeb.Endpoint.url() <> "/api/v1/oauth/twitter"
 
-  # Unused for now
-  # defp get(url, params, creds) do
-  #   oauther_params = OAuther.sign("get", url, params, creds)
-  #   encoded_params = URI.encode_query(oauther_params)
-  #   request_url = "#{url}?#{encoded_params}"
+  defp get(url, params, creds) do
+    oauther_params = OAuther.sign("get", url, params, creds)
+    encoded_params = URI.encode_query(oauther_params)
+    request_url = "#{url}?#{encoded_params}"
 
-  #   retry_get_until_success(request_url)
-  #   |> Map.get(:body)
-  #   |> Poison.decode!()
-  # end
+    retry_get_until_success(request_url)
+    |> Map.get(:body)
+    |> Poison.decode!()
+  end
 
   defp module_config(key) do
     Application.get_env(:ret, __MODULE__)[key]
