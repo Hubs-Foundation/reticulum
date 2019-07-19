@@ -325,7 +325,7 @@ defmodule Ret.Hub do
     hub |> Repo.preload([hub_role_memberships: []], force: true)
   end
 
-  def revoke_owner!(%Hub{} = hub, %Account{} = account) do
+  def remove_owner!(%Hub{} = hub, %Account{} = account) do
     case Repo.get_by(HubRoleMembership, hub_id: hub.hub_id, account_id: account.account_id) do
       %HubRoleMembership{} = membership ->
         membership |> Repo.delete!()
@@ -337,12 +337,14 @@ defmodule Ret.Hub do
     hub |> Repo.preload([hub_role_memberships: []], force: true)
   end
 
-  def is_owner?(%Hub{created_by_account_id: created_by_account_id}, account_id)
+  def is_creator?(%Hub{created_by_account_id: created_by_account_id}, account_id)
       when created_by_account_id != nil and created_by_account_id === account_id,
       do: true
 
-  def is_owner?(%Hub{} = hub, account_id) do
-    Repo.get_by(HubRoleMembership, hub_id: hub.hub_id, account_id: account_id) != nil
+  def is_creator?(_hub, _account), do: false
+
+  def is_owner?(%Hub{hub_role_memberships: hub_role_memberships} = hub, account_id) do
+    is_creator?(hub, account_id) || hub_role_memberships |> Enum.any?(&(&1.account_id === account_id))
   end
 
   @member_permissions %{
@@ -384,6 +386,7 @@ defmodule Ret.Hub do
     %{
       join_hub: account |> can?(join_hub(hub)),
       update_hub: account |> can?(update_hub(hub)),
+      update_roles: account |> can?(update_roles(hub)),
       close_hub: account |> can?(close_hub(hub)),
       embed_hub: account |> can?(embed_hub(hub)),
       kick_users: account |> can?(kick_users(hub)),
@@ -395,17 +398,17 @@ defmodule Ret.Hub do
     }
   end
 
-  def roles_for_account(%Ret.Hub{} = hub, account), do: hub |> perms_for_account(account) |> roles_for_perms
+  def roles_for_account(%Ret.Hub{}, nil),
+    do: %{owner: false, creator: false}
 
-  # Eventually this will draw upon a real role system
-  defp roles_for_perms(%{kick_users: true}), do: %{moderator: true}
-  defp roles_for_perms(_), do: %{moderator: false}
+  def roles_for_account(%Ret.Hub{} = hub, account),
+    do: %{owner: hub |> is_owner?(account.account_id), creator: hub |> is_creator?(account.account_id)}
 end
 
 defimpl Canada.Can, for: Ret.Account do
   alias Ret.{Hub}
   @object_actions [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects]
-  @special_actions [:update_hub, :close_hub, :embed_hub, :kick_users, :mute_users] ++ @object_actions
+  @owner_actions [:update_hub, :close_hub, :embed_hub, :kick_users, :mute_users]
   @creator_actions [:update_roles]
 
   # Always deny access to non-enterable hubs
@@ -451,18 +454,18 @@ defimpl Canada.Can, for: Ret.Account do
   def can?(_account, :join_hub, %Ret.Hub{hub_bindings: []}), do: true
 
   # Unbound hubs - Creator can perform creator actions
-  def can?(%Ret.Account{account_id: account_id}, action, %Ret.Hub{created_by_account_id: created_by_account_id} = hub)
-      when action in @creator_actions and created_by_account_id != nil and created_by_account_id = account_id,
+  def can?(%Ret.Account{account_id: account_id}, action, %Ret.Hub{created_by_account_id: created_by_account_id})
+      when action in @creator_actions and created_by_account_id != nil and created_by_account_id == account_id,
       do: true
 
   # Unbound hubs - Owners can perform special actions
-  def can?(%Ret.Account{account_id: account_id}, action, %Ret.Hub{} = hub)
-      when action in @special_actions,
+  def can?(%Ret.Account{account_id: account_id}, action, %Ret.Hub{hub_bindings: []} = hub)
+      when action in @owner_actions,
       do: hub |> Ret.Hub.is_owner?(account_id)
 
-  # Unbound hubs - Object permissions for regular users are based on member permission settings
-  def can?(_account, action, %Hub{hub_bindings: []} = hub) when action in @object_actions do
-    hub |> Hub.has_member_permission(action)
+  # Unbound hubs - Object permissions for regular users are based on member permission settings or ownership
+  def can?(%Ret.Account{account_id: account_id}, action, %Hub{hub_bindings: []} = hub) when action in @object_actions do
+    hub |> Hub.has_member_permission(action) || hub |> Ret.Hub.is_owner?(account_id)
   end
 
   # Deny permissions for any other case that falls through

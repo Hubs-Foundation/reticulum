@@ -22,7 +22,7 @@ defmodule RetWeb.HubChannel do
   alias RetWeb.{Presence}
   alias RetWeb.Api.V1.{HubView}
 
-  intercept(["mute", "naf"])
+  intercept(["mute", "add_owner", "remove_owner", "naf"])
 
   @hub_preloads [
     scene: [:model_owned_file, :screenshot_owned_file, :scene_owned_file],
@@ -518,6 +518,17 @@ defmodule RetWeb.HubChannel do
   def handle_in("block_naf", _payload, socket), do: {:noreply, socket |> assign(:block_naf, true)}
   def handle_in("unblock_naf", _payload, socket), do: {:noreply, socket |> assign(:block_naf, false)}
 
+  def handle_in(event, %{"session_id" => _session_id} = payload, socket) when event in ["add_owner", "remove_owner"] do
+    account = Guardian.Phoenix.Socket.current_resource(socket)
+    hub = socket |> hub_for_socket
+
+    if account |> can?(update_roles(hub)) do
+      broadcast_from!(socket, event, payload)
+    end
+
+    {:noreply, socket}
+  end
+
   def handle_in(_message, _payload, socket) do
     {:noreply, socket}
   end
@@ -525,6 +536,27 @@ defmodule RetWeb.HubChannel do
   def handle_out("mute" = event, %{"session_id" => session_id} = payload, socket) do
     if socket.assigns.session_id == session_id do
       push(socket, event, payload)
+    end
+
+    {:noreply, socket}
+  end
+
+  def handle_out(event, %{"session_id" => session_id}, socket) when event in ["add_owner", "remove_owner"] do
+    if socket.assigns.session_id == session_id do
+      # Outgoing message has already had a permission check on the sender side, so perform the action
+      account = Guardian.Phoenix.Socket.current_resource(socket)
+
+      action =
+        if event == "add_owner" do
+          &Hub.add_owner!/2
+        else
+          &Hub.remove_owner!/2
+        end
+
+      socket |> hub_for_socket |> action.(account)
+
+      broadcast_presence_update(socket)
+      push(socket, "permissions_updated", %{})
     end
 
     {:noreply, socket}
@@ -983,6 +1015,6 @@ defmodule RetWeb.HubChannel do
   end
 
   defp hub_for_socket(socket) do
-    Repo.get_by(Hub, hub_sid: socket.assigns.hub_sid) |> Repo.preload(:hub_bindings)
+    Repo.get_by(Hub, hub_sid: socket.assigns.hub_sid) |> Repo.preload([:hub_bindings, :hub_role_memberships])
   end
 end

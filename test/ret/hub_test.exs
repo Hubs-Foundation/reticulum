@@ -26,7 +26,7 @@ defmodule Ret.HubTest do
 
   test "should deny permissions for non-creator", %{scene: scene} do
     {:ok, hub} = %Hub{} |> Hub.changeset(scene, %{name: "Test Hub"}) |> Repo.insert()
-    hub = hub |> Repo.preload([:hub_bindings])
+    hub = hub |> Repo.preload([:hub_bindings, :hub_role_memberships])
 
     %{join_hub: true, update_hub: false, close_hub: false, mute_users: false} =
       hub |> Hub.perms_for_account(Ret.Account.account_for_email("non-creator@mozilla.com"))
@@ -61,7 +61,7 @@ defmodule Ret.HubTest do
       |> Hub.add_account_to_changeset(account)
       |> Repo.insert()
 
-    hub = hub |> Repo.preload([:hub_bindings])
+    hub = hub |> Repo.preload([:hub_bindings, :hub_role_memberships])
 
     %{join_hub: true, update_hub: true, close_hub: true, mute_users: true} = hub |> Hub.perms_for_account(account)
   end
@@ -175,6 +175,8 @@ defmodule Ret.HubTest do
       |> Hub.add_account_to_changeset(account)
       |> Repo.insert()
 
+    hub = hub |> Repo.preload([:hub_role_memberships])
+
     assert hub |> Hub.is_owner?(account.account_id) === true
     assert hub |> Hub.is_owner?(account2.account_id) === false
 
@@ -183,7 +185,7 @@ defmodule Ret.HubTest do
     assert hub |> Hub.is_owner?(account.account_id) === true
     assert hub |> Hub.is_owner?(account2.account_id) === true
 
-    hub = hub |> Hub.revoke_owner!(account2)
+    hub = hub |> Hub.remove_owner!(account2)
 
     assert hub |> Hub.is_owner?(account.account_id) === true
     assert hub |> Hub.is_owner?(account2.account_id) === false
