@@ -58,12 +58,6 @@ defmodule Ret.RoomObject do
     }
   end
 
-  def objects_for_hub(hub) do
-    RoomObject
-    |> where([o], o.hub_id == ^hub.hub_id)
-    |> Repo.all()
-  end
-
   defp changeset(%RoomObject{} = room_object, %Hub{} = hub, %Account{} = account, attrs) do
     room_object
     |> cast(attrs, [:object_id, :gltf_node])

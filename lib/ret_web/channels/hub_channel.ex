@@ -43,25 +43,12 @@ defmodule RetWeb.HubChannel do
     |> assign(:profile, profile)
     |> assign(:context, context)
     |> assign(:block_naf, false)
-    # Pre-populate created_objects with all the pinned and scene objects in the room
-    |> assign(:created_objects, hub |> objects_for_hub() |> Enum.map(&created_object_from_hub_object/1))
+    |> assign(:secure_scene_objects, [])
     |> perform_join(
       hub,
       context,
       params |> Map.take(["push_subscription_endpoint", "auth_token", "perms_token", "bot_access_key"])
     )
-  end
-
-  defp objects_for_hub(hub) do
-    RoomObject.objects_for_hub(hub) ++ Scene.networked_objects_for_scene(hub.scene)
-  end
-
-  defp created_object_from_hub_object(%RoomObject{} = room_object) do
-    %{creator: "scene", network_id: room_object.object_id, template: "#interactable-media"}
-  end
-
-  defp created_object_from_hub_object(spoke_networked_object) do
-    %{creator: "scene", network_id: spoke_networked_object["networked"]["id"], template: "#static-controlled-media"}
   end
 
   defp perform_join(socket, hub, context, params) do
@@ -161,52 +148,18 @@ defmodule RetWeb.HubChannel do
   def handle_in("events:end_streaming", _payload, socket), do: socket |> set_presence_flag(:streaming, false)
 
   # Captures all inbound NAF messages that result in spawned objects.
-  def handle_in(
-        "naf" = event,
-        %{"data" => %{"isFirstSync" => true, "template" => template, "networkId" => network_id}} = payload,
-        socket
-      ) do
-    account = Guardian.Phoenix.Socket.current_resource(socket)
-    hub = socket |> hub_for_socket
-    created_object = socket.assigns.created_objects |> Enum.find(&(&1.network_id == network_id))
-    secure_template = if created_object, do: created_object.template, else: ""
+  def handle_in("naf" = event, %{"data" => %{"isFirstSync" => true, "template" => template}} = payload, socket) do
+    data = payload["data"]
 
-    should_broadcast =
-      cond do
-        template |> String.ends_with?("-avatar") ->
-          true
-
-        # If we have a secure_template for this object, and it's a static-controlled-media, that means it was part
-        # of the Spoke scene and we want to allow anyone to firstSync it.
-        secure_template |> String.ends_with?("static-controlled-media") ->
-          true
-
-        template |> String.ends_with?("-media") ->
-          account |> can?(spawn_and_move_media(hub))
-
-        template |> String.ends_with?("-camera") ->
-          account |> can?(spawn_camera(hub))
-
-        template |> String.ends_with?("-drawing") ->
-          account |> can?(spawn_drawing(hub))
-
-        template |> String.ends_with?("-pen") ->
-          account |> can?(spawn_drawing(hub))
-
-        true ->
-          # We want to forbid messages if they fall through the above list of template suffixes
-          false
-      end
-
-    if should_broadcast do
+    if template |> spawn_permitted?(socket) do
       data =
-        payload["data"]
+        data
         |> Map.put("creator", socket.assigns.session_id)
         |> Map.put("owner", socket.assigns.session_id)
 
       payload = payload |> Map.put("data", data)
 
-      socket = socket |> maybe_store_created_object(payload)
+      socket = socket |> maybe_store_secure_scene_object(payload)
 
       broadcast_from!(socket, event, payload)
 
@@ -216,56 +169,18 @@ defmodule RetWeb.HubChannel do
     end
   end
 
-  # Captures inbound NAF update messages
-  def handle_in("naf" = event, %{"dataType" => "u"} = payload, socket) do
-    if payload["data"] |> should_broadcast_object_manipulation(:update, socket) do
-      broadcast_from!(socket, event, payload)
-    end
-
-    {:noreply, socket}
-  end
-
-  # Captures inbound NAF multi update messages
-  def handle_in("naf" = event, %{"dataType" => "um"} = payload, socket) do
-    %{"data" => %{"d" => updates}} = payload
-
-    filtered_updates = updates |> Enum.filter(&(&1 |> should_broadcast_object_manipulation(:update, socket)))
-
-    if filtered_updates |> length > 0 do
-      payload = payload |> Map.put("data", payload["data"] |> Map.put("d", filtered_updates))
-      broadcast_from!(socket, event, payload)
-    end
-
-    {:noreply, socket}
-  end
-
   # Captures inbound NAF removal messages
-  def handle_in("naf" = event, %{"dataType" => "r"} = payload, socket) do
-    if payload["data"] |> should_broadcast_object_manipulation(:remove, socket) do
-      broadcast_from!(socket, event, payload)
-    end
+  def handle_in("naf" = event, %{"dataType" => "r", "data" => %{"networkId" => network_id}} = payload, socket) do
+    socket =
+      if network_id |> removal_permitted?(socket) do
+        socket = socket |> remove_secure_scene_object(payload)
 
-    {:noreply, socket}
-  end
-
-  # Captures inbound NAF drawing buffer updates
-  # Drawings are special since we implemented our own networking code, their data type is actually an identifier
-  # for a particular instance of a networked drawing.
-  def handle_in("naf" = event, %{"dataType" => "drawing-" <> drawing_network_id} = payload, socket) do
-    account = Guardian.Phoenix.Socket.current_resource(socket)
-    hub = socket |> hub_for_socket
-
-    created_object = socket.assigns.created_objects |> Enum.find(&(&1.network_id == drawing_network_id))
-
-    # If created_object is nil, we've received a message for a drawing that has not received a first sync yet,
-    # or was denied creation. so just ignore it.
-    if created_object != nil do
-      is_creator = created_object.creator == socket.assigns.session_id
-
-      if is_creator or account |> can?(spawn_drawing(hub)) do
         broadcast_from!(socket, event, payload)
+
+        socket
+      else
+        socket
       end
-    end
 
     {:noreply, socket}
   end
@@ -280,7 +195,7 @@ defmodule RetWeb.HubChannel do
     account = Guardian.Phoenix.Socket.current_resource(socket)
     hub = socket |> hub_for_socket
 
-    if type != "photo" or account |> can?(spawn_camera(hub)) do
+    if (type != "photo" and type != "video") or account |> can?(spawn_camera(hub)) do
       broadcast!(socket, event, payload |> Map.put(:session_id, socket.assigns.session_id))
     end
 
@@ -563,7 +478,13 @@ defmodule RetWeb.HubChannel do
   end
 
   def handle_out("naf" = event, payload, socket) do
-    socket = socket |> maybe_store_created_object(payload)
+    socket =
+      case payload["dataType"] do
+        "u" -> socket |> maybe_store_secure_scene_object(payload)
+        "r" -> socket |> remove_secure_scene_object(payload)
+        # Object creation never occurs on other data types, so we don't care about them
+        _ -> socket
+      end
 
     # Sockets can block NAF as an optimization, eg iframe embeds do not need NAF messages until user clicks load
     if !socket.assigns.block_naf do
@@ -573,65 +494,74 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
-  def handle_out("mute", _payload, socket), do: {:noreply, socket}
+  defp maybe_store_secure_scene_object(socket, %{
+         "data" => %{"isFirstSync" => true, "creator" => creator, "template" => template, "networkId" => network_id}
+       }) do
+    secure_scene_object = socket.assigns.secure_scene_objects |> Enum.find(&(&1.network_id == network_id))
 
-  defp maybe_store_created_object(socket, payload) do
-    case payload do
-      %{"data" => %{"isFirstSync" => true, "creator" => creator, "template" => template, "networkId" => network_id}} ->
-        created_object = socket.assigns.created_objects |> Enum.find(&(&1.network_id == network_id))
-
-        if created_object == nil do
-          socket
-          |> assign(:created_objects, [
-            %{creator: creator, network_id: network_id, template: template} | socket.assigns.created_objects
-          ])
-        else
-          socket
-        end
-
-      _ ->
-        # This is not a first sync message, so we don't need to do anything.
-        socket
+    if secure_scene_object == nil do
+      socket
+      |> assign(:secure_scene_objects, [
+        %{creator: creator, network_id: network_id, template: template} | socket.assigns.secure_scene_objects
+      ])
+    else
+      socket
     end
   end
 
-  defp should_broadcast_object_manipulation(%{"networkId" => network_id}, type, socket) do
+  # Let non-first-sync messages pass through
+  defp maybe_store_secure_scene_object(socket, _payload) do
+    socket
+  end
+
+  defp remove_secure_scene_object(socket, %{"data" => %{"networkId" => network_id}}) do
+    socket
+    |> assign(
+      :secure_scene_objects,
+      socket.assigns.secure_scene_objects |> Enum.reject(&(&1.network_id == network_id))
+    )
+  end
+
+  defp spawn_permitted?(template, socket) do
     account = Guardian.Phoenix.Socket.current_resource(socket)
     hub = socket |> hub_for_socket
 
-    created_object = socket.assigns.created_objects |> Enum.find(&(&1.network_id == network_id))
+    cond do
+      template |> String.ends_with?("-avatar") -> true
+      template |> String.ends_with?("-media") -> account |> can?(spawn_and_move_media(hub))
+      template |> String.ends_with?("-camera") -> account |> can?(spawn_camera(hub))
+      template |> String.ends_with?("-drawing") -> account |> can?(spawn_drawing(hub))
+      template |> String.ends_with?("-pen") -> account |> can?(spawn_drawing(hub))
+      # We want to forbid messages if they fall through the above list of template suffixes
+      true -> false
+    end
+  end
 
-    if created_object == nil do
-      # It seems we've received an object manipulation message for an object that has not received a first sync yet, 
-      # or was denied creation, so just ignore it.
-      false
-    else
-      is_creator = created_object.creator == socket.assigns.session_id
-      template = created_object.template
+  defp removal_permitted?(network_id, socket) do
+    account = Guardian.Phoenix.Socket.current_resource(socket)
+    hub = socket |> hub_for_socket
 
-      cond do
-        template |> String.ends_with?("-avatar") ->
-          true
+    secure_scene_object = socket.assigns.secure_scene_objects |> Enum.find(&(&1.network_id == network_id))
+    is_creator = secure_scene_object != nil and secure_scene_object.creator == socket.assigns.session_id
+    secure_template = if secure_scene_object == nil, do: "", else: secure_scene_object.template
 
-        template |> String.ends_with?("static-controlled-media") ->
-          type == :update
+    cond do
+      secure_template |> String.ends_with?("-avatar") ->
+        is_creator
 
-        template |> String.ends_with?("-media") ->
-          is_pinned = Repo.get_by(RoomObject, object_id: network_id) != nil
+      secure_template |> String.ends_with?("-media") ->
+        is_pinned = Repo.get_by(RoomObject, object_id: network_id) != nil
+        (!is_pinned or account |> can?(pin_objects(hub))) and (is_creator or account |> can?(spawn_and_move_media(hub)))
 
-          (!is_pinned or account |> can?(pin_objects(hub))) and
-            (is_creator or account |> can?(spawn_and_move_media(hub)))
+      secure_template |> String.ends_with?("-camera") ->
+        is_creator or account |> can?(spawn_camera(hub))
 
-        template |> String.ends_with?("-camera") ->
-          is_creator or account |> can?(spawn_camera(hub))
+      secure_template |> String.ends_with?("-pen") ->
+        is_creator or account |> can?(spawn_drawing(hub))
 
-        template |> String.ends_with?("-pen") ->
-          is_creator or account |> can?(spawn_drawing(hub))
-
-        true ->
-          # We want to forbid messages if they fall through the above list of template suffixes
-          false
-      end
+      # We want to forbid removal if it falls through the above list of template suffixes
+      true ->
+        false
     end
   end
 

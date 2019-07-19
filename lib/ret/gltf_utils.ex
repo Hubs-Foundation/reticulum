@@ -44,10 +44,4 @@ defmodule Ret.GLTFUtils do
         end)
     end
   end
-
-  def json_from_glb(glb) do
-    <<_header::binary-12, json_length::unsigned-integer-little-32, _type::binary-4, glb_body::binary>> = glb
-    <<json::binary-size(json_length), _rest::binary>> = glb_body
-    json
-  end
 end
