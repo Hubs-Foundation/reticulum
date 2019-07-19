@@ -8,33 +8,7 @@ defmodule Ret.Speelycaptor do
           resp_body = body |> Poison.decode!()
           upload_url = resp_body |> Map.get("uploadUrl")
           key = resp_body |> Map.get("key")
-
-          query = %{
-            key: key,
-            args: "-f mp4 -vcodec libx264 -preset fast -profile:v main -r 24 -acodec aac"
-          }
-
-          case retry_put_until_success(upload_url, {:file, path}, [], 30_000, 120_000) do
-            %HTTPoison.Response{} ->
-              case retry_get_until_success(
-                     "#{speelycaptor_endpoint}/convert?#{URI.encode_query(query)}",
-                     [],
-                     30_000,
-                     120_000
-                   ) do
-                %HTTPoison.Response{body: body} ->
-                  url = body |> Poison.decode!() |> Map.get("url")
-                  {:ok, download_path} = Temp.path()
-                  Download.from(url, path: download_path)
-                  {:ok, download_path}
-
-                :error ->
-                  nil
-              end
-
-            :error ->
-              nil
-          end
+          upload_and_convert_mp4(speelycaptor_endpoint, upload_url, path, key)
 
         :error ->
           nil
@@ -45,6 +19,35 @@ defmodule Ret.Speelycaptor do
   end
 
   def convert(_path, _content_type), do: nil
+
+  defp upload_and_convert_mp4(endpoint, upload_url, path, key) do
+    case retry_put_until_success(upload_url, {:file, path}, [], 30_000, 120_000) do
+      %HTTPoison.Response{} ->
+        query = %{
+          key: key,
+          args: "-f mp4 -vcodec libx264 -preset fast -profile:v main -r 24 -acodec aac"
+        }
+
+        case retry_get_until_success(
+               "#{endpoint}/convert?#{URI.encode_query(query)}",
+               [],
+               30_000,
+               120_000
+             ) do
+          %HTTPoison.Response{body: body} ->
+            url = body |> Poison.decode!() |> Map.get("url")
+            {:ok, download_path} = Temp.path()
+            Download.from(url, path: download_path)
+            {:ok, download_path}
+
+          :error ->
+            nil
+        end
+
+      :error ->
+        nil
+    end
+  end
 
   defp module_config(key) do
     Application.get_env(:ret, __MODULE__)[key]
