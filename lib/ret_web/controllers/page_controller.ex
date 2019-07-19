@@ -117,7 +117,7 @@ defmodule RetWeb.PageController do
   end
 
   def render_hub_content(conn, hub, _slug) do
-    hub = hub |> Repo.preload(scene: [:screenshot_owned_file])
+    hub = hub |> Repo.preload(scene: [:screenshot_owned_file], scene_listing: [:screenshot_owned_file])
 
     hub_meta_tags =
       Phoenix.View.render_to_string(RetWeb.PageView, "hub-meta.html",

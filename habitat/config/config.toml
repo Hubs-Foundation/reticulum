@@ -9,6 +9,12 @@ client_id = "{{ cfg.discord_client.client_id }}"
 client_secret = "{{ cfg.discord_client.client_secret }}"
 bot_token = "{{ cfg.discord_client.bot_token }}"
 
+[ret."Elixir.Ret.TwitterClient"]
+consumer_key = "{{ cfg.twitter_client.consumer_key }}"
+consumer_secret = "{{ cfg.twitter_client.consumer_secret }}"
+access_token = "{{ cfg.twitter_client.access_token }}"
+access_token_secret = "{{ cfg.twitter_client.access_token_secret }}"
+
 [ret."Elixir.RetWeb.Endpoint".https]
 port = {{ cfg.phx.port }}
 certfile = "{{ pkg.svc_files_path }}/ssl.pem"

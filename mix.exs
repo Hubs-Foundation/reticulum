@@ -71,7 +71,8 @@ defmodule Ret.Mixfile do
       {:toml, "~> 0.5"},
       {:scrivener_ecto, "~> 1.0"},
       {:ua_parser, "~> 1.5.0"},
-      {:download, git: "https://github.com/gfodor/download.git", branch: "reticulum/master"}
+      {:download, git: "https://github.com/gfodor/download.git", branch: "reticulum/master"},
+      {:oauther, "~> 1.1"}
     ]
   end
 
