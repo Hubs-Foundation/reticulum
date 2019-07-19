@@ -21,7 +21,7 @@ defmodule RetWeb.Api.V1.MediaController do
   end
 
   def create(conn, %{"media" => %Plug.Upload{content_type: content_type} = upload} = params) do
-    desired_content_type = params |> Map.get("desired")
+    desired_content_type = params |> Map.get("desired_content_type")
     promotion_token = params |> promotion_token_for_params
 
     store_and_render_upload(conn, upload, content_type, desired_content_type, promotion_token)
