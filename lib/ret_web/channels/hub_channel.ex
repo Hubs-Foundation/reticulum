@@ -451,44 +451,35 @@ defmodule RetWeb.HubChannel do
 
   def handle_out("mute", _payload, socket), do: {:noreply, socket}
 
-  def handle_out("naf" = event, %{"dataType" => "u", "data" => %{"isFirstSync" => false}} = payload, socket) do
-    # Sockets can block NAF as an optimization, eg iframe embeds do not need NAF messages until user clicks load
-    if !socket.assigns.block_naf do
-      push(socket, event, payload)
-    end
+  def handle_out("naf" = event, %{"dataType" => "u", "data" => %{"isFirstSync" => is_first_sync}} = payload, socket) do
+    socket =
+      if is_first_sync do
+        socket |> maybe_store_created_entity(payload)
+      else
+        socket
+      end
 
-    {:noreply, socket}
-  end
-
-  def handle_out("naf" = event, %{"dataType" => "u", "data" => %{"isFirstSync" => true}} = payload, socket) do
-    socket = socket |> maybe_store_created_entity(payload)
-
-    # Sockets can block NAF as an optimization, eg iframe embeds do not need NAF messages until user clicks load
-    if !socket.assigns.block_naf do
-      push(socket, event, payload)
-    end
-
-    {:noreply, socket}
+    maybe_push_naf(socket.assigns.block_naf)
   end
 
   def handle_out("naf" = event, %{"dataType" => "r"} = payload, socket) do
     socket = socket |> remove_created_entity(payload)
 
-    # Sockets can block NAF as an optimization, eg iframe embeds do not need NAF messages until user clicks load
-    if !socket.assigns.block_naf do
-      push(socket, event, payload)
-    end
-
-    {:noreply, socket}
+    maybe_push_naf(socket.assigns.block_naf)
   end
 
   # Fall through for other dataTypes
   def handle_out("naf" = event, payload, socket) do
-    # Sockets can block NAF as an optimization, eg iframe embeds do not need NAF messages until user clicks load
-    if !socket.assigns.block_naf do
-      push(socket, event, payload)
-    end
+    maybe_push_naf(socket.assigns.block_naf)
+  end
 
+  defp maybe_push_naf(false = _block_naf) do
+    push(socket, event, payload)
+    {:noreply, socket}
+  end
+
+  # Sockets can block NAF as an optimization, eg iframe embeds do not need NAF messages until user clicks load
+  defp maybe_push_naf(true = _block_naf) do
     {:noreply, socket}
   end
 
