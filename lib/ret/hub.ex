@@ -399,10 +399,10 @@ defmodule Ret.Hub do
   end
 
   def roles_for_account(%Ret.Hub{}, nil),
-    do: %{owner: false, creator: false}
+    do: %{owner: false, creator: false, signed_in: false}
 
   def roles_for_account(%Ret.Hub{} = hub, account),
-    do: %{owner: hub |> is_owner?(account.account_id), creator: hub |> is_creator?(account.account_id)}
+    do: %{owner: hub |> is_owner?(account.account_id), creator: hub |> is_creator?(account.account_id), signed_in: true}
 end
 
 defimpl Canada.Can, for: Ret.Account do

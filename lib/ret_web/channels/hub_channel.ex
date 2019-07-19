@@ -262,10 +262,7 @@ defmodule RetWeb.HubChannel do
           end
 
         perms_token = get_perms_token(hub, account)
-
-        if creator_assignment_token do
-          broadcast_presence_update(socket)
-        end
+        broadcast_presence_update(socket)
 
         {:reply, {:ok, %{perms_token: perms_token}}, socket}
 
@@ -276,6 +273,7 @@ defmodule RetWeb.HubChannel do
 
   def handle_in("sign_out", _payload, socket) do
     socket = Guardian.Phoenix.Socket.put_current_resource(socket, nil)
+    broadcast_presence_update(socket)
     {:reply, {:ok, %{}}, socket}
   end
 
