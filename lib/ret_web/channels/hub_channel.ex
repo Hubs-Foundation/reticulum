@@ -1,3 +1,8 @@
+defmodule RetWeb.CreatedEntity do
+  @enforce_keys [:creator, :template]
+  defstruct [:creator, :template]
+end
+
 defmodule RetWeb.HubChannel do
   @moduledoc "Ret Web Channel for Hubs"
 
@@ -19,7 +24,7 @@ defmodule RetWeb.HubChannel do
     WebPushSubscription
   }
 
-  alias RetWeb.{Presence}
+  alias RetWeb.{Presence, CreatedEntity}
   alias RetWeb.Api.V1.{HubView}
 
   intercept(["mute", "naf"])
@@ -42,7 +47,7 @@ defmodule RetWeb.HubChannel do
     |> assign(:profile, profile)
     |> assign(:context, context)
     |> assign(:block_naf, false)
-    |> assign(:secure_scene_objects, [])
+    |> assign(:created_entities, %{})
     |> perform_join(
       hub,
       context,
@@ -158,7 +163,7 @@ defmodule RetWeb.HubChannel do
 
       payload = payload |> Map.put("data", data)
 
-      socket = socket |> maybe_store_secure_scene_object(payload)
+      socket = socket |> maybe_store_created_entity(payload)
 
       broadcast_from!(socket, event, payload)
 
@@ -172,7 +177,7 @@ defmodule RetWeb.HubChannel do
   def handle_in("naf" = event, %{"dataType" => "r", "data" => %{"networkId" => network_id}} = payload, socket) do
     socket =
       if network_id |> removal_permitted?(socket) do
-        socket = socket |> remove_secure_scene_object(payload)
+        socket = socket |> remove_created_entity(payload)
 
         broadcast_from!(socket, event, payload)
 
@@ -449,8 +454,8 @@ defmodule RetWeb.HubChannel do
   def handle_out("naf" = event, payload, socket) do
     socket =
       case payload["dataType"] do
-        "u" -> socket |> maybe_store_secure_scene_object(payload)
-        "r" -> socket |> remove_secure_scene_object(payload)
+        "u" -> socket |> maybe_store_created_entity(payload)
+        "r" -> socket |> remove_created_entity(payload)
         # Object creation never occurs on other data types, so we don't care about them
         _ -> socket
       end
@@ -463,31 +468,32 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
-  defp maybe_store_secure_scene_object(socket, %{
+  defp maybe_store_created_entity(socket, %{
          "data" => %{"isFirstSync" => true, "creator" => creator, "template" => template, "networkId" => network_id}
        }) do
-    secure_scene_object = socket.assigns.secure_scene_objects |> Enum.find(&(&1.network_id == network_id))
+    created_entity = socket.assigns.created_entities[network_id]
 
-    if secure_scene_object == nil do
+    if created_entity == nil do
       socket
-      |> assign(:secure_scene_objects, [
-        %{creator: creator, network_id: network_id, template: template} | socket.assigns.secure_scene_objects
-      ])
+      |> assign(
+        :created_entities,
+        socket.assigns.created_entities |> Map.put(network_id, %CreatedEntity{creator: creator, template: template})
+      )
     else
       socket
     end
   end
 
   # Let non-first-sync messages pass through
-  defp maybe_store_secure_scene_object(socket, _payload) do
+  defp maybe_store_created_entity(socket, _payload) do
     socket
   end
 
-  defp remove_secure_scene_object(socket, %{"data" => %{"networkId" => network_id}}) do
+  defp remove_created_entity(socket, %{"data" => %{"networkId" => network_id}}) do
     socket
     |> assign(
-      :secure_scene_objects,
-      socket.assigns.secure_scene_objects |> Enum.reject(&(&1.network_id == network_id))
+      :created_entities,
+      socket.assigns.created_entities |> Map.delete(network_id)
     )
   end
 
@@ -510,9 +516,9 @@ defmodule RetWeb.HubChannel do
     account = Guardian.Phoenix.Socket.current_resource(socket)
     hub = socket |> hub_for_socket
 
-    secure_scene_object = socket.assigns.secure_scene_objects |> Enum.find(&(&1.network_id == network_id))
-    is_creator = secure_scene_object != nil and secure_scene_object.creator == socket.assigns.session_id
-    secure_template = if secure_scene_object == nil, do: "", else: secure_scene_object.template
+    created_entity = socket.assigns.created_entities[network_id]
+    is_creator = created_entity != nil and created_entity.creator == socket.assigns.session_id
+    secure_template = if created_entity == nil, do: "", else: created_entity.template
 
     cond do
       secure_template |> String.ends_with?("-avatar") ->
