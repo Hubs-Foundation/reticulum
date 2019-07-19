@@ -139,4 +139,28 @@ defmodule Ret.HubTest do
 
     assert hub.creator_assignment_token == nil
   end
+
+  test "hub permissions map can be converted to bit field integer" do
+    member_permissions = %{spawn_and_move_media: true}
+    bit_field = member_permissions |> Hub.member_permissions_to_int()
+    assert bit_field == 1
+  end
+
+  test "invalid hub permissions map cannot be converted to bit field integer" do
+    member_permissions = %{fake_permission: false}
+    assert_raise ArgumentError, fn -> member_permissions |> Hub.member_permissions_to_int() end
+  end
+
+  test "hub permissions bit field integer can be queried for a permission" do
+    bit_field = 1
+    assert Hub.has_member_permission?(%Hub{member_permissions: bit_field}, :spawn_and_move_media)
+  end
+
+  test "hub permissions bit field integer cannot be queried with an invalid permission" do
+    bit_field = 1
+
+    assert_raise ArgumentError, fn ->
+      Hub.has_member_permission?(%Hub{member_permissions: bit_field}, :fake_permission)
+    end
+  end
 end
