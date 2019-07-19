@@ -459,27 +459,25 @@ defmodule RetWeb.HubChannel do
         socket
       end
 
-    maybe_push_naf(socket.assigns.block_naf)
+    socket |> maybe_push_naf(event, payload, socket.assigns.block_naf)
   end
 
   def handle_out("naf" = event, %{"dataType" => "r"} = payload, socket) do
-    socket = socket |> remove_created_entity(payload)
-
-    maybe_push_naf(socket.assigns.block_naf)
+    socket |> remove_created_entity(payload) |> maybe_push_naf(event, payload, socket.assigns.block_naf)
   end
 
   # Fall through for other dataTypes
   def handle_out("naf" = event, payload, socket) do
-    maybe_push_naf(socket.assigns.block_naf)
+    socket |> maybe_push_naf(event, payload, socket.assigns.block_naf)
   end
 
-  defp maybe_push_naf(false = _block_naf) do
+  defp maybe_push_naf(socket, event, payload, false = _block_naf) do
     push(socket, event, payload)
     {:noreply, socket}
   end
 
   # Sockets can block NAF as an optimization, eg iframe embeds do not need NAF messages until user clicks load
-  defp maybe_push_naf(true = _block_naf) do
+  defp maybe_push_naf(socket, _event, _payload, true = _block_naf) do
     {:noreply, socket}
   end
 
