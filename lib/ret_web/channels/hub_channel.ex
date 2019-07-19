@@ -451,15 +451,39 @@ defmodule RetWeb.HubChannel do
 
   def handle_out("mute", _payload, socket), do: {:noreply, socket}
 
-  def handle_out("naf" = event, payload, socket) do
-    socket =
-      case payload["dataType"] do
-        "u" -> socket |> maybe_store_created_entity(payload)
-        "r" -> socket |> remove_created_entity(payload)
-        # Object creation never occurs on other data types, so we don't care about them
-        _ -> socket
-      end
+  def handle_out("naf" = event, %{"dataType" => "u", "data" => %{"isFirstSync" => false}} = payload, socket) do
+    # Sockets can block NAF as an optimization, eg iframe embeds do not need NAF messages until user clicks load
+    if !socket.assigns.block_naf do
+      push(socket, event, payload)
+    end
 
+    {:noreply, socket}
+  end
+
+  def handle_out("naf" = event, %{"dataType" => "u", "data" => %{"isFirstSync" => true}} = payload, socket) do
+    socket = socket |> maybe_store_created_entity(payload)
+
+    # Sockets can block NAF as an optimization, eg iframe embeds do not need NAF messages until user clicks load
+    if !socket.assigns.block_naf do
+      push(socket, event, payload)
+    end
+
+    {:noreply, socket}
+  end
+
+  def handle_out("naf" = event, %{"dataType" => "r"} = payload, socket) do
+    socket = socket |> remove_created_entity(payload)
+
+    # Sockets can block NAF as an optimization, eg iframe embeds do not need NAF messages until user clicks load
+    if !socket.assigns.block_naf do
+      push(socket, event, payload)
+    end
+
+    {:noreply, socket}
+  end
+
+  # Fall through for other dataTypes
+  def handle_out("naf" = event, payload, socket) do
     # Sockets can block NAF as an optimization, eg iframe embeds do not need NAF messages until user clicks load
     if !socket.assigns.block_naf do
       push(socket, event, payload)
