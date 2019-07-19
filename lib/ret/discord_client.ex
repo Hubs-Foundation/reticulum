@@ -1,5 +1,6 @@
 defmodule Ret.DiscordClient do
   use Bitwise
+  alias Ret.{BitFieldUtils}
 
   @oauth_scope "identify email"
   @discord_api_base "https://discordapp.com/api/v6"
@@ -90,48 +91,44 @@ defmodule Ret.DiscordClient do
 
   @none 0x0000_0000
   @all 0xFFFF_FFFF
-  @administrator 0x0000_0008
+  @administrator 1 <<< 3
   @permissions %{
-    0x0000_0001 => :create_instant_invite,
-    0x0000_0002 => :kick_members,
-    0x0000_0004 => :ban_members,
-    0x0000_0008 => :administrator,
-    0x0000_0010 => :manage_channels,
-    0x0000_0020 => :manage_guild,
-    0x0000_0040 => :add_reactions,
-    0x0000_0080 => :view_audit_log,
-    0x0000_0100 => :priority_speaker,
-    0x0000_0200 => :unused,
-    0x0000_0400 => :view_channel,
-    0x0000_0800 => :send_messages,
-    0x0000_1000 => :send_tts_messages,
-    0x0000_2000 => :manage_messages,
-    0x0000_4000 => :emded_links,
-    0x0000_8000 => :attach_files,
-    0x0001_0000 => :read_message_history,
-    0x0002_0000 => :mention_everyone,
-    0x0004_0000 => :use_external_emojis,
-    0x0008_0000 => :unused,
-    0x0010_0000 => :connect,
-    0x0020_0000 => :speak,
-    0x0040_0000 => :mute_members,
-    0x0080_0000 => :deafen_members,
-    0x0100_0000 => :move_members,
-    0x0200_0000 => :use_vad,
-    0x0400_0000 => :change_nickname,
-    0x0800_0000 => :manage_nicknames,
-    0x1000_0000 => :manage_roles,
-    0x2000_0000 => :manage_webhooks,
-    0x4000_0000 => :manage_emojis,
-    0x8000_0000 => :unused
+    (1 <<< 0) => :create_instant_invite,
+    (1 <<< 1) => :kick_members,
+    (1 <<< 2) => :ban_members,
+    (1 <<< 3) => :administrator,
+    (1 <<< 4) => :manage_channels,
+    (1 <<< 5) => :manage_guild,
+    (1 <<< 6) => :add_reactions,
+    (1 <<< 7) => :view_audit_log,
+    (1 <<< 8) => :priority_speaker,
+    (1 <<< 9) => :unused,
+    (1 <<< 10) => :view_channel,
+    (1 <<< 11) => :send_messages,
+    (1 <<< 12) => :send_tts_messages,
+    (1 <<< 13) => :manage_messages,
+    (1 <<< 14) => :emded_links,
+    (1 <<< 15) => :attach_files,
+    (1 <<< 16) => :read_message_history,
+    (1 <<< 17) => :mention_everyone,
+    (1 <<< 18) => :use_external_emojis,
+    (1 <<< 19) => :unused,
+    (1 <<< 20) => :connect,
+    (1 <<< 21) => :speak,
+    (1 <<< 22) => :mute_members,
+    (1 <<< 23) => :deafen_members,
+    (1 <<< 24) => :move_members,
+    (1 <<< 25) => :use_vad,
+    (1 <<< 26) => :change_nickname,
+    (1 <<< 27) => :manage_nicknames,
+    (1 <<< 28) => :manage_roles,
+    (1 <<< 29) => :manage_webhooks,
+    (1 <<< 30) => :manage_emojis,
+    (1 <<< 31) => :unused
   }
 
-  # Convert a permissions bit field integer into a {:permission_name => boolean} map
-  defp permissions_to_map(permissions) do
-    0..31
-    |> Enum.map(&bsl(1, &1))
-    |> Enum.map(&{@permissions[&1], (permissions &&& &1) == &1})
-    |> Map.new()
+  defp permissions_to_map(bit_field) do
+    bit_field |> BitFieldUtils.permissions_to_map(@permissions)
   end
 
   # compute_base_permissions and compute_overwrites based on pseudo-code at 

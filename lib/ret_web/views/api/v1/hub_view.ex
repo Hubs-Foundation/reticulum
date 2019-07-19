@@ -41,7 +41,8 @@ defmodule RetWeb.Api.V1.HubView do
               hub.embed_token
             else
               nil
-            end
+            end,
+          member_permissions: hub |> Hub.member_permissions_for_hub()
         }
       ]
     }

@@ -1,3 +1,8 @@
+defmodule RetWeb.CreatedEntity do
+  @enforce_keys [:creator, :template]
+  defstruct [:creator, :template]
+end
+
 defmodule RetWeb.HubChannel do
   @moduledoc "Ret Web Channel for Hubs"
 
@@ -19,7 +24,7 @@ defmodule RetWeb.HubChannel do
     WebPushSubscription
   }
 
-  alias RetWeb.{Presence}
+  alias RetWeb.{Presence, CreatedEntity}
   alias RetWeb.Api.V1.{HubView}
 
   intercept(["mute", "naf"])
@@ -33,28 +38,29 @@ defmodule RetWeb.HubChannel do
   ]
 
   def join("hub:" <> hub_sid, %{"profile" => profile, "context" => context} = params, socket) do
+    hub =
+      Hub
+      |> Repo.get_by(hub_sid: hub_sid)
+      |> Repo.preload(@hub_preloads)
+
     socket
     |> assign(:profile, profile)
     |> assign(:context, context)
     |> assign(:block_naf, false)
+    |> assign(:created_entities, %{})
     |> perform_join(
-      hub_sid,
+      hub,
       context,
       params |> Map.take(["push_subscription_endpoint", "auth_token", "perms_token", "bot_access_key"])
     )
   end
 
-  defp perform_join(socket, hub_sid, context, params) do
+  defp perform_join(socket, hub, context, params) do
     account =
       case Ret.Guardian.resource_from_token(params["auth_token"]) do
         {:ok, %Account{} = account, _claims} -> account
         _ -> nil
       end
-
-    hub =
-      Hub
-      |> Repo.get_by(hub_sid: hub_sid)
-      |> Repo.preload(@hub_preloads)
 
     hub_requires_oauth = hub.hub_bindings |> Enum.empty?() |> Kernel.not()
 
@@ -145,22 +151,69 @@ defmodule RetWeb.HubChannel do
   def handle_in("events:begin_streaming", _payload, socket), do: socket |> set_presence_flag(:streaming, true)
   def handle_in("events:end_streaming", _payload, socket), do: socket |> set_presence_flag(:streaming, false)
 
-  def handle_in("naf" = event, %{"data" => %{"isFirstSync" => true}} = payload, socket) do
-    data =
-      payload["data"] |> Map.put("creator", socket.assigns.session_id) |> Map.put("owner", socket.assigns.session_id)
+  # Captures all inbound NAF messages that result in spawned objects.
+  def handle_in("naf" = event, %{"data" => %{"isFirstSync" => true, "template" => template}} = payload, socket) do
+    data = payload["data"]
 
-    payload = payload |> Map.put("data", data)
-    broadcast_from!(socket, event, payload)
+    if template |> spawn_permitted?(socket) do
+      data =
+        data
+        |> Map.put("creator", socket.assigns.session_id)
+        |> Map.put("owner", socket.assigns.session_id)
+
+      payload = payload |> Map.put("data", data)
+
+      socket = socket |> maybe_store_created_entity(payload)
+
+      broadcast_from!(socket, event, payload)
+
+      {:noreply, socket}
+    else
+      {:noreply, socket}
+    end
+  end
+
+  # Captures all inbound NAF Update Multi messages
+  def handle_in("naf" = event, %{"dataType" => "um", "data" => %{"d" => updates}} = payload, socket) do
+    if updates |> Enum.any?(& &1["isFirstSync"]) do
+      # Do not broadcast "um" messages that contain isFirstSyncs.
+      {:noreply, socket}
+    else
+      broadcast_from!(socket, event, payload)
+
+      {:noreply, socket}
+    end
+  end
+
+  # Captures inbound NAF removal messages
+  def handle_in("naf" = event, %{"dataType" => "r", "data" => %{"networkId" => network_id}} = payload, socket) do
+    socket =
+      if network_id |> removal_permitted?(socket) do
+        socket = socket |> remove_created_entity(payload)
+
+        broadcast_from!(socket, event, payload)
+
+        socket
+      else
+        socket
+      end
+
     {:noreply, socket}
   end
 
+  # Fallthrough for all other dataTypes
   def handle_in("naf" = event, payload, socket) do
     broadcast_from!(socket, event, payload)
     {:noreply, socket}
   end
 
-  def handle_in("message" = event, payload, socket) do
-    broadcast!(socket, event, payload |> Map.put(:session_id, socket.assigns.session_id))
+  def handle_in("message" = event, %{"type" => type} = payload, socket) do
+    account = Guardian.Phoenix.Socket.current_resource(socket)
+    hub = socket |> hub_for_socket
+
+    if (type != "photo" and type != "video") or account |> can?(spawn_camera(hub)) do
+      broadcast!(socket, event, payload |> Map.put(:session_id, socket.assigns.session_id))
+    end
 
     {:noreply, socket}
   end
@@ -254,15 +307,23 @@ defmodule RetWeb.HubChannel do
         socket
       ) do
     with_account(socket, fn account ->
-      perform_pin!(object_id, gltf_node, account, socket)
-      Storage.promote(file_id, file_access_token, promotion_token, account)
-      OwnedFile.set_active(file_id, account.account_id)
+      hub = socket |> hub_for_socket
+
+      if account |> can?(pin_objects(hub)) do
+        perform_pin!(object_id, gltf_node, account, socket)
+        Storage.promote(file_id, file_access_token, promotion_token, account)
+        OwnedFile.set_active(file_id, account.account_id)
+      end
     end)
   end
 
   def handle_in("pin", %{"id" => object_id, "gltf_node" => gltf_node}, socket) do
     with_account(socket, fn account ->
-      perform_pin!(object_id, gltf_node, account, socket)
+      hub = socket |> hub_for_socket
+
+      if account |> can?(pin_objects(hub)) do
+        perform_pin!(object_id, gltf_node, account, socket)
+      end
     end)
   end
 
@@ -271,8 +332,10 @@ defmodule RetWeb.HubChannel do
 
     case Guardian.Phoenix.Socket.current_resource(socket) do
       %Account{} = account ->
-        RoomObject.perform_unpin(hub, object_id)
-        OwnedFile.set_inactive(file_id, account.account_id)
+        if account |> can?(pin_objects(hub)) do
+          RoomObject.perform_unpin(hub, object_id)
+          OwnedFile.set_inactive(file_id, account.account_id)
+        end
 
       _ ->
         nil
@@ -285,8 +348,10 @@ defmodule RetWeb.HubChannel do
     hub = socket |> hub_for_socket
 
     case Guardian.Phoenix.Socket.current_resource(socket) do
-      %Account{} = _account ->
-        RoomObject.perform_unpin(hub, object_id)
+      %Account{} = account ->
+        if account |> can?(pin_objects(hub)) do
+          RoomObject.perform_unpin(hub, object_id)
+        end
 
       _ ->
         nil
@@ -304,12 +369,17 @@ defmodule RetWeb.HubChannel do
     hub = socket |> hub_for_socket
     account = Guardian.Phoenix.Socket.current_resource(socket)
 
+    name_changed = hub.name != payload["name"]
+
+    stale_fields = if name_changed, do: ["member_permissions", "name"], else: ["member_permissions"]
+
     if account |> can?(update_hub(hub)) do
       hub
       |> Hub.add_name_to_changeset(payload)
+      |> Hub.add_member_permissions_to_changeset(payload)
       |> Repo.update!()
       |> Repo.preload(@hub_preloads)
-      |> broadcast_hub_refresh!(socket, ["name"])
+      |> broadcast_hub_refresh!(socket, stale_fields)
     end
 
     {:noreply, socket}
@@ -404,16 +474,109 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
-  def handle_out("naf" = event, payload, socket) do
-    # Sockets can block NAF as an optimization, eg iframe embeds do not need NAF messages until user clicks load
-    if !socket.assigns.block_naf do
-      push(socket, event, payload)
-    end
+  def handle_out("mute", _payload, socket), do: {:noreply, socket}
 
+  def handle_out("naf" = event, %{"dataType" => "u", "data" => %{"isFirstSync" => is_first_sync}} = payload, socket) do
+    socket =
+      if is_first_sync do
+        socket |> maybe_store_created_entity(payload)
+      else
+        socket
+      end
+
+    socket |> maybe_push_naf(event, payload, socket.assigns.block_naf)
+  end
+
+  def handle_out("naf" = event, %{"dataType" => "r"} = payload, socket) do
+    socket |> remove_created_entity(payload) |> maybe_push_naf(event, payload, socket.assigns.block_naf)
+  end
+
+  # Fall through for other dataTypes
+  def handle_out("naf" = event, payload, socket) do
+    socket |> maybe_push_naf(event, payload, socket.assigns.block_naf)
+  end
+
+  defp maybe_push_naf(socket, event, payload, false = _block_naf) do
+    push(socket, event, payload)
     {:noreply, socket}
   end
 
-  def handle_out("mute", _payload, socket), do: {:noreply, socket}
+  # Sockets can block NAF as an optimization, eg iframe embeds do not need NAF messages until user clicks load
+  defp maybe_push_naf(socket, _event, _payload, true = _block_naf) do
+    {:noreply, socket}
+  end
+
+  defp maybe_store_created_entity(socket, %{
+         "data" => %{"isFirstSync" => true, "creator" => creator, "template" => template, "networkId" => network_id}
+       }) do
+    created_entity = socket.assigns.created_entities[network_id]
+
+    if created_entity == nil do
+      socket
+      |> assign(
+        :created_entities,
+        socket.assigns.created_entities |> Map.put(network_id, %CreatedEntity{creator: creator, template: template})
+      )
+    else
+      socket
+    end
+  end
+
+  # Let non-first-sync messages pass through
+  defp maybe_store_created_entity(socket, _payload) do
+    socket
+  end
+
+  defp remove_created_entity(socket, %{"data" => %{"networkId" => network_id}}) do
+    socket
+    |> assign(
+      :created_entities,
+      socket.assigns.created_entities |> Map.delete(network_id)
+    )
+  end
+
+  defp spawn_permitted?(template, socket) do
+    account = Guardian.Phoenix.Socket.current_resource(socket)
+    hub = socket |> hub_for_socket
+
+    cond do
+      template |> String.ends_with?("-avatar") -> true
+      template |> String.ends_with?("-media") -> account |> can?(spawn_and_move_media(hub))
+      template |> String.ends_with?("-camera") -> account |> can?(spawn_camera(hub))
+      template |> String.ends_with?("-drawing") -> account |> can?(spawn_drawing(hub))
+      template |> String.ends_with?("-pen") -> account |> can?(spawn_drawing(hub))
+      # We want to forbid messages if they fall through the above list of template suffixes
+      true -> false
+    end
+  end
+
+  defp removal_permitted?(network_id, socket) do
+    account = Guardian.Phoenix.Socket.current_resource(socket)
+    hub = socket |> hub_for_socket
+
+    created_entity = socket.assigns.created_entities[network_id]
+    is_creator = created_entity != nil and created_entity.creator == socket.assigns.session_id
+    secure_template = if created_entity == nil, do: "", else: created_entity.template
+
+    cond do
+      secure_template |> String.ends_with?("-avatar") ->
+        is_creator
+
+      secure_template |> String.ends_with?("-media") ->
+        is_pinned = Repo.get_by(RoomObject, object_id: network_id) != nil
+        (!is_pinned or account |> can?(pin_objects(hub))) and (is_creator or account |> can?(spawn_and_move_media(hub)))
+
+      secure_template |> String.ends_with?("-camera") ->
+        is_creator or account |> can?(spawn_camera(hub))
+
+      secure_template |> String.ends_with?("-pen") ->
+        is_creator or account |> can?(spawn_drawing(hub))
+
+      # We want to forbid removal if it falls through the above list of template suffixes
+      true ->
+        false
+    end
+  end
 
   defp handle_entry_mode_change(socket, entry_mode) do
     hub = socket |> hub_for_socket
