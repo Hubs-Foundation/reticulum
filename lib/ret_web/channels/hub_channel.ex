@@ -173,6 +173,18 @@ defmodule RetWeb.HubChannel do
     end
   end
 
+  # Captures all inbound NAF Update Multi messages
+  def handle_in("naf" = event, %{"dataType" => "um", "data" => %{"d" => updates}} = payload, socket) do
+    if updates |> Enum.any?(& &1["isFirstSync"]) do
+      # Do not broadcast "um" messages that contain isFirstSyncs.
+      {:noreply, socket}
+    else
+      broadcast_from!(socket, event, payload)
+
+      {:noreply, socket}
+    end
+  end
+
   # Captures inbound NAF removal messages
   def handle_in("naf" = event, %{"dataType" => "r", "data" => %{"networkId" => network_id}} = payload, socket) do
     socket =
