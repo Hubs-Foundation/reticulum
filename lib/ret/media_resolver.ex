@@ -53,14 +53,8 @@ defmodule Ret.MediaResolver do
     with ytdl_host when is_binary(ytdl_host) <- module_config(:ytdl_host) do
       encoded_url = uri |> URI.to_string() |> URI.encode()
 
-      # NOTE we are temporarily logging youtube URL resolutions because of an unexplained
-      # load/traffic spike on yt-dl
-      if root_host |> String.downcase() |> String.contains?("youtube.com") do
-        Logger.info("Resolving YouTube URL: #{uri |> URI.to_string()}")
-      end
-
       ytdl_resp =
-        "#{ytdl_host}/api/play?format=#{URI.encode(ytdl_format)}&url=#{encoded_url}"
+        "#{ytdl_host}/api/play?format=#{URI.encode(ytdl_format)}&url=#{encoded_url}&playlist_items=1"
         |> retry_get_until_valid_ytdl_response
 
       case ytdl_resp do
