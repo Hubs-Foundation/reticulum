@@ -535,9 +535,16 @@ defmodule Ret.MediaSearch do
       type: :hub,
       name: hub.name,
       last_activated_at: favorite.last_activated_at,
-      images: scene_entry.images
+      images:
+        if scene_entry do
+          scene_entry.images
+        else
+          %{preview: %{url: "#{RetWeb.Endpoint.url()}/hub-preview.png"}}
+        end
     }
   end
+
+  defp scene_or_scene_listing_to_entry(nil), do: nil
 
   defp scene_or_scene_listing_to_entry(%Scene{} = scene), do: scene_or_scene_listing_to_entry(scene, "scene")
 
