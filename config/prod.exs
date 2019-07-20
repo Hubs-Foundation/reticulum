@@ -24,7 +24,7 @@ config :ret, RetWeb.Endpoint,
   root: "."
 
 # Do not print debug messages in production
-config :logger, level: :debug
+config :logger, level: :info
 
 config :ret, Ret.Repo,
   adapter: Ecto.Adapters.Postgres,
