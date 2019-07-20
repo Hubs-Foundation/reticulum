@@ -527,7 +527,14 @@ defmodule Ret.MediaSearch do
   end
 
   defp favorite_to_entry(%AccountFavorite{hub: hub} = favorite) when hub != nil do
-    scene_entry = scene_or_scene_listing_to_entry(hub.scene || hub.scene_listing, "scene")
+    scene_or_scene_listing = hub.scene || hub.scene_listing
+
+    images =
+      if scene_or_scene_listing do
+        scene_or_scene_listing_to_entry(scene_or_scene_listing, "scene").images
+      else
+        %{preview: %{url: "#{RetWeb.Endpoint.url()}/hub-preview.png"}}
+      end
 
     %{
       id: hub.hub_sid,
@@ -535,16 +542,9 @@ defmodule Ret.MediaSearch do
       type: :hub,
       name: hub.name,
       last_activated_at: favorite.last_activated_at,
-      images:
-        if scene_entry do
-          scene_entry.images
-        else
-          %{preview: %{url: "#{RetWeb.Endpoint.url()}/hub-preview.png"}}
-        end
+      images: images
     }
   end
-
-  defp scene_or_scene_listing_to_entry(nil), do: nil
 
   defp scene_or_scene_listing_to_entry(%Scene{} = scene), do: scene_or_scene_listing_to_entry(scene, "scene")
 
