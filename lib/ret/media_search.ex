@@ -531,7 +531,7 @@ defmodule Ret.MediaSearch do
 
     images =
       if scene_or_scene_listing do
-        scene_or_scene_listing_to_entry(scene_or_scene_listing, "scene").images
+        scene_or_scene_listing_to_entry(scene_or_scene_listing).images
       else
         %{preview: %{url: "#{RetWeb.Endpoint.url()}/hub-preview.png"}}
       end
