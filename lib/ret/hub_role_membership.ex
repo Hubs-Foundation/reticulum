@@ -11,6 +11,8 @@ defmodule Ret.HubRoleMembership do
     belongs_to(:hub, Ret.Hub, references: :hub_id)
     belongs_to(:account, Ret.Account, references: :account_id)
 
+    # Right now role membership is implicit to be the single role of "owners", no db state for now in accordance with YAGNI
+
     timestamps()
   end
 

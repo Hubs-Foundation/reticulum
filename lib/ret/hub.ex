@@ -454,7 +454,10 @@ defimpl Canada.Can, for: Ret.Account do
   def can?(_account, :join_hub, %Ret.Hub{hub_bindings: []}), do: true
 
   # Unbound hubs - Creator can perform creator actions
-  def can?(%Ret.Account{account_id: account_id}, action, %Ret.Hub{created_by_account_id: created_by_account_id})
+  def can?(%Ret.Account{account_id: account_id}, action, %Ret.Hub{
+        created_by_account_id: created_by_account_id,
+        hub_bindings: []
+      })
       when action in @creator_actions and created_by_account_id != nil and created_by_account_id == account_id,
       do: true
 
@@ -465,7 +468,7 @@ defimpl Canada.Can, for: Ret.Account do
 
   # Unbound hubs - Object actions can be performed if granted in member permissions or if account is an owner
   def can?(%Ret.Account{account_id: account_id}, action, %Hub{hub_bindings: []} = hub) when action in @object_actions do
-    hub |> Hub.has_member_permission?(action) || hub |> Ret.Hub.is_owner?(account_id)
+    hub |> Hub.has_member_permission?(action) or hub |> Ret.Hub.is_owner?(account_id)
   end
 
   # Deny permissions for any other case that falls through
