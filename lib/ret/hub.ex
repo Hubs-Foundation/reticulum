@@ -211,12 +211,16 @@ defmodule Ret.Hub do
     "#{RetWeb.Endpoint.url()}/#{hub.hub_sid}/#{hub.slug}"
   end
 
-  def image_url_for(%Hub{scene: nil}) do
+  def image_url_for(%Hub{scene: nil, scene_listing: nil}) do
     "#{RetWeb.Endpoint.url()}/hub-preview.png"
   end
 
-  def image_url_for(%Hub{scene: scene}) do
+  def image_url_for(%Hub{scene: scene}) when scene != nil do
     scene.screenshot_owned_file |> Ret.OwnedFile.uri_for() |> URI.to_string()
+  end
+
+  def image_url_for(%Hub{scene_listing: scene_listing}) when scene_listing != nil do
+    scene_listing.screenshot_owned_file |> Ret.OwnedFile.uri_for() |> URI.to_string()
   end
 
   defp changeset_for_new_entry_code(%Hub{} = hub) do
@@ -365,7 +369,7 @@ defmodule Ret.Hub do
 
     @member_permissions
     |> Enum.reduce(0, fn {val, member_permission}, acc ->
-      if member_permissions[member_permission], do: val + acc, else: 0
+      if(member_permissions[member_permission], do: val, else: 0) + acc
     end)
   end
 
@@ -479,13 +483,13 @@ end
 defimpl Canada.Can, for: Ret.OAuthProvider do
   alias Ret.{Hub}
   @object_actions [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects]
-  @all_actions [:update_hub, :update_roles, :close_hub, :embed_hub, :kick_users, :mute_users] ++ @object_actions
+  @special_actions [:update_hub, :update_roles, :close_hub, :embed_hub, :kick_users, :mute_users]
 
   # Always deny access to non-enterable hubs
   def can?(%Ret.OAuthProvider{}, :join_hub, %Ret.Hub{entry_mode: :deny}), do: false
 
-  # OAuthProvider users cannot perform all actions
-  def can?(%Ret.OAuthProvider{}, action, %Ret.Hub{}) when action in @all_actions,
+  # OAuthProvider users cannot perform special actions
+  def can?(%Ret.OAuthProvider{}, action, %Ret.Hub{}) when action in @special_actions,
     do: false
 
   def can?(%Ret.OAuthProvider{} = oauth_provider, :join_hub, %Ret.Hub{hub_bindings: hub_bindings})

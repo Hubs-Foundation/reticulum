@@ -123,6 +123,8 @@ config :ret, Ret.MediaResolver,
   ytdl_host: nil,
   photomnemonic_endpoint: "https://pyrkq22jjj.execute-api.us-west-1.amazonaws.com/public"
 
+config :ret, Ret.Speelycaptor, speelycaptor_endpoint: "https://1dhaogh2hd.execute-api.us-west-1.amazonaws.com/public"
+
 config :ret, Ret.Storage,
   storage_path: "storage/dev",
   ttl: 60 * 60 * 24
@@ -136,7 +138,7 @@ asset_hosts =
 websocket_hosts =
   "https://localhost:4000 https://localhost:8080 wss://localhost:4000 " <>
     "https://#{host}:4000 https://#{host}:8080 wss://#{host}:4000 wss://#{host}:8080 wss://#{host}:9090 " <>
-    "wss://#{dev_janus_host} wss://prod-janus.reticulum.io wss://#{host}:4000 wss://#{host}:8080"
+    "wss://#{dev_janus_host} wss://prod-janus.reticulum.io wss://#{host}:4000 wss://#{host}:8080 https://#{host}:8080 https://hubs.local:8080 wss://hubs.local:8080"
 
 script_shas =
   "'sha256-hsbRcgUBASABDq7qVGVTpbnWq/ns7B+ToTctZFJXYi8=' 'sha256-MIpWPgYj31kCgSUFc0UwHGQrV87W6N5ozotqfxxQG0w=' 'sha256-/S6PM16MxkmUT7zJN2lkEKFgvXR7yL4Z8PCrRrFu4Q8='"
@@ -145,11 +147,11 @@ config :ret, RetWeb.AddCSPPlug,
   content_security_policy:
     "default-src 'none'; script-src 'self' #{script_shas} #{asset_hosts} https://cdn.rawgit.com https://aframe.io https://www.google-analytics.com 'unsafe-eval'; worker-src 'self' blob:; font-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://cdn.aframe.io #{
       asset_hosts
-    }; style-src 'self' https://fonts.googleapis.com #{asset_hosts} 'unsafe-inline'; connect-src 'self' https://#{host}:8080 https://sentry.prod.mozaws.net https://dpdb.webvr.rocks #{
+    }; style-src 'self' https://fonts.googleapis.com https://cdn.jsdelivr.net #{asset_hosts} 'unsafe-inline'; connect-src 'self' https://#{
+      host
+    }:8080 https://sentry.prod.mozaws.net https://dpdb.webvr.rocks #{asset_hosts} #{websocket_hosts} https://cdn.aframe.io https://www.mozilla.org data: blob:; img-src 'self' #{
       asset_hosts
-    } #{websocket_hosts} https://cdn.aframe.io https://www.mozilla.org data: blob:; img-src 'self' #{asset_hosts} https://cdn.aframe.io data: blob:; media-src 'self' #{
-      asset_hosts
-    } data: blob:; frame-src 'self'; base-uri 'none'; form-action 'self';"
+    } https://cdn.aframe.io https://cdn.jsdelivr.net data: blob:; media-src 'self' #{asset_hosts} data: blob:; frame-src 'self'; base-uri 'none'; form-action 'self';"
 
 config :ret, Ret.Mailer, adapter: Bamboo.LocalAdapter
 
@@ -186,3 +188,5 @@ config :ret, Ret.JanusLoadStatus, default_janus_host: dev_janus_host
 config :ret, Ret.RoomAssigner, balancer_weights: [{600, 1}, {300, 50}, {0, 500}]
 
 config :ret, RetWeb.PageController, skip_cache: true
+
+config :ret, Ret.HttpUtils, insecure_ssl: true

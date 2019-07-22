@@ -9,6 +9,12 @@ client_id = "{{ cfg.discord_client.client_id }}"
 client_secret = "{{ cfg.discord_client.client_secret }}"
 bot_token = "{{ cfg.discord_client.bot_token }}"
 
+[ret."Elixir.Ret.TwitterClient"]
+consumer_key = "{{ cfg.twitter_client.consumer_key }}"
+consumer_secret = "{{ cfg.twitter_client.consumer_secret }}"
+access_token = "{{ cfg.twitter_client.access_token }}"
+access_token_secret = "{{ cfg.twitter_client.access_token_secret }}"
+
 [ret."Elixir.RetWeb.Endpoint".https]
 port = {{ cfg.phx.port }}
 certfile = "{{ pkg.svc_files_path }}/ssl.pem"
@@ -78,6 +84,9 @@ tenor_api_key = "{{ cfg.resolver.tenor_api_key }}"
 bing_search_api_key = "{{ cfg.resolver.bing_search_api_key }}"
 twitch_client_id = "{{ cfg.resolver.twitch_client_id }}"
 photomnemonic_endpoint = "{{ cfg.resolver.photomnemonic_endpoint }}"
+
+[ret."Elixir.Ret.Speelycaptor"]
+speelycaptor_endpoint = "{{ cfg.speelycaptor.speelycaptor_endpoint }}"
 
 [ret."Elixir.Ret.PageOriginWarmer"]
 hubs_page_origin = "{{ cfg.pages.hubs_page_origin }}"

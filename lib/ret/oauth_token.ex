@@ -11,11 +11,24 @@ defmodule Ret.OAuthToken do
   def resource_from_claims(_), do: nil
 
   def token_for_hub(hub_sid) do
+    token_for_hub_and_account(hub_sid)
+  end
+
+  def token_for_hub_and_account(hub_sid, account_id \\ nil) do
+    data = %{hub_sid: hub_sid, aud: :ret_oauth}
+
+    data =
+      if account_id do
+        data |> Map.put(:account_id, account_id |> to_string)
+      else
+        data
+      end
+
     {:ok, token, _claims} =
       Ret.OAuthToken.encode_and_sign(
         # OAuthTokens do not have a resource associated with them
         nil,
-        %{hub_sid: hub_sid, aud: :ret_oauth},
+        data,
         allowed_algos: ["HS512"],
         ttl: {10, :minutes},
         allowed_drift: 60 * 1000

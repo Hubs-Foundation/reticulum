@@ -153,14 +153,14 @@ defmodule Ret.HubTest do
 
   test "hub permissions bit field integer can be queried for a permission" do
     bit_field = 1
-    assert Hub.has_member_permission(%Hub{member_permissions: bit_field}, :spawn_and_move_media)
+    assert Hub.has_member_permission?(%Hub{member_permissions: bit_field}, :spawn_and_move_media)
   end
 
   test "hub permissions bit field integer cannot be queried with an invalid permission" do
     bit_field = 1
 
     assert_raise ArgumentError, fn ->
-      Hub.has_member_permission(%Hub{member_permissions: bit_field}, :fake_permission)
+      Hub.has_member_permission?(%Hub{member_permissions: bit_field}, :fake_permission)
     end
   end
 

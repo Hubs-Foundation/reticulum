@@ -12,6 +12,8 @@ defmodule Ret.MediaResolver do
   use Retry
   import Ret.HttpUtils
 
+  require Logger
+
   alias Ret.{CachedFile, MediaResolverQuery, Statix}
 
   @ytdl_valid_status_codes [200, 302, 500]
@@ -52,7 +54,7 @@ defmodule Ret.MediaResolver do
       encoded_url = uri |> URI.to_string() |> URI.encode()
 
       ytdl_resp =
-        "#{ytdl_host}/api/play?format=#{URI.encode(ytdl_format)}&url=#{encoded_url}"
+        "#{ytdl_host}/api/play?format=#{URI.encode(ytdl_format)}&url=#{encoded_url}&playlist_items=1"
         |> retry_get_until_valid_ytdl_response
 
       case ytdl_resp do
