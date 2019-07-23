@@ -152,7 +152,11 @@ defmodule RetWeb.HubChannel do
   def handle_in("events:end_streaming", _payload, socket), do: socket |> set_presence_flag(:streaming, false)
 
   # Captures all inbound NAF messages that result in spawned objects.
-  def handle_in("naf" = event, %{"data" => %{"isFirstSync" => true, "template" => template}} = payload, socket) do
+  def handle_in(
+        "naf" = event,
+        %{"data" => %{"isFirstSync" => true, "persistent" => false, "template" => template}} = payload,
+        socket
+      ) do
     data = payload["data"]
 
     if template |> spawn_permitted?(socket) do
@@ -176,7 +180,8 @@ defmodule RetWeb.HubChannel do
   # Captures all inbound NAF Update Multi messages
   def handle_in("naf" = event, %{"dataType" => "um", "data" => %{"d" => updates}} = payload, socket) do
     if updates |> Enum.any?(& &1["isFirstSync"]) do
-      # Do not broadcast "um" messages that contain isFirstSyncs.
+      # Do not broadcast "um" messages that contain isFirstSyncs. NAF should never send these, so we'd only see them
+      # from a malicious client.
       {:noreply, socket}
     else
       broadcast_from!(socket, event, payload)
