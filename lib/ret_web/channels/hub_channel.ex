@@ -27,14 +27,15 @@ defmodule RetWeb.HubChannel do
   alias RetWeb.{Presence, CreatedEntity}
   alias RetWeb.Api.V1.{HubView}
 
-  intercept(["mute", "naf"])
+  intercept(["mute", "add_owner", "remove_owner", "naf"])
 
   @hub_preloads [
     scene: [:model_owned_file, :screenshot_owned_file, :scene_owned_file],
     scene_listing: [:model_owned_file, :screenshot_owned_file, :scene_owned_file, :scene],
     web_push_subscriptions: [],
     hub_bindings: [],
-    created_by_account: []
+    created_by_account: [],
+    hub_role_memberships: []
   ]
 
   def join("hub:" <> hub_sid, %{"profile" => profile, "context" => context} = params, socket) do
@@ -278,10 +279,7 @@ defmodule RetWeb.HubChannel do
           end
 
         perms_token = get_perms_token(hub, account)
-
-        if creator_assignment_token do
-          broadcast_presence_update(socket)
-        end
+        broadcast_presence_update(socket)
 
         {:reply, {:ok, %{perms_token: perms_token}}, socket}
 
@@ -292,6 +290,7 @@ defmodule RetWeb.HubChannel do
 
   def handle_in("sign_out", _payload, socket) do
     socket = Guardian.Phoenix.Socket.put_current_resource(socket, nil)
+    broadcast_presence_update(socket)
     {:reply, {:ok, %{}}, socket}
   end
 
@@ -449,6 +448,17 @@ defmodule RetWeb.HubChannel do
   def handle_in("block_naf", _payload, socket), do: {:noreply, socket |> assign(:block_naf, true)}
   def handle_in("unblock_naf", _payload, socket), do: {:noreply, socket |> assign(:block_naf, false)}
 
+  def handle_in(event, %{"session_id" => _session_id} = payload, socket) when event in ["add_owner", "remove_owner"] do
+    account = Guardian.Phoenix.Socket.current_resource(socket)
+    hub = socket |> hub_for_socket
+
+    if account |> can?(update_roles(hub)) do
+      broadcast_from!(socket, event, payload)
+    end
+
+    {:noreply, socket}
+  end
+
   def handle_in("oauth", %{"type" => "twitter"}, socket) do
     hub = socket |> hub_for_socket
 
@@ -474,7 +484,26 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
-  def handle_out("mute", _payload, socket), do: {:noreply, socket}
+  def handle_out(event, %{"session_id" => session_id}, socket) when event in ["add_owner", "remove_owner"] do
+    account = Guardian.Phoenix.Socket.current_resource(socket)
+
+    if account && socket.assigns.session_id == session_id do
+      # Outgoing message has already had a permission check on the sender side, so perform the action
+      action =
+        if event == "add_owner" do
+          &Hub.add_owner!/2
+        else
+          &Hub.remove_owner!/2
+        end
+
+      socket |> hub_for_socket |> action.(account)
+
+      broadcast_presence_update(socket)
+      push(socket, "permissions_updated", %{})
+    end
+
+    {:noreply, socket}
+  end
 
   def handle_out("naf" = event, %{"dataType" => "u", "data" => %{"isFirstSync" => is_first_sync}} = payload, socket) do
     socket =
@@ -958,6 +987,6 @@ defmodule RetWeb.HubChannel do
   end
 
   defp hub_for_socket(socket) do
-    Repo.get_by(Hub, hub_sid: socket.assigns.hub_sid) |> Repo.preload(:hub_bindings)
+    Repo.get_by(Hub, hub_sid: socket.assigns.hub_sid) |> Repo.preload([:hub_bindings, :hub_role_memberships])
   end
 end
