@@ -14,7 +14,18 @@ defmodule Ret.Hub do
   import Ecto.Query
   import Canada, only: [can?: 2]
 
-  alias Ret.{Account, Hub, Repo, Scene, SceneListing, WebPushSubscription, RoomAssigner, BitFieldUtils}
+  alias Ret.{
+    Account,
+    Hub,
+    Repo,
+    Scene,
+    SceneListing,
+    WebPushSubscription,
+    RoomAssigner,
+    BitFieldUtils,
+    HubRoleMembership
+  }
+
   alias Ret.Hub.{HubSlug}
 
   @schema_prefix "ret0"
@@ -60,6 +71,7 @@ defmodule Ret.Hub do
     has_many(:web_push_subscriptions, Ret.WebPushSubscription, foreign_key: :hub_id)
     belongs_to(:created_by_account, Ret.Account, references: :account_id)
     has_many(:hub_bindings, Ret.HubBinding, foreign_key: :hub_id)
+    has_many(:hub_role_memberships, Ret.HubRoleMembership, foreign_key: :hub_id)
 
     timestamps()
   end
@@ -315,6 +327,39 @@ defmodule Ret.Hub do
     changeset |> put_change(:member_permissions, @default_member_permissions |> member_permissions_to_int)
   end
 
+  def add_owner!(%Hub{created_by_account_id: created_by_account_id} = hub, %Account{account_id: account_id})
+      when created_by_account_id != nil and created_by_account_id === account_id,
+      do: hub
+
+  def add_owner!(%Hub{} = hub, %Account{} = account) do
+    Repo.get_by(HubRoleMembership, hub_id: hub.hub_id, account_id: account.account_id) ||
+      %HubRoleMembership{} |> HubRoleMembership.changeset(hub, account) |> Repo.insert!()
+
+    hub |> Repo.preload([hub_role_memberships: []], force: true)
+  end
+
+  def remove_owner!(%Hub{} = hub, %Account{} = account) do
+    case Repo.get_by(HubRoleMembership, hub_id: hub.hub_id, account_id: account.account_id) do
+      %HubRoleMembership{} = membership ->
+        membership |> Repo.delete!()
+
+      _ ->
+        nil
+    end
+
+    hub |> Repo.preload([hub_role_memberships: []], force: true)
+  end
+
+  def is_creator?(%Hub{created_by_account_id: created_by_account_id}, account_id)
+      when created_by_account_id != nil and created_by_account_id === account_id,
+      do: true
+
+  def is_creator?(_hub, _account), do: false
+
+  def is_owner?(%Hub{hub_role_memberships: hub_role_memberships} = hub, account_id) do
+    is_creator?(hub, account_id) || hub_role_memberships |> Enum.any?(&(&1.account_id === account_id))
+  end
+
   def member_permissions_to_int(%{} = member_permissions) do
     invalid_member_permissions = member_permissions |> Map.drop(@member_permissions_keys) |> Map.keys()
 
@@ -345,6 +390,7 @@ defmodule Ret.Hub do
     %{
       join_hub: account |> can?(join_hub(hub)),
       update_hub: account |> can?(update_hub(hub)),
+      update_roles: account |> can?(update_roles(hub)),
       close_hub: account |> can?(close_hub(hub)),
       embed_hub: account |> can?(embed_hub(hub)),
       kick_users: account |> can?(kick_users(hub)),
@@ -356,17 +402,18 @@ defmodule Ret.Hub do
     }
   end
 
-  def roles_for_account(%Ret.Hub{} = hub, account), do: hub |> perms_for_account(account) |> roles_for_perms
+  def roles_for_account(%Ret.Hub{}, nil),
+    do: %{owner: false, creator: false, signed_in: false}
 
-  # Eventually this will draw upon a real role system
-  defp roles_for_perms(%{kick_users: true}), do: %{moderator: true}
-  defp roles_for_perms(_), do: %{moderator: false}
+  def roles_for_account(%Ret.Hub{} = hub, account),
+    do: %{owner: hub |> is_owner?(account.account_id), creator: hub |> is_creator?(account.account_id), signed_in: true}
 end
 
 defimpl Canada.Can, for: Ret.Account do
   alias Ret.{Hub}
+  @owner_actions [:update_hub, :close_hub, :embed_hub, :kick_users, :mute_users]
   @object_actions [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects]
-  @all_actions [:update_hub, :close_hub, :embed_hub, :kick_users, :mute_users] ++ @object_actions
+  @creator_actions [:update_roles]
 
   # Always deny access to non-enterable hubs
   def can?(%Ret.Account{}, :join_hub, %Ret.Hub{entry_mode: :deny}), do: false
@@ -402,22 +449,30 @@ defimpl Canada.Can, for: Ret.Account do
     end
   end
 
-  # Bound hubs - Always prevent embedding
+  # Bound hubs - Always prevent embedding and role assignment (since it's dictated by binding)
   def can?(%Ret.Account{}, action, %Ret.Hub{hub_bindings: hub_bindings})
-      when hub_bindings |> length > 0 and action in [:embed_hub],
+      when hub_bindings |> length > 0 and action in [:embed_hub, :update_roles],
       do: false
 
   # Unbound hubs - Anyone can join an unbound hub
   def can?(_account, :join_hub, %Ret.Hub{hub_bindings: []}), do: true
 
-  # Unbound hubs - Owners can perform all actions
-  def can?(%Ret.Account{account_id: account_id}, action, %Ret.Hub{created_by_account_id: account_id, hub_bindings: []})
-      when account_id != nil and action in @all_actions,
+  # Unbound hubs - Creator can perform creator actions
+  def can?(%Ret.Account{account_id: account_id}, action, %Ret.Hub{
+        created_by_account_id: created_by_account_id,
+        hub_bindings: []
+      })
+      when action in @creator_actions and created_by_account_id != nil and created_by_account_id == account_id,
       do: true
 
-  # Unbound hubs - Object permissions for regular users are based on member permission settings
-  def can?(_account, action, %Hub{hub_bindings: []} = hub) when action in @object_actions do
-    hub |> Hub.has_member_permission?(action)
+  # Unbound hubs - Owners can perform special actions
+  def can?(%Ret.Account{account_id: account_id}, action, %Ret.Hub{hub_bindings: []} = hub)
+      when action in @owner_actions,
+      do: hub |> Ret.Hub.is_owner?(account_id)
+
+  # Unbound hubs - Object actions can be performed if granted in member permissions or if account is an owner
+  def can?(%Ret.Account{account_id: account_id}, action, %Hub{hub_bindings: []} = hub) when action in @object_actions do
+    hub |> Hub.has_member_permission?(action) or hub |> Ret.Hub.is_owner?(account_id)
   end
 
   # Deny permissions for any other case that falls through
@@ -428,7 +483,7 @@ end
 defimpl Canada.Can, for: Ret.OAuthProvider do
   alias Ret.{Hub}
   @object_actions [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects]
-  @special_actions [:update_hub, :close_hub, :embed_hub, :kick_users, :mute_users]
+  @special_actions [:update_hub, :update_roles, :close_hub, :embed_hub, :kick_users, :mute_users]
 
   # Always deny access to non-enterable hubs
   def can?(%Ret.OAuthProvider{}, :join_hub, %Ret.Hub{entry_mode: :deny}), do: false

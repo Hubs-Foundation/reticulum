@@ -26,12 +26,14 @@ defmodule Ret.TestHelpers do
     conn |> Plug.Conn.put_req_header("authorization", "bearer: " <> token)
   end
 
-  def create_account() do
-    Account.account_for_email("test@mozilla.com")
+  def create_random_account(), do: create_account(Ret.Sids.generate_sid())
+
+  def create_account(prefix) when is_binary(prefix) do
+    Account.account_for_email("#{prefix}@mozilla.com")
   end
 
   def create_account(_) do
-    {:ok, account: create_account(), account2: create_account()}
+    {:ok, account: create_account("test"), account2: create_account("test2")}
   end
 
   def create_owned_file(%{account: account}) do
