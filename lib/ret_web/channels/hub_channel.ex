@@ -1,4 +1,4 @@
-defmodule RetWeb.CreatedEntity do
+defmodule RetWeb.SecuredEntity do
   @enforce_keys [:creator, :template]
   defstruct [:creator, :template]
 end
@@ -24,7 +24,7 @@ defmodule RetWeb.HubChannel do
     WebPushSubscription
   }
 
-  alias RetWeb.{Presence, CreatedEntity}
+  alias RetWeb.{Presence, SecuredEntity}
   alias RetWeb.Api.V1.{HubView}
 
   intercept(["mute", "add_owner", "remove_owner", "naf"])
@@ -48,7 +48,7 @@ defmodule RetWeb.HubChannel do
     |> assign(:profile, profile)
     |> assign(:context, context)
     |> assign(:block_naf, false)
-    |> assign(:created_entities, %{})
+    |> assign(:secured_entities, %{})
     |> perform_join(
       hub,
       context,
@@ -153,7 +153,11 @@ defmodule RetWeb.HubChannel do
   def handle_in("events:end_streaming", _payload, socket), do: socket |> set_presence_flag(:streaming, false)
 
   # Captures all inbound NAF messages that result in spawned objects.
-  def handle_in("naf" = event, %{"data" => %{"isFirstSync" => true, "template" => template}} = payload, socket) do
+  def handle_in(
+        "naf" = event,
+        %{"data" => %{"isFirstSync" => true, "persistent" => false, "template" => template}} = payload,
+        socket
+      ) do
     data = payload["data"]
 
     if template |> spawn_permitted?(socket) do
@@ -164,7 +168,7 @@ defmodule RetWeb.HubChannel do
 
       payload = payload |> Map.put("data", data)
 
-      socket = socket |> maybe_store_created_entity(payload)
+      socket = socket |> maybe_store_secured_entity(payload)
 
       broadcast_from!(socket, event, payload)
 
@@ -177,7 +181,8 @@ defmodule RetWeb.HubChannel do
   # Captures all inbound NAF Update Multi messages
   def handle_in("naf" = event, %{"dataType" => "um", "data" => %{"d" => updates}} = payload, socket) do
     if updates |> Enum.any?(& &1["isFirstSync"]) do
-      # Do not broadcast "um" messages that contain isFirstSyncs.
+      # Do not broadcast "um" messages that contain isFirstSyncs. NAF should never send these, so we'd only see them
+      # from a malicious client.
       {:noreply, socket}
     else
       broadcast_from!(socket, event, payload)
@@ -190,7 +195,7 @@ defmodule RetWeb.HubChannel do
   def handle_in("naf" = event, %{"dataType" => "r", "data" => %{"networkId" => network_id}} = payload, socket) do
     socket =
       if network_id |> removal_permitted?(socket) do
-        socket = socket |> remove_created_entity(payload)
+        socket = socket |> remove_secured_entity(payload)
 
         broadcast_from!(socket, event, payload)
 
@@ -508,7 +513,7 @@ defmodule RetWeb.HubChannel do
   def handle_out("naf" = event, %{"dataType" => "u", "data" => %{"isFirstSync" => is_first_sync}} = payload, socket) do
     socket =
       if is_first_sync do
-        socket |> maybe_store_created_entity(payload)
+        socket |> maybe_store_secured_entity(payload)
       else
         socket
       end
@@ -517,7 +522,7 @@ defmodule RetWeb.HubChannel do
   end
 
   def handle_out("naf" = event, %{"dataType" => "r"} = payload, socket) do
-    socket |> remove_created_entity(payload) |> maybe_push_naf(event, payload, socket.assigns.block_naf)
+    socket |> remove_secured_entity(payload) |> maybe_push_naf(event, payload, socket.assigns.block_naf)
   end
 
   # Fall through for other dataTypes
@@ -535,16 +540,16 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
-  defp maybe_store_created_entity(socket, %{
+  defp maybe_store_secured_entity(socket, %{
          "data" => %{"isFirstSync" => true, "creator" => creator, "template" => template, "networkId" => network_id}
        }) do
-    created_entity = socket.assigns.created_entities[network_id]
+    secured_entity = socket.assigns.secured_entities[network_id]
 
-    if created_entity == nil do
+    if secured_entity == nil do
       socket
       |> assign(
-        :created_entities,
-        socket.assigns.created_entities |> Map.put(network_id, %CreatedEntity{creator: creator, template: template})
+        :secured_entities,
+        socket.assigns.secured_entities |> Map.put(network_id, %SecuredEntity{creator: creator, template: template})
       )
     else
       socket
@@ -552,15 +557,15 @@ defmodule RetWeb.HubChannel do
   end
 
   # Let non-first-sync messages pass through
-  defp maybe_store_created_entity(socket, _payload) do
+  defp maybe_store_secured_entity(socket, _payload) do
     socket
   end
 
-  defp remove_created_entity(socket, %{"data" => %{"networkId" => network_id}}) do
+  defp remove_secured_entity(socket, %{"data" => %{"networkId" => network_id}}) do
     socket
     |> assign(
-      :created_entities,
-      socket.assigns.created_entities |> Map.delete(network_id)
+      :secured_entities,
+      socket.assigns.secured_entities |> Map.delete(network_id)
     )
   end
 
@@ -583,9 +588,9 @@ defmodule RetWeb.HubChannel do
     account = Guardian.Phoenix.Socket.current_resource(socket)
     hub = socket |> hub_for_socket
 
-    created_entity = socket.assigns.created_entities[network_id]
-    is_creator = created_entity != nil and created_entity.creator == socket.assigns.session_id
-    secure_template = if created_entity == nil, do: "", else: created_entity.template
+    secured_entity = socket.assigns.secured_entities[network_id]
+    is_creator = secured_entity != nil and secured_entity.creator == socket.assigns.session_id
+    secure_template = if secured_entity == nil, do: "", else: secured_entity.template
 
     cond do
       secure_template |> String.ends_with?("-avatar") ->
