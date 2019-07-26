@@ -48,6 +48,7 @@ defmodule RetWeb.HubChannel do
     |> assign(:profile, profile)
     |> assign(:context, context)
     |> assign(:block_naf, false)
+    |> assign(:blocked_session_ids, %{})
     |> assign(:secured_entities, %{})
     |> perform_join(
       hub,
@@ -170,7 +171,7 @@ defmodule RetWeb.HubChannel do
 
       socket = socket |> maybe_store_secured_entity(payload)
 
-      broadcast_from!(socket, event, payload)
+      broadcast_from!(socket, event, payload |> Map.put(:from_session_id, socket.assigns.session_id))
 
       {:noreply, socket}
     else
@@ -185,7 +186,7 @@ defmodule RetWeb.HubChannel do
       # from a malicious client.
       {:noreply, socket}
     else
-      broadcast_from!(socket, event, payload)
+      broadcast_from!(socket, event, payload |> Map.put(:from_session_id, socket.assigns.session_id))
 
       {:noreply, socket}
     end
@@ -197,7 +198,7 @@ defmodule RetWeb.HubChannel do
       if network_id |> removal_permitted?(socket) do
         socket = socket |> remove_secured_entity(payload)
 
-        broadcast_from!(socket, event, payload)
+        broadcast_from!(socket, event, payload |> Map.put(:from_session_id, socket.assigns.session_id))
 
         socket
       else
@@ -209,7 +210,7 @@ defmodule RetWeb.HubChannel do
 
   # Fallthrough for all other dataTypes
   def handle_in("naf" = event, payload, socket) do
-    broadcast_from!(socket, event, payload)
+    broadcast_from!(socket, event, payload |> Map.put(:from_session_id, socket.assigns.session_id))
     {:noreply, socket}
   end
 
@@ -439,6 +440,16 @@ defmodule RetWeb.HubChannel do
     {:reply, {:ok, %{perms_token: perms_token}}, socket}
   end
 
+  def handle_in("block", %{"session_id" => session_id}, socket) do
+    socket = socket |> assign(:blocked_session_ids, socket.assigns.blocked_session_ids |> Map.put(session_id, true))
+    {:noreply, socket}
+  end
+
+  def handle_in("unblock", %{"session_id" => session_id}, socket) do
+    socket = socket |> assign(:blocked_session_ids, socket.assigns.blocked_session_ids |> Map.delete(session_id))
+    {:noreply, socket}
+  end
+
   def handle_in("kick", %{"session_id" => session_id}, socket) do
     account = Guardian.Phoenix.Socket.current_resource(socket)
     hub = socket |> hub_for_socket
@@ -518,25 +529,45 @@ defmodule RetWeb.HubChannel do
         socket
       end
 
-    socket |> maybe_push_naf(event, payload, socket.assigns.block_naf)
+    socket |> maybe_push_naf(event, payload, socket.assigns.block_naf, socket.assigns.blocked_session_ids)
   end
 
   def handle_out("naf" = event, %{"dataType" => "r"} = payload, socket) do
-    socket |> remove_secured_entity(payload) |> maybe_push_naf(event, payload, socket.assigns.block_naf)
+    socket
+    |> remove_secured_entity(payload)
+    |> maybe_push_naf(event, payload, socket.assigns.block_naf, socket.assigns.blocked_session_ids)
   end
 
   # Fall through for other dataTypes
   def handle_out("naf" = event, payload, socket) do
-    socket |> maybe_push_naf(event, payload, socket.assigns.block_naf)
+    socket |> maybe_push_naf(event, payload, socket.assigns.block_naf, socket.assigns.blocked_session_ids)
   end
 
-  defp maybe_push_naf(socket, event, payload, false = _block_naf) do
+  defp maybe_push_naf(socket, event, payload, false = _block_naf, blocked_session_ids)
+       when blocked_session_ids == %{} do
     push(socket, event, payload)
     {:noreply, socket}
   end
 
+  defp maybe_push_naf(
+         socket,
+         event,
+         %{from_session_id: from_session_id} = payload,
+         false = _block_naf,
+         blocked_session_ids
+       ) do
+    if !Map.has_key?(blocked_session_ids, from_session_id) do
+      push(socket, event, payload)
+    else
+      IO.puts("blocked")
+      IO.inspect(payload)
+    end
+
+    {:noreply, socket}
+  end
+
   # Sockets can block NAF as an optimization, eg iframe embeds do not need NAF messages until user clicks load
-  defp maybe_push_naf(socket, _event, _payload, true = _block_naf) do
+  defp maybe_push_naf(socket, _event, _payload, true = _block_naf, _blocked_session_ids) do
     {:noreply, socket}
   end
 
