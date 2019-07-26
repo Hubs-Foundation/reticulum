@@ -558,9 +558,6 @@ defmodule RetWeb.HubChannel do
        ) do
     if !Map.has_key?(blocked_session_ids, from_session_id) do
       push(socket, event, payload)
-    else
-      IO.puts("blocked")
-      IO.inspect(payload)
     end
 
     {:noreply, socket}
