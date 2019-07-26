@@ -65,7 +65,8 @@ defmodule RetWeb.Api.V1.HubView do
               janus_room_id: Hub.janus_room_id_for_hub(hub),
               assets: [%{asset_type: asset_type, src: asset_url}]
             }
-          ]
+          ],
+          member_permissions: hub |> Hub.member_permissions_for_hub()
         }
       ]
     }
