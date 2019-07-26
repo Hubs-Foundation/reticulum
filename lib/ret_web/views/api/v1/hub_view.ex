@@ -20,7 +20,6 @@ defmodule RetWeb.Api.V1.HubView do
     hub |> render_with_scene(embeddable)
   end
 
-  # DEPRECATED
   def render("show.json", %{hub: hub}) do
     hub |> render_with_scene_asset(:gltf_bundle, hub.default_environment_gltf_bundle_url)
   end
@@ -48,7 +47,6 @@ defmodule RetWeb.Api.V1.HubView do
     }
   end
 
-  # DEPRECATED
   defp render_with_scene_asset(hub, asset_type, asset_url) do
     %{
       hubs: [
