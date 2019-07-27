@@ -447,13 +447,13 @@ defmodule RetWeb.HubChannel do
 
   def handle_in("block" = event, %{"session_id" => session_id} = payload, socket) do
     socket = socket |> assign(:blocked_session_ids, socket.assigns.blocked_session_ids |> Map.put(session_id, true))
-    broadcast_from!(socket, event, payload |> Map.put(:from_session_id, socket.assigns.session_id))
+    broadcast_from!(socket, event, payload |> payload_with_from(socket))
     {:noreply, socket}
   end
 
   def handle_in("unblock" = event, %{"session_id" => session_id} = payload, socket) do
     socket = socket |> assign(:blocked_session_ids, socket.assigns.blocked_session_ids |> Map.delete(session_id))
-    broadcast_from!(socket, event, payload |> Map.put(:from_session_id, socket.assigns.session_id))
+    broadcast_from!(socket, event, payload |> payload_with_from(socket))
     {:noreply, socket}
   end
 
