@@ -115,9 +115,12 @@ defmodule Ret.Hub do
     |> HubSlug.maybe_generate_slug()
   end
 
+  def member_permissions_from_attrs(%{} = attrs) do
+    attrs["member_permissions"] |> Map.new(fn {k, v} -> {String.to_atom(k), v} end) |> member_permissions_to_int
+  end
+
   def add_member_permissions_to_changeset(changeset, attrs) do
-    member_permissions =
-      attrs["member_permissions"] |> Map.new(fn {k, v} -> {String.to_atom(k), v} end) |> member_permissions_to_int
+    member_permissions = attrs |> member_permissions_from_attrs
 
     changeset
     |> put_change(:member_permissions, member_permissions)

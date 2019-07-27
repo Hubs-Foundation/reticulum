@@ -27,7 +27,7 @@ defmodule RetWeb.HubChannel do
   alias RetWeb.{Presence, SecuredEntity}
   alias RetWeb.Api.V1.{HubView}
 
-  intercept(["mute", "add_owner", "remove_owner", "naf"])
+  intercept(["mute", "add_owner", "remove_owner", "hub_refresh", "naf"])
 
   @hub_preloads [
     scene: [:model_owned_file, :screenshot_owned_file, :scene_owned_file],
@@ -373,11 +373,14 @@ defmodule RetWeb.HubChannel do
     hub = socket |> hub_for_socket
     account = Guardian.Phoenix.Socket.current_resource(socket)
 
-    name_changed = hub.name != payload["name"]
-
-    stale_fields = if name_changed, do: ["member_permissions", "name"], else: ["member_permissions"]
-
     if account |> can?(update_hub(hub)) do
+      name_changed = hub.name != payload["name"]
+      member_permissions_changed = hub.member_permissions != payload |> Hub.member_permissions_from_attrs()
+
+      stale_fields = []
+      stale_fields = if name_changed, do: ["name" | stale_fields], else: stale_fields
+      stale_fields = if member_permissions_changed, do: ["member_permissions" | stale_fields], else: stale_fields
+
       hub
       |> Hub.add_name_to_changeset(payload)
       |> Hub.add_member_permissions_to_changeset(payload)
@@ -484,6 +487,16 @@ defmodule RetWeb.HubChannel do
   def handle_out("mute" = event, %{"session_id" => session_id} = payload, socket) do
     if socket.assigns.session_id == session_id do
       push(socket, event, payload)
+    end
+
+    {:noreply, socket}
+  end
+
+  def handle_out("hub_refresh" = event, %{stale_fields: stale_fields} = payload, socket) do
+    push(socket, event, payload)
+
+    if stale_fields |> Enum.member?("member_permissions") do
+      broadcast_presence_update(socket)
     end
 
     {:noreply, socket}
@@ -705,7 +718,8 @@ defmodule RetWeb.HubChannel do
     socket.assigns
     |> maybe_override_display_name(account)
     |> Map.put(:roles, hub |> Hub.roles_for_account(account))
-    |> Map.take([:presence, :profile, :context, :roles, :streaming, :recording])
+    |> Map.put(:permissions, hub |> Hub.perms_for_account(account))
+    |> Map.take([:presence, :profile, :context, :roles, :permissions, :streaming, :recording])
   end
 
   # Hubs Bot can set their own display name.
