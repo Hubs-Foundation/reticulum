@@ -92,16 +92,17 @@ config :ret, Ret.DiscordClient,
   client_secret: "",
   bot_token: ""
 
+config :ret, Ret.TwitterClient,
+  consumer_key: "yuFg5hG2SSSwKjiK7HWXQ",
+  consumer_secret: "WWM3FOqdViz29ajRfjuSBqYQTQku6gVW7xIY9fug",
+  access_token: "21245713-qNN1bbRQ25HtGNWw1TCahWmC1ZMKet0aA0b25P0W7",
+  access_token_secret: "0t8GWF35LhfVucXLlzhSwry4k2my5udmqUbGvWm6JFz3B"
+
 # Allow any origin for API access in dev
 config :cors_plug, origin: ["*"]
 
 config :ret,
   upload_encryption_key: "a8dedeb57adafa7821027d546f016efef5a501bd",
-  farspark_signature_key:
-    "248cf801c4f5d6fd70c1b0dfea8dedeb57adafa7821027d546f016efef5a501bd8168c8479d33b466199d0ac68c71bb71b68c27537102a63cd70776aa83bca76",
-  farspark_signature_salt:
-    "da914bb89e332b2a815a667875584d067b698fe1f6f5c61d98384dc74d2ed85b67eea0a51325afb9d9c7d798f4bbbd630102a261e152aceb13d9469b02da6b31",
-  farspark_host: "https://farspark-dev.reticulum.io",
   bot_access_key: ""
 
 config :ret, Ret.PageOriginWarmer,

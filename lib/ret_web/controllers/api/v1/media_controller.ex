@@ -98,25 +98,6 @@ defmodule RetWeb.Api.V1.MediaController do
   end
 
   defp render_resolved_media(conn, %Ret.ResolvedMedia{uri: uri, meta: meta}, index) do
-    raw = gen_farspark_url(uri, index)
-
-    conn
-    |> render("show.json", origin: uri |> URI.to_string(), raw: raw, meta: meta)
-  end
-
-  defp gen_farspark_url(uri, index) do
-    path = "/raw/0/0/0/#{index}/#{uri |> URI.to_string() |> Base.url_encode64(padding: false)}"
-
-    host = Application.get_env(:ret, :farspark_host)
-    "#{host}/#{gen_signature(path)}#{path}"
-  end
-
-  defp gen_signature(path) do
-    key = Application.get_env(:ret, :farspark_signature_key) |> Base.decode16!(case: :lower)
-    salt = Application.get_env(:ret, :farspark_signature_salt) |> Base.decode16!(case: :lower)
-
-    :sha256
-    |> :crypto.hmac(key, salt <> path)
-    |> Base.url_encode64(padding: false)
+    conn |> render("show.json", origin: uri |> URI.to_string(), meta: meta)
   end
 end
