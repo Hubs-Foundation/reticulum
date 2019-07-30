@@ -185,7 +185,7 @@ defmodule RetWeb.HubChannel do
       # from a malicious client.
       {:noreply, socket}
     else
-      broadcast_from!(socket, event, payload)
+      broadcast_from!(socket, event, payload |> payload_with_from(socket))
 
       {:noreply, socket}
     end
@@ -207,9 +207,9 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
-  # Fallthrough for all other dataTypes
+  # Fallthrough for all other NAF dataTypes
   def handle_in("naf" = event, payload, socket) do
-    broadcast_from!(socket, event, payload)
+    broadcast_from!(socket, event, payload |> payload_with_from(socket))
     {:noreply, socket}
   end
 
@@ -1007,5 +1007,9 @@ defmodule RetWeb.HubChannel do
 
   defp hub_for_socket(socket) do
     Repo.get_by(Hub, hub_sid: socket.assigns.hub_sid) |> Repo.preload([:hub_bindings, :hub_role_memberships])
+  end
+
+  defp payload_with_from(payload, socket) do
+    payload |> Map.put(:from_session_id, socket.assigns.session_id)
   end
 end
