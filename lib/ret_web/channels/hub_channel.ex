@@ -499,15 +499,6 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
-  def handle_out("naf" = event, %{"dataType" => "u"} = payload, socket) do
-    socket |> maybe_push_naf(event, payload, socket.assigns.block_naf)
-  end
-
-  def handle_out("naf" = event, %{"dataType" => "r"} = payload, socket) do
-    socket |> maybe_push_naf(event, payload, socket.assigns.block_naf)
-  end
-
-  # Fall through for other dataTypes
   def handle_out("naf" = event, payload, socket) do
     socket |> maybe_push_naf(event, payload, socket.assigns.block_naf)
   end
