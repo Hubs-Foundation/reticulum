@@ -1,8 +1,3 @@
-defmodule RetWeb.SecuredEntity do
-  @enforce_keys [:creator, :template]
-  defstruct [:creator, :template]
-end
-
 defmodule RetWeb.HubChannel do
   @moduledoc "Ret Web Channel for Hubs"
 
@@ -24,7 +19,7 @@ defmodule RetWeb.HubChannel do
     WebPushSubscription
   }
 
-  alias RetWeb.{Presence, SecuredEntity}
+  alias RetWeb.{Presence}
   alias RetWeb.Api.V1.{HubView}
 
   intercept(["mute", "add_owner", "remove_owner", "hub_refresh", "naf"])
@@ -48,7 +43,6 @@ defmodule RetWeb.HubChannel do
     |> assign(:profile, profile)
     |> assign(:context, context)
     |> assign(:block_naf, false)
-    |> assign(:secured_entities, %{})
     |> perform_join(
       hub,
       context,
@@ -168,8 +162,6 @@ defmodule RetWeb.HubChannel do
 
       payload = payload |> Map.put("data", data)
 
-      socket = socket |> maybe_store_secured_entity(payload)
-
       broadcast_from!(socket, event, payload)
 
       {:noreply, socket}
@@ -189,22 +181,6 @@ defmodule RetWeb.HubChannel do
 
       {:noreply, socket}
     end
-  end
-
-  # Captures inbound NAF removal messages
-  def handle_in("naf" = event, %{"dataType" => "r", "data" => %{"networkId" => network_id}} = payload, socket) do
-    socket =
-      if network_id |> removal_permitted?(socket) do
-        socket = socket |> remove_secured_entity(payload)
-
-        broadcast_from!(socket, event, payload)
-
-        socket
-      else
-        socket
-      end
-
-    {:noreply, socket}
   end
 
   # Fallthrough for all other NAF dataTypes
@@ -523,19 +499,12 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
-  def handle_out("naf" = event, %{"dataType" => "u", "data" => %{"isFirstSync" => is_first_sync}} = payload, socket) do
-    socket =
-      if is_first_sync do
-        socket |> maybe_store_secured_entity(payload)
-      else
-        socket
-      end
-
+  def handle_out("naf" = event, %{"dataType" => "u"} = payload, socket) do
     socket |> maybe_push_naf(event, payload, socket.assigns.block_naf)
   end
 
   def handle_out("naf" = event, %{"dataType" => "r"} = payload, socket) do
-    socket |> remove_secured_entity(payload) |> maybe_push_naf(event, payload, socket.assigns.block_naf)
+    socket |> maybe_push_naf(event, payload, socket.assigns.block_naf)
   end
 
   # Fall through for other dataTypes
@@ -553,35 +522,6 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
-  defp maybe_store_secured_entity(socket, %{
-         "data" => %{"isFirstSync" => true, "creator" => creator, "template" => template, "networkId" => network_id}
-       }) do
-    secured_entity = socket.assigns.secured_entities[network_id]
-
-    if secured_entity == nil do
-      socket
-      |> assign(
-        :secured_entities,
-        socket.assigns.secured_entities |> Map.put(network_id, %SecuredEntity{creator: creator, template: template})
-      )
-    else
-      socket
-    end
-  end
-
-  # Let non-first-sync messages pass through
-  defp maybe_store_secured_entity(socket, _payload) do
-    socket
-  end
-
-  defp remove_secured_entity(socket, %{"data" => %{"networkId" => network_id}}) do
-    socket
-    |> assign(
-      :secured_entities,
-      socket.assigns.secured_entities |> Map.delete(network_id)
-    )
-  end
-
   defp spawn_permitted?(template, socket) do
     account = Guardian.Phoenix.Socket.current_resource(socket)
     hub = socket |> hub_for_socket
@@ -594,34 +534,6 @@ defmodule RetWeb.HubChannel do
       template |> String.ends_with?("-pen") -> account |> can?(spawn_drawing(hub))
       # We want to forbid messages if they fall through the above list of template suffixes
       true -> false
-    end
-  end
-
-  defp removal_permitted?(network_id, socket) do
-    account = Guardian.Phoenix.Socket.current_resource(socket)
-    hub = socket |> hub_for_socket
-
-    secured_entity = socket.assigns.secured_entities[network_id]
-    is_creator = secured_entity != nil and secured_entity.creator == socket.assigns.session_id
-    secure_template = if secured_entity == nil, do: "", else: secured_entity.template
-
-    cond do
-      secure_template |> String.ends_with?("-avatar") ->
-        is_creator
-
-      secure_template |> String.ends_with?("-media") ->
-        is_pinned = Repo.get_by(RoomObject, object_id: network_id) != nil
-        (!is_pinned or account |> can?(pin_objects(hub))) and (is_creator or account |> can?(spawn_and_move_media(hub)))
-
-      secure_template |> String.ends_with?("-camera") ->
-        is_creator or account |> can?(spawn_camera(hub))
-
-      secure_template |> String.ends_with?("-pen") ->
-        is_creator or account |> can?(spawn_drawing(hub))
-
-      # We want to forbid removal if it falls through the above list of template suffixes
-      true ->
-        false
     end
   end
 
