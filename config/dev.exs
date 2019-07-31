@@ -133,7 +133,7 @@ config :ret, Ret.Storage,
 asset_hosts =
   "https://localhost:4000 https://localhost:8080 " <>
     "https://#{host}:4000 https://#{host}:8080 https://#{host}:3000 https://#{host}:9090 " <>
-    "https://asset-bundles-dev.reticulum.io https://asset-bundles-prod.reticulum.io " <>
+    "https://assets-prod.reticulum.io https://asset-bundles-dev.reticulum.io https://asset-bundles-prod.reticulum.io " <>
     "https://farspark-prod.reticulum.io https://farspark-dev.reticulum.io " <> "https://hubs-proxy.com"
 
 websocket_hosts =
@@ -142,21 +142,19 @@ websocket_hosts =
     "wss://#{dev_janus_host} wss://prod-janus.reticulum.io wss://#{host}:4000 wss://#{host}:8080 https://#{host}:8080 https://hubs.local:8080 wss://hubs.local:8080"
 
 script_shas =
-  "'sha256-hsbRcgUBASABDq7qVGVTpbnWq/ns7B+ToTctZFJXYi8=' 'sha256-MIpWPgYj31kCgSUFc0UwHGQrV87W6N5ozotqfxxQG0w=' 'sha256-/S6PM16MxkmUT7zJN2lkEKFgvXR7yL4Z8PCrRrFu4Q8=' 'sha256-aF47D2e8rRobVmW15rgetYffvYocKsA9QbosafkX2/E='"
-
-worker_script_shas = "'sha256-aF47D2e8rRobVmW15rgetYffvYocKsA9QbosafkX2/E='"
+  "'sha256-hsbRcgUBASABDq7qVGVTpbnWq/ns7B+ToTctZFJXYi8=' 'sha256-MIpWPgYj31kCgSUFc0UwHGQrV87W6N5ozotqfxxQG0w=' 'sha256-/S6PM16MxkmUT7zJN2lkEKFgvXR7yL4Z8PCrRrFu4Q8='"
 
 config :ret, RetWeb.AddCSPPlug,
   content_security_policy:
-    "default-src 'none'; script-src 'self' #{script_shas} #{asset_hosts} https://cdn.rawgit.com https://aframe.io https://www.google-analytics.com 'unsafe-eval'; worker-src 'self' #{
-      worker_script_shas
-    } blob:; font-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://cdn.aframe.io #{asset_hosts}; style-src 'self' https://fonts.googleapis.com https://cdn.jsdelivr.net #{
+    "default-src 'none'; script-src 'self' #{script_shas} #{asset_hosts} https://cdn.rawgit.com https://aframe.io https://www.google-analytics.com 'unsafe-eval'; worker-src 'self' blob:; font-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://cdn.aframe.io #{
       asset_hosts
-    } 'unsafe-inline'; connect-src 'self' https://#{host}:8080 https://sentry.prod.mozaws.net https://dpdb.webvr.rocks #{
+    }; style-src 'self' https://fonts.googleapis.com https://cdn.jsdelivr.net #{asset_hosts} 'unsafe-inline'; connect-src 'self' https://#{
+      host
+    }:8080 https://sentry.prod.mozaws.net https://dpdb.webvr.rocks #{asset_hosts} #{websocket_hosts} https://cdn.aframe.io https://www.mozilla.org data: blob:; img-src 'self' #{
       asset_hosts
-    } #{websocket_hosts} https://cdn.aframe.io https://www.mozilla.org data: blob:; img-src 'self' #{asset_hosts} https://cdn.aframe.io https://cdn.jsdelivr.net data: blob:; media-src 'self' #{
+    } https://cdn.aframe.io https://cdn.jsdelivr.net data: blob:; media-src 'self' #{asset_hosts} data: blob:; frame-src 'self'; base-uri 'none'; form-action 'self'; manifest-src 'self' #{
       asset_hosts
-    } data: blob:; frame-src 'self'; base-uri 'none'; form-action 'self';"
+    };"
 
 config :ret, Ret.Mailer, adapter: Bamboo.LocalAdapter
 
