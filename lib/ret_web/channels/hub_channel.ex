@@ -490,6 +490,8 @@ defmodule RetWeb.HubChannel do
     push(socket, event, payload)
 
     if stale_fields |> Enum.member?("member_permissions") do
+      # If hub member permissions change, everyone should flush their new permissions into presence so that other
+      # clients can correctly authorized their actions.
       broadcast_presence_update(socket)
     end
 
