@@ -92,12 +92,6 @@ config :ret, Ret.DiscordClient,
   client_secret: "",
   bot_token: ""
 
-config :ret, Ret.TwitterClient,
-  consumer_key: "yuFg5hG2SSSwKjiK7HWXQ",
-  consumer_secret: "WWM3FOqdViz29ajRfjuSBqYQTQku6gVW7xIY9fug",
-  access_token: "21245713-qNN1bbRQ25HtGNWw1TCahWmC1ZMKet0aA0b25P0W7",
-  access_token_secret: "0t8GWF35LhfVucXLlzhSwry4k2my5udmqUbGvWm6JFz3B"
-
 # Allow any origin for API access in dev
 config :cors_plug, origin: ["*"]
 
