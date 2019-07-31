@@ -1,8 +1,3 @@
-defmodule RetWeb.SecuredEntity do
-  @enforce_keys [:creator, :template]
-  defstruct [:creator, :template]
-end
-
 defmodule RetWeb.HubChannel do
   @moduledoc "Ret Web Channel for Hubs"
 
@@ -24,10 +19,10 @@ defmodule RetWeb.HubChannel do
     WebPushSubscription
   }
 
-  alias RetWeb.{Presence, SecuredEntity}
+  alias RetWeb.{Presence}
   alias RetWeb.Api.V1.{HubView}
 
-  intercept(["mute", "add_owner", "remove_owner", "naf", "message", "block", "unblock"])
+  intercept(["hub_refresh", "mute", "add_owner", "remove_owner", "naf", "message", "block", "unblock"])
 
   @hub_preloads [
     scene: [:model_owned_file, :screenshot_owned_file, :scene_owned_file],
@@ -50,7 +45,6 @@ defmodule RetWeb.HubChannel do
     |> assign(:block_naf, false)
     |> assign(:blocked_session_ids, %{})
     |> assign(:blocked_by_session_ids, %{})
-    |> assign(:secured_entities, %{})
     |> perform_join(
       hub,
       context,
@@ -170,8 +164,6 @@ defmodule RetWeb.HubChannel do
 
       payload = payload |> Map.put("data", data)
 
-      socket = socket |> maybe_store_secured_entity(payload)
-
       broadcast_from!(socket, event, payload |> payload_with_from(socket))
 
       {:noreply, socket}
@@ -193,23 +185,7 @@ defmodule RetWeb.HubChannel do
     end
   end
 
-  # Captures inbound NAF removal messages
-  def handle_in("naf" = event, %{"dataType" => "r", "data" => %{"networkId" => network_id}} = payload, socket) do
-    socket =
-      if network_id |> removal_permitted?(socket) do
-        socket = socket |> remove_secured_entity(payload)
-
-        broadcast_from!(socket, event, payload |> payload_with_from(socket))
-
-        socket
-      else
-        socket
-      end
-
-    {:noreply, socket}
-  end
-
-  # Fallthrough for all other dataTypes
+  # Fallthrough for all other NAF dataTypes
   def handle_in("naf" = event, payload, socket) do
     broadcast_from!(socket, event, payload |> payload_with_from(socket))
     {:noreply, socket}
@@ -379,11 +355,14 @@ defmodule RetWeb.HubChannel do
     hub = socket |> hub_for_socket
     account = Guardian.Phoenix.Socket.current_resource(socket)
 
-    name_changed = hub.name != payload["name"]
-
-    stale_fields = if name_changed, do: ["member_permissions", "name"], else: ["member_permissions"]
-
     if account |> can?(update_hub(hub)) do
+      name_changed = hub.name != payload["name"]
+      member_permissions_changed = hub.member_permissions != payload |> Hub.member_permissions_from_attrs()
+
+      stale_fields = []
+      stale_fields = if name_changed, do: ["name" | stale_fields], else: stale_fields
+      stale_fields = if member_permissions_changed, do: ["member_permissions" | stale_fields], else: stale_fields
+
       hub
       |> Hub.add_name_to_changeset(payload)
       |> Hub.add_member_permissions_to_changeset(payload)
@@ -507,6 +486,18 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
+  def handle_out("hub_refresh" = event, %{stale_fields: stale_fields} = payload, socket) do
+    push(socket, event, payload)
+
+    if stale_fields |> Enum.member?("member_permissions") do
+      # If hub member permissions change, everyone should flush their new permissions into presence so that other
+      # clients can correctly authorized their actions.
+      broadcast_presence_update(socket)
+    end
+
+    {:noreply, socket}
+  end
+
   def handle_out("block", %{"session_id" => session_id, :from_session_id => from_session_id}, socket) do
     socket =
       if socket.assigns.session_id === session_id do
@@ -551,48 +542,6 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
-  def handle_out(
-        "naf" = event,
-        %{
-          "dataType" => "u",
-          "data" => %{"isFirstSync" => is_first_sync}
-        } = payload,
-        socket
-      ) do
-    socket =
-      if is_first_sync do
-        socket |> maybe_store_secured_entity(payload)
-      else
-        socket
-      end
-
-    socket
-    |> maybe_push_naf(
-      event,
-      payload,
-      socket.assigns.block_naf,
-      socket.assigns.blocked_session_ids,
-      socket.assigns.blocked_by_session_ids
-    )
-  end
-
-  def handle_out(
-        "naf" = event,
-        %{"dataType" => "r"} = payload,
-        socket
-      ) do
-    socket
-    |> remove_secured_entity(payload)
-    |> maybe_push_naf(
-      event,
-      payload,
-      socket.assigns.block_naf,
-      socket.assigns.blocked_session_ids,
-      socket.assigns.blocked_by_session_ids
-    )
-  end
-
-  # Fall through for other dataTypes
   def handle_out("naf" = event, payload, socket) do
     socket
     |> maybe_push_naf(
@@ -617,7 +566,7 @@ defmodule RetWeb.HubChannel do
 
   defp maybe_push_naf(socket, event, payload, false = _block_naf, blocked_session_ids, blocked_by_session_ids)
        when blocked_session_ids === %{} and blocked_by_session_ids === %{} do
-    push(socket, event, payload |> payload_without_from)
+    push(socket, event, payload)
     {:noreply, socket}
   end
 
@@ -630,7 +579,7 @@ defmodule RetWeb.HubChannel do
          blocked_by_session_ids
        ) do
     if !Map.has_key?(blocked_session_ids, from_session_id) and !Map.has_key?(blocked_by_session_ids, from_session_id) do
-      push(socket, event, payload |> payload_without_from)
+      push(socket, event, payload)
     end
 
     {:noreply, socket}
@@ -639,35 +588,6 @@ defmodule RetWeb.HubChannel do
   # Sockets can block NAF as an optimization, eg iframe embeds do not need NAF messages until user clicks load
   defp maybe_push_naf(socket, _event, _payload, true = _block_naf, _blocked_session_ids, _blocked_by_session_ids) do
     {:noreply, socket}
-  end
-
-  defp maybe_store_secured_entity(socket, %{
-         "data" => %{"isFirstSync" => true, "creator" => creator, "template" => template, "networkId" => network_id}
-       }) do
-    secured_entity = socket.assigns.secured_entities[network_id]
-
-    if secured_entity == nil do
-      socket
-      |> assign(
-        :secured_entities,
-        socket.assigns.secured_entities |> Map.put(network_id, %SecuredEntity{creator: creator, template: template})
-      )
-    else
-      socket
-    end
-  end
-
-  # Let non-first-sync messages pass through
-  defp maybe_store_secured_entity(socket, _payload) do
-    socket
-  end
-
-  defp remove_secured_entity(socket, %{"data" => %{"networkId" => network_id}}) do
-    socket
-    |> assign(
-      :secured_entities,
-      socket.assigns.secured_entities |> Map.delete(network_id)
-    )
   end
 
   defp spawn_permitted?(template, socket) do
@@ -682,34 +602,6 @@ defmodule RetWeb.HubChannel do
       template |> String.ends_with?("-pen") -> account |> can?(spawn_drawing(hub))
       # We want to forbid messages if they fall through the above list of template suffixes
       true -> false
-    end
-  end
-
-  defp removal_permitted?(network_id, socket) do
-    account = Guardian.Phoenix.Socket.current_resource(socket)
-    hub = socket |> hub_for_socket
-
-    secured_entity = socket.assigns.secured_entities[network_id]
-    is_creator = secured_entity != nil and secured_entity.creator == socket.assigns.session_id
-    secure_template = if secured_entity == nil, do: "", else: secured_entity.template
-
-    cond do
-      secure_template |> String.ends_with?("-avatar") ->
-        is_creator
-
-      secure_template |> String.ends_with?("-media") ->
-        is_pinned = Repo.get_by(RoomObject, object_id: network_id) != nil
-        (!is_pinned or account |> can?(pin_objects(hub))) and (is_creator or account |> can?(spawn_and_move_media(hub)))
-
-      secure_template |> String.ends_with?("-camera") ->
-        is_creator or account |> can?(spawn_camera(hub))
-
-      secure_template |> String.ends_with?("-pen") ->
-        is_creator or account |> can?(spawn_drawing(hub))
-
-      # We want to forbid removal if it falls through the above list of template suffixes
-      true ->
-        false
     end
   end
 
@@ -806,7 +698,8 @@ defmodule RetWeb.HubChannel do
     socket.assigns
     |> maybe_override_display_name(account)
     |> Map.put(:roles, hub |> Hub.roles_for_account(account))
-    |> Map.take([:presence, :profile, :context, :roles, :streaming, :recording])
+    |> Map.put(:permissions, hub |> Hub.perms_for_account(account))
+    |> Map.take([:presence, :profile, :context, :roles, :permissions, :streaming, :recording])
   end
 
   # Hubs Bot can set their own display name.
