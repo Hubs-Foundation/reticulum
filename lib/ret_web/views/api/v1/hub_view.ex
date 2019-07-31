@@ -20,7 +20,6 @@ defmodule RetWeb.Api.V1.HubView do
     hub |> render_with_scene(embeddable)
   end
 
-  # DEPRECATED
   def render("show.json", %{hub: hub}) do
     hub |> render_with_scene_asset(:gltf_bundle, hub.default_environment_gltf_bundle_url)
   end
@@ -48,7 +47,6 @@ defmodule RetWeb.Api.V1.HubView do
     }
   end
 
-  # DEPRECATED
   defp render_with_scene_asset(hub, asset_type, asset_url) do
     %{
       hubs: [
@@ -65,7 +63,8 @@ defmodule RetWeb.Api.V1.HubView do
               janus_room_id: Hub.janus_room_id_for_hub(hub),
               assets: [%{asset_type: asset_type, src: asset_url}]
             }
-          ]
+          ],
+          member_permissions: hub |> Hub.member_permissions_for_hub()
         }
       ]
     }

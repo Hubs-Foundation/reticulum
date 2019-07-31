@@ -2,12 +2,8 @@ defmodule RetWeb.Api.V1.MediaController do
   use RetWeb, :controller
   use Retry
 
-  def create(conn, %{"media" => %{"url" => url, "index" => index}}) do
-    resolve_and_render(conn, url, index)
-  end
-
   def create(conn, %{"media" => %{"url" => url}}) do
-    resolve_and_render(conn, url, 0)
+    resolve_and_render(conn, url)
   end
 
   def create(
@@ -71,7 +67,7 @@ defmodule RetWeb.Api.V1.MediaController do
     end
   end
 
-  defp resolve_and_render(conn, url, index) do
+  defp resolve_and_render(conn, url) do
     ua =
       conn
       |> Plug.Conn.get_req_header("user-agent")
@@ -90,33 +86,14 @@ defmodule RetWeb.Api.V1.MediaController do
         conn |> send_resp(404, "")
 
       {_status, %Ret.ResolvedMedia{} = resolved_media} ->
-        render_resolved_media(conn, resolved_media, index)
+        render_resolved_media(conn, resolved_media)
 
       _ ->
         conn |> send_resp(404, "")
     end
   end
 
-  defp render_resolved_media(conn, %Ret.ResolvedMedia{uri: uri, meta: meta}, index) do
-    raw = gen_farspark_url(uri, index)
-
-    conn
-    |> render("show.json", origin: uri |> URI.to_string(), raw: raw, meta: meta)
-  end
-
-  defp gen_farspark_url(uri, index) do
-    path = "/raw/0/0/0/#{index}/#{uri |> URI.to_string() |> Base.url_encode64(padding: false)}"
-
-    host = Application.get_env(:ret, :farspark_host)
-    "#{host}/#{gen_signature(path)}#{path}"
-  end
-
-  defp gen_signature(path) do
-    key = Application.get_env(:ret, :farspark_signature_key) |> Base.decode16!(case: :lower)
-    salt = Application.get_env(:ret, :farspark_signature_salt) |> Base.decode16!(case: :lower)
-
-    :sha256
-    |> :crypto.hmac(key, salt <> path)
-    |> Base.url_encode64(padding: false)
+  defp render_resolved_media(conn, %Ret.ResolvedMedia{uri: uri, meta: meta}) do
+    conn |> render("show.json", origin: uri |> URI.to_string(), meta: meta)
   end
 end

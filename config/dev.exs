@@ -97,11 +97,6 @@ config :cors_plug, origin: ["*"]
 
 config :ret,
   upload_encryption_key: "a8dedeb57adafa7821027d546f016efef5a501bd",
-  farspark_signature_key:
-    "248cf801c4f5d6fd70c1b0dfea8dedeb57adafa7821027d546f016efef5a501bd8168c8479d33b466199d0ac68c71bb71b68c27537102a63cd70776aa83bca76",
-  farspark_signature_salt:
-    "da914bb89e332b2a815a667875584d067b698fe1f6f5c61d98384dc74d2ed85b67eea0a51325afb9d9c7d798f4bbbd630102a261e152aceb13d9469b02da6b31",
-  farspark_host: "https://farspark-dev.reticulum.io",
   bot_access_key: ""
 
 config :ret, Ret.PageOriginWarmer,
@@ -132,7 +127,7 @@ config :ret, Ret.Storage,
 asset_hosts =
   "https://localhost:4000 https://localhost:8080 " <>
     "https://#{host}:4000 https://#{host}:8080 https://#{host}:3000 https://#{host}:9090 " <>
-    "https://asset-bundles-dev.reticulum.io https://asset-bundles-prod.reticulum.io " <>
+    "https://assets-prod.reticulum.io https://asset-bundles-dev.reticulum.io https://asset-bundles-prod.reticulum.io " <>
     "https://farspark-prod.reticulum.io https://farspark-dev.reticulum.io " <> "https://hubs-proxy.com"
 
 websocket_hosts =
@@ -151,7 +146,9 @@ config :ret, RetWeb.AddCSPPlug,
       host
     }:8080 https://sentry.prod.mozaws.net https://dpdb.webvr.rocks #{asset_hosts} #{websocket_hosts} https://cdn.aframe.io https://www.mozilla.org data: blob:; img-src 'self' #{
       asset_hosts
-    } https://cdn.aframe.io https://cdn.jsdelivr.net data: blob:; media-src 'self' #{asset_hosts} data: blob:; frame-src 'self'; base-uri 'none'; form-action 'self';"
+    } https://cdn.aframe.io https://cdn.jsdelivr.net data: blob:; media-src 'self' #{asset_hosts} data: blob:; frame-src 'self'; base-uri 'none'; form-action 'self'; manifest-src 'self' #{
+      asset_hosts
+    };"
 
 config :ret, Ret.Mailer, adapter: Bamboo.LocalAdapter
 
