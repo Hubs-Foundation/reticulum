@@ -224,13 +224,13 @@ defmodule Ret.MediaResolver do
   defp screenshot_commit_for_uri(uri, content_type) do
     photomnemonic_endpoint = module_config(:photomnemonic_endpoint)
 
-    query = URI.encode_query(url: uri |> URI.to_string())
+    encoded_url = uri |> URI.to_string() |> :base64.encode()
 
     cached_file_result =
-      CachedFile.fetch("screenshot-#{query}", fn path ->
+      CachedFile.fetch("screenshot-#{encoded_url}", fn path ->
         Statix.increment("ret.media_resolver.screenshot.requests")
 
-        url = "#{photomnemonic_endpoint}/screenshot?#{query}"
+        url = "#{photomnemonic_endpoint}/screenshot/#{encoded_url}"
 
         case Download.from(url, path: path) do
           {:ok, _path} -> {:ok, %{content_type: "image/png"}}

@@ -121,7 +121,7 @@ config :ret, Ret.MediaResolver,
   youtube_api_key: nil,
   sketchfab_api_key: nil,
   ytdl_host: nil,
-  photomnemonic_endpoint: "https://pyrkq22jjj.execute-api.us-west-1.amazonaws.com/public"
+  photomnemonic_endpoint: "https://uvnsm9nzhe.execute-api.us-west-1.amazonaws.com/public"
 
 config :ret, Ret.Speelycaptor, speelycaptor_endpoint: "https://1dhaogh2hd.execute-api.us-west-1.amazonaws.com/public"
 
