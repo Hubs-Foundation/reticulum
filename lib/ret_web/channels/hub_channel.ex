@@ -27,7 +27,7 @@ defmodule RetWeb.HubChannel do
   alias RetWeb.{Presence, SecuredEntity}
   alias RetWeb.Api.V1.{HubView}
 
-  intercept(["mute", "add_owner", "remove_owner", "naf"])
+  intercept(["mute", "add_owner", "remove_owner", "naf", "message", "block", "unblock"])
 
   @hub_preloads [
     scene: [:model_owned_file, :screenshot_owned_file, :scene_owned_file],
@@ -48,6 +48,8 @@ defmodule RetWeb.HubChannel do
     |> assign(:profile, profile)
     |> assign(:context, context)
     |> assign(:block_naf, false)
+    |> assign(:blocked_session_ids, %{})
+    |> assign(:blocked_by_session_ids, %{})
     |> assign(:secured_entities, %{})
     |> perform_join(
       hub,
@@ -170,7 +172,7 @@ defmodule RetWeb.HubChannel do
 
       socket = socket |> maybe_store_secured_entity(payload)
 
-      broadcast_from!(socket, event, payload)
+      broadcast_from!(socket, event, payload |> payload_with_from(socket))
 
       {:noreply, socket}
     else
@@ -185,7 +187,7 @@ defmodule RetWeb.HubChannel do
       # from a malicious client.
       {:noreply, socket}
     else
-      broadcast_from!(socket, event, payload)
+      broadcast_from!(socket, event, payload |> payload_with_from(socket))
 
       {:noreply, socket}
     end
@@ -197,7 +199,7 @@ defmodule RetWeb.HubChannel do
       if network_id |> removal_permitted?(socket) do
         socket = socket |> remove_secured_entity(payload)
 
-        broadcast_from!(socket, event, payload)
+        broadcast_from!(socket, event, payload |> payload_with_from(socket))
 
         socket
       else
@@ -209,7 +211,7 @@ defmodule RetWeb.HubChannel do
 
   # Fallthrough for all other dataTypes
   def handle_in("naf" = event, payload, socket) do
-    broadcast_from!(socket, event, payload)
+    broadcast_from!(socket, event, payload |> payload_with_from(socket))
     {:noreply, socket}
   end
 
@@ -218,7 +220,11 @@ defmodule RetWeb.HubChannel do
     hub = socket |> hub_for_socket
 
     if (type != "photo" and type != "video") or account |> can?(spawn_camera(hub)) do
-      broadcast!(socket, event, payload |> Map.put(:session_id, socket.assigns.session_id))
+      broadcast!(
+        socket,
+        event,
+        payload |> Map.put(:session_id, socket.assigns.session_id) |> payload_with_from(socket)
+      )
     end
 
     {:noreply, socket}
@@ -439,6 +445,18 @@ defmodule RetWeb.HubChannel do
     {:reply, {:ok, %{perms_token: perms_token}}, socket}
   end
 
+  def handle_in("block" = event, %{"session_id" => session_id} = payload, socket) do
+    socket = socket |> assign(:blocked_session_ids, socket.assigns.blocked_session_ids |> Map.put(session_id, true))
+    broadcast_from!(socket, event, payload |> payload_with_from(socket))
+    {:noreply, socket}
+  end
+
+  def handle_in("unblock" = event, %{"session_id" => session_id} = payload, socket) do
+    socket = socket |> assign(:blocked_session_ids, socket.assigns.blocked_session_ids |> Map.delete(session_id))
+    broadcast_from!(socket, event, payload |> payload_with_from(socket))
+    {:noreply, socket}
+  end
+
   def handle_in("kick", %{"session_id" => session_id}, socket) do
     account = Guardian.Phoenix.Socket.current_resource(socket)
     hub = socket |> hub_for_socket
@@ -489,6 +507,29 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
+  def handle_out("block", %{"session_id" => session_id, :from_session_id => from_session_id}, socket) do
+    socket =
+      if socket.assigns.session_id === session_id do
+        socket
+        |> assign(:blocked_by_session_ids, socket.assigns.blocked_by_session_ids |> Map.put(from_session_id, true))
+      else
+        socket
+      end
+
+    {:noreply, socket}
+  end
+
+  def handle_out("unblock", %{"session_id" => session_id, :from_session_id => from_session_id}, socket) do
+    socket =
+      if socket.assigns.session_id === session_id do
+        socket |> assign(:blocked_by_session_ids, socket.assigns.blocked_by_session_ids |> Map.delete(from_session_id))
+      else
+        socket
+      end
+
+    {:noreply, socket}
+  end
+
   def handle_out(event, %{"session_id" => session_id}, socket) when event in ["add_owner", "remove_owner"] do
     account = Guardian.Phoenix.Socket.current_resource(socket)
 
@@ -510,7 +551,14 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
-  def handle_out("naf" = event, %{"dataType" => "u", "data" => %{"isFirstSync" => is_first_sync}} = payload, socket) do
+  def handle_out(
+        "naf" = event,
+        %{
+          "dataType" => "u",
+          "data" => %{"isFirstSync" => is_first_sync}
+        } = payload,
+        socket
+      ) do
     socket =
       if is_first_sync do
         socket |> maybe_store_secured_entity(payload)
@@ -518,25 +566,78 @@ defmodule RetWeb.HubChannel do
         socket
       end
 
-    socket |> maybe_push_naf(event, payload, socket.assigns.block_naf)
+    socket
+    |> maybe_push_naf(
+      event,
+      payload,
+      socket.assigns.block_naf,
+      socket.assigns.blocked_session_ids,
+      socket.assigns.blocked_by_session_ids
+    )
   end
 
-  def handle_out("naf" = event, %{"dataType" => "r"} = payload, socket) do
-    socket |> remove_secured_entity(payload) |> maybe_push_naf(event, payload, socket.assigns.block_naf)
+  def handle_out(
+        "naf" = event,
+        %{"dataType" => "r"} = payload,
+        socket
+      ) do
+    socket
+    |> remove_secured_entity(payload)
+    |> maybe_push_naf(
+      event,
+      payload,
+      socket.assigns.block_naf,
+      socket.assigns.blocked_session_ids,
+      socket.assigns.blocked_by_session_ids
+    )
   end
 
   # Fall through for other dataTypes
   def handle_out("naf" = event, payload, socket) do
-    socket |> maybe_push_naf(event, payload, socket.assigns.block_naf)
+    socket
+    |> maybe_push_naf(
+      event,
+      payload,
+      socket.assigns.block_naf,
+      socket.assigns.blocked_session_ids,
+      socket.assigns.blocked_by_session_ids
+    )
   end
 
-  defp maybe_push_naf(socket, event, payload, false = _block_naf) do
-    push(socket, event, payload)
+  def handle_out("message" = event, %{from_session_id: from_session_id} = payload, socket) do
+    blocked_session_ids = socket.assigns.blocked_session_ids
+    blocked_by_session_ids = socket.assigns.blocked_by_session_ids
+
+    if !Map.has_key?(blocked_session_ids, from_session_id) and !Map.has_key?(blocked_by_session_ids, from_session_id) do
+      push(socket, event, payload |> payload_without_from)
+    end
+
+    {:noreply, socket}
+  end
+
+  defp maybe_push_naf(socket, event, payload, false = _block_naf, blocked_session_ids, blocked_by_session_ids)
+       when blocked_session_ids === %{} and blocked_by_session_ids === %{} do
+    push(socket, event, payload |> payload_without_from)
+    {:noreply, socket}
+  end
+
+  defp maybe_push_naf(
+         socket,
+         event,
+         %{from_session_id: from_session_id} = payload,
+         false = _block_naf,
+         blocked_session_ids,
+         blocked_by_session_ids
+       ) do
+    if !Map.has_key?(blocked_session_ids, from_session_id) and !Map.has_key?(blocked_by_session_ids, from_session_id) do
+      push(socket, event, payload |> payload_without_from)
+    end
+
     {:noreply, socket}
   end
 
   # Sockets can block NAF as an optimization, eg iframe embeds do not need NAF messages until user clicks load
-  defp maybe_push_naf(socket, _event, _payload, true = _block_naf) do
+  defp maybe_push_naf(socket, _event, _payload, true = _block_naf, _blocked_session_ids, _blocked_by_session_ids) do
     {:noreply, socket}
   end
 
@@ -993,5 +1094,13 @@ defmodule RetWeb.HubChannel do
 
   defp hub_for_socket(socket) do
     Repo.get_by(Hub, hub_sid: socket.assigns.hub_sid) |> Repo.preload([:hub_bindings, :hub_role_memberships])
+  end
+
+  defp payload_with_from(payload, socket) do
+    payload |> Map.put(:from_session_id, socket.assigns.session_id)
+  end
+
+  defp payload_without_from(payload) do
+    payload |> Map.delete(:from_session_id)
   end
 end
