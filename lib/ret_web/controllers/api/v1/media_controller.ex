@@ -2,12 +2,8 @@ defmodule RetWeb.Api.V1.MediaController do
   use RetWeb, :controller
   use Retry
 
-  def create(conn, %{"media" => %{"url" => url, "index" => index}}) do
-    resolve_and_render(conn, url, index)
-  end
-
   def create(conn, %{"media" => %{"url" => url}}) do
-    resolve_and_render(conn, url, 0)
+    resolve_and_render(conn, url)
   end
 
   def create(
@@ -71,7 +67,7 @@ defmodule RetWeb.Api.V1.MediaController do
     end
   end
 
-  defp resolve_and_render(conn, url, index) do
+  defp resolve_and_render(conn, url) do
     ua =
       conn
       |> Plug.Conn.get_req_header("user-agent")
@@ -90,14 +86,14 @@ defmodule RetWeb.Api.V1.MediaController do
         conn |> send_resp(404, "")
 
       {_status, %Ret.ResolvedMedia{} = resolved_media} ->
-        render_resolved_media(conn, resolved_media, index)
+        render_resolved_media(conn, resolved_media)
 
       _ ->
         conn |> send_resp(404, "")
     end
   end
 
-  defp render_resolved_media(conn, %Ret.ResolvedMedia{uri: uri, meta: meta}, index) do
+  defp render_resolved_media(conn, %Ret.ResolvedMedia{uri: uri, meta: meta}) do
     conn |> render("show.json", origin: uri |> URI.to_string(), meta: meta)
   end
 end
