@@ -65,9 +65,6 @@ perms_key = "{{ cfg.guardian.perms_key }}"
 oauth_token_key = "{{ cfg.guardian.oauth_token_key }}"
 
 [ret]
-farspark_signature_key = "{{ cfg.farspark.signature_key }}"
-farspark_signature_salt = "{{ cfg.farspark.signature_salt }}"
-farspark_host = "{{ cfg.farspark.host }}"
 bot_access_key = "{{ cfg.ret.bot_access_key }}"
 
 [ret."Elixir.Ret.MediaResolver"]
