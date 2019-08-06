@@ -5,7 +5,6 @@ defmodule RetWeb.Api.V1.AvatarController do
 
   plug(RetWeb.Plugs.RateLimit when action in [:create, :update])
 
-  @primary_material_name "Bot_PBS"
 
   defp get_avatar(avatar_sid) do
     avatar_sid
@@ -151,11 +150,8 @@ defmodule RetWeb.Api.V1.AvatarController do
           stream
           |> Enum.join("")
           |> Poison.decode!()
-          |> GLTFUtils.with_material(
-            @primary_material_name,
-            (apply_overrides && avatar_files |> Map.take(Avatar.image_columns())) || []
-          )
-          |> GLTFUtils.with_buffer(avatar_files.bin_owned_file)
+          |> GLTFUtils.with_default_material_override((apply_overrides && avatar_files |> Map.take(Avatar.image_columns())) || [])
+          |> GLTFUtils.with_buffer_override(avatar_files.bin_owned_file)
 
         conn
         # |> put_resp_content_type("model/gltf", nil)
