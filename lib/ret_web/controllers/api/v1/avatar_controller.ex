@@ -21,6 +21,17 @@ defmodule RetWeb.Api.V1.AvatarController do
     a |> Repo.preload([Avatar.file_columns() ++ [:avatar, :parent_avatar_listing, :account]])
   end
 
+  # TODO this should clone the thumbnail owned file
+  def create(conn, %{"avatar" => %{"parent_avatar_listing_id" => parent_avatar_listing_id} = params})
+      when not is_nil(parent_avatar_listing_id) and parent_avatar_listing_id != "" do
+    account = conn |> Guardian.Plug.current_resource()
+    parent_avatar_listing = Repo.get_by(AvatarListing, avatar_listing_sid: parent_avatar_listing_id)
+
+    create_or_update(conn, params, %Avatar{
+      thumbnail_owned_file_id: parent_avatar_listing.thumbnail_owned_file_id
+    })
+  end
+
   def create(conn, %{"avatar" => params}) do
     create_or_update(conn, params, %Avatar{})
   end
