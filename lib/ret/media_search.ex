@@ -187,7 +187,7 @@ defmodule Ret.MediaSearch do
         URI.encode_query(
           q: q,
           contentfilter: :low,
-          media_filter: :minimal,
+          media_filter: :basic,
           limit: @page_size,
           pos: cursor,
           key: api_key
@@ -675,9 +675,10 @@ defmodule Ret.MediaSearch do
       url: media_entry["mp4"]["url"],
       images: %{
         preview: %{
-          url: media_entry["tinygif"]["url"],
-          width: media_entry["tinygif"]["dims"] |> Enum.at(0),
-          height: media_entry["tinygif"]["dims"] |> Enum.at(1)
+          url: media_entry["tinymp4"]["url"],
+          width: media_entry["tinymp4"]["dims"] |> Enum.at(0),
+          height: media_entry["tinymp4"]["dims"] |> Enum.at(1),
+          type: "mp4"
         }
       }
     }
