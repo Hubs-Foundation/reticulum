@@ -38,12 +38,8 @@ defmodule Ret.MediaSearch do
     scene_search(cursor, query, filter, account_id)
   end
 
-  def search(%Ret.MediaSearchQuery{source: "avatar_listings", cursor: cursor, filter: "featured", q: query}) do
-    avatar_listing_search(cursor, query, "featured", asc: :order)
-  end
-
   def search(%Ret.MediaSearchQuery{source: "avatar_listings", cursor: cursor, filter: filter, q: query}) do
-    avatar_listing_search(cursor, query, filter)
+    avatar_listing_search(cursor, query, filter, asc: :order)
   end
 
   def search(%Ret.MediaSearchQuery{source: "avatars", cursor: cursor, filter: filter, user: account_id, q: query}) do

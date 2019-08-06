@@ -29,9 +29,9 @@ defmodule RetWeb.Api.V1.MediaSearchController do
     conn |> render("index.json", results: results)
   end
 
-  def index(conn, %{"source" => "avatar_listings", "filter" => "featured"} = params) do
+  def index(conn, %{"source" => "avatar_listings", "filter" => filter} = params) do
     {:commit, results} =
-      %Ret.MediaSearchQuery{source: "avatar_listings", cursor: params["cursor"] || "1", filter: "featured"}
+      %Ret.MediaSearchQuery{source: "avatar_listings", cursor: params["cursor"] || "1", filter: filter}
       |> Ret.MediaSearch.search()
 
     conn |> render("index.json", results: results)
