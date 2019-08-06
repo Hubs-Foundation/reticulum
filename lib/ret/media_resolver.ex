@@ -51,10 +51,15 @@ defmodule Ret.MediaResolver do
 
   def resolve_with_ytdl(%URI{} = uri, root_host, ytdl_format) do
     with ytdl_host when is_binary(ytdl_host) <- module_config(:ytdl_host) do
-      encoded_url = uri |> URI.to_string() |> URI.encode()
+
+      query = URI.encode_query(%{
+        format: ytdl_format,
+        url: URI.to_string(uri),
+        playlist_items: 1
+      })
 
       ytdl_resp =
-        "#{ytdl_host}/api/play?format=#{URI.encode(ytdl_format)}&url=#{encoded_url}&playlist_items=1"
+        "#{ytdl_host}/api/play?#{query}"
         |> retry_get_until_valid_ytdl_response
 
       case ytdl_resp do
