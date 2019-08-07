@@ -19,25 +19,24 @@ defmodule RetWeb.Api.V1.AvatarController do
     a |> Repo.preload([Avatar.file_columns() ++ [:avatar, :parent_avatar_listing, :account]])
   end
 
-  # TODO this should clone the thumbnail owned file
-  def create(conn, %{"avatar" => %{"parent_avatar_listing_id" => parent_avatar_listing_id} = params})
-      when not is_nil(parent_avatar_listing_id) and parent_avatar_listing_id != "" do
-    account = conn |> Guardian.Plug.current_resource()
-
-    parent_avatar_listing =
-      AvatarListing
-      |> Repo.get_by(avatar_listing_sid: parent_avatar_listing_id)
-      |> Repo.preload([:thumbnail_owned_file])
-
-    {:ok, new_thumbnail} = Storage.duplicate(parent_avatar_listing.thumbnail_owned_file, account)
-
-    create_or_update(conn, params, %Avatar{
-      thumbnail_owned_file_id: new_thumbnail.owned_file_id
-    })
-  end
-
   def create(conn, %{"avatar" => params}) do
-    create_or_update(conn, params, %Avatar{})
+    avatar =
+      with %{"parent_avatar_listing_id" => sid} when not is_nil(sid) and sid != "" <- params,
+           parent_listing <-
+             AvatarListing
+             |> Repo.get_by(avatar_listing_sid: sid)
+             |> Repo.preload([:thumbnail_owned_file]),
+           thumbnail when not is_nil(thumbnail) <- parent_listing.thumbnail_owned_file,
+           account <- conn |> Guardian.Plug.current_resource(),
+           {:ok, new_thumbnail} <- Storage.duplicate(thumbnail, account) do
+        %Avatar{
+          thumbnail_owned_file_id: new_thumbnail.owned_file_id
+        }
+      else
+        _ -> %Avatar{}
+      end
+
+    create_or_update(conn, params, avatar)
   end
 
   def update(conn, %{"id" => avatar_sid, "avatar" => params}) do
