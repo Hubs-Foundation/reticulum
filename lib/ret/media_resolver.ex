@@ -460,10 +460,10 @@ defmodule Ret.MediaResolver do
     ext = query |> ytdl_ext
 
     [
-      "best#{ext}[protocol*=http][height<=?#{resolution}]",
-      "best#{ext}[protocol*=m3u8][height<=?#{resolution}]",
-      "best#{ext}[protocol*=http]",
-      "best#{ext}[protocol*=m3u8]"
+      "best#{ext}[protocol*=http][height<=?#{resolution}][format_id!=0]",
+      "best#{ext}[protocol*=m3u8][height<=?#{resolution}][format_id!=0]",
+      "best#{ext}[protocol*=http][format_id!=0]",
+      "best#{ext}[protocol*=m3u8][format_id!=0]"
     ]
     |> Enum.join("/")
   end
