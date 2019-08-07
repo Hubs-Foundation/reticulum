@@ -4,6 +4,8 @@ defmodule Ret.Storage do
   @expiring_file_path "expiring"
   @owned_file_path "owned"
 
+  @chunk_size 1024 * 1024
+
   alias Ret.{OwnedFile, Repo, Account}
 
   def store(path, content_type, key, promotion_token \\ nil)
@@ -17,28 +19,36 @@ defmodule Ret.Storage do
   # Given a path to a file, a content-type, and an optional encryption key, returns an id
   # that can be used to fetch a stream to the uploaded file after this call.
   def store(path, content_type, key, promotion_token) do
+    case File.stat(path) do
+      {:ok, %{size: source_size}} ->
+        source_stream = path |> File.stream!([], @chunk_size)
+        store_stream(source_stream, source_size, content_type, key, promotion_token, @expiring_file_path)
+
+      {:error, _reason} = err ->
+        err
+    end
+  end
+
+  # Given a stream, a content-type, an optional encryption key, and a storage subpath, returns an id
+  # that can be used to fetch a stream to the uploaded file after this call.
+  def store_stream(source_stream, source_size, content_type, key, promotion_token, subpath) do
     with storage_path when is_binary(storage_path) <- module_config(:storage_path) do
-      {:ok, %{size: content_length}} = File.stat(path)
       uuid = Ecto.UUID.generate()
+      [file_directory, meta_file_path, blob_file_path] = paths_for_uuid(uuid, subpath)
 
-      [file_path, meta_file_path, blob_file_path] = paths_for_uuid(uuid, @expiring_file_path)
-      File.mkdir_p!(file_path)
+      File.mkdir_p!(file_directory)
+      source_stream |> write_stream_to_file(source_size, blob_file_path, key)
 
-      case write_blob_file(path, blob_file_path, key) do
-        :ok ->
-          meta = %{
-            content_type: content_type,
-            content_length: content_length,
-            promotion_token: promotion_token
-          }
+      meta_file_path
+      |> File.write!(
+        Poison.encode!(%{
+          content_type: content_type,
+          content_length: source_size,
+          promotion_token: promotion_token
+        })
+      )
 
-          meta_file_path |> File.write!(Poison.encode!(meta))
-
-          {:ok, uuid}
-
-        {:error, _reason} = err ->
-          err
-      end
+      {:ok, uuid}
     else
       _ -> {:error, :not_allowed}
     end
@@ -229,8 +239,8 @@ defmodule Ret.Storage do
     Ret.Crypto.stream_decrypt_file(source_path, key |> Ret.Crypto.hash())
   end
 
-  defp write_blob_file(source_path, destination_path, key) do
-    Ret.Crypto.encrypt_file(source_path, destination_path, key |> Ret.Crypto.hash())
+  defp write_stream_to_file(source_stream, source_size, destination_path, key) do
+    Ret.Crypto.encrypt_stream_to_file(source_stream, source_size, destination_path, key |> Ret.Crypto.hash())
   end
 
   defp module_config(key) do
@@ -244,5 +254,31 @@ defmodule Ret.Storage do
     meta_file_path = "#{path}/#{uuid}.meta.json"
 
     [path, meta_file_path, blob_file_path]
+  end
+
+  def duplicate(%OwnedFile{owned_file_uuid: id, key: key}, %Account{} = account) do
+    {:ok, meta, source_stream} = fetch_blob(id, key, @owned_file_path)
+    %{"content_type" => content_type, "content_length" => content_length, "promotion_token" => promotion_token} = meta
+
+    new_key = SecureRandom.hex()
+    new_promotion_token = SecureRandom.hex()
+    new_key = key
+    new_promotion_token = promotion_token
+    {:ok, new_id} = store_stream(source_stream, content_length, content_type, new_key, new_promotion_token, @owned_file_path)
+
+    owned_file_params = %{
+      owned_file_uuid: new_id,
+      key: new_key,
+      content_type: content_type,
+      content_length: content_length
+    }
+
+    owned_file =
+      %OwnedFile{}
+      |> OwnedFile.changeset(account, owned_file_params)
+      |> Repo.insert!()
+    |> IO.inspect
+
+    {:ok, owned_file}
   end
 end

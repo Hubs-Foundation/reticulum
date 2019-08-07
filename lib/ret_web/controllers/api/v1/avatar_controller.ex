@@ -5,7 +5,6 @@ defmodule RetWeb.Api.V1.AvatarController do
 
   plug(RetWeb.Plugs.RateLimit when action in [:create, :update])
 
-
   defp get_avatar(avatar_sid) do
     avatar_sid
     |> Avatar.avatar_or_avatar_listing_by_sid()
@@ -24,10 +23,16 @@ defmodule RetWeb.Api.V1.AvatarController do
   def create(conn, %{"avatar" => %{"parent_avatar_listing_id" => parent_avatar_listing_id} = params})
       when not is_nil(parent_avatar_listing_id) and parent_avatar_listing_id != "" do
     account = conn |> Guardian.Plug.current_resource()
-    parent_avatar_listing = Repo.get_by(AvatarListing, avatar_listing_sid: parent_avatar_listing_id)
+
+    parent_avatar_listing =
+      AvatarListing
+      |> Repo.get_by(avatar_listing_sid: parent_avatar_listing_id)
+      |> Repo.preload([:thumbnail_owned_file])
+
+    {:ok, new_thumbnail} = Storage.duplicate(parent_avatar_listing.thumbnail_owned_file, account)
 
     create_or_update(conn, params, %Avatar{
-      thumbnail_owned_file_id: parent_avatar_listing.thumbnail_owned_file_id
+      thumbnail_owned_file_id: new_thumbnail.owned_file_id
     })
   end
 
@@ -150,7 +155,9 @@ defmodule RetWeb.Api.V1.AvatarController do
           stream
           |> Enum.join("")
           |> Poison.decode!()
-          |> GLTFUtils.with_default_material_override((apply_overrides && avatar_files |> Map.take(Avatar.image_columns())) || [])
+          |> GLTFUtils.with_default_material_override(
+            (apply_overrides && avatar_files |> Map.take(Avatar.image_columns())) || []
+          )
           |> GLTFUtils.with_buffer_override(avatar_files.bin_owned_file)
 
         conn
