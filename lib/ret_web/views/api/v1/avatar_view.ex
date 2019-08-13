@@ -10,6 +10,10 @@ defmodule RetWeb.Api.V1.AvatarView do
     %{avatars: [render_avatar(avatar, account)]}
   end
 
+  def render("show.json", %{avatars: avatars, account: account}) do
+    %{avatars: avatars |> Enum.map(&render_avatar(&1, account))}
+  end
+
   defp render_avatar(%Avatar{} = avatar, account) do
     avatar
     |> common_fields()

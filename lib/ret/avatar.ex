@@ -36,8 +36,9 @@ defmodule Ret.Avatar do
     field(:attributions, :map)
 
     belongs_to(:account, Account, references: :account_id)
-    belongs_to(:parent_avatar, Avatar, references: :avatar_id)
-    belongs_to(:parent_avatar_listing, AvatarListing, references: :avatar_listing_id)
+    belongs_to(:parent_avatar, Avatar, references: :avatar_id, on_replace: :nilify)
+    belongs_to(:parent_avatar_listing, AvatarListing, references: :avatar_listing_id, on_replace: :nilify)
+
     has_many(:avatar_listings, AvatarListing, foreign_key: :avatar_id, references: :avatar_id, on_replace: :nilify)
 
     field(:allow_remixing, :boolean)
@@ -145,10 +146,10 @@ defmodule Ret.Avatar do
   defp put_owned_files(in_changeset, owned_files_map) do
     Enum.reduce(owned_files_map, in_changeset, fn
       {key, :remove}, changes ->
-        changes |> put_assoc(:"#{key}_owned_file", nil)
+        changes |> put_assoc(key, nil)
 
       {key, file}, changes ->
-        changes |> put_assoc(:"#{key}_owned_file", file)
+        changes |> put_assoc(key, file)
     end)
   end
 

@@ -12,6 +12,10 @@ defmodule RetWeb.Api.V1.AvatarController do
     |> preload()
   end
 
+  defp preload(nil = _avatar) do
+    nil
+  end
+
   defp preload(%Avatar{} = a) do
     a |> Repo.preload([Avatar.file_columns() ++ [:parent_avatar, :parent_avatar_listing, :account]])
   end
@@ -83,7 +87,8 @@ defmodule RetWeb.Api.V1.AvatarController do
 
     case promotion_error do
       nil ->
-        owned_files = owned_file_results |> Enum.map(fn {k, {:ok, file}} -> {k, file} end) |> Enum.into(%{})
+        owned_files =
+          owned_file_results |> Enum.map(fn {k, {:ok, file}} -> {:"#{k}_owned_file", file} end) |> Enum.into(%{})
 
         parent_avatar = params["parent_avatar_id"] && Repo.get_by(Avatar, avatar_sid: params["parent_avatar_id"])
 
