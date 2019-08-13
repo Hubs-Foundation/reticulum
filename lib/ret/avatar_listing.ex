@@ -30,7 +30,7 @@ defmodule Ret.AvatarListing do
     field(:description, :string)
     field(:attributions, :map)
 
-    has_one(:account, through: [:avatar, :account])
+    belongs_to(:account, Account, references: :account_id)
     belongs_to(:parent_avatar_listing, AvatarListing, references: :avatar_listing_id)
 
     belongs_to(:gltf_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
