@@ -38,6 +38,7 @@ defmodule Ret.Avatar do
     belongs_to(:account, Account, references: :account_id)
     belongs_to(:parent_avatar, Avatar, references: :avatar_id)
     belongs_to(:parent_avatar_listing, AvatarListing, references: :avatar_listing_id)
+    has_many(:avatar_listings, AvatarListing, foreign_key: :avatar_id, references: :avatar_id, on_replace: :nilify)
 
     field(:allow_remixing, :boolean)
     field(:allow_promotion, :boolean)

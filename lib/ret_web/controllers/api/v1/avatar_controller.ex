@@ -2,6 +2,7 @@ defmodule RetWeb.Api.V1.AvatarController do
   use RetWeb, :controller
 
   alias Ret.{Account, Repo, Avatar, AvatarListing, Storage, GLTFUtils}
+  import Ecto.Query
 
   plug(RetWeb.Plugs.RateLimit when action in [:create, :update])
 
@@ -185,8 +186,20 @@ defmodule RetWeb.Api.V1.AvatarController do
     conn |> send_resp(401, "You do not own this avatar")
   end
 
-  defp delete(conn, %Avatar{} = avatar, %Account{}) do
-    case Repo.delete(avatar) do
+  defp delete(conn, %Avatar{} = avatar, %Account{} = account) do
+    Ecto.Multi.new()
+    |> Ecto.Multi.update_all(
+      :update_all,
+      from(l in AvatarListing,
+        join: a in Avatar,
+        on: l.avatar_id == a.avatar_id,
+        where: l.avatar_id == ^avatar.avatar_id and l.account_id == ^avatar.account_id
+      ),
+      set: [state: :delisted, avatar_id: nil]
+    )
+    |> Ecto.Multi.delete(:delete, avatar)
+    |> Repo.transaction()
+    |> case do
       {:ok, _} -> send_resp(conn, 200, "OK")
       {:error, error} -> render_error_json(conn, error)
     end

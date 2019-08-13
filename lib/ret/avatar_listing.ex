@@ -33,6 +33,8 @@ defmodule Ret.AvatarListing do
     belongs_to(:account, Account, references: :account_id)
     belongs_to(:parent_avatar_listing, AvatarListing, references: :avatar_listing_id)
 
+    has_many(:child_avatars, Avatar, references: :avatar_listing_id, foreign_key: :parent_avatar_listing_id, on_replace: :nilify)
+
     belongs_to(:gltf_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
     belongs_to(:bin_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
     belongs_to(:thumbnail_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
