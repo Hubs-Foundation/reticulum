@@ -24,7 +24,8 @@ defmodule Ret.GLTFUtils do
     gltf
     |> Map.put("buffers", [
       %{
-        "uri" => bin_file |> OwnedFile.uri_for() |> URI.to_string()
+        "uri" => bin_file |> OwnedFile.uri_for() |> URI.to_string(),
+        "byteLength" => bin_file.content_length
       }
     ])
   end
