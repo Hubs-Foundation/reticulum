@@ -2,7 +2,6 @@ defmodule RetWeb.Api.V1.AvatarController do
   use RetWeb, :controller
 
   alias Ret.{Account, Repo, Avatar, AvatarListing, Storage, GLTFUtils}
-  import Ecto.Query
 
   plug(RetWeb.Plugs.RateLimit when action in [:create, :update])
 
@@ -10,10 +9,6 @@ defmodule RetWeb.Api.V1.AvatarController do
     avatar_sid
     |> Avatar.avatar_or_avatar_listing_by_sid()
     |> preload()
-  end
-
-  defp preload(nil = _avatar) do
-    nil
   end
 
   defp preload(%Avatar{} = a) do
@@ -24,23 +19,11 @@ defmodule RetWeb.Api.V1.AvatarController do
     a |> Repo.preload([Avatar.file_columns() ++ [:avatar, :parent_avatar_listing]])
   end
 
-  def create(conn, %{"avatar" => params}) do
-    avatar =
-      with %{"parent_avatar_listing_id" => sid} when not is_nil(sid) and sid != "" <- params,
-           parent_listing <-
-             AvatarListing
-             |> Repo.get_by(avatar_listing_sid: sid)
-             |> Repo.preload([:thumbnail_owned_file]),
-           thumbnail when not is_nil(thumbnail) <- parent_listing.thumbnail_owned_file,
-           account <- conn |> Guardian.Plug.current_resource(),
-           {:ok, new_thumbnail} <- Storage.duplicate(thumbnail, account) do
-        %Avatar{
-          thumbnail_owned_file_id: new_thumbnail.owned_file_id
-        }
-      else
-        _ -> %Avatar{}
-      end
+  defp preload(_avatar), do: nil
 
+  def create(conn, %{"avatar" => %{"parent_avatar_listing_id" => parent_sid} = params}) do
+    account = conn |> Guardian.Plug.current_resource()
+    avatar = parent_sid |> Avatar.new_avatar_from_parent_sid(account)
     create_or_update(conn, params, avatar)
   end
 
@@ -192,18 +175,8 @@ defmodule RetWeb.Api.V1.AvatarController do
   end
 
   defp delete(conn, %Avatar{} = avatar, %Account{} = account) do
-    Ecto.Multi.new()
-    |> Ecto.Multi.update_all(
-      :update_all,
-      from(l in AvatarListing,
-        join: a in Avatar,
-        on: l.avatar_id == a.avatar_id,
-        where: l.avatar_id == ^avatar.avatar_id and l.account_id == ^avatar.account_id
-      ),
-      set: [state: :delisted, avatar_id: nil]
-    )
-    |> Ecto.Multi.delete(:delete, avatar)
-    |> Repo.transaction()
+    avatar
+    |> Avatar.delete_avatar_and_delist_listings()
     |> case do
       {:ok, _} -> send_resp(conn, 200, "OK")
       {:error, error} -> render_error_json(conn, error)

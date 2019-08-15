@@ -45,7 +45,7 @@ defmodule Ret.Crypto do
   # Given the source path and the user-specified decryption key, return
   # { :error, reason } if decryption fails, or return { :ok, stream }
   # where stream is a Stream of the decrypted file contents.
-  def stream_decrypt_file(source_path, key) do
+  def decrypt_file_to_stream(source_path, key) do
     case stream_decode_encrypted_header(source_path, key) do
       {:ok, file_size, aes_key, stream} ->
         state = :crypto.stream_init(:aes_ctr, aes_key, <<0::size(128)>>)

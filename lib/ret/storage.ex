@@ -37,7 +37,7 @@ defmodule Ret.Storage do
       [file_directory, meta_file_path, blob_file_path] = paths_for_uuid(uuid, subpath)
 
       File.mkdir_p!(file_directory)
-      source_stream |> write_stream_to_file(source_size, blob_file_path, key)
+      source_stream |> encrypt_stream_to_file(source_size, blob_file_path, key)
 
       meta_file_path
       |> File.write!(
@@ -68,7 +68,7 @@ defmodule Ret.Storage do
          [_file_path, meta_file_path, blob_file_path] <- paths_for_uuid(uuid, subpath),
          [{:ok, _}, {:ok, _}] <- [File.stat(meta_file_path), File.stat(blob_file_path)],
          meta <- File.read!(meta_file_path) |> Poison.decode!(),
-         {:ok, stream} <- read_blob_file(blob_file_path, meta, key) do
+         {:ok, stream} <- decrypt_file_to_stream(blob_file_path, meta, key) do
       {:ok, meta, stream}
     else
       {:error, :invalid_key} -> {:error, :not_allowed}
@@ -235,11 +235,11 @@ defmodule Ret.Storage do
     Ret.Crypto.stream_check_key(source_path, key |> Ret.Crypto.hash())
   end
 
-  defp read_blob_file(source_path, _meta, key) do
-    Ret.Crypto.stream_decrypt_file(source_path, key |> Ret.Crypto.hash())
+  defp decrypt_file_to_stream(source_path, _meta, key) do
+    Ret.Crypto.decrypt_file_to_stream(source_path, key |> Ret.Crypto.hash())
   end
 
-  defp write_stream_to_file(source_stream, source_size, destination_path, key) do
+  defp encrypt_stream_to_file(source_stream, source_size, destination_path, key) do
     Ret.Crypto.encrypt_stream_to_file(source_stream, source_size, destination_path, key |> Ret.Crypto.hash())
   end
 
@@ -257,14 +257,18 @@ defmodule Ret.Storage do
   end
 
   def duplicate(%OwnedFile{owned_file_uuid: id, key: key}, %Account{} = account) do
-    {:ok, meta, source_stream} = fetch_blob(id, key, @owned_file_path)
-    %{"content_type" => content_type, "content_length" => content_length, "promotion_token" => promotion_token} = meta
+    {:ok,
+     %{
+       "content_type" => content_type,
+       "content_length" => content_length,
+       "promotion_token" => promotion_token
+     }, source_stream} = fetch_blob(id, key, @owned_file_path)
 
     new_key = SecureRandom.hex()
     new_promotion_token = SecureRandom.hex()
-    new_key = key
-    new_promotion_token = promotion_token
-    {:ok, new_id} = store_stream(source_stream, content_length, content_type, new_key, new_promotion_token, @owned_file_path)
+
+    {:ok, new_id} =
+      store_stream(source_stream, content_length, content_type, new_key, new_promotion_token, @owned_file_path)
 
     owned_file_params = %{
       owned_file_uuid: new_id,
@@ -277,7 +281,6 @@ defmodule Ret.Storage do
       %OwnedFile{}
       |> OwnedFile.changeset(account, owned_file_params)
       |> Repo.insert!()
-    |> IO.inspect
 
     {:ok, owned_file}
   end
