@@ -30,40 +30,10 @@ defmodule Ret.GLTFUtils do
     ])
   end
 
-  def reduce(%{"children" => children} = node, {nodes, acc}, fun) do
-    acc = fun.(node, acc)
-    children |> Enum.map(&Enum.at(nodes, &1)) |> Enum.reduce({nodes, acc}, &reduce(&1, &2, fun))
-  end
-
-  def reduce(node, {nodes, acc}, fun) do
-    {nodes, fun.(node, acc)}
-  end
-
-  def reduce(%{"scenes" => scenes, "scene" => scene, "nodes" => nodes} = gltf, acc, fun) do
-    {nodes, acc} =
-      List.first(scenes)["nodes"]
-      |> Enum.map(&Enum.at(nodes, &1))
-      |> Enum.reduce({nodes, acc}, &reduce(&1, &2, fun))
-
-    acc
-  end
-
   @primary_material_name "Bot_PBS"
   def with_default_material_override(gltf, image_files) do
-    material_to_replace =
-      case gltf["materials"] |> Enum.find_index(&(&1["name"] == @primary_material_name)) do
-        nil ->
-          # TODO this currently traverses the whole GLTF, and should early out instead
-          first_material =
-            gltf
-            |> reduce([], &(&2 ++ materials_for_node(gltf, &1)))
-            |> List.first()
-        idx ->
-          idx
-
-      end
-
-    gltf |> with_material_override(material_to_replace, image_files)
+    material_idx = gltf["materials"] |> Enum.find_index(&(&1["name"] == @primary_material_name))
+    gltf |> with_material_override(material_idx, image_files)
   end
 
   def with_material_override(gltf, nil, _image_files) do
