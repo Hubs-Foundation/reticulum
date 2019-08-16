@@ -10,7 +10,7 @@ defmodule Ret.AvatarListing do
   use Ecto.Schema
   import Ecto.Changeset
 
-  alias Ret.{AvatarListing, OwnedFile}
+  alias Ret.{AvatarListing, OwnedFile, Avatar}
   alias AvatarListing.{AvatarListingSlug}
 
   @schema_prefix "ret0"
@@ -22,7 +22,7 @@ defmodule Ret.AvatarListing do
     field(:order, :integer)
     field(:state, AvatarListing.State)
     field(:tags, :map)
-    belongs_to(:avatar, Ret.Avatar, references: :avatar_id)
+    belongs_to(:avatar, Avatar, references: :avatar_id)
     timestamps()
 
     # Properties cloned from avatars
@@ -55,6 +55,7 @@ defmodule Ret.AvatarListing do
     |> maybe_add_avatar_listing_sid_to_changeset
     |> unique_constraint(:avatar_listing_sid)
     |> put_assoc(:avatar, avatar)
+    |> put_change(:account_id, avatar.account_id)
     |> put_change(:name, params[:name] || avatar.name)
     |> put_change(:description, params[:description] || avatar.description)
     |> put_change(:attributions, avatar.attributions)

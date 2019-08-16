@@ -30,17 +30,16 @@ defmodule Ret.GLTFUtils do
     ])
   end
 
-  @primary_material_name "Bot_PBS"
   def with_default_material_override(gltf, image_files) do
-    material_idx = gltf["materials"] |> Enum.find_index(&(&1["name"] == @primary_material_name))
-    gltf |> with_material_override(material_idx, image_files)
+    gltf |> with_material_override("Bot_PBS", image_files)
   end
 
   def with_material_override(gltf, nil, _image_files) do
     gltf
   end
 
-  def with_material_override(gltf, mat_index, image_files) do
+  def with_material_override(gltf, mat_name, image_files) do
+    mat_index = gltf["materials"] |> Enum.find_index(&(&1["name"] == mat_name))
     material = gltf |> get_in(["materials", Access.at(mat_index)])
 
     image_files
