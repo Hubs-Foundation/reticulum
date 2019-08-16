@@ -5,21 +5,25 @@ defmodule RetWeb.Api.V1.AvatarController do
 
   plug(RetWeb.Plugs.RateLimit when action in [:create, :update])
 
-  defp get_avatar(avatar_sid) do
+  defp get_avatar(avatar_sid, preloads \\ []) do
     avatar_sid
     |> Avatar.avatar_or_avatar_listing_by_sid()
-    |> preload()
+    |> preload(preloads)
   end
 
-  defp preload(%Avatar{} = a) do
+  defp preload(a) do
+    preload(a, [])
+  end
+
+  defp preload(%Avatar{} = a, preloads) do
     a |> Repo.preload([Avatar.file_columns() ++ [:parent_avatar, :parent_avatar_listing]])
   end
 
-  defp preload(%AvatarListing{} = a) do
+  defp preload(%AvatarListing{} = a, preloads) do
     a |> Repo.preload([Avatar.file_columns() ++ [:avatar, :parent_avatar_listing]])
   end
 
-  defp preload(_avatar), do: nil
+  defp preload(_avatar, _preloads), do: nil
 
   def create(conn, %{"avatar" => %{"parent_avatar_listing_id" => parent_sid} = params}) do
     account = conn |> Guardian.Plug.current_resource()
@@ -123,7 +127,18 @@ defmodule RetWeb.Api.V1.AvatarController do
   end
 
   def show_base_gltf(conn, %{"id" => avatar_sid}) do
-    conn |> show_gltf(avatar_sid |> get_avatar(), false)
+    case avatar_sid |> get_avatar([:parent_avatar_listing]) do
+      # For avatars with a parent, base is the same as the parents collapsed avatar plus gltf override
+      %{parent_avatar_listing: parent_listing} = avatar when not is_nil(parent_listing) ->
+        case avatar.gltf_owned_file do
+          nil -> conn |> show_gltf(parent_listing |> preload, true)
+          gltf -> conn |> show_gltf(parent_listing |> preload |> Map.put(:gltf_owned_file, gltf), true)
+        end
+
+      # Otherwise base is just not applying overrides the the avatar
+      avatar ->
+        conn |> show_gltf(avatar, false)
+    end
   end
 
   def show_gltf(conn, nil = _avatar, _apply_overrides) do
