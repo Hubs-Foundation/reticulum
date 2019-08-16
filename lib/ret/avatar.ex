@@ -11,7 +11,7 @@ defmodule Ret.Avatar do
   import Ecto.Changeset
   import Ecto.Query
 
-  alias Ret.{Avatar, AvatarListing, Repo, OwnedFile, Account, Sids}
+  alias Ret.{Avatar, AvatarListing, Repo, OwnedFile, Account, Sids, Storage}
   alias Ret.Avatar.{AvatarSlug}
 
   @schema_prefix "ret0"
@@ -132,7 +132,7 @@ defmodule Ret.Avatar do
          thumbnail when not is_nil(thumbnail) <- parent.thumbnail_owned_file,
          {:ok, new_thumbnail} <- Storage.duplicate(thumbnail, account) do
       %Avatar{
-        thumbnail_owned_file_id: new_thumbnail.owned_file_id
+        thumbnail_owned_file: new_thumbnail
       }
     else
       _ -> %Avatar{}
