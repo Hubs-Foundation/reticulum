@@ -16,7 +16,7 @@ defmodule RetWeb.Api.V1.AvatarController do
   end
 
   defp preload(%Avatar{} = a, preloads) do
-    a |> Repo.preload([Avatar.file_columns() ++ [:parent_avatar, :parent_avatar_listing]])
+    a |> Repo.preload([Avatar.file_columns() ++ [:parent_avatar, :parent_avatar_listing, :avatar_listings]])
   end
 
   defp preload(%AvatarListing{} = a, preloads) do
@@ -88,7 +88,7 @@ defmodule RetWeb.Api.V1.AvatarController do
           |> Avatar.changeset(account, owned_files, parent_avatar, parent_avatar_listing, params)
           |> Repo.insert_or_update()
 
-        avatar = avatar |> Repo.preload(Avatar.file_columns())
+        avatar = avatar |> preload()
 
         case result do
           :ok ->

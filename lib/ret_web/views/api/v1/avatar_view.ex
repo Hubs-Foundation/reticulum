@@ -23,7 +23,8 @@ defmodule RetWeb.Api.V1.AvatarView do
       # Only include account id on your own avatars
       account_id: account && avatar.account_id == account.account_id && avatar.account_id |> Integer.to_string(),
       allow_remixing: avatar.allow_remixing,
-      allow_promotion: avatar.allow_promotion
+      allow_promotion: avatar.allow_promotion,
+      has_listings: length(avatar.avatar_listings) > 0
     })
   end
 
