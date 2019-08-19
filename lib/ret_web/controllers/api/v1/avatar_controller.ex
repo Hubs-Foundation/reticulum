@@ -115,7 +115,7 @@ defmodule RetWeb.Api.V1.AvatarController do
   end
 
   def show(conn, %Avatar{state: :removed}), do: conn |> send_resp(404, "Avatar not found")
-  def show(conn, %AvatarListing{state: :delisted}), do: conn |> send_resp(404, "Avatar not found")
+  def show(conn, %AvatarListing{state: :removed}), do: conn |> send_resp(404, "Avatar not found")
 
   def show(conn, %t{} = avatar) when t in [Avatar, AvatarListing] do
     account = conn |> Guardian.Plug.current_resource()
@@ -146,7 +146,7 @@ defmodule RetWeb.Api.V1.AvatarController do
   end
 
   def show_gltf(conn, %Avatar{state: :removed}, _overrides), do: conn |> send_resp(404, "Avatar not found")
-  def show_gltf(conn, %AvatarListing{state: :delisted}, _overrides), do: conn |> send_resp(404, "Avatar not found")
+  def show_gltf(conn, %AvatarListing{state: :removed}, _overrides), do: conn |> send_resp(404, "Avatar not found")
 
   def show_gltf(conn, %t{} = a, apply_overrides) when t in [Avatar, AvatarListing],
     do: conn |> show_gltf(a |> Avatar.collapsed_files(), apply_overrides)
