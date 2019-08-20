@@ -51,6 +51,7 @@ defmodule RetWeb.SceneControllerTest do
     updated_scene = Scene |> Repo.get_by(scene_sid: scene.scene_sid)
 
     assert updated_scene.name == "New Name"
+    assert updated_scene.slug == "new-name"
     assert updated_scene.description == "New Description"
   end
 

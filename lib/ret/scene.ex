@@ -1,5 +1,5 @@
 defmodule Ret.Scene.SceneSlug do
-  use EctoAutoslugField.Slug, from: :name, to: :slug
+  use EctoAutoslugField.Slug, from: :name, to: :slug, always_change: true
 
   def get_sources(_changeset, _opts) do
     [:scene_sid, :name]
@@ -73,7 +73,6 @@ defmodule Ret.Scene do
     |> put_change(:screenshot_owned_file_id, screenshot_owned_file.owned_file_id)
     |> put_change(:scene_owned_file_id, scene_owned_file.owned_file_id)
     |> SceneSlug.maybe_generate_slug()
-    |> SceneSlug.unique_constraint()
   end
 
   def changeset_to_mark_as_reviewed(%Scene{} = scene) do
