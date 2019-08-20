@@ -13,5 +13,5 @@ if [ -z "$PERMS_KEY" ]; then
   >&2 echo "$(tput setaf 1)Perms key not found. Exiting.$(tput sgr0)"
   exit 1
 else
-  PERMS_KEY="$PERMS_KEY" mix phx.server
+  PERMS_KEY="$PERMS_KEY" iex -S mix phx.server
 fi

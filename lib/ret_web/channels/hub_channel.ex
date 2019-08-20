@@ -104,6 +104,20 @@ defmodule RetWeb.HubChannel do
     hub |> join_with_hub(account, socket, context, params)
   end
 
+  def handle_in("events:entering", _payload, socket) do
+    context = socket.assigns.context || %{}
+    socket = socket |> assign(:context, context |> Map.put("entering", true)) |> broadcast_presence_update
+
+    {:noreply, socket}
+  end
+
+  def handle_in("events:entering_cancelled", _payload, socket) do
+    context = socket.assigns.context || %{}
+    socket = socket |> assign(:context, context |> Map.delete("entering")) |> broadcast_presence_update
+
+    {:noreply, socket}
+  end
+
   def handle_in("events:entered", %{"initialOccupantCount" => occupant_count} = payload, socket) do
     socket =
       socket
