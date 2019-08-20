@@ -1,5 +1,5 @@
 defmodule Ret.AvatarListing.AvatarListingSlug do
-  use EctoAutoslugField.Slug, from: :name, to: :slug
+  use EctoAutoslugField.Slug, from: :name, to: :slug, always_change: true
 
   def get_sources(_changeset, _opts) do
     [:avatar_listing_sid, :name]
@@ -65,7 +65,6 @@ defmodule Ret.AvatarListing do
     |> put_change(:normal_map_owned_file_id, avatar.normal_map_owned_file_id)
     |> put_change(:orm_map_owned_file_id, avatar.orm_map_owned_file_id)
     |> AvatarListingSlug.maybe_generate_slug()
-    |> AvatarListingSlug.unique_constraint()
   end
 
   defp maybe_add_avatar_listing_sid_to_changeset(changeset) do

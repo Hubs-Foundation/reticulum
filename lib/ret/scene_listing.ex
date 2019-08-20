@@ -1,5 +1,5 @@
 defmodule Ret.SceneListing.SceneListingSlug do
-  use EctoAutoslugField.Slug, from: :name, to: :slug
+  use EctoAutoslugField.Slug, from: :name, to: :slug, always_change: true
 
   def get_sources(_changeset, _opts) do
     [:scene_listing_sid, :name]
@@ -51,7 +51,6 @@ defmodule Ret.SceneListing do
     |> put_change(:screenshot_owned_file_id, scene.screenshot_owned_file.owned_file_id)
     |> put_change(:scene_owned_file_id, scene.scene_owned_file.owned_file_id)
     |> SceneListingSlug.maybe_generate_slug()
-    |> SceneListingSlug.unique_constraint()
   end
 
   defp maybe_add_scene_listing_sid_to_changeset(changeset) do

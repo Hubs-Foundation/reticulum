@@ -1,5 +1,5 @@
 defmodule Ret.Avatar.AvatarSlug do
-  use EctoAutoslugField.Slug, from: :name, to: :slug
+  use EctoAutoslugField.Slug, from: :name, to: :slug, always_change: true
 
   def get_sources(_changeset, _opts) do
     [:avatar_sid, :name]
@@ -138,7 +138,6 @@ defmodule Ret.Avatar do
     |> put_assoc(:parent_avatar_listing, parent_avatar_listing)
     |> put_owned_files(owned_files_map)
     |> AvatarSlug.maybe_generate_slug()
-    |> AvatarSlug.unique_constraint()
   end
 
   defp put_owned_files(in_changeset, owned_files_map) do
