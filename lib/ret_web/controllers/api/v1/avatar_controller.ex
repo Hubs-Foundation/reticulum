@@ -16,11 +16,11 @@ defmodule RetWeb.Api.V1.AvatarController do
   end
 
   defp preload(%Avatar{} = a, preloads) do
-    a |> Repo.preload([Avatar.file_columns() ++ [:parent_avatar, :parent_avatar_listing, :avatar_listings]])
+    a |> Repo.preload([Avatar.file_columns() ++ [:parent_avatar, :parent_avatar_listing, :avatar_listings] ++ preloads])
   end
 
   defp preload(%AvatarListing{} = a, preloads) do
-    a |> Repo.preload([Avatar.file_columns() ++ [:avatar, :parent_avatar_listing]])
+    a |> Repo.preload([Avatar.file_columns() ++ [:avatar, :parent_avatar_listing] ++ preloads])
   end
 
   defp preload(_avatar, _preloads), do: nil

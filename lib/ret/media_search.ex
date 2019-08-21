@@ -595,7 +595,7 @@ defmodule Ret.MediaSearch do
       name: avatar_listing.name,
       description: avatar_listing.description,
       attributions: avatar_listing.attributions,
-      allow_remixing: not is_nil(avatar_listing.avatar) and avatar_listing.avatar.allow_remixing,
+      allow_remixing: avatar_listing.avatar !== nil and avatar_listing.avatar.allow_remixing,
       images: %{
         preview: %{
           url: thumbnail || "https://asset-bundles-prod.reticulum.io/bots/avatar_unavailable.png",
