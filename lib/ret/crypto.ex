@@ -4,29 +4,20 @@ defmodule Ret.Crypto do
   @chunk_size 1024 * 1024
   @min_aes_size 12
 
-  # Takes the file at source path and stream encrypts it using AES-CTR
-  # to a file at dest path. The file has a header that has a magic number
+  # Takes a stream and encrypts it using AES-CTR to a file at dest path.
+  # The file has a header that has a magic number
   # (to easily check if the decryption key is correct) as well as the
   # original file length.
-  def encrypt_file(source_path, destination_path, key) do
-    case File.stat(source_path) do
-      {:ok, %{size: source_size}} ->
-        outfile = File.stream!(destination_path, [], @chunk_size)
-        infile = source_path |> File.stream!([], @chunk_size)
+  def encrypt_stream_to_file(source_stream, source_size, destination_path, key) do
+    outfile = File.stream!(destination_path, [], @chunk_size)
+    state = :crypto.stream_init(:aes_ctr, :crypto.hash(:sha256, key), <<0::size(128)>>)
 
-        state = :crypto.stream_init(:aes_ctr, :crypto.hash(:sha256, key), <<0::size(128)>>)
-
-        Stream.concat([@header_bytes <> <<source_size::size(32)>>], infile)
-        |> Stream.map(&pad_chunk/1)
-        |> Stream.scan({state, nil}, &encrypt_chunk/2)
-        |> Stream.map(fn x -> elem(x, 1) end)
-        |> Enum.into(outfile)
-
-        :ok
-
-      {:error, _reason} = err ->
-        err
-    end
+    [@header_bytes <> <<source_size::size(32)>>]
+    |> Stream.concat(source_stream)
+    |> Stream.map(&pad_chunk/1)
+    |> Stream.scan({state, nil}, &encrypt_chunk/2)
+    |> Stream.map(fn x -> elem(x, 1) end)
+    |> Enum.into(outfile)
   end
 
   def encrypt(plaintext, key \\ default_secret_key()) do
@@ -54,7 +45,7 @@ defmodule Ret.Crypto do
   # Given the source path and the user-specified decryption key, return
   # { :error, reason } if decryption fails, or return { :ok, stream }
   # where stream is a Stream of the decrypted file contents.
-  def stream_decrypt_file(source_path, key) do
+  def decrypt_file_to_stream(source_path, key) do
     case stream_decode_encrypted_header(source_path, key) do
       {:ok, file_size, aes_key, stream} ->
         state = :crypto.stream_init(:aes_ctr, aes_key, <<0::size(128)>>)

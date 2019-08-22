@@ -38,12 +38,8 @@ defmodule Ret.MediaSearch do
     scene_search(cursor, query, filter, account_id)
   end
 
-  def search(%Ret.MediaSearchQuery{source: "avatar_listings", cursor: cursor, filter: "featured", q: query}) do
-    avatar_listing_search(cursor, query, "featured", asc: :order)
-  end
-
   def search(%Ret.MediaSearchQuery{source: "avatar_listings", cursor: cursor, filter: filter, q: query}) do
-    avatar_listing_search(cursor, query, filter)
+    avatar_listing_search(cursor, query, filter, asc: :order)
   end
 
   def search(%Ret.MediaSearchQuery{source: "avatars", cursor: cursor, filter: filter, user: account_id, q: query}) do
@@ -464,7 +460,7 @@ defmodule Ret.MediaSearch do
       |> where([l, a], l.state == ^"active" and a.state == ^"active" and a.allow_promotion == ^true)
       |> add_query_to_listing_search_query(query)
       |> add_tag_to_listing_search_query(filter)
-      |> preload([:thumbnail_owned_file])
+      |> preload([:thumbnail_owned_file, :avatar])
       |> order_by(^order)
       |> Repo.paginate(%{page: page_number, page_size: @page_size})
       |> result_for_page(page_number, :avatar_listings, &avatar_listing_to_entry/1)
@@ -599,6 +595,7 @@ defmodule Ret.MediaSearch do
       name: avatar_listing.name,
       description: avatar_listing.description,
       attributions: avatar_listing.attributions,
+      allow_remixing: avatar_listing.avatar !== nil and avatar_listing.avatar.allow_remixing,
       images: %{
         preview: %{
           url: thumbnail || "https://asset-bundles-prod.reticulum.io/bots/avatar_unavailable.png",

@@ -10,6 +10,10 @@ defmodule RetWeb.Api.V1.AvatarView do
     %{avatars: [render_avatar(avatar, account)]}
   end
 
+  def render("show.json", %{avatars: avatars, account: account}) do
+    %{avatars: avatars |> Enum.map(&render_avatar(&1, account))}
+  end
+
   defp render_avatar(%Avatar{} = avatar, account) do
     avatar
     |> common_fields()
@@ -19,7 +23,8 @@ defmodule RetWeb.Api.V1.AvatarView do
       # Only include account id on your own avatars
       account_id: account && avatar.account_id == account.account_id && avatar.account_id |> Integer.to_string(),
       allow_remixing: avatar.allow_remixing,
-      allow_promotion: avatar.allow_promotion
+      allow_promotion: avatar.allow_promotion,
+      has_listings: length(avatar.avatar_listings |> Enum.filter(fn l -> l.state == :active end)) > 0
     })
   end
 

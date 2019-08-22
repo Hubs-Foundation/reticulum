@@ -5,24 +5,30 @@ defmodule RetWeb.Api.V1.AvatarController do
 
   plug(RetWeb.Plugs.RateLimit when action in [:create, :update])
 
-  @primary_material_name "Bot_PBS"
-
-  defp get_avatar(avatar_sid) do
+  defp get_avatar(avatar_sid, preloads \\ []) do
     avatar_sid
     |> Avatar.avatar_or_avatar_listing_by_sid()
-    |> preload()
+    |> preload(preloads)
   end
 
-  defp preload(%Avatar{} = a) do
-    a |> Repo.preload([Avatar.file_columns() ++ [:parent_avatar, :parent_avatar_listing, :account]])
+  defp preload(a) do
+    preload(a, [])
   end
 
-  defp preload(%AvatarListing{} = a) do
-    a |> Repo.preload([Avatar.file_columns() ++ [:avatar, :parent_avatar_listing, :account]])
+  defp preload(%Avatar{} = a, preloads) do
+    a |> Repo.preload([Avatar.file_columns() ++ [:parent_avatar, :parent_avatar_listing, :avatar_listings] ++ preloads])
   end
 
-  def create(conn, %{"avatar" => params}) do
-    create_or_update(conn, params, %Avatar{})
+  defp preload(%AvatarListing{} = a, preloads) do
+    a |> Repo.preload([Avatar.file_columns() ++ [:avatar, :parent_avatar_listing] ++ preloads])
+  end
+
+  defp preload(_avatar, _preloads), do: nil
+
+  def create(conn, %{"avatar" => %{"parent_avatar_listing_id" => parent_sid} = params}) do
+    account = conn |> Guardian.Plug.current_resource()
+    avatar = parent_sid |> Avatar.new_avatar_from_parent_sid(account)
+    create_or_update(conn, params, avatar)
   end
 
   def update(conn, %{"id" => avatar_sid, "avatar" => params}) do
@@ -68,7 +74,8 @@ defmodule RetWeb.Api.V1.AvatarController do
 
     case promotion_error do
       nil ->
-        owned_files = owned_file_results |> Enum.map(fn {k, {:ok, file}} -> {k, file} end) |> Enum.into(%{})
+        owned_files =
+          owned_file_results |> Enum.map(fn {k, {:ok, file}} -> {:"#{k}_owned_file", file} end) |> Enum.into(%{})
 
         parent_avatar = params["parent_avatar_id"] && Repo.get_by(Avatar, avatar_sid: params["parent_avatar_id"])
 
@@ -81,7 +88,7 @@ defmodule RetWeb.Api.V1.AvatarController do
           |> Avatar.changeset(account, owned_files, parent_avatar, parent_avatar_listing, params)
           |> Repo.insert_or_update()
 
-        avatar = avatar |> Repo.preload(Avatar.file_columns())
+        avatar = avatar |> preload()
 
         case result do
           :ok ->
@@ -108,7 +115,7 @@ defmodule RetWeb.Api.V1.AvatarController do
   end
 
   def show(conn, %Avatar{state: :removed}), do: conn |> send_resp(404, "Avatar not found")
-  def show(conn, %AvatarListing{state: :delisted}), do: conn |> send_resp(404, "Avatar not found")
+  def show(conn, %AvatarListing{state: :removed}), do: conn |> send_resp(404, "Avatar not found")
 
   def show(conn, %t{} = avatar) when t in [Avatar, AvatarListing] do
     account = conn |> Guardian.Plug.current_resource()
@@ -120,7 +127,18 @@ defmodule RetWeb.Api.V1.AvatarController do
   end
 
   def show_base_gltf(conn, %{"id" => avatar_sid}) do
-    conn |> show_gltf(avatar_sid |> get_avatar(), false)
+    case avatar_sid |> get_avatar([:parent_avatar_listing]) do
+      # For avatars with a parent, base is the same as the parents collapsed avatar plus gltf override
+      %{parent_avatar_listing: parent_listing} = avatar when not is_nil(parent_listing) ->
+        case avatar.gltf_owned_file do
+          nil -> conn |> show_gltf(parent_listing |> preload, true)
+          gltf -> conn |> show_gltf(parent_listing |> preload |> Map.put(:gltf_owned_file, gltf), true)
+        end
+
+      # Otherwise base is just not applying overrides the the avatar
+      avatar ->
+        conn |> show_gltf(avatar, false)
+    end
   end
 
   def show_gltf(conn, nil = _avatar, _apply_overrides) do
@@ -128,7 +146,7 @@ defmodule RetWeb.Api.V1.AvatarController do
   end
 
   def show_gltf(conn, %Avatar{state: :removed}, _overrides), do: conn |> send_resp(404, "Avatar not found")
-  def show_gltf(conn, %AvatarListing{state: :delisted}, _overrides), do: conn |> send_resp(404, "Avatar not found")
+  def show_gltf(conn, %AvatarListing{state: :removed}, _overrides), do: conn |> send_resp(404, "Avatar not found")
 
   def show_gltf(conn, %t{} = a, apply_overrides) when t in [Avatar, AvatarListing],
     do: conn |> show_gltf(a |> Avatar.collapsed_files(), apply_overrides)
@@ -140,11 +158,10 @@ defmodule RetWeb.Api.V1.AvatarController do
           stream
           |> Enum.join("")
           |> Poison.decode!()
-          |> GLTFUtils.with_material(
-            @primary_material_name,
+          |> GLTFUtils.with_default_material_override(
             (apply_overrides && avatar_files |> Map.take(Avatar.image_columns())) || []
           )
-          |> GLTFUtils.with_buffer(avatar_files.bin_owned_file)
+          |> GLTFUtils.with_buffer_override(avatar_files.bin_owned_file)
 
         conn
         # |> put_resp_content_type("model/gltf", nil)
@@ -172,8 +189,10 @@ defmodule RetWeb.Api.V1.AvatarController do
     conn |> send_resp(401, "You do not own this avatar")
   end
 
-  defp delete(conn, %Avatar{} = avatar, %Account{}) do
-    case Repo.delete(avatar) do
+  defp delete(conn, %Avatar{} = avatar, %Account{} = account) do
+    avatar
+    |> Avatar.delete_avatar_and_delist_listings()
+    |> case do
       {:ok, _} -> send_resp(conn, 200, "OK")
       {:error, error} -> render_error_json(conn, error)
     end

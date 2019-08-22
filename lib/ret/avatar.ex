@@ -9,8 +9,9 @@ end
 defmodule Ret.Avatar do
   use Ecto.Schema
   import Ecto.Changeset
+  import Ecto.Query
 
-  alias Ret.{Avatar, AvatarListing, Repo, OwnedFile, Account, Sids}
+  alias Ret.{Avatar, AvatarListing, Repo, OwnedFile, Account, Sids, Storage}
   alias Ret.Avatar.{AvatarSlug}
 
   @schema_prefix "ret0"
@@ -36,8 +37,10 @@ defmodule Ret.Avatar do
     field(:attributions, :map)
 
     belongs_to(:account, Account, references: :account_id)
-    belongs_to(:parent_avatar, Avatar, references: :avatar_id)
-    belongs_to(:parent_avatar_listing, AvatarListing, references: :avatar_listing_id)
+    belongs_to(:parent_avatar, Avatar, references: :avatar_id, on_replace: :nilify)
+    belongs_to(:parent_avatar_listing, AvatarListing, references: :avatar_listing_id, on_replace: :nilify)
+
+    has_many(:avatar_listings, AvatarListing, foreign_key: :avatar_id, references: :avatar_id, on_replace: :nilify)
 
     field(:allow_remixing, :boolean)
     field(:allow_promotion, :boolean)
@@ -100,7 +103,9 @@ defmodule Ret.Avatar do
   def url(%AvatarListing{} = avatar), do: "#{RetWeb.Endpoint.url()}/avatars/#{avatar.avatar_listing_sid}"
 
   defp api_base_url(%Avatar{} = avatar), do: "#{RetWeb.Endpoint.url()}/api/v1/avatars/#{avatar.avatar_sid}"
-  defp api_base_url(%AvatarListing{} = avatar), do: "#{RetWeb.Endpoint.url()}/api/v1/avatars/#{avatar.avatar_listing_sid}"
+
+  defp api_base_url(%AvatarListing{} = avatar),
+    do: "#{RetWeb.Endpoint.url()}/api/v1/avatars/#{avatar.avatar_listing_sid}"
 
   def gltf_url(%t{} = a) when t in [Avatar, AvatarListing], do: "#{api_base_url(a)}/avatar.gltf?v=#{Avatar.version(a)}"
 
@@ -119,6 +124,40 @@ defmodule Ret.Avatar do
       AvatarListing |> Repo.get_by(avatar_listing_sid: sid) |> Repo.preload(:avatar)
   end
 
+  def new_avatar_from_parent_sid(parent_sid, account) when not is_nil(parent_sid) and parent_sid != "" do
+    with parent <-
+           parent_sid
+           |> avatar_or_avatar_listing_by_sid()
+           |> Repo.preload([:thumbnail_owned_file]),
+         thumbnail when not is_nil(thumbnail) <- parent.thumbnail_owned_file,
+         {:ok, new_thumbnail} <- Storage.duplicate(thumbnail, account) do
+      %Avatar{
+        thumbnail_owned_file: new_thumbnail
+      }
+    else
+      _ -> %Avatar{}
+    end
+  end
+
+  def new_avatar_from_parent_sid(_parent_avatar_sid, _account) do
+    %Avatar{}
+  end
+
+  def delete_avatar_and_delist_listings(avatar) do
+    Ecto.Multi.new()
+    |> Ecto.Multi.update_all(
+      :update_all,
+      from(l in AvatarListing,
+        join: a in Avatar,
+        on: l.avatar_id == a.avatar_id,
+        where: l.avatar_id == ^avatar.avatar_id and l.account_id == ^avatar.account_id
+      ),
+      set: [state: :delisted, avatar_id: nil]
+    )
+    |> Ecto.Multi.delete(:delete, avatar)
+    |> Repo.transaction()
+  end
+
   @doc false
   def changeset(
         %Avatar{} = avatar,
@@ -133,7 +172,7 @@ defmodule Ret.Avatar do
     |> validate_required([])
     |> maybe_add_avatar_sid_to_changeset
     |> unique_constraint(:avatar_sid)
-    |> put_assoc(:account, account)
+    |> put_change(:account_id, account.account_id)
     |> put_assoc(:parent_avatar, parent_avatar)
     |> put_assoc(:parent_avatar_listing, parent_avatar_listing)
     |> put_owned_files(owned_files_map)
@@ -143,10 +182,10 @@ defmodule Ret.Avatar do
   defp put_owned_files(in_changeset, owned_files_map) do
     Enum.reduce(owned_files_map, in_changeset, fn
       {key, :remove}, changes ->
-        changes |> put_assoc(:"#{key}_owned_file", nil)
+        changes |> put_assoc(key, nil)
 
       {key, file}, changes ->
-        changes |> put_assoc(:"#{key}_owned_file", file)
+        changes |> put_assoc(key, file)
     end)
   end
 

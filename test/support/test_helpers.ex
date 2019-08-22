@@ -1,5 +1,5 @@
 defmodule Ret.TestHelpers do
-  alias Ret.{Storage, Project, Account, Asset, ProjectAsset, Scene, SceneListing, Repo, Hub, Avatar}
+  alias Ret.{Storage, Project, Account, Asset, ProjectAsset, Scene, SceneListing, Repo, Hub, Avatar, AvatarListing}
 
   def generate_temp_owned_file(account) do
     temp_file = generate_temp_file("test")
@@ -69,8 +69,8 @@ defmodule Ret.TestHelpers do
       |> Avatar.changeset(
         account,
         %{
-          gltf: generate_temp_owned_file(account),
-          bin: generate_temp_owned_file(account)
+          gltf_owned_file: generate_temp_owned_file(account),
+          bin_owned_file: generate_temp_owned_file(account)
         },
         nil,
         nil,
@@ -81,6 +81,19 @@ defmodule Ret.TestHelpers do
       |> Repo.insert_or_update()
 
     avatar
+  end
+
+  def create_avatar_listing(%{avatar: avatar}) do
+    {:ok, avatar_listing: create_avatar_listing(avatar)}
+  end
+
+  def create_avatar_listing(avatar) do
+    {:ok, listing} =
+      %AvatarListing{}
+      |> AvatarListing.changeset_for_listing_for_avatar(avatar, %{})
+      |> Repo.insert()
+
+    listing
   end
 
   def create_scene_listing(%{scene: scene}) do
