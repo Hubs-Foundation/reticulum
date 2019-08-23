@@ -124,8 +124,7 @@ defmodule RetWeb.FileController do
             # so the proper range of bytes is emitted.
             stream
             |> Stream.transform(0, fn chunk, chunk_start ->
-              len = byte_size(chunk)
-              chunk_end = chunk_start + len - 1
+              chunk_end = chunk_start + byte_size(chunk) - 1
 
               cond do
                 chunk_end < start_offset ->
