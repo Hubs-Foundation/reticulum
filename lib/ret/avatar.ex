@@ -60,40 +60,39 @@ defmodule Ret.Avatar do
     timestamps()
   end
 
-  defp avatar_to_collapsed_files(%{parent_avatar: nil, parent_avatar_listing: nil} = avatar),
+  def load_parents(avatar, preload_fields \\ [])
+
+  def load_parents(%t{parent_avatar_listing: nil} = avatar, preload_fields) when t in [Avatar, AvatarListing],
+    do: avatar |> Repo.preload(preload_fields)
+
+  def load_parents(%t{} = avatar, preload_fields) when t in [Avatar, AvatarListing] do
+    avatar
+    |> Repo.preload([:parent_avatar_listing] ++ preload_fields)
+    |> Map.update!(
+      :parent_avatar_listing,
+      &Avatar.load_parents(&1, preload_fields)
+    )
+  end
+
+  def load_parents(nil, _preload_fields), do: nil
+
+  defp avatar_to_collapsed_files(%t{parent_avatar_listing: nil} = avatar) when t in [Avatar, AvatarListing],
     do: avatar |> Map.take(@file_columns)
 
-  defp avatar_to_collapsed_files(%{parent_avatar: parent, parent_avatar_listing: parent_listing} = avatar) do
-    (parent_listing || parent)
-    |> Repo.preload(@file_columns)
-    |> Map.take(@file_columns)
+  defp avatar_to_collapsed_files(%t{parent_avatar_listing: parent} = avatar) when t in [Avatar, AvatarListing] do
+    parent
+    |> avatar_to_collapsed_files
     |> Map.merge(avatar |> Map.take(@file_columns), fn
       _k, v1, nil -> v1
       _k, _v1, v2 -> v2
     end)
   end
 
-  defp avatar_listing_to_collapsed_files(%{parent_avatar_listing: nil} = listing),
-    do: listing |> Map.take(Avatar.file_columns())
-
-  defp avatar_listing_to_collapsed_files(%{parent_avatar_listing: parent} = listing) do
-    parent
-    |> Repo.preload(@file_columns)
-    |> Map.take(@file_columns)
-    |> Map.merge(listing |> Map.take(@file_columns), fn
-      _k, v1, nil -> v1
-      _k, _v1, v2 -> v2
-    end)
-  end
-
-  def collapsed_files(%Avatar{} = avatar) do
+  def collapsed_files(%t{} = avatar) when t in [Avatar, AvatarListing] do
+    # TODO we ideally don't need to be featching the OwnedFiles until after we collapse them
     avatar
-    |> Repo.preload([:parent_avatar, :parent_avatar_listing] ++ @file_columns)
+    |> Avatar.load_parents(@file_columns)
     |> avatar_to_collapsed_files()
-  end
-
-  def collapsed_files(%AvatarListing{} = listing) do
-    listing |> Repo.preload([:parent_avatar_listing] ++ Avatar.file_columns()) |> avatar_listing_to_collapsed_files()
   end
 
   def version(%t{} = a) when t in [Avatar, AvatarListing],
