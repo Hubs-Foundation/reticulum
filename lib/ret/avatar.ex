@@ -68,6 +68,15 @@ defmodule Ret.Avatar do
   def load_parents(%Avatar{parent_avatar_listing: nil, parent_avatar: nil} = avatar, preload_fields),
     do: avatar |> Repo.preload(preload_fields)
 
+  def load_parents(%AvatarListing{} = avatar, preload_fields) do
+    avatar
+    |> Repo.preload([:parent_avatar_listing] ++ preload_fields)
+    |> Map.update!(
+      :parent_avatar_listing,
+      &Avatar.load_parents(&1, preload_fields)
+    )
+  end
+
   def load_parents(%Avatar{parent_avatar_listing: nil, parent_avatar: parent} = avatar, preload_fields) do
     avatar
     |> Repo.preload([:parent_avatar] ++ preload_fields)
@@ -77,9 +86,9 @@ defmodule Ret.Avatar do
     )
   end
 
-  def load_parents(%t{} = avatar, preload_fields) when t in [Avatar, AvatarListing] do
+  def load_parents(%Avatar{} = avatar, preload_fields) do
     avatar
-    |> Repo.preload([:parent_avatar_listing] ++ preload_fields)
+    |> Repo.preload([:parent_avatar_listing, :parent_avatar] ++ preload_fields)
     |> Map.update!(
       :parent_avatar_listing,
       &Avatar.load_parents(&1, preload_fields)
