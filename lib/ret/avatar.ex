@@ -62,8 +62,20 @@ defmodule Ret.Avatar do
 
   def load_parents(avatar, preload_fields \\ [])
 
-  def load_parents(%t{parent_avatar_listing: nil} = avatar, preload_fields) when t in [Avatar, AvatarListing],
+  def load_parents(%AvatarListing{parent_avatar_listing: nil} = avatar, preload_fields),
     do: avatar |> Repo.preload(preload_fields)
+
+  def load_parents(%Avatar{parent_avatar_listing: nil, parent_avatar: nil} = avatar, preload_fields),
+    do: avatar |> Repo.preload(preload_fields)
+
+  def load_parents(%Avatar{parent_avatar_listing: nil, parent_avatar: parent} = avatar, preload_fields) do
+    avatar
+    |> Repo.preload([:parent_avatar] ++ preload_fields)
+    |> Map.update!(
+      :parent_avatar,
+      &Avatar.load_parents(&1, preload_fields)
+    )
+  end
 
   def load_parents(%t{} = avatar, preload_fields) when t in [Avatar, AvatarListing] do
     avatar
@@ -76,11 +88,23 @@ defmodule Ret.Avatar do
 
   def load_parents(nil, _preload_fields), do: nil
 
-  defp avatar_to_collapsed_files(%t{parent_avatar_listing: nil} = avatar) when t in [Avatar, AvatarListing],
+  defp avatar_to_collapsed_files(%AvatarListing{parent_avatar_listing: nil} = avatar),
     do: avatar |> Map.take(@file_columns)
 
-  defp avatar_to_collapsed_files(%t{parent_avatar_listing: parent} = avatar) when t in [Avatar, AvatarListing] do
-    parent
+  defp avatar_to_collapsed_files(%Avatar{parent_avatar_listing: nil, parent_avatar: nil} = avatar),
+    do: avatar |> Map.take(@file_columns)
+
+  defp avatar_to_collapsed_files(%AvatarListing{parent_avatar_listing: parent_listing} = avatar) do
+    parent_listing
+    |> avatar_to_collapsed_files
+    |> Map.merge(avatar |> Map.take(@file_columns), fn
+      _k, v1, nil -> v1
+      _k, _v1, v2 -> v2
+    end)
+  end
+
+  defp avatar_to_collapsed_files(%Avatar{parent_avatar_listing: parent_listing, parent_avatar: parent} = avatar) do
+    (parent_listing || parent)
     |> avatar_to_collapsed_files
     |> Map.merge(avatar |> Map.take(@file_columns), fn
       _k, v1, nil -> v1
