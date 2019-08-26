@@ -185,7 +185,37 @@ defmodule Ret.Storage do
           nil
         )
 
-        # TODO clean empty dirs
+        # Clean empty dirs
+        # TODO figure out what to do about owned files -- that structure increase over time
+        for type <- [@expiring_file_path] do
+          root_path = "#{storage_path}/#{type}"
+          {:ok, dirs} = :file.list_dir(root_path)
+
+          # Walk sub directories and remove them if they are empty.
+          for d <- dirs do
+            sub_path = "#{root_path}/#{d}"
+            {:ok, subdirs} = :file.list_dir(sub_path)
+
+            for sd <- subdirs do
+              path = "#{sub_path}/#{sd}"
+              {:ok, files} = :file.list_dir(path)
+
+              if files |> length === 0 do
+                File.rmdir(path)
+              end
+            end
+          end
+
+          # Check if we've removed all the sub directories.
+          for d <- dirs do
+            sub_path = "#{root_path}/#{d}"
+            {:ok, subdirs} = :file.list_dir(sub_path)
+
+            if subdirs |> length === 0 do
+              File.rmdir(sub_path)
+            end
+          end
+        end
       end
 
       Logger.info("Stored Files: Vacuum Finished.")
