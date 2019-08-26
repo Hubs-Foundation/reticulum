@@ -77,7 +77,7 @@ defmodule Ret.Avatar do
     )
   end
 
-  def load_parents(%Avatar{parent_avatar_listing: nil, parent_avatar: parent} = avatar, preload_fields) do
+  def load_parents(%Avatar{parent_avatar_listing: nil, parent_avatar: _parent} = avatar, preload_fields) do
     avatar
     |> Repo.preload([:parent_avatar] ++ preload_fields)
     |> Map.update!(

@@ -261,7 +261,6 @@ defmodule Ret.Storage do
      %{
        "content_type" => content_type,
        "content_length" => content_length,
-       "promotion_token" => promotion_token
      }, source_stream} = fetch_blob(id, key, @owned_file_path)
 
     new_key = SecureRandom.hex()
