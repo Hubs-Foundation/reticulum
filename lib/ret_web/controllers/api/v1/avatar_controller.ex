@@ -184,17 +184,17 @@ defmodule RetWeb.Api.V1.AvatarController do
     end
   end
 
-  defp delete(conn, %Avatar{account_id: avatar_account_id}, %Account{account_id: account_id})
-       when not is_nil(avatar_account_id) and avatar_account_id != account_id do
-    conn |> send_resp(401, "You do not own this avatar")
-  end
-
-  defp delete(conn, %Avatar{} = avatar, %Account{} = account) do
+  defp delete(conn, %Avatar{account_id: avatar_account_id} = avatar, %Account{account_id: account_id})
+       when not is_nil(avatar_account_id) and avatar_account_id == account_id do
     avatar
     |> Avatar.delete_avatar_and_delist_listings()
     |> case do
       {:ok, _} -> send_resp(conn, 200, "OK")
       {:error, error} -> render_error_json(conn, error)
     end
+  end
+
+  defp delete(conn, _avatar)
+    conn |> send_resp(401, "You do not own this avatar")
   end
 end
