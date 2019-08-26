@@ -9,14 +9,14 @@ pkg_deps=(
     core/coreutils
     core/bash
     core/which
-    mozillareality/erlang/21.0
+    mozillareality/erlang/22.0
 )
 
 pkg_build_deps=(
     core/coreutils
     core/git
-    mozillareality/erlang/21.0
-    core/elixir/1.7.4
+    mozillareality/erlang/22.0
+    core/elixir/1.9.1
 )
 
 pkg_exports=(

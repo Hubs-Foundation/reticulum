@@ -18,8 +18,6 @@ defmodule Ret.Application do
 
       # Quantum scheduler
       worker(Ret.Scheduler, []),
-      # Quantum singleton scheduler
-      worker(Ret.SingletonScheduler, []),
       # Room assigner monitor
       worker(Ret.RoomAssignerMonitor, []),
       # Storage for rate limiting

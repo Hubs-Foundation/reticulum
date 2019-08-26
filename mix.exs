@@ -51,7 +51,7 @@ defmodule Ret.Mixfile do
       {:cors_plug, "~> 1.5"},
       {:basic_auth, "~> 2.2"},
       {:statix, "~> 1.1"},
-      {:quantum, "~> 2.3"},
+      {:quantum, "~> 2.2.7"},
       {:credo, "~> 0.9.1", only: [:dev, :test], runtime: false},
       {:plug_attack, "~> 0.3"},
       {:ecto_enum, "~> 1.2"},
