@@ -51,15 +51,17 @@ do_build() {
 do_install() {
     rm -rf _build/prod/rel/ret/releases
     MIX_ENV=prod mix release
-    chmod 0655 _build/prod/rel/ret/bin/*
+    # TODO 1.9 releases chmod 0655 _build/prod/rel/ret/bin/*
     cp -a _build/prod/rel/ret/* ${pkg_prefix}
 
     for f in $(find ${pkg_prefix} -name '*.sh')
     do
         fix_interpreter "$f" core/bash bin/bash
         fix_interpreter "$f" core/coreutils bin/env
-        chmod 0655 "$f"
+        # TODO 1.9 releases chmod 0655 "$f"
     done
+
+    # TODO 1.9 releases chmod 0655 elixir, bin/erl
 }
 
 do_strip() {
