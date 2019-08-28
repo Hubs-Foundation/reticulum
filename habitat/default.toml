@@ -33,7 +33,7 @@ pool_size = 16
 
 [security]
 content_security_policy = "default-src 'self'"
-cors_origins = "[\"*\"]"
+cors_origins = "*"
 
 [pages]
 insecure_ssl = "false"

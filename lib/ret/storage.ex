@@ -178,7 +178,7 @@ defmodule Ret.Storage do
         end
 
         :filelib.fold_files(
-          "#{storage_path}/#{@expiring_file_path}",
+          Path.join(storage_path, @expiring_file_path),
           "\\.blob$",
           true,
           process_blob,
@@ -193,11 +193,11 @@ defmodule Ret.Storage do
 
           # Walk sub directories and remove them if they are empty.
           for d <- dirs do
-            sub_path = "#{root_path}/#{d}"
+            sub_path = Path.join(root_path, d)
             {:ok, subdirs} = :file.list_dir(sub_path)
 
             for sd <- subdirs do
-              path = "#{sub_path}/#{sd}"
+              path = Path.join(sub_path, sd)
               {:ok, files} = :file.list_dir(path)
 
               if files |> length === 0 do
@@ -208,7 +208,7 @@ defmodule Ret.Storage do
 
           # Check if we've removed all the sub directories.
           for d <- dirs do
-            sub_path = "#{root_path}/#{d}"
+            sub_path = Path.join(root_path, d)
             {:ok, subdirs} = :file.list_dir(sub_path)
 
             if subdirs |> length === 0 do
