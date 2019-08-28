@@ -156,9 +156,6 @@ defmodule RetWeb.FileController do
             |> Stream.run()
 
             conn
-
-          {:error, :bad_ranges} ->
-            conn |> send_resp(401, "Unsupported range specification. Multiple ranges not yet supported.")
         end
 
       {:error, :not_found} ->
@@ -170,22 +167,26 @@ defmodule RetWeb.FileController do
   end
 
   defp extract_ranges(conn, content_length) do
+    ranges = [[0, content_length - 1]]
+
     case conn |> get_req_header("range") do
       [<<"bytes=", range::binary>>] ->
-        ranges = range |> ranges_for_range_header(content_length)
+        parsed_ranges = range |> ranges_for_range_header(content_length)
 
-        if length(ranges) === 1 do
-          conn =
-            conn |> put_resp_header("content-range", "bytes #{response_ranges_for_ranges(ranges)}/#{content_length}")
+        # Multiple ranges not supported yet in chunked responses until we upgrade cowboy, for now just return the whole thing
+        ranges =
+          if length(parsed_ranges) === 1 do
+            parsed_ranges
+          else
+            ranges
+          end
 
-          {:ok, conn, ranges}
-        else
-          # Multiple ranges not supported yet in chunked responses
-          {:error, :bad_ranges}
-        end
+        conn = conn |> put_resp_header("content-range", "bytes #{response_ranges_for_ranges(ranges)}/#{content_length}")
+
+        {:ok, conn, ranges}
 
       _ ->
-        {:ok, conn, [[0, content_length - 1]]}
+        {:ok, conn, ranges}
     end
   end
 
