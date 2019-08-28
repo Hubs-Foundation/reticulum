@@ -16,7 +16,7 @@ pkg_build_deps=(
     core/coreutils
     core/git
     mozillareality/erlang/22.0
-    core/elixir/1.9.1
+    core/elixir/1.8.2
 )
 
 pkg_exports=(
