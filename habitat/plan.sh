@@ -9,13 +9,13 @@ pkg_deps=(
     core/coreutils
     core/bash
     core/which
-    core/erlang/22.0
+    mozillareality/erlang/22.0
 )
 
 pkg_build_deps=(
     core/coreutils
     core/git
-    core/erlang/22.0
+    mozillareality/erlang/22.0
     core/elixir/1.9.1
 )
 
