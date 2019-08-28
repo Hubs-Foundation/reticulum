@@ -44,16 +44,14 @@ config :peerage, log_results: false
 
 config :statix, prefix: "ret"
 
-config :ret, Ret.SingletonScheduler,
-  global: true,
+config :ret, Ret.Scheduler,
   jobs: [
-    # Vacuum stored files
-    {"@daily", {Ret.Storage, :vacuum, []}},
-    {"@daily", {Ret.Storage, :demote_inactive_owned_files, []}},
-    {"@daily", {Ret.LoginToken, :expire_stale, []}},
-    {"@daily", {Ret.Hub, :vacuum_entry_codes, []}},
-    {"@daily", {Ret.Hub, :vacuum_hosts, []}},
-    {"@daily", {Ret.CachedFile, :vacuum, []}}
+    {"0 10 * * * *", {Ret.Storage, :vacuum, []}},
+    {"5 10 * * * *", {Ret.Storage, :demote_inactive_owned_files, []}},
+    {"10 10 * * * *", {Ret.LoginToken, :expire_stale, []}},
+    {"15 10 * * * *", {Ret.Hub, :vacuum_entry_codes, []}},
+    {"20 10 * * * *", {Ret.Hub, :vacuum_hosts, []}},
+    {"25 10 * * * *", {Ret.CachedFile, :vacuum, []}}
   ]
 
 # Import environment specific config. This must remain at the bottom

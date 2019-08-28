@@ -59,12 +59,14 @@ defmodule Ret.LoginToken do
   end
 
   def expire_stale do
-    Ret.LoginToken
-    |> where(
-      [t],
-      t.inserted_at < datetime_add(^NaiveDateTime.utc_now(), ^(@token_max_age * -1), "second")
-    )
-    |> Repo.delete_all()
+    Ret.Locking.exec_if_lockable(:login_token_expire, fn ->
+      Ret.LoginToken
+      |> where(
+        [t],
+        t.inserted_at < datetime_add(^NaiveDateTime.utc_now(), ^(@token_max_age * -1), "second")
+      )
+      |> Repo.delete_all()
+    end)
   end
 
   defp generate_token(nil), do: nil
