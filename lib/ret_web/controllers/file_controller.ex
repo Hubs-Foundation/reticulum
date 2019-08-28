@@ -1,5 +1,6 @@
 defmodule RetWeb.FileController do
   use RetWeb, :controller
+  require Logger
 
   alias Ret.{OwnedFile, Storage, Repo}
 
@@ -168,10 +169,12 @@ defmodule RetWeb.FileController do
 
   defp extract_ranges(conn, content_length) do
     ranges = [[0, content_length - 1]]
+    Logger.info("Checking for Range #{conn |> get_req_header("range")}")
 
     case conn |> get_req_header("range") do
       [<<"bytes=", range::binary>>] ->
         parsed_ranges = range |> ranges_for_range_header(content_length)
+        Logger.info("Got parsed range #{parsed_ranges}")
 
         # Multiple ranges not supported yet in chunked responses until we upgrade cowboy, for now just return the whole thing
         ranges =
