@@ -3,11 +3,14 @@ defmodule RetWeb.FileController do
 
   alias Ret.{OwnedFile, Storage, Repo}
 
-  def show(conn, %{"id" => <<uuid::binary-size(36)>>, "token" => token}) do
-    render_file_with_token(conn, uuid, token)
+  def show(conn, params), do: handle(conn, params, :show)
+  def head(conn, params), do: handle(conn, params, :head)
+
+  def handle(conn, %{"id" => <<uuid::binary-size(36)>>, "token" => token}, type) do
+    render_file_with_token(type, conn, uuid, token)
   end
 
-  def show(conn, %{"id" => <<uuid::binary-size(36), ".html">>, "token" => token}) do
+  def handle(conn, %{"id" => <<uuid::binary-size(36), ".html">>, "token" => token}, :show) do
     case Storage.fetch(uuid, token) do
       {:ok, %{"content_type" => content_type}, _stream} ->
         image_url =
@@ -26,35 +29,39 @@ defmodule RetWeb.FileController do
     end
   end
 
-  def show(conn, %{
-        "id" => <<uuid::binary-size(36), ".", _extension::binary>>,
-        "token" => token
-      }) do
-    render_file_with_token(conn, uuid, token)
+  def handle(
+        conn,
+        %{
+          "id" => <<uuid::binary-size(36), ".", _extension::binary>>,
+          "token" => token
+        },
+        type
+      ) do
+    render_file_with_token(conn, type, uuid, token)
   end
 
-  def show(conn, %{"id" => <<uuid::binary-size(36)>>}) do
-    render_file_with_token_from_header(conn, uuid)
+  def handle(conn, %{"id" => <<uuid::binary-size(36)>>}, type) do
+    render_file_with_token_from_header(conn, type, uuid)
   end
 
-  def show(conn, %{"id" => <<uuid::binary-size(36), ".", _extension::binary>>}) do
-    render_file_with_token_from_header(conn, uuid)
+  def handle(conn, %{"id" => <<uuid::binary-size(36), ".", _extension::binary>>}, type) do
+    render_file_with_token_from_header(conn, type, uuid)
   end
 
-  defp render_file_with_token_from_header(conn, uuid) do
+  defp render_file_with_token_from_header(conn, type, uuid) do
     case conn |> get_req_header("authorization") do
       [<<"Token ", token::binary>>] ->
-        render_file_with_token(conn, uuid, token)
+        render_file_with_token(conn, type, uuid, token)
 
       _ ->
-        render_file_with_token(conn, uuid, nil)
+        render_file_with_token(conn, type, uuid, nil)
     end
   end
 
-  defp render_file_with_token(conn, uuid, token) do
+  defp render_file_with_token(conn, type, uuid, token) do
     {uuid, token}
     |> resolve_fetch_args
-    |> fetch_and_render(conn)
+    |> fetch_and_render(conn, type)
   end
 
   # Given a tuple of a UUID and a (optional) user specified token, check to see if there is a OwnedFile
@@ -68,32 +75,25 @@ defmodule RetWeb.FileController do
     end
   end
 
-  defp fetch_and_render({_uuid, nil}, conn) do
+  defp fetch_and_render({_uuid, nil}, conn, _type) do
     conn |> send_resp(401, "")
   end
 
-  defp fetch_and_render({uuid, token}, conn) do
-    Storage.fetch(uuid, token) |> render_fetch_result(conn)
+  defp fetch_and_render({uuid, token}, conn, type) do
+    Storage.fetch(uuid, token) |> render_fetch_result(conn, type)
   end
 
-  defp fetch_and_render(%OwnedFile{} = owned_file, conn) do
-    owned_file |> Storage.fetch() |> render_fetch_result(conn)
+  defp fetch_and_render(%OwnedFile{} = owned_file, conn, type) do
+    owned_file |> Storage.fetch() |> render_fetch_result(conn, type)
   end
 
-  defp render_fetch_result(fetch_result, conn) do
+  defp render_fetch_result(fetch_result, conn, :head) do
     case fetch_result do
-      {:ok, %{"content_type" => content_type, "content_length" => content_length}, stream} ->
-        conn =
-          conn
-          |> put_resp_content_type(content_type, nil)
-          |> put_resp_header("content-length", "#{content_length}")
-          |> put_resp_header("transfer-encoding", "chunked")
-          |> put_resp_header("cache-control", "public, max-age=31536000")
-          |> send_chunked(200)
-
-        stream |> Stream.map(&chunk(conn, &1)) |> Stream.run()
-
+      {:ok, %{"content_type" => content_type, "content_length" => content_length}, _stream} ->
         conn
+        |> put_resp_content_type(content_type, nil)
+        |> put_resp_header("content-length", "#{content_length}")
+        |> put_resp_header("accept-ranges", "bytes")
 
       {:error, :not_found} ->
         conn |> send_resp(400, "")
@@ -101,5 +101,126 @@ defmodule RetWeb.FileController do
       {:error, :not_allowed} ->
         conn |> send_resp(401, "")
     end
+  end
+
+  defp render_fetch_result(fetch_result, conn, :show) do
+    case fetch_result do
+      {:ok, %{"content_type" => content_type, "content_length" => content_length}, stream} ->
+        case extract_ranges(conn, content_length) do
+          {:ok, conn, ranges} ->
+            conn =
+              conn
+              |> put_resp_content_type(content_type, nil)
+              |> put_resp_header("content-length", "#{ranges |> total_range_length}")
+              |> put_resp_header("transfer-encoding", "chunked")
+              |> put_resp_header("cache-control", "public, max-age=31536000")
+              |> put_resp_header("accept-ranges", "bytes")
+              |> send_chunked(200)
+
+            # Multiple ranges not yet supported
+            [[start_offset, end_offset]] = ranges
+
+            # To deal with the range, we need to create a new stream that either emits or slices chunks
+            # so the proper range of bytes is emitted.
+            stream
+            |> Stream.transform(0, fn chunk, chunk_start ->
+              chunk_end = chunk_start + byte_size(chunk) - 1
+
+              cond do
+                chunk_end < start_offset ->
+                  {[], chunk_end + 1}
+
+                chunk_start <= end_offset ->
+                  extract_start =
+                    if chunk_start <= start_offset do
+                      start_offset - chunk_start
+                    else
+                      0
+                    end
+
+                  extract_end =
+                    if chunk_end <= end_offset do
+                      chunk_end - chunk_start
+                    else
+                      end_offset - chunk_start
+                    end
+
+                  extract_length = extract_end - extract_start + 1
+                  {[binary_part(chunk, extract_start, extract_length)], chunk_end + 1}
+
+                true ->
+                  {:halt, chunk_end + 1}
+              end
+            end)
+            |> Stream.map(&chunk(conn, &1))
+            |> Stream.run()
+
+            conn
+        end
+
+      {:error, :not_found} ->
+        conn |> send_resp(400, "")
+
+      {:error, :not_allowed} ->
+        conn |> send_resp(401, "")
+    end
+  end
+
+  defp extract_ranges(conn, content_length) do
+    ranges = [[0, content_length - 1]]
+
+    case conn |> get_req_header("range") do
+      [<<"bytes=", range::binary>>] ->
+        parsed_ranges = range |> ranges_for_range_header(content_length)
+
+        # Multiple ranges not supported yet in chunked responses until we upgrade cowboy, for now just return the whole thing
+        ranges =
+          if length(parsed_ranges) === 1 do
+            parsed_ranges
+          else
+            ranges
+          end
+
+        conn = conn |> put_resp_header("content-range", "bytes #{response_ranges_for_ranges(ranges)}/#{content_length}")
+
+        {:ok, conn, ranges}
+
+      _ ->
+        {:ok, conn, ranges}
+    end
+  end
+
+  defp total_range_length(ranges) do
+    # [[100, 200], [300, 400]] -> 200
+    ranges |> Enum.reduce(0, fn x, acc -> acc + Enum.at(x, 1) - Enum.at(x, 0) + 1 end)
+  end
+
+  defp ranges_for_range_header("-" <> suffix_length, content_length) do
+    # "-100", 1000 -> [[899, 999]]
+
+    suffix_length_int = suffix_length |> Integer.parse() |> elem(0)
+    [[content_length - suffix_length_int, content_length - 1]]
+  end
+
+  defp ranges_for_range_header(range_header, content_length) do
+    # "100-200, 300-", 1000 -> [[100, 200], [300, 999]]
+
+    s_to_byte = fn x ->
+      if x === "" do
+        content_length - 1
+      else
+        Integer.parse(x) |> elem(0)
+      end
+    end
+
+    range_header
+    |> String.split(", ")
+    |> Enum.map(fn x -> String.split(x, "-") |> Enum.map(s_to_byte) end)
+  end
+
+  defp response_ranges_for_ranges(ranges) do
+    ranges
+    |> Enum.map(fn x -> "#{Enum.at(x, 0)}-#{Enum.at(x, 1)}" end)
+    |> Enum.join(", ")
   end
 end
