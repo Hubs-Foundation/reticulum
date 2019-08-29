@@ -8,7 +8,7 @@ defmodule RetWeb.FileController do
   def head(conn, params), do: handle(conn, params, :head)
 
   def handle(conn, %{"id" => <<uuid::binary-size(36)>>, "token" => token}, type) do
-    render_file_with_token(type, conn, uuid, token)
+    render_file_with_token(conn, type, uuid, token)
   end
 
   def handle(conn, %{"id" => <<uuid::binary-size(36), ".html">>, "token" => token}, :show) do
@@ -95,6 +95,7 @@ defmodule RetWeb.FileController do
         |> put_resp_content_type(content_type, nil)
         |> put_resp_header("content-length", "#{content_length}")
         |> put_resp_header("accept-ranges", "bytes")
+        |> send_resp(200, "")
 
       {:error, :not_found} ->
         conn |> send_resp(400, "")
