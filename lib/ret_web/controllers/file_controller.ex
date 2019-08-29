@@ -113,7 +113,7 @@ defmodule RetWeb.FileController do
     case fetch_result do
       {:ok, %{"content_type" => content_type, "content_length" => content_length}, stream} ->
         case extract_ranges(conn, content_length) do
-          {:ok, conn, ranges} ->
+          {:ok, conn, ranges, has_range} ->
             conn =
               conn
               |> put_resp_content_type(content_type, nil)
@@ -121,7 +121,13 @@ defmodule RetWeb.FileController do
               |> put_resp_header("transfer-encoding", "chunked")
               |> put_resp_header("cache-control", "public, max-age=31536000")
               |> put_resp_header("accept-ranges", "bytes")
-              |> send_chunked(200)
+              |> send_chunked(
+                if has_range do
+                  206
+                else
+                  200
+                end
+              )
 
             # Multiple ranges not yet supported
             [[start_offset, end_offset]] = ranges
@@ -189,10 +195,10 @@ defmodule RetWeb.FileController do
 
         conn = conn |> put_resp_header("content-range", "bytes #{response_ranges_for_ranges(ranges)}/#{content_length}")
 
-        {:ok, conn, ranges}
+        {:ok, conn, ranges, true}
 
       _ ->
-        {:ok, conn, ranges}
+        {:ok, conn, ranges, false}
     end
   end
 
