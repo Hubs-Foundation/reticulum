@@ -113,7 +113,7 @@ defmodule RetWeb.FileController do
     case fetch_result do
       {:ok, %{"content_type" => content_type, "content_length" => content_length}, stream} ->
         case extract_ranges(conn, content_length) do
-          {:ok, conn, ranges, has_range} ->
+          {:ok, conn, ranges, is_partial} ->
             conn =
               conn
               |> put_resp_content_type(content_type, nil)
@@ -122,7 +122,7 @@ defmodule RetWeb.FileController do
               |> put_resp_header("cache-control", "public, max-age=31536000")
               |> put_resp_header("accept-ranges", "bytes")
               |> send_chunked(
-                if has_range do
+                if is_partial do
                   206
                 else
                   200
