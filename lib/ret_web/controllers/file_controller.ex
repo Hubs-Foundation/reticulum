@@ -97,8 +97,7 @@ defmodule RetWeb.FileController do
       {:ok, %{"content_type" => content_type, "content_length" => content_length}, _stream} ->
         conn
         |> put_resp_content_type(content_type, nil)
-        # HACK: alb doesn't like lower case
-        |> put_resp_header("Content-Length", "#{content_length}")
+        |> put_resp_header("content-length", "#{content_length}")
         |> put_resp_header("accept-ranges", "bytes")
         |> send_resp(200, "")
 
@@ -118,8 +117,7 @@ defmodule RetWeb.FileController do
             conn =
               conn
               |> put_resp_content_type(content_type, nil)
-              # HACK: alb doesn't like lower case
-              |> put_resp_header("Content-Length", "#{ranges |> total_range_length}")
+              |> put_resp_header("content-length", "#{ranges |> total_range_length}")
               |> put_resp_header("transfer-encoding", "chunked")
               |> put_resp_header("cache-control", "public, max-age=31536000")
               |> put_resp_header("accept-ranges", "bytes")
