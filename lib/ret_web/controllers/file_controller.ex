@@ -4,8 +4,12 @@ defmodule RetWeb.FileController do
 
   alias Ret.{OwnedFile, Storage, Repo}
 
-  def show(conn, params), do: handle(conn, params, :show)
-  def head(conn, params), do: handle(conn, params, :head)
+  def show(conn, params) do
+    case conn |> get_req_header("x-original-method") do
+      ["HEAD"] -> handle(conn, params, :head)
+      _ -> handle(conn, params, :show)
+    end
+  end
 
   def handle(conn, %{"id" => <<uuid::binary-size(36)>>, "token" => token}, type) do
     render_file_with_token(conn, type, uuid, token)

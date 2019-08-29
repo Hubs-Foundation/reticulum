@@ -3,10 +3,6 @@ defmodule RetWeb.Router do
   use Plug.ErrorHandler
   use Sentry.Plug
 
-  pipeline :head do
-    plug(Plug.Head)
-  end
-
   pipeline :secure_headers do
     plug(:put_secure_browser_headers)
     plug(RetWeb.AddCSPPlug)
@@ -48,9 +44,7 @@ defmodule RetWeb.Router do
   end
 
   scope "/api", RetWeb do
-    pipe_through(
-      [:head, :secure_headers, :api] ++ if(Mix.env() == :prod, do: [:ssl_only, :canonicalize_domain], else: [])
-    )
+    pipe_through([:secure_headers, :api] ++ if(Mix.env() == :prod, do: [:ssl_only, :canonicalize_domain], else: []))
 
     scope "/v1", as: :api_v1 do
       get("/meta", Api.V1.MetaController, :show)
@@ -102,9 +96,7 @@ defmodule RetWeb.Router do
   end
 
   scope "/", RetWeb do
-    pipe_through(
-      [:head, :secure_headers, :browser] ++ if(Mix.env() == :prod, do: [:ssl_only, :canonicalize_domain], else: [])
-    )
+    pipe_through([:secure_headers, :browser] ++ if(Mix.env() == :prod, do: [:ssl_only, :canonicalize_domain], else: []))
 
     get("/*path", PageController, only: [:index])
   end
