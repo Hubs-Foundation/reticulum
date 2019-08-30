@@ -61,7 +61,7 @@ defmodule Ret.Mixfile do
       {:open_graph, "~> 0.0.3"},
       {:secure_random, "~> 0.5.1"},
       {:bamboo, "~> 1.1"},
-      {:bamboo_smtp, "~> 1.6"},
+      {:bamboo_smtp, "~> 1.7"},
       {:guardian, "~> 1.1"},
       {:canary, "~> 1.1.1"},
       {:temp, "~> 0.4"},
