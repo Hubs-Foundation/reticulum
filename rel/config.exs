@@ -38,7 +38,6 @@ environment :prod do
   set(include_src: false)
   set(no_dot_erlang: true)
   set(vm_args: "rel/prod.vm_args")
-  set(post_start_hooks: "rel/hooks/post_start")
 end
 
 # You may define one or more releases in this file.

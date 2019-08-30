@@ -1,7 +1,10 @@
 defmodule Ret.ReleaseTasks do
   def migrate do
     {:ok, _} = Application.ensure_all_started(:ret)
-    Ecto.Migrator.run(Ret.Repo, migrations_path(:ret), :up, all: true)
+
+    Ret.Locking.exec_after_session_lock("ret_migrations", fn ->
+      Ecto.Migrator.run(Ret.Repo, migrations_path(:ret), :up, all: true)
+    end)
   end
 
   def priv_dir(app), do: "#{:code.priv_dir(app)}"
