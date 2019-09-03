@@ -16,7 +16,12 @@ defmodule Ret.Asset do
     belongs_to(:account, Ret.Account, references: :account_id)
     belongs_to(:asset_owned_file, Ret.OwnedFile, references: :owned_file_id)
     belongs_to(:thumbnail_owned_file, Ret.OwnedFile, references: :owned_file_id)
-    many_to_many(:projects, Ret.Project, join_through: Ret.ProjectAsset, join_keys: [ asset_id: :asset_id, project_id: :project_id], on_replace: :delete)
+
+    many_to_many(:projects, Ret.Project,
+      join_through: Ret.ProjectAsset,
+      join_keys: [asset_id: :asset_id, project_id: :project_id],
+      on_replace: :delete
+    )
 
     timestamps()
   end
@@ -30,9 +35,10 @@ defmodule Ret.Asset do
   def create_asset_and_project_asset(account, project, asset_owned_file, thumbnail_owned_file, params) do
     asset_changeset = Asset.changeset(%Asset{}, account, asset_owned_file, thumbnail_owned_file, params)
 
-    multi = Multi.new
+    multi =
+      Multi.new()
       |> Multi.insert(:asset, asset_changeset)
-      |> Multi.run(:project_asset, fn %{asset: asset} ->
+      |> Multi.run(:project_asset, fn _repo, %{asset: asset} ->
         project_asset_changeset = ProjectAsset.changeset(%ProjectAsset{}, project, asset)
         Repo.insert(project_asset_changeset)
       end)
@@ -43,8 +49,9 @@ defmodule Ret.Asset do
   def asset_by_sid_for_account(asset_sid, account) do
     from(a in Asset,
       where: a.asset_sid == ^asset_sid and a.account_id == ^account.account_id,
-      preload: [:account, :asset_owned_file, :thumbnail_owned_file])
-    |> Repo.one
+      preload: [:account, :asset_owned_file, :thumbnail_owned_file]
+    )
+    |> Repo.one()
   end
 
   # Create an Asset

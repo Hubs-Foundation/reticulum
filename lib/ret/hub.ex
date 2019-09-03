@@ -139,7 +139,7 @@ defmodule Ret.Hub do
 
   # NOTE occupant_count is 1 when there is 1 *other* user in the room with you, so active is when >= 1.
   defp maybe_add_last_active_at_to_changeset(changeset, occupant_count) when occupant_count >= 1,
-    do: changeset |> put_change(:last_active_at, Timex.now())
+    do: changeset |> put_change(:last_active_at, Timex.now() |> DateTime.truncate(:second))
 
   defp maybe_add_last_active_at_to_changeset(changeset, _), do: changeset
 
@@ -277,7 +277,9 @@ defmodule Ret.Hub do
       one_day_ago = Timex.now() |> Timex.shift(days: -1)
 
       candidate_hub_sids =
-        from(h in Hub, where: not is_nil(h.host) and h.inserted_at < ^one_day_ago) |> Repo.all() |> Enum.map(& &1.hub_sid)
+        from(h in Hub, where: not is_nil(h.host) and h.inserted_at < ^one_day_ago)
+        |> Repo.all()
+        |> Enum.map(& &1.hub_sid)
 
       present_hub_sids = RetWeb.Presence.present_hub_sids()
       clearable_hub_sids = candidate_hub_sids |> Enum.filter(&(!Enum.member?(present_hub_sids, &1)))
@@ -301,7 +303,7 @@ defmodule Ret.Hub do
   end
 
   defp add_entry_code_to_changeset(changeset) do
-    expires_at = Timex.now() |> Timex.shift(hours: @entry_code_expiration_hours)
+    expires_at = Timex.now() |> Timex.shift(hours: @entry_code_expiration_hours) |> DateTime.truncate(:second)
 
     changeset
     |> put_change(:entry_code, generate_entry_code!())
