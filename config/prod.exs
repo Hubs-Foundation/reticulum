@@ -27,7 +27,6 @@ config :ret, RetWeb.Endpoint,
 config :logger, level: :info
 
 config :ret, Ret.Repo,
-  adapter: Ecto.Adapters.Postgres,
   username: "postgres",
   password: "postgres",
   database: "ret_production",

@@ -92,6 +92,6 @@ defmodule Ret.WebPushSubscription do
   defp changeset_for_notification_sent(%WebPushSubscription{} = subscription) do
     subscription
     |> cast(%{}, [])
-    |> put_change(:last_notified_at, Timex.now())
+    |> put_change(:last_notified_at, Timex.now() |> DateTime.truncate(:second))
   end
 end

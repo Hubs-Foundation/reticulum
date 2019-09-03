@@ -75,13 +75,14 @@ env_db_host = "#{System.get_env("DB_HOST")}"
 
 # Configure your database
 config :ret, Ret.Repo,
-  adapter: Ecto.Adapters.Postgres,
   username: "postgres",
   password: "postgres",
   database: "ret_dev",
   hostname: if(env_db_host == "", do: "localhost", else: env_db_host),
   template: "template0",
   pool_size: 10
+
+config :ret, Ret.ReleaseTasks, migrate_post_start: false
 
 config :ret, RetWeb.Plugs.HeaderAuthorization,
   header_name: "x-ret-admin-access-key",
