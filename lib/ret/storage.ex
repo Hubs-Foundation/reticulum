@@ -157,6 +157,8 @@ defmodule Ret.Storage do
 
   # Vacuums up TTLed out files
   def vacuum do
+    Logger.info("Stored Files: Attempting Vacuum.")
+
     Ret.Locking.exec_if_lockable(:storage_vacuum, fn ->
       Logger.info("Stored Files: Beginning Vacuum.")
 
