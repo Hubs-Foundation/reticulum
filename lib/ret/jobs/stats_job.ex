@@ -8,7 +8,7 @@ defmodule Ret.StatsJob do
   def save_node_stats do
     {:ok, _} =
       with node_id <- Node.self() |> to_string,
-           measured_at <- NaiveDateTime.utc_now() |> DateTime.truncate(:second),
+           measured_at <- NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second),
            present_sessions <- RetWeb.Presence.present_session_count(),
            present_rooms <- RetWeb.Presence.present_room_count() do
         %NodeStat{}
