@@ -19,7 +19,7 @@ defmodule Ret.PageOriginWarmer do
       cache_values =
         @pages
         |> Enum.map(fn {source, page} -> Task.async(fn -> page_to_cache_entry(source, page) end) end)
-        |> Enum.map(&Task.await(&1, 15000))
+        |> Enum.map(&Task.await(&1, 15_000))
         |> Enum.reject(&is_nil/1)
 
       {:ok, cache_values}
@@ -29,7 +29,7 @@ defmodule Ret.PageOriginWarmer do
   end
 
   def chunks_for_page(source, page) do
-    {:ok, page_to_cache_entry(source, page) |> elem(1)}
+    {:ok, source |> page_to_cache_entry(page) |> elem(1)}
   end
 
   defp page_to_cache_entry(source, page) do
