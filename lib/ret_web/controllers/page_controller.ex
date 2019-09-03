@@ -40,7 +40,17 @@ defmodule RetWeb.PageController do
     conn |> send_resp(404, "")
   end
 
-  def render_for_path("/", _params, conn), do: conn |> render_page("index.html")
+  def render_for_path("/", _params, conn) do
+    index_meta_tags = Phoenix.View.render_to_string(RetWeb.PageView, "index-meta.html", [])
+
+    chunks =
+      chunks_for_page("index.html", :hubs)
+      |> List.insert_at(1, index_meta_tags)
+
+    conn
+    |> put_resp_header("content-type", "text/html; charset=utf-8")
+    |> send_resp(200, chunks)
+  end
 
   def render_for_path("/scenes/" <> path, _params, conn) do
     path
@@ -78,7 +88,24 @@ defmodule RetWeb.PageController do
   def render_for_path("/whats-new/", _params, conn), do: conn |> render_page("whats-new.html")
 
   def render_for_path("/hub.service.js", _params, conn), do: conn |> render_page("hub.service.js")
-  def render_for_path("/manifest.webmanifest", _params, conn), do: conn |> render_page("manifest.webmanifest")
+
+  def render_for_path("/manifest.webmanifest", _params, conn) do
+    ua =
+      conn
+      |> Plug.Conn.get_req_header("user-agent")
+      |> List.first()
+      |> UAParser.parse()
+
+    # For iOS, do not render the manifest since we don't want to trigger the PWA functionality,
+    # since WebRTC doesn't work then.
+    supports_pwa = ua.family != "Safari" && ua.family != "Mobile Safari"
+
+    if supports_pwa do
+      conn |> render_page("manifest.webmanifest")
+    else
+      conn |> send_resp(404, "Not found.")
+    end
+  end
 
   def render_for_path("/admin", _params, conn), do: conn |> render_page("admin.html")
 
@@ -109,7 +136,7 @@ defmodule RetWeb.PageController do
   end
 
   def render_hub_content(conn, hub, "objects.gltf") do
-    room_gltf = Ret.RoomObject.gltf_for_hub_id(hub.hub_id) |> Poison.encode!()
+    room_gltf = hub.hub_id |> Ret.RoomObject.gltf_for_hub_id() |> Poison.encode!()
 
     conn
     |> put_resp_header("content-type", "model/gltf+json; charset=utf-8")
