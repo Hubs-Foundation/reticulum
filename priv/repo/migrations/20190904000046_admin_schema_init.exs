@@ -131,7 +131,7 @@ defmodule Ret.Repo.Migrations.AdminSchemaInit do
     execute("grant all privileges on all tables in schema ret0_admin to ret_admin;")
 
     execute("""
-      create or replace function create_or_replace_admin_view(
+      create or replace function ret0_admin.create_or_replace_admin_view(
       name text,
       extra_columns text default '',
       extra_clauses text default ''
@@ -171,25 +171,25 @@ defmodule Ret.Repo.Migrations.AdminSchemaInit do
     $$ language plpgsql;
     """)
 
-    execute("select create_or_replace_admin_view('scenes');")
+    execute("select ret0_admin.create_or_replace_admin_view('scenes');")
     execute("grant select, insert, update on ret0_admin.scenes to ret_admin;")
 
-    execute("select create_or_replace_admin_view('accounts');")
+    execute("select ret0_admin.create_or_replace_admin_view('accounts');")
     execute("grant select, insert, update on ret0_admin.accounts to ret_admin;")
 
-    execute("select create_or_replace_admin_view('owned_files');")
+    execute("select ret0_admin.create_or_replace_admin_view('owned_files');")
     execute("grant select, insert, update on ret0_admin.owned_files to ret_admin;")
 
-    execute("select create_or_replace_admin_view('scene_listings');")
+    execute("select ret0_admin.create_or_replace_admin_view('scene_listings');")
     execute("grant select, insert, update on ret0_admin.scene_listings to ret_admin;")
 
-    execute("select create_or_replace_admin_view('avatars');")
+    execute("select ret0_admin.create_or_replace_admin_view('avatars');")
     execute("grant select, insert, update on ret0_admin.avatars to ret_admin;")
 
-    execute("select create_or_replace_admin_view('avatar_listings');")
+    execute("select ret0_admin.create_or_replace_admin_view('avatar_listings');")
     execute("grant select, insert, update on ret0_admin.avatar_listings to ret_admin;")
 
-    execute("select create_or_replace_admin_view('projects');")
+    execute("select ret0_admin.create_or_replace_admin_view('projects');")
     execute("grant select, insert, update on ret0_admin.projects to ret_admin;")
 
     execute("""
