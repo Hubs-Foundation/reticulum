@@ -17,7 +17,7 @@ defmodule Ret.GuardianTest do
     account = Account.account_for_email("test@mozilla.com")
     token = Account.credentials_for_identifier_hash(account.login.identifier_hash)
 
-    date = NaiveDateTime.utc_now() |> NaiveDateTime.add(1, :second)
+    date = Timex.now() |> Timex.shift(seconds: 1) |> DateTime.truncate(:second)
 
     account |> Changeset.change(%{min_token_issued_at: date}) |> Repo.update()
 

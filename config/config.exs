@@ -44,18 +44,6 @@ config :peerage, log_results: false
 
 config :statix, prefix: "ret"
 
-config :ret, Ret.SingletonScheduler,
-  global: true,
-  jobs: [
-    # Vacuum stored files
-    {"@daily", {Ret.Storage, :vacuum, []}},
-    {"@daily", {Ret.Storage, :demote_inactive_owned_files, []}},
-    {"@daily", {Ret.LoginToken, :expire_stale, []}},
-    {"@daily", {Ret.Hub, :vacuum_entry_codes, []}},
-    {"@daily", {Ret.Hub, :vacuum_hosts, []}},
-    {"@daily", {Ret.CachedFile, :vacuum, []}}
-  ]
-
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{Mix.env()}.exs"

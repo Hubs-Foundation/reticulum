@@ -35,7 +35,9 @@ defmodule Ret.Mixfile do
     [
       {:phoenix, "~> 1.3.0"},
       {:phoenix_pubsub, "~> 1.0"},
-      {:phoenix_ecto, "~> 3.3"},
+      {:phoenix_ecto, "~> 4.0"},
+      {:ecto, "~> 3.1"},
+      {:ecto_sql, "~> 3.1"},
       {:postgrex, ">= 0.0.0"},
       {:phoenix_html, "~> 2.10"},
       {:phoenix_live_reload, "~> 1.0", only: :dev},
@@ -51,7 +53,7 @@ defmodule Ret.Mixfile do
       {:cors_plug, "~> 1.5"},
       {:basic_auth, "~> 2.2"},
       {:statix, "~> 1.1"},
-      {:quantum, "~> 2.3"},
+      {:quantum, "~> 2.2.7"},
       {:credo, "~> 0.9.1", only: [:dev, :test], runtime: false},
       {:plug_attack, "~> 0.3"},
       {:ecto_enum, "~> 1.2"},
@@ -61,18 +63,19 @@ defmodule Ret.Mixfile do
       {:open_graph, "~> 0.0.3"},
       {:secure_random, "~> 0.5.1"},
       {:bamboo, "~> 1.1"},
-      {:bamboo_smtp, "~> 1.6"},
-      {:guardian, "~> 1.1"},
+      {:bamboo_smtp, "~> 1.7"},
+      {:guardian, "~> 1.2"},
       {:canary, "~> 1.1.1"},
       {:temp, "~> 0.4"},
       {:timex, "~> 3.4"},
       {:web_push_encryption, "~> 0.2.0"},
       {:sentry, "~> 6.0"},
       {:toml, "~> 0.5"},
-      {:scrivener_ecto, "~> 1.0"},
+      {:scrivener_ecto, "~> 2.0"},
       {:ua_parser, "~> 1.5.0"},
       {:download, git: "https://github.com/gfodor/download.git", branch: "reticulum/master"},
-      {:oauther, "~> 1.1"}
+      {:oauther, "~> 1.1"},
+      {:jason, "~> 1.1"}
     ]
   end
 

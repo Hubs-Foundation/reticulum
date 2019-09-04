@@ -91,7 +91,8 @@ defmodule RetWeb.Router do
   scope "/", RetWeb do
     pipe_through([:secure_headers, :browser] ++ if(Mix.env() == :prod, do: [:ssl_only], else: []))
 
-    resources("/files", FileController, only: [:show])
+    head("/files/:id", FileController, :head)
+    get("/files/:id", FileController, :show)
   end
 
   scope "/", RetWeb do

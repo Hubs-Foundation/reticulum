@@ -30,10 +30,11 @@ hostname = "localhost"
 database = "ret_dev"
 template = "template0"
 pool_size = 16
+auto_migrate = "false"
 
 [security]
 content_security_policy = "default-src 'self'"
-cors_origins = "[\"*\"]"
+cors_origins = "*"
 
 [pages]
 insecure_ssl = "false"

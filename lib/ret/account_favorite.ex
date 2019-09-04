@@ -62,13 +62,13 @@ defmodule Ret.AccountFavorite do
     |> change()
     |> put_assoc(:hub, hub)
     |> put_assoc(:account, account)
-    |> put_change(:last_activated_at, Timex.now())
+    |> put_change(:last_activated_at, Timex.now() |> DateTime.truncate(:second))
   end
 
   defp changeset_for_activation(%AccountFavorite{} = favorite) do
     favorite
     |> change()
-    |> put_change(:last_activated_at, Timex.now())
+    |> put_change(:last_activated_at, Timex.now() |> DateTime.truncate(:second))
   end
 
   defp get_favorite(%Hub{}, nil), do: nil

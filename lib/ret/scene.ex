@@ -78,7 +78,7 @@ defmodule Ret.Scene do
   def changeset_to_mark_as_reviewed(%Scene{} = scene) do
     scene
     |> Ecto.Changeset.change()
-    |> put_change(:reviewed_at, Timex.now())
+    |> put_change(:reviewed_at, Timex.now() |> DateTime.truncate(:second))
   end
 
   defp maybe_add_scene_sid_to_changeset(changeset) do

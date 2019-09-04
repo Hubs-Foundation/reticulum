@@ -27,7 +27,6 @@ config :ret, RetWeb.Endpoint,
 config :logger, level: :info
 
 config :ret, Ret.Repo,
-  adapter: Ecto.Adapters.Postgres,
   username: "postgres",
   password: "postgres",
   database: "ret_production",
@@ -91,7 +90,19 @@ config :ret, Ret.Scheduler,
     {{:extended, "*/5 * * * *"}, {Ret.StatsJob, :send_statsd_gauges, []}},
 
     # Flush stats to db every 5 minutes
-    {{:cron, "*/5 * * * *"}, {Ret.StatsJob, :save_node_stats, []}}
+    {{:cron, "*/5 * * * *"}, {Ret.StatsJob, :save_node_stats, []}},
+
+    {{:cron, "0 10 * * *"}, {Ret.Storage, :vacuum, []}},
+
+    {{:cron, "5 10 * * *"}, {Ret.Storage, :demote_inactive_owned_files, []}},
+
+    {{:cron, "10 10 * * *"}, {Ret.LoginToken, :expire_stale, []}},
+
+    {{:cron, "15 10 * * *"}, {Ret.Hub, :vacuum_entry_codes, []}},
+
+    {{:cron, "20 10 * * *"}, {Ret.Hub, :vacuum_hosts, []}},
+
+    {{:cron, "25 10 * * *"}, {Ret.CachedFile, :vacuum, []}}
   ]
 
 config :ret, RetWeb.Plugs.HeaderAuthorization, header_name: "x-ret-admin-access-key"

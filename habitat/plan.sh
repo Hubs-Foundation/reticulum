@@ -9,14 +9,14 @@ pkg_deps=(
     core/coreutils
     core/bash
     core/which
-    mozillareality/erlang/21.0
+    mozillareality/erlang/22.0
 )
 
 pkg_build_deps=(
     core/coreutils
     core/git
-    mozillareality/erlang/21.0
-    core/elixir/1.7.4
+    mozillareality/erlang/22.0
+    core/elixir/1.8.0
 )
 
 pkg_exports=(
@@ -50,14 +50,18 @@ do_build() {
 
 do_install() {
     rm -rf _build/prod/rel/ret/releases
-    mix release --env=prod
+    MIX_ENV=prod mix release
+    # TODO 1.9 releases chmod 0655 _build/prod/rel/ret/bin/*
     cp -a _build/prod/rel/ret/* ${pkg_prefix}
 
     for f in $(find ${pkg_prefix} -name '*.sh')
     do
         fix_interpreter "$f" core/bash bin/bash
         fix_interpreter "$f" core/coreutils bin/env
+        # TODO 1.9 releases chmod 0655 "$f"
     done
+
+    # TODO 1.9 releases chmod 0655 elixir, bin/erl
 }
 
 do_strip() {

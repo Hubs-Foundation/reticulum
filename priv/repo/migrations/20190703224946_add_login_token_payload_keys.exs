@@ -1,4 +1,4 @@
-defmodule Ret.Repo.Migrations.AddEmbedTokenToHubs do
+defmodule Ret.Repo.Migrations.AddLoginTokenPayloadKeys do
   use Ecto.Migration
 
   def change do

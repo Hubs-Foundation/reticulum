@@ -20,13 +20,10 @@ defmodule Ret.CachedFile do
   # write the data to cache to, and is expected to return a { :ok, %{ content_type: } } tuple
   # with the content type.
   def fetch(cache_key, loader) do
-    Repo.transaction(fn ->
-      # Use a PostgreSQL advisory lock on the cache key as a mutex across all
-      # nodes for accessing this cache key
-      <<lock_key::little-signed-integer-size(64), _::binary>> = :crypto.hash(:sha256, cache_key)
-
-      Ecto.Adapters.SQL.query!(Repo, "select pg_advisory_xact_lock($1);", [lock_key])
-
+    # Use a PostgreSQL advisory lock on the cache key as a mutex across all
+    # nodes for accessing this cache key
+    #
+    Ret.Locking.exec_after_lock(cache_key, fn ->
       case CachedFile
            |> where(cache_key: ^cache_key)
            |> Repo.one() do
@@ -40,7 +37,7 @@ defmodule Ret.CachedFile do
             loader_result = loader.(path)
 
             case loader_result do
-              { :ok, %{content_type: content_type} } ->
+              {:ok, %{content_type: content_type}} ->
                 file_key = SecureRandom.hex()
                 {:ok, file_uuid} = Storage.store(path, content_type, file_key)
 
@@ -73,10 +70,12 @@ defmodule Ret.CachedFile do
   end
 
   def vacuum do
-    # Underlying files will be removed by storage vacuum
-    one_day_ago = Timex.now() |> Timex.shift(days: -1)
+    Ret.Locking.exec_if_lockable(:cached_file_vacuum, fn ->
+      # Underlying files will be removed by storage vacuum
+      one_day_ago = Timex.now() |> Timex.shift(days: -1)
 
-    from(f in CachedFile, where: f.inserted_at() < ^one_day_ago)
-    |> Repo.delete_all()
+      from(f in CachedFile, where: f.inserted_at() < ^one_day_ago)
+      |> Repo.delete_all()
+    end)
   end
 end

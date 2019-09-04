@@ -157,48 +157,84 @@ defmodule Ret.Storage do
 
   # Vacuums up TTLed out files
   def vacuum do
-    Logger.info("Stored Files: Beginning Vacuum.")
+    Logger.info("Stored Files: Attempting Vacuum.")
 
-    with storage_path when is_binary(storage_path) <- module_config(:storage_path),
-         ttl when is_integer(ttl) <- module_config(:ttl) do
-      process_blob = fn blob_file, _acc ->
-        {:ok, %{atime: atime}} = File.stat(blob_file)
+    Ret.Locking.exec_if_lockable(:storage_vacuum, fn ->
+      Logger.info("Stored Files: Beginning Vacuum.")
 
-        now = DateTime.utc_now()
-        atime_datetime = atime |> NaiveDateTime.from_erl!() |> DateTime.from_naive!("Etc/UTC")
-        seconds_since_access = DateTime.diff(now, atime_datetime)
+      with storage_path when is_binary(storage_path) <- module_config(:storage_path),
+           ttl when is_integer(ttl) <- module_config(:ttl) do
+        process_blob = fn blob_file, _acc ->
+          {:ok, %{atime: atime}} = File.stat(blob_file)
 
-        if seconds_since_access > ttl do
-          Logger.info("Stored Files: Removing #{blob_file} after #{seconds_since_access}s since last access.")
+          now = DateTime.utc_now()
+          atime_datetime = atime |> NaiveDateTime.from_erl!() |> DateTime.from_naive!("Etc/UTC")
+          seconds_since_access = DateTime.diff(now, atime_datetime)
 
-          File.rm!(blob_file)
-          File.rm(blob_file |> String.replace_suffix(".blob", ".meta.json"))
+          if seconds_since_access > ttl do
+            Logger.info("Stored Files: Removing #{blob_file} after #{seconds_since_access}s since last access.")
+
+            File.rm!(blob_file)
+            File.rm(blob_file |> String.replace_suffix(".blob", ".meta.json"))
+          end
+        end
+
+        :filelib.fold_files(
+          Path.join(storage_path, @expiring_file_path),
+          "\\.blob$",
+          true,
+          process_blob,
+          nil
+        )
+
+        # Clean empty dirs
+        # TODO figure out what to do about owned files -- that structure increase over time
+        for type <- [@expiring_file_path] do
+          root_path = "#{storage_path}/#{type}"
+          {:ok, dirs} = :file.list_dir(root_path)
+
+          # Walk sub directories and remove them if they are empty.
+          for d <- dirs do
+            sub_path = Path.join(root_path, d)
+            {:ok, subdirs} = :file.list_dir(sub_path)
+
+            for sd <- subdirs do
+              path = Path.join(sub_path, sd)
+              {:ok, files} = :file.list_dir(path)
+
+              if files |> length === 0 do
+                File.rmdir(path)
+              end
+            end
+          end
+
+          # Check if we've removed all the sub directories.
+          for d <- dirs do
+            sub_path = Path.join(root_path, d)
+            {:ok, subdirs} = :file.list_dir(sub_path)
+
+            if subdirs |> length === 0 do
+              File.rmdir(sub_path)
+            end
+          end
         end
       end
 
-      :filelib.fold_files(
-        "#{storage_path}/#{@expiring_file_path}",
-        "\\.blob$",
-        true,
-        process_blob,
-        nil
-      )
-
-      # TODO clean empty dirs
-    end
-
-    Logger.info("Stored Files: Vacuum Finished.")
+      Logger.info("Stored Files: Vacuum Finished.")
+    end)
   end
 
   def demote_inactive_owned_files do
-    inactive_owned_files = OwnedFile.inactive()
+    Ret.Locking.exec_if_lockable(:storage_demote, fn ->
+      inactive_owned_files = OwnedFile.inactive()
 
-    inactive_owned_files
-    |> Enum.map(& &1.owned_file_uuid)
-    |> Enum.each(&move_file_to_expiring_storage/1)
+      inactive_owned_files
+      |> Enum.map(& &1.owned_file_uuid)
+      |> Enum.each(&move_file_to_expiring_storage/1)
 
-    inactive_owned_files
-    |> Enum.each(&Repo.delete/1)
+      inactive_owned_files
+      |> Enum.each(&Repo.delete/1)
+    end)
   end
 
   defp move_file_to_expiring_storage(uuid) do
@@ -260,7 +296,7 @@ defmodule Ret.Storage do
     {:ok,
      %{
        "content_type" => content_type,
-       "content_length" => content_length,
+       "content_length" => content_length
      }, source_stream} = fetch_blob(id, key, @owned_file_path)
 
     new_key = SecureRandom.hex()

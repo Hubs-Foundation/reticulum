@@ -23,6 +23,7 @@ defmodule Ret.Avatar do
     :normal_map_owned_file,
     :orm_map_owned_file
   ]
+
   @file_columns [:gltf_owned_file, :bin_owned_file, :thumbnail_owned_file] ++ @image_columns
 
   def image_columns, do: @image_columns

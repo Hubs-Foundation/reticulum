@@ -139,7 +139,7 @@ defmodule Ret.Hub do
 
   # NOTE occupant_count is 1 when there is 1 *other* user in the room with you, so active is when >= 1.
   defp maybe_add_last_active_at_to_changeset(changeset, occupant_count) when occupant_count >= 1,
-    do: changeset |> put_change(:last_active_at, Timex.now())
+    do: changeset |> put_change(:last_active_at, Timex.now() |> DateTime.truncate(:second))
 
   defp maybe_add_last_active_at_to_changeset(changeset, _), do: changeset
 
@@ -265,21 +265,27 @@ defmodule Ret.Hub do
   end
 
   def vacuum_entry_codes do
-    query = from(h in Hub, where: h.entry_code_expires_at() < ^Timex.now())
-    Repo.update_all(query, set: [entry_code: nil, entry_code_expires_at: nil])
+    Ret.Locking.exec_if_lockable(:hub_vacuum_entry_codes, fn ->
+      query = from(h in Hub, where: h.entry_code_expires_at() < ^Timex.now())
+      Repo.update_all(query, set: [entry_code: nil, entry_code_expires_at: nil])
+    end)
   end
 
   # Remove the host entry from any rooms that are older than a day old and have no presence
   def vacuum_hosts do
-    one_day_ago = Timex.now() |> Timex.shift(days: -1)
+    Ret.Locking.exec_if_lockable(:hub_vacuum_hosts, fn ->
+      one_day_ago = Timex.now() |> Timex.shift(days: -1)
 
-    candidate_hub_sids =
-      from(h in Hub, where: not is_nil(h.host) and h.inserted_at < ^one_day_ago) |> Repo.all() |> Enum.map(& &1.hub_sid)
+      candidate_hub_sids =
+        from(h in Hub, where: not is_nil(h.host) and h.inserted_at < ^one_day_ago)
+        |> Repo.all()
+        |> Enum.map(& &1.hub_sid)
 
-    present_hub_sids = RetWeb.Presence.present_hub_sids()
-    clearable_hub_sids = candidate_hub_sids |> Enum.filter(&(!Enum.member?(present_hub_sids, &1)))
+      present_hub_sids = RetWeb.Presence.present_hub_sids()
+      clearable_hub_sids = candidate_hub_sids |> Enum.filter(&(!Enum.member?(present_hub_sids, &1)))
 
-    from(h in Hub, where: h.hub_sid in ^clearable_hub_sids) |> Repo.update_all(set: [host: nil])
+      from(h in Hub, where: h.hub_sid in ^clearable_hub_sids) |> Repo.update_all(set: [host: nil])
+    end)
   end
 
   defp add_hub_sid_to_changeset(changeset) do
@@ -297,7 +303,7 @@ defmodule Ret.Hub do
   end
 
   defp add_entry_code_to_changeset(changeset) do
-    expires_at = Timex.now() |> Timex.shift(hours: @entry_code_expiration_hours)
+    expires_at = Timex.now() |> Timex.shift(hours: @entry_code_expiration_hours) |> DateTime.truncate(:second)
 
     changeset
     |> put_change(:entry_code, generate_entry_code!())

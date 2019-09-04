@@ -16,7 +16,7 @@ defmodule RetWeb.SessionSocket do
     socket =
       socket
       |> assign(:session_id, session_token |> session_id_for_token || generate_session_id())
-      |> assign(:started_at, NaiveDateTime.utc_now())
+      |> assign(:started_at, NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second))
 
     {:ok, socket}
   end
@@ -25,7 +25,7 @@ defmodule RetWeb.SessionSocket do
     socket =
       socket
       |> assign(:session_id, generate_session_id())
-      |> assign(:started_at, NaiveDateTime.utc_now())
+      |> assign(:started_at, NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second))
 
     {:ok, socket}
   end
