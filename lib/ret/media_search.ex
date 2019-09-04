@@ -39,7 +39,7 @@ defmodule Ret.MediaSearch do
   end
 
   def search(%Ret.MediaSearchQuery{source: "avatar_listings", cursor: cursor, filter: filter, q: query}) do
-    avatar_listing_search(cursor, query, filter, asc: :order)
+    avatar_listing_search(cursor, query, filter)
   end
 
   def search(%Ret.MediaSearchQuery{source: "avatars", cursor: cursor, filter: filter, user: account_id, q: query}) do
@@ -451,7 +451,7 @@ defmodule Ret.MediaSearch do
     {:commit, results}
   end
 
-  defp avatar_listing_search(cursor, query, filter, order \\ [desc: :updated_at]) do
+  defp avatar_listing_search(cursor, query, filter, order \\ [asc: :order, desc: :updated_at]) do
     page_number = (cursor || "1") |> Integer.parse() |> elem(0)
 
     results =

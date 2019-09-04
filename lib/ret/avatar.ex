@@ -61,42 +61,20 @@ defmodule Ret.Avatar do
     timestamps()
   end
 
-  def load_parents(avatar, preload_fields \\ [])
-
-  def load_parents(%AvatarListing{parent_avatar_listing: nil} = avatar, preload_fields),
-    do: avatar |> Repo.preload(preload_fields)
-
-  def load_parents(%Avatar{parent_avatar_listing: nil, parent_avatar: nil} = avatar, preload_fields),
-    do: avatar |> Repo.preload(preload_fields)
+  def load_parents(nil, _preload_fields), do: nil
 
   def load_parents(%AvatarListing{} = avatar, preload_fields) do
     avatar
     |> Repo.preload([:parent_avatar_listing] ++ preload_fields)
-    |> Map.update!(
-      :parent_avatar_listing,
-      &Avatar.load_parents(&1, preload_fields)
-    )
-  end
-
-  def load_parents(%Avatar{parent_avatar_listing: nil, parent_avatar: parent} = avatar, preload_fields) do
-    avatar
-    |> Repo.preload([:parent_avatar] ++ preload_fields)
-    |> Map.update!(
-      :parent_avatar,
-      &Avatar.load_parents(&1, preload_fields)
-    )
+    |> Map.update!(:parent_avatar_listing, &load_parents(&1, preload_fields))
   end
 
   def load_parents(%Avatar{} = avatar, preload_fields) do
     avatar
     |> Repo.preload([:parent_avatar_listing, :parent_avatar] ++ preload_fields)
-    |> Map.update!(
-      :parent_avatar_listing,
-      &Avatar.load_parents(&1, preload_fields)
-    )
+    |> Map.update!(:parent_avatar_listing, &load_parents(&1, preload_fields))
+    |> Map.update!(:parent_avatar, &load_parents(&1, preload_fields))
   end
-
-  def load_parents(nil, _preload_fields), do: nil
 
   defp avatar_to_collapsed_files(%AvatarListing{parent_avatar_listing: nil} = avatar),
     do: avatar |> Map.take(@file_columns)
@@ -125,7 +103,7 @@ defmodule Ret.Avatar do
   def collapsed_files(%t{} = avatar) when t in [Avatar, AvatarListing] do
     # TODO we ideally don't need to be featching the OwnedFiles until after we collapse them
     avatar
-    |> Avatar.load_parents(@file_columns)
+    |> load_parents(@file_columns)
     |> avatar_to_collapsed_files()
   end
 
