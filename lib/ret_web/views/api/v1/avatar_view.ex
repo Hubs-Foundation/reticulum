@@ -18,6 +18,7 @@ defmodule RetWeb.Api.V1.AvatarView do
     avatar
     |> common_fields()
     |> Map.merge(%{
+      type: "avatar",
       avatar_id: avatar.avatar_sid,
       parent_avatar_id: unless(is_nil(avatar.parent_avatar), do: avatar.parent_avatar.avatar_sid),
       # Only include account id on your own avatars
@@ -32,6 +33,7 @@ defmodule RetWeb.Api.V1.AvatarView do
     listing
     |> common_fields()
     |> Map.merge(%{
+      type: "avatar_listing",
       avatar_id: listing.avatar_listing_sid,
       allow_remixing: listing.avatar.allow_remixing,
       allow_promotion: listing.avatar.allow_promotion
