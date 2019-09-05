@@ -187,7 +187,7 @@ defmodule RetWeb.FileController do
         # Multiple ranges not supported yet in chunked responses until we upgrade cowboy, for now just return the whole thing
         if length(parsed_ranges) === 1 do
           conn =
-            conn |> put_resp_header("content-range", "bytes #{response_ranges_for_ranges(ranges)}/#{content_length}")
+            conn |> put_resp_header("content-range", "bytes #{response_ranges_for_ranges(parsed_ranges)}/#{content_length}")
 
           {:ok, conn, parsed_ranges, true}
         else
