@@ -48,7 +48,7 @@ pipeline {
             def (major, minor, version) = packageIdent.tokenize('/')[2].tokenize('.')
             def retVersion = "${major}.${minor}.${packageTimeVersion}"
             def poolHost = env.RET_DARK_POOL_HOST
-            def retPool = sh(returnStdout: true, script: "curl https://${poolHost}/api/v1/meta | jq -r '.pool'").trim()
+            def retPool = sh(returnStdout: true, script: "curl https://${poolHost}/api/v1/meta | jq -r '.pool'; exit 0").trim()
             def retPoolIcon = retPool == 'earth' ? ':earth_americas:' : ':new_moon:'
 
             def gitMessage = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'[%an] %s'").trim()
@@ -58,9 +58,9 @@ pipeline {
               "*<http://localhost:8080/job/${env.JOB_NAME}/${env.BUILD_NUMBER}|#${env.BUILD_NUMBER}>* *${env.JOB_NAME}* " +
               "<https://bldr.habitat.sh/#/pkgs/${packageIdent}|${packageIdent}>\n" +
               "<https://github.com/mozilla/reticulum/commit/$gitSha|$gitSha> " +
-              "Reticulum -> ${retPoolIcon} `${retPool}`: ```${gitSha} ${gitMessage}```\n" +
+              (retPool != "" ? "Reticulum -> ${retPoolIcon} `${retPool}`: ```${gitSha} ${gitMessage}```\n" : "") +
               "<https://smoke-hubs.mozilla.com/0zuesf6c6mf/smoke-test?required_ret_version=${retVersion}&required_ret_pool=${retPool}|Smoke Test> - to push:\n" +
-              "`/mr ret deploy ${retVersion} ${retPool}`"
+              (retPool != "" ? "`/mr ret deploy ${retVersion} ${retPool}`" : "")
             )
             def payload = 'payload=' + JsonOutput.toJson([
               text      : text,
