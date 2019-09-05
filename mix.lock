@@ -86,6 +86,7 @@
   "rabbit_common": {:git, "https://github.com/jbrisbin/rabbit_common.git", "9c1965273032ffb79ec0ff80b250e5d0b4608aa7", [ref: ""]},
   "ranch": {:hex, :ranch, "1.7.1", "6b1fab51b49196860b733a49c07604465a47bdb78aa10c1c16a3d199f7f8c881", [:rebar3], [], "hexpm"},
   "retry": {:hex, :retry, "0.13.0", "bb9b2713f70f39337837852337ad280c77662574f4fb852a8386c269f3d734c4", [:mix], [], "hexpm"},
+  "reverse_proxy_plug": {:hex, :reverse_proxy_plug, "1.2.1", "f950a7ba212182b36fb44d06b8c6a347951863fd22d2201452c5233ce23701b1", [:mix], [{:cowboy, "~> 2.4", [hex: :cowboy, repo: "hexpm", optional: false]}, {:httpoison, "~> 1.2", [hex: :httpoison, repo: "hexpm", optional: false]}, {:plug, "~> 1.6", [hex: :plug, repo: "hexpm", optional: false]}], "hexpm"},
   "scrivener": {:hex, :scrivener, "2.7.0", "fa94cdea21fad0649921d8066b1833d18d296217bfdf4a5389a2f45ee857b773", [:mix], [], "hexpm"},
   "scrivener_ecto": {:hex, :scrivener_ecto, "2.2.0", "53d5f1ba28f35f17891cf526ee102f8f225b7024d1cdaf8984875467158c9c5e", [:mix], [{:ecto, "~> 3.0", [hex: :ecto, repo: "hexpm", optional: false]}, {:scrivener, "~> 2.4", [hex: :scrivener, repo: "hexpm", optional: false]}], "hexpm"},
   "secure_random": {:hex, :secure_random, "0.5.1", "c5532b37c89d175c328f5196a0c2a5680b15ebce3e654da37129a9fe40ebf51b", [:mix], [], "hexpm"},
