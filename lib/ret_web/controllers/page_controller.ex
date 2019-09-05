@@ -237,6 +237,11 @@ defmodule RetWeb.PageController do
     stream_cors_proxy_response(conn)
   end
 
+  defp allow_origin?(origin) do
+    allowed_origins = Application.get_env(:ret, RetWeb.Endpoint)[:allowed_origins] |> String.split(",")
+    allowed_origins == ["*"] || Enum.any?(allowed_origins, fn o -> o === origin end)
+  end
+
   # TODO see if this can get incorporated into ReverseProxyPlug upstream
   defp stream_cors_proxy_response(conn) do
     receive do
@@ -257,10 +262,29 @@ defmodule RetWeb.PageController do
           |> Conn.put_resp_header("x-content-type-options", "nosniff")
 
         # Handle redirects
-        case headers |> Enum.find(fn {h, _} -> String.downcase(h) == "location" end) do
-          nil -> conn
-          {_, location} -> conn |> Conn.put_resp_header("location", "#{RetWeb.Endpoint.url()}/#{location}")
-        end
+        conn =
+          case headers |> Enum.find(fn {h, _} -> String.downcase(h) == "location" end) do
+            nil -> conn
+            {_, location} -> conn |> Conn.put_resp_header("location", "#{RetWeb.Endpoint.url()}/#{location}")
+          end
+
+        # Add CORS headers
+        conn =
+          with [origin] <- Conn.get_req_header(conn, "origin"),
+               true <- allow_origin?(origin) do
+            conn
+            |> Conn.put_resp_header("access-control-allow-origin", origin)
+            |> Conn.put_resp_header("access-control-allow-methods", "GET, HEAD, OPTIONS")
+            |> Conn.put_resp_header("access-control-allow-headers", "Range")
+            |> Conn.put_resp_header(
+              "access-control-expose-headers",
+              "Accept-Ranges, Content-Encoding, Content-Length, Content-Range"
+            )
+          else
+            _ -> conn
+          end
+
+        conn
         |> Conn.send_chunked(conn.status)
         |> stream_cors_proxy_response
 
