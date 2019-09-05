@@ -2,7 +2,7 @@ defmodule RetWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :ret
   use Sentry.Phoenix.Endpoint
 
-  socket("/socket", RetWeb.SessionSocket)
+  socket("/socket", RetWeb.SessionSocket, websocket: true, check_origin: false)
 
   def get_cors_origins, do: Application.get_env(:ret, RetWeb.Endpoint)[:allowed_origins] |> String.split(",")
 
@@ -36,7 +36,7 @@ defmodule RetWeb.Endpoint do
     Plug.Parsers,
     parsers: [:urlencoded, :multipart, :json],
     pass: ["*/*"],
-    json_decoder: Poison,
+    json_decoder: Phoenix.json_library(),
     length: 157_286_400,
     read_timeout: 300_000
   )

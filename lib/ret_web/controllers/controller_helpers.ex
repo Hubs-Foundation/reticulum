@@ -4,7 +4,11 @@ defmodule RetWeb.ControllerHelpers do
   import RetWeb.ErrorHelpers
 
   def render_error_json(conn, status, params) do
-    conn |> put_status(status) |> put_layout(false) |> render(RetWeb.ErrorView, "error.json", %{ error: params })
+    conn
+    |> put_status(status)
+    |> put_layout(false)
+    |> put_view(RetWeb.ErrorView)
+    |> render("error.json", %{error: params})
   end
 
   def render_error_json(conn, %Ecto.Changeset{} = changeset) do

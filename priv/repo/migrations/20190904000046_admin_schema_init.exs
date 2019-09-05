@@ -3,11 +3,52 @@ defmodule Ret.Repo.Migrations.AdminSchemaInit do
   @disable_ddl_transaction true
 
   def up do
-    execute("create schema ret0_admin;")
-    execute("create role postgrest_authenticator noinherit login;")
+    execute("create schema if not exists ret0_admin;")
 
-    execute("create role postgrest_anonymous;")
-    execute("create role ret_admin;")
+    execute("""
+    DO
+    $do$
+    BEGIN
+       IF NOT EXISTS (
+          SELECT                       -- SELECT list can stay empty for this
+          FROM   pg_catalog.pg_roles
+          WHERE  rolname = 'postgrest_authenticator') THEN
+
+          CREATE ROLE postgrest_authenticator;
+       END IF;
+    END
+    $do$;
+    """)
+
+    execute("""
+    DO
+    $do$
+    BEGIN
+       IF NOT EXISTS (
+          SELECT                       -- SELECT list can stay empty for this
+          FROM   pg_catalog.pg_roles
+          WHERE  rolname = 'postgrest_anonymous') THEN
+
+          CREATE ROLE postgrest_anonymous;
+       END IF;
+    END
+    $do$;
+    """)
+
+    execute("""
+    DO
+    $do$
+    BEGIN
+       IF NOT EXISTS (
+          SELECT                       -- SELECT list can stay empty for this
+          FROM   pg_catalog.pg_roles
+          WHERE  rolname = 'ret_admin') THEN
+
+          CREATE ROLE ret_admin;
+       END IF;
+    END
+    $do$;
+    """)
 
     execute("grant postgrest_anonymous to postgrest_authenticator;")
     execute("grant ret_admin to postgrest_authenticator;")

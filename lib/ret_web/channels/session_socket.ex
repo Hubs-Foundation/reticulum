@@ -1,8 +1,6 @@
 defmodule RetWeb.SessionSocket do
   use Phoenix.Socket
 
-  transport(:websocket, Phoenix.Transports.WebSocket, check_origin: false)
-
   channel("ret", RetWeb.RetChannel)
   channel("hub:*", RetWeb.HubChannel)
   channel("link:*", RetWeb.LinkChannel)

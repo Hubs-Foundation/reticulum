@@ -47,7 +47,7 @@ defmodule Ret.WebPushSubscription do
         keys: %{p256dh: p256dh, auth: auth}
       }
 
-      retry with: exp_backoff() |> randomize |> cap(5_000) |> expiry(10_000) do
+      retry with: exponential_backoff() |> randomize |> cap(5_000) |> expiry(10_000) do
         case WebPushEncryption.send_web_push(body, subscription) do
           {:ok, _response} -> :ok
           _ -> :error

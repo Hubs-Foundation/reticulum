@@ -31,7 +31,7 @@ defmodule Ret.HttpUtils do
         []
       end
 
-    retry with: exp_backoff() |> randomize |> cap(cap_ms) |> expiry(expiry_ms) do
+    retry with: exponential_backoff() |> randomize |> cap(cap_ms) |> expiry(expiry_ms) do
       case HTTPoison.request(verb, url, body, headers,
              follow_redirect: true,
              timeout: cap_ms,

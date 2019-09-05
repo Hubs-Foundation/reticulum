@@ -60,7 +60,7 @@ defmodule Ret.PageOriginWarmer do
   end
 
   defp retry_get_until_success(url) do
-    retry with: exp_backoff() |> randomize |> cap(5_000) |> expiry(10_000) do
+    retry with: exponential_backoff() |> randomize |> cap(5_000) |> expiry(10_000) do
       hackney_options =
         if module_config(:insecure_ssl) == true do
           [:insecure]
