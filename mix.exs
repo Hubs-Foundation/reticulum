@@ -67,7 +67,7 @@ defmodule Ret.Mixfile do
       {:canary, "~> 1.1.1"},
       {:temp, "~> 0.4"},
       {:timex, "~> 3.6"},
-      {:web_push_encryption, "~> 0.2"},
+      {:web_push_encryption, "0.2.1"}, # 0.2.2 breaks FCM without an auth token, not sure what's up with that.
       {:sentry, "~> 6.0"},
       {:toml, "~> 0.5"},
       {:scrivener_ecto, "~> 2.0"},
