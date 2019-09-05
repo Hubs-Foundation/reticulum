@@ -223,7 +223,8 @@ defmodule RetWeb.PageController do
   defp cors_proxy(%Conn{request_path: "/" <> url, query_string: qs} = conn), do: cors_proxy(conn, "#{url}?#{qs}")
 
   defp cors_proxy(conn, url) do
-    opts = ReverseProxyPlug.init(upstream: url)
+    allowed_origins = Application.get_env(:ret, RetWeb.Endpoint)[:allowed_origins] |> String.split(",")
+    opts = ReverseProxyPlug.init(upstream: url, allowed_origins: allowed_origins, proxy_url: RetWeb.Endpoint.url())
     body = ReverseProxyPlug.read_body(conn)
 
     %Conn{}
@@ -233,73 +234,7 @@ defmodule RetWeb.PageController do
     # Some domains disallow access from improper Origins
     |> Conn.delete_req_header("origin")
     |> ReverseProxyPlug.request(body, opts)
-
-    stream_cors_proxy_response(conn)
-  end
-
-  defp allow_origin?(origin) do
-    allowed_origins = Application.get_env(:ret, RetWeb.Endpoint)[:allowed_origins] |> String.split(",")
-    allowed_origins == ["*"] || Enum.any?(allowed_origins, fn o -> o === origin end)
-  end
-
-  # TODO see if this can get incorporated into ReverseProxyPlug upstream
-  defp stream_cors_proxy_response(conn) do
-    receive do
-      %HTTPoison.AsyncStatus{code: code} ->
-        conn
-        |> Conn.put_status(code)
-        |> stream_cors_proxy_response
-
-      %HTTPoison.AsyncHeaders{headers: headers} ->
-        conn =
-          headers
-          |> ReverseProxyPlug.normalize_headers()
-          |> Enum.reject(fn {header, _} -> header == "content-length" end)
-          |> Enum.reduce(conn, fn {header, value}, conn ->
-            Conn.put_resp_header(conn, header, value)
-          end)
-          |> Conn.put_resp_header("vary", "origin")
-          |> Conn.put_resp_header("x-content-type-options", "nosniff")
-
-        # Handle redirects
-        conn =
-          case headers |> Enum.find(fn {h, _} -> String.downcase(h) == "location" end) do
-            nil -> conn
-            {_, location} -> conn |> Conn.put_resp_header("location", "#{RetWeb.Endpoint.url()}/#{location}")
-          end
-
-        # Add CORS headers
-        conn =
-          with [origin] <- Conn.get_req_header(conn, "origin"),
-               true <- allow_origin?(origin) do
-            conn
-            |> Conn.put_resp_header("access-control-allow-origin", origin)
-            |> Conn.put_resp_header("access-control-allow-methods", "GET, HEAD, OPTIONS")
-            |> Conn.put_resp_header("access-control-allow-headers", "Range")
-            |> Conn.put_resp_header(
-              "access-control-expose-headers",
-              "Accept-Ranges, Content-Encoding, Content-Length, Content-Range"
-            )
-          else
-            _ -> conn
-          end
-
-        conn
-        |> Conn.send_chunked(conn.status)
-        |> stream_cors_proxy_response
-
-      %HTTPoison.AsyncChunk{chunk: chunk} ->
-        case Conn.chunk(conn, chunk) do
-          {:ok, conn} ->
-            stream_cors_proxy_response(conn)
-
-          {:error, :closed} ->
-            conn
-        end
-
-      %HTTPoison.AsyncEnd{} ->
-        conn
-    end
+    |> ReverseProxyPlug.response(conn, opts)
   end
 
   defp module_config(key) do

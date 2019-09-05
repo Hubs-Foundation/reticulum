@@ -74,9 +74,10 @@ defmodule Ret.Mixfile do
       {:scrivener_ecto, "~> 2.0"},
       {:ua_parser, "~> 1.5"},
       {:download, git: "https://github.com/gfodor/download.git", branch: "reticulum/master"},
+      {:reverse_proxy_plug,
+       git: "https://github.com/mozillareality/reverse_proxy_plug.git", branch: "reticulum/master"},
       {:oauther, "~> 1.1"},
-      {:jason, "~> 1.1"},
-      {:reverse_proxy_plug, "~> 1.2"}
+      {:jason, "~> 1.1"}
     ]
   end
 
