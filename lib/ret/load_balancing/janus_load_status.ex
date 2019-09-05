@@ -47,7 +47,7 @@ defmodule Ret.JanusLoadStatus do
   end
 
   defp retry_api_post_until_success(url, payload) do
-    retry with: exp_backoff() |> randomize |> cap(3_000) |> expiry(5_000) do
+    retry with: exponential_backoff() |> randomize |> cap(3_000) |> expiry(5_000) do
       hackney_options =
         if module_config(:insecure_ssl) == true do
           [:insecure]

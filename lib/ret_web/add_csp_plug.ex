@@ -5,7 +5,7 @@ defmodule RetWeb.AddCSPPlug do
     policy = Application.get_env(:ret, RetWeb.AddCSPPlug)[:content_security_policy]
 
     if policy do
-      conn |> Plug.Conn.put_resp_header("Content-Security-Policy", policy)
+      conn |> Plug.Conn.put_resp_header("content-security-policy", policy)
     else
       conn
     end

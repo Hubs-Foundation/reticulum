@@ -51,12 +51,12 @@ defmodule Ret.MediaResolver do
 
   def resolve_with_ytdl(%URI{} = uri, root_host, ytdl_format) do
     with ytdl_host when is_binary(ytdl_host) <- module_config(:ytdl_host) do
-
-      query = URI.encode_query(%{
-        format: ytdl_format,
-        url: URI.to_string(uri),
-        playlist_items: 1
-      })
+      query =
+        URI.encode_query(%{
+          format: ytdl_format,
+          url: URI.to_string(uri),
+          playlist_items: 1
+        })
 
       ytdl_resp =
         "#{ytdl_host}/api/play?#{query}"
@@ -378,7 +378,7 @@ defmodule Ret.MediaResolver do
   #
   # https://youtube-dl-api-server.readthedocs.io/en/latest/api.html#api-methods
   defp retry_get_until_valid_ytdl_response(url) do
-    retry with: exp_backoff() |> randomize |> cap(1_000) |> expiry(10_000) do
+    retry with: exponential_backoff() |> randomize |> cap(1_000) |> expiry(10_000) do
       Statix.increment("ret.media_resolver.ytdl.requests")
 
       case HTTPoison.get(url) do

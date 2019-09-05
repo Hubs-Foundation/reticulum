@@ -21,7 +21,7 @@ defmodule RetWeb do
     quote do
       use Phoenix.Controller, namespace: RetWeb
       import Plug.Conn
-      import RetWeb.Router.Helpers
+      alias RetWeb.Router.Helpers, as: Routes
       import RetWeb.Gettext
       import RetWeb.ControllerHelpers
     end
@@ -38,7 +38,7 @@ defmodule RetWeb do
       # Use all HTML functionality (forms, tags, etc)
       use Phoenix.HTML
 
-      import RetWeb.Router.Helpers
+      alias RetWeb.Router.Helpers, as: Routes
       import RetWeb.ErrorHelpers
       import RetWeb.Gettext
     end

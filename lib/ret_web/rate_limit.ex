@@ -1,6 +1,4 @@
 defmodule RetWeb.Plugs.RateLimit do
-  import Plug.Conn
-
   use PlugAttack
 
   if Mix.env() != :test do

@@ -19,6 +19,7 @@ config :ret, RetWeb.Endpoint,
   https: [
     port: 4000,
     otp_app: :ret,
+    cipher_suite: :strong,
     keyfile: "#{System.get_env("PWD")}/priv/dev-ssl.key",
     certfile: "#{System.get_env("PWD")}/priv/dev-ssl.cert"
   ],

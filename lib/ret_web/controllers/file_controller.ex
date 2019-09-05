@@ -118,7 +118,6 @@ defmodule RetWeb.FileController do
               conn
               |> put_resp_content_type(content_type, nil)
               |> put_resp_header("content-length", "#{ranges |> total_range_length}")
-              |> put_resp_header("transfer-encoding", "chunked")
               |> put_resp_header("cache-control", "public, max-age=31536000")
               |> put_resp_header("accept-ranges", "bytes")
               |> send_chunked(
