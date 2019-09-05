@@ -14,4 +14,11 @@ export RELEASE_MUTABLE_DIR={{ pkg.svc_var_path }}
 export NODE_NAME=$(echo $HOSTNAME | sed 's/\([^.]*\)\(.*\)$/\1{{ cfg.run.hostname_dns_suffix }}\2/')
 export NODE_COOKIE={{ cfg.erlang.node_cookie }}
 
+# Remove erl start data so the shell script will updated it as needed
+START_ERL_DATA="${RELEASE_MUTABLE_DIR}/start_erl.data"
+
+if [ -f "${START_ERL_DATA}" ]; then
+    rm "${START_ERL_DATA}"
+fi
+
 exec {{ pkg.path }}/bin/ret foreground
