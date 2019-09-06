@@ -1,6 +1,7 @@
 use Mix.Config
 
 host = "hubs.local"
+cors_proxy_host = "hubs-proxy.local"
 
 # To run reticulum across a LAN for local testing, uncomment and change the line below to the LAN IP
 # host = "192.168.1.27"
@@ -23,6 +24,7 @@ config :ret, RetWeb.Endpoint,
     keyfile: "#{System.get_env("PWD")}/priv/dev-ssl.key",
     certfile: "#{System.get_env("PWD")}/priv/dev-ssl.cert"
   ],
+  cors_proxy_url: [scheme: "https", host: cors_proxy_host, port: 4000],
   debug_errors: true,
   code_reloader: true,
   check_origin: false,
@@ -128,9 +130,8 @@ config :ret, Ret.Storage,
 
 asset_hosts =
   "https://localhost:4000 https://localhost:8080 " <>
-    "https://#{host}:4000 https://#{host}:8080 https://#{host}:3000 https://#{host}:9090 " <>
-    "https://assets-prod.reticulum.io https://asset-bundles-dev.reticulum.io https://asset-bundles-prod.reticulum.io " <>
-    "https://farspark-prod.reticulum.io https://farspark-dev.reticulum.io " <> "https://hubs-proxy.com"
+    "https://#{host}:4000 https://#{host}:8080 https://#{host}:3000 https://#{host}:9090 https://#{cors_proxy_host}:4000 " <>
+    "https://assets-prod.reticulum.io https://asset-bundles-dev.reticulum.io https://asset-bundles-prod.reticulum.io"
 
 websocket_hosts =
   "https://localhost:4000 https://localhost:8080 wss://localhost:4000 " <>

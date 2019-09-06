@@ -5,8 +5,8 @@ defmodule RetWeb.PageController do
 
   def call(conn, _params) do
     case conn.request_path do
-      # "/http://" <> _ -> cors_proxy(conn)
-      # "/https://" <> _ -> cors_proxy(conn)
+      "/http://" <> _ -> cors_proxy(conn)
+      "/https://" <> _ -> cors_proxy(conn)
       _ -> render_for_path(conn.request_path, conn.query_params, conn)
     end
   end
@@ -223,18 +223,26 @@ defmodule RetWeb.PageController do
   defp cors_proxy(%Conn{request_path: "/" <> url, query_string: qs} = conn), do: cors_proxy(conn, "#{url}?#{qs}")
 
   defp cors_proxy(conn, url) do
-    allowed_origins = Application.get_env(:ret, RetWeb.Endpoint)[:allowed_origins] |> String.split(",")
-    opts = ReverseProxyPlug.init(upstream: url, allowed_origins: allowed_origins, proxy_url: RetWeb.Endpoint.url())
-    body = ReverseProxyPlug.read_body(conn)
+    [scheme: cors_scheme, host: cors_host, port: cors_port] =
+      Application.get_env(:ret, RetWeb.Endpoint)[:cors_proxy_url]
 
-    %Conn{}
-    |> Map.merge(conn)
-    # Need to strip path_info since proxy plug reads it
-    |> Map.put(:path_info, [])
-    # Some domains disallow access from improper Origins
-    |> Conn.delete_req_header("origin")
-    |> ReverseProxyPlug.request(body, opts)
-    |> ReverseProxyPlug.response(conn, opts)
+    # Disallow CORS proxying unless request was made to the cors proxy url
+    if cors_scheme == Atom.to_string(conn.scheme) && cors_host == conn.host && cors_port == conn.port do
+      allowed_origins = Application.get_env(:ret, RetWeb.Endpoint)[:allowed_origins] |> String.split(",")
+      opts = ReverseProxyPlug.init(upstream: url, allowed_origins: allowed_origins, proxy_url: RetWeb.Endpoint.url())
+      body = ReverseProxyPlug.read_body(conn)
+
+      %Conn{}
+      |> Map.merge(conn)
+      # Need to strip path_info since proxy plug reads it
+      |> Map.put(:path_info, [])
+      # Some domains disallow access from improper Origins
+      |> Conn.delete_req_header("origin")
+      |> ReverseProxyPlug.request(body, opts)
+      |> ReverseProxyPlug.response(conn, opts)
+    else
+      conn |> send_resp(401, "Bad request.")
+    end
   end
 
   defp module_config(key) do
