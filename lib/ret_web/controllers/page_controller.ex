@@ -223,8 +223,8 @@ defmodule RetWeb.PageController do
   defp cors_proxy(%Conn{request_path: "/" <> url, query_string: qs} = conn), do: cors_proxy(conn, "#{url}?#{qs}")
 
   defp cors_proxy(conn, url) do
-    [scheme: cors_scheme, host: cors_host, port: cors_port] =
-      Application.get_env(:ret, RetWeb.Endpoint)[:cors_proxy_url]
+    cors_proxy_url = Application.get_env(:ret, RetWeb.Endpoint)[:cors_proxy_url]
+    [cors_scheme, cors_port, cors_host] = [:scheme, :port, :host] |> Enum.map(&Keyword.get(cors_proxy_url, &1))
 
     # Disallow CORS proxying unless request was made to the cors proxy url
     if cors_scheme == Atom.to_string(conn.scheme) && cors_host == conn.host && cors_port == conn.port do
