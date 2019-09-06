@@ -234,7 +234,8 @@ defmodule RetWeb.PageController do
         ReverseProxyPlug.init(
           upstream: url,
           allowed_origins: allowed_origins,
-          proxy_url: "#{cors_scheme}://#{cors_host}:#{cors_port}"
+          proxy_url: "#{cors_scheme}://#{cors_host}:#{cors_port}",
+          client_options: [hackney: [:insecure]]
         )
 
       body = ReverseProxyPlug.read_body(conn)
