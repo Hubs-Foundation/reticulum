@@ -5,8 +5,8 @@ defmodule RetWeb.PageController do
 
   def call(conn, _params) do
     case conn.request_path do
-      "/http://" <> _ -> cors_proxy(conn)
-      "/https://" <> _ -> cors_proxy(conn)
+      # "/http://" <> _ -> cors_proxy(conn)
+      # "/https://" <> _ -> cors_proxy(conn)
       _ -> render_for_path(conn.request_path, conn.query_params, conn)
     end
   end
