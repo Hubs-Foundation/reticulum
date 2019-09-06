@@ -25,6 +25,12 @@ keyfile = "{{ pkg.svc_files_path }}/ssl.key"
 allowed_origins = "{{ cfg.security.cors_origins }}"
 secret_key_base = "{{ cfg.phx.secret_key }}"
 
+[ret."Elixir.RetWeb.Endpoint".cors_proxy_url]
+host = "{{ cfg.phx.url_host_prefix }}{{ cfg.phx.cors_proxy_url_host }}"
+{{#if cfg.phx.cors_proxy_url_port }}
+port = "{{ cfg.phx.cors_proxy_url_port }}"
+{{/if}}
+
 [ret."Elixir.RetWeb.Endpoint".url]
 host = "{{ cfg.phx.url_host_prefix }}{{ cfg.phx.url_host }}"
 {{#if cfg.phx.url_port }}

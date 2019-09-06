@@ -5,8 +5,9 @@ defmodule RetWeb.Plugs.RedirectToMainDomain do
 
   def call(conn, _options) do
     main_host = RetWeb.Endpoint.config(:url)[:host]
+    cors_proxy_host = RetWeb.Endpoint.config(:cors_proxy_url)[:host]
 
-    if !Regex.match?(~r/\A#{conn.host}\z/i, main_host) do
+    if !matches_host(conn, main_host) && !matches_host(conn, cors_proxy_host) do
       conn
       |> put_status(:moved_permanently)
       |> Phoenix.Controller.redirect(external: "https://#{main_host}")
@@ -15,4 +16,6 @@ defmodule RetWeb.Plugs.RedirectToMainDomain do
       conn
     end
   end
+
+  defp matches_host(conn, host), do: Regex.match?(~r/\A#{conn.host}\z/i, host)
 end

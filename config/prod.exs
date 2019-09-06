@@ -20,6 +20,7 @@ config :ret, RetWeb.Endpoint,
   ],
   url: [scheme: "https", host: "", port: 443],
   static_url: [scheme: "https", host: "", port: 443],
+  cors_proxy_url: [scheme: "https", host: "", port: 443],
   server: true,
   root: "."
 
