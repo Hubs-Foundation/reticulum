@@ -1,9 +1,14 @@
 defmodule RetWeb.PageController do
   use RetWeb, :controller
   alias Ret.{Repo, Hub, Scene, SceneListing, Avatar, AvatarListing, PageOriginWarmer}
+  alias Plug.Conn
 
   def call(conn, _params) do
-    render_for_path(conn.request_path, conn.query_params, conn)
+    case conn.request_path do
+      "/http://" <> _ -> cors_proxy(conn)
+      "/https://" <> _ -> cors_proxy(conn)
+      _ -> render_for_path(conn.request_path, conn.query_params, conn)
+    end
   end
 
   defp render_scene_content(%t{} = scene, conn) when t in [Scene, SceneListing] do
@@ -92,7 +97,7 @@ defmodule RetWeb.PageController do
   def render_for_path("/manifest.webmanifest", _params, conn) do
     ua =
       conn
-      |> Plug.Conn.get_req_header("user-agent")
+      |> Conn.get_req_header("user-agent")
       |> List.first()
       |> UAParser.parse()
 
@@ -212,6 +217,24 @@ defmodule RetWeb.PageController do
     conn
     |> put_resp_header("content-type", content_type)
     |> send_resp(200, chunks)
+  end
+
+  defp cors_proxy(%Conn{request_path: "/" <> url, query_string: ""} = conn), do: cors_proxy(conn, url)
+  defp cors_proxy(%Conn{request_path: "/" <> url, query_string: qs} = conn), do: cors_proxy(conn, "#{url}?#{qs}")
+
+  defp cors_proxy(conn, url) do
+    allowed_origins = Application.get_env(:ret, RetWeb.Endpoint)[:allowed_origins] |> String.split(",")
+    opts = ReverseProxyPlug.init(upstream: url, allowed_origins: allowed_origins, proxy_url: RetWeb.Endpoint.url())
+    body = ReverseProxyPlug.read_body(conn)
+
+    %Conn{}
+    |> Map.merge(conn)
+    # Need to strip path_info since proxy plug reads it
+    |> Map.put(:path_info, [])
+    # Some domains disallow access from improper Origins
+    |> Conn.delete_req_header("origin")
+    |> ReverseProxyPlug.request(body, opts)
+    |> ReverseProxyPlug.response(conn, opts)
   end
 
   defp module_config(key) do

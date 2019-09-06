@@ -67,12 +67,15 @@ defmodule Ret.Mixfile do
       {:canary, "~> 1.1.1"},
       {:temp, "~> 0.4"},
       {:timex, "~> 3.6"},
-      {:web_push_encryption, "0.2.1"}, # 0.2.2 breaks FCM without an auth token, not sure what's up with that.
+      # 0.2.2 breaks FCM without an auth token, not sure what's up with that.
+      {:web_push_encryption, "0.2.1"},
       {:sentry, "~> 6.0"},
       {:toml, "~> 0.5"},
       {:scrivener_ecto, "~> 2.0"},
       {:ua_parser, "~> 1.5"},
       {:download, git: "https://github.com/gfodor/download.git", branch: "reticulum/master"},
+      {:reverse_proxy_plug,
+       git: "https://github.com/mozillareality/reverse_proxy_plug.git", branch: "reticulum/master"},
       {:oauther, "~> 1.1"},
       {:jason, "~> 1.1"}
     ]
