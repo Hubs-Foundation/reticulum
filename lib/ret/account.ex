@@ -19,6 +19,9 @@ defmodule Ret.Account do
     timestamps()
   end
 
+  def has_accounts?(), do: from(a in Account, limit: 1) |> query_any?
+  def has_admin_accounts?(), do: from(a in Account, limit: 1) |> where(is_admin: true) |> query_any?
+
   def account_for_email(email) do
     email |> identifier_hash_for_email |> account_for_identifier_hash
   end
@@ -79,4 +82,11 @@ defmodule Ret.Account do
   end
 
   def oauth_provider_for_source(nil, _source), do: nil
+
+  defp query_any?(q) do
+    case q |> Ret.Repo.one() do
+      nil -> false
+      _ -> true
+    end
+  end
 end

@@ -45,7 +45,17 @@ defmodule RetWeb.PageController do
     conn |> send_resp(404, "")
   end
 
-  def render_for_path("/", _params, conn) do
+  def render_for_path("/", %{}, conn) do
+    if Ret.Account.has_accounts?() do
+      conn |> render_index
+    else
+      conn |> redirect(to: "/admin")
+    end
+  end
+
+  def render_for_path("/", _params, conn), do: render_index(conn)
+
+  def render_index(conn) do
     index_meta_tags = Phoenix.View.render_to_string(RetWeb.PageView, "index-meta.html", [])
 
     chunks =
