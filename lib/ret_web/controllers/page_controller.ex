@@ -55,18 +55,6 @@ defmodule RetWeb.PageController do
 
   def render_for_path("/", _params, conn), do: render_index(conn)
 
-  def render_index(conn) do
-    index_meta_tags = Phoenix.View.render_to_string(RetWeb.PageView, "index-meta.html", [])
-
-    chunks =
-      chunks_for_page("index.html", :hubs)
-      |> List.insert_at(1, index_meta_tags)
-
-    conn
-    |> put_resp_header("content-type", "text/html; charset=utf-8")
-    |> send_resp(200, chunks)
-  end
-
   def render_for_path("/scenes/" <> path, _params, conn) do
     path
     |> String.split("/")
@@ -146,6 +134,18 @@ defmodule RetWeb.PageController do
     end
   end
 
+  def render_index(conn) do
+    index_meta_tags = Phoenix.View.render_to_string(RetWeb.PageView, "index-meta.html", [])
+
+    chunks =
+      chunks_for_page("index.html", :hubs)
+      |> List.insert_at(1, index_meta_tags)
+
+    conn
+    |> put_resp_header("content-type", "text/html; charset=utf-8")
+    |> send_resp(200, chunks)
+  end
+
   def render_hub_content(conn, nil, _) do
     conn |> send_resp(404, "Invalid URL.")
   end
@@ -165,7 +165,7 @@ defmodule RetWeb.PageController do
       Phoenix.View.render_to_string(RetWeb.PageView, "hub-meta.html",
         hub: hub,
         scene: hub.scene,
-        ret_meta: Ret.Meta.get_meta()
+        ret_meta: Ret.Meta.get_meta(include_repo: false)
       )
 
     chunks =
