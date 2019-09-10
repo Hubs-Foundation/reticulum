@@ -46,7 +46,10 @@ defmodule RetWeb.PageController do
   end
 
   def render_for_path("/", _params, conn) do
-    index_meta_tags = Phoenix.View.render_to_string(RetWeb.PageView, "index-meta.html", [])
+    index_meta_tags =
+      Phoenix.View.render_to_string(RetWeb.PageView, "index-meta.html",
+        config_json: {:safe, Ret.AppConfig.config() |> Poison.encode!()}
+      )
 
     chunks =
       chunks_for_page("index.html", :hubs)
