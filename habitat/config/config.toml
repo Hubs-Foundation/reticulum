@@ -116,9 +116,6 @@ slack_webhook_url = "{{ cfg.support.slack_webhook_url }}"
 [ret."Elixir.RetWeb.AddCSPPlug"]
 content_security_policy = "{{ cfg.security.content_security_policy }}"
 
-[ret."Elixir.Ret.ReleaseTasks"]
-migrate_post_start = {{ cfg.db.auto_migrate }}
-
 [web_push_encryption.vapid_details]
 subject = "{{ cfg.web_push.subject }}"
 public_key = "{{ cfg.web_push.public_key }}"

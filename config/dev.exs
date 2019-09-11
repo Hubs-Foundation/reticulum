@@ -85,8 +85,6 @@ config :ret, Ret.Repo,
   template: "template0",
   pool_size: 10
 
-config :ret, Ret.ReleaseTasks, migrate_post_start: false
-
 config :ret, RetWeb.Plugs.HeaderAuthorization,
   header_name: "x-ret-admin-access-key",
   header_value: "admin-only"

@@ -14,5 +14,5 @@ done
 set -e
 
 echo "Running migrations"  
-bin/ret rpc 'Elixir.Ret.ReleaseTasks.migrate_post_start'
+bin/ret rpc 'Elixir.Ret.ReleaseTasks.migrate'
 echo "Migrations finished"
