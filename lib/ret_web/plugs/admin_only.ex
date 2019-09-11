@@ -1,3 +1,4 @@
+# Terminates the pipeline if the user is not currently logged in or if they are not an administrator.
 defmodule RetWeb.Plugs.AdminOnly do
   import Plug.Conn
 
@@ -7,7 +8,7 @@ defmodule RetWeb.Plugs.AdminOnly do
     # Put account in into assigns for Canary to consume.
     account = Guardian.Plug.current_resource(conn)
 
-    if account.is_admin do
+    if account && account.is_admin do
       conn
     else
       conn
