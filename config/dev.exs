@@ -141,7 +141,7 @@ websocket_hosts =
 script_shas =
   "'sha256-hsbRcgUBASABDq7qVGVTpbnWq/ns7B+ToTctZFJXYi8=' 'sha256-MIpWPgYj31kCgSUFc0UwHGQrV87W6N5ozotqfxxQG0w=' 'sha256-/S6PM16MxkmUT7zJN2lkEKFgvXR7yL4Z8PCrRrFu4Q8='"
 
-config :ret, RetWeb.AddCSPPlug,
+config :ret, RetWeb.Plugs.AddCSP,
   content_security_policy:
     "default-src 'none'; script-src 'self' #{script_shas} #{asset_hosts} https://cdn.rawgit.com https://aframe.io https://www.google-analytics.com 'unsafe-eval'; worker-src 'self' blob:; font-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://cdn.aframe.io #{
       asset_hosts

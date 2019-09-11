@@ -46,7 +46,7 @@ defmodule RetWeb.Endpoint do
   # We need to handle HEAD for the FileController, but pushing the Plug.Head into the router pipeline
   # prevents matching on HEAD. So this new plug sends a GET as Plug.Head but also adds a x-original-method request
   # header
-  plug(RetWeb.Head)
+  plug(RetWeb.Plugs.Head)
 
   plug(CORSPlug, origin: &RetWeb.Endpoint.get_cors_origins/0)
   plug(RetWeb.Router)

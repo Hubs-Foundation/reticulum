@@ -5,7 +5,7 @@ defmodule RetWeb.Router do
 
   pipeline :secure_headers do
     plug(:put_secure_browser_headers)
-    plug(RetWeb.AddCSPPlug)
+    plug(RetWeb.Plugs.AddCSP)
   end
 
   pipeline :ssl_only do
@@ -31,6 +31,15 @@ defmodule RetWeb.Router do
     plug(RetWeb.Canary.AuthorizationPipeline)
   end
 
+  pipeline :rewrite_to_perms_bearer do
+    plug(RetWeb.Plugs.RewriteAuthorizationHeaderToPerms)
+  end
+
+  pipeline :admin_required do
+    plug(RetWeb.Guardian.AuthPipeline)
+    plug(RetWeb.Plugs.AdminOnly)
+  end
+
   pipeline :bot_header_auth do
     plug(RetWeb.Plugs.BotHeaderAuthorization)
   end
@@ -41,6 +50,11 @@ defmodule RetWeb.Router do
 
   scope "/health", RetWeb do
     get("/", HealthController, :index)
+  end
+
+  scope "/api/v1/postgrest" do
+    pipe_through([:secure_headers, :api, :admin_required, :rewrite_to_perms_bearer])
+    forward("/", ReverseProxyPlug, upstream: "http://localhost:3000")
   end
 
   scope "/api", RetWeb do

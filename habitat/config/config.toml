@@ -113,7 +113,7 @@ password = "{{ cfg.email.password }}"
 [ret."Elixir.Ret.Support"]
 slack_webhook_url = "{{ cfg.support.slack_webhook_url }}"
 
-[ret."Elixir.RetWeb.AddCSPPlug"]
+[ret."Elixir.RetWeb.Plugs.AddCSP"]
 content_security_policy = "{{ cfg.security.content_security_policy }}"
 
 [ret."Elixir.Ret.ReleaseTasks"]

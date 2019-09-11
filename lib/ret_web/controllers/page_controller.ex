@@ -13,7 +13,10 @@ defmodule RetWeb.PageController do
 
   defp render_scene_content(%t{} = scene, conn) when t in [Scene, SceneListing] do
     scene_meta_tags =
-      Phoenix.View.render_to_string(RetWeb.PageView, "scene-meta.html", scene: scene, ret_meta: Ret.Meta.get_meta())
+      Phoenix.View.render_to_string(RetWeb.PageView, "scene-meta.html",
+        scene: scene,
+        ret_meta: Ret.Meta.get_meta(include_repo: false)
+      )
 
     chunks =
       chunks_for_page("scene.html", :hubs)
@@ -30,7 +33,10 @@ defmodule RetWeb.PageController do
 
   defp render_avatar_content(%t{} = avatar, conn) when t in [Avatar, AvatarListing] do
     avatar_meta_tags =
-      Phoenix.View.render_to_string(RetWeb.PageView, "avatar-meta.html", avatar: avatar, ret_meta: Ret.Meta.get_meta())
+      Phoenix.View.render_to_string(RetWeb.PageView, "avatar-meta.html",
+        avatar: avatar,
+        ret_meta: Ret.Meta.get_meta(include_repo: true)
+      )
 
     chunks =
       chunks_for_page("avatar.html", :hubs)
@@ -45,15 +51,13 @@ defmodule RetWeb.PageController do
     conn |> send_resp(404, "")
   end
 
-  def render_for_path("/", %{}, conn) do
-    if Ret.Account.has_accounts?() do
+  def render_for_path("/", params, conn) do
+    if !Enum.empty?(params) || Ret.Account.has_accounts?() do
       conn |> render_index
     else
       conn |> redirect(to: "/admin")
     end
   end
-
-  def render_for_path("/", _params, conn), do: render_index(conn)
 
   def render_for_path("/scenes/" <> path, _params, conn) do
     path
