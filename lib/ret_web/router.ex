@@ -64,7 +64,7 @@ defmodule RetWeb.Router do
     get("/", HealthController, :index)
   end
 
-  scope "/api/v1/postgrest" do
+  scope "/api/postgrest" do
     pipe_through([:secure_headers, :postgrest_api, :admin_required])
     forward("/", ReverseProxyPlug, upstream: "http://localhost:3000")
   end
