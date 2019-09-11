@@ -32,15 +32,6 @@ defmodule RetWeb.Endpoint do
   plug(Plug.RequestId)
   plug(Plug.Logger)
 
-  plug(
-    Plug.Parsers,
-    parsers: [:urlencoded, :multipart, :json],
-    pass: ["*/*"],
-    json_decoder: Phoenix.json_library(),
-    length: 157_286_400,
-    read_timeout: 300_000
-  )
-
   plug(Plug.MethodOverride)
 
   # We need to handle HEAD for the FileController, but pushing the Plug.Head into the router pipeline

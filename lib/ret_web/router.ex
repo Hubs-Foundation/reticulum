@@ -12,6 +12,17 @@ defmodule RetWeb.Router do
     plug(Plug.SSL, hsts: true, rewrite_on: [:x_forwarded_proto])
   end
 
+  pipeline :parsed_body do
+    plug(
+      Plug.Parsers,
+      parsers: [:urlencoded, :multipart, :json],
+      pass: ["*/*"],
+      json_decoder: Phoenix.json_library(),
+      length: 157_286_400,
+      read_timeout: 300_000
+    )
+  end
+
   pipeline :browser do
     plug(:accepts, ["html"])
     plug(:put_layout, false)
@@ -20,6 +31,10 @@ defmodule RetWeb.Router do
   pipeline :api do
     plug(:accepts, ["json"])
     plug(JaSerializer.Deserializer)
+  end
+
+  pipeline :postgrest_api do
+    plug(:accepts, ["json"])
   end
 
   pipeline :auth_optional do
@@ -53,12 +68,14 @@ defmodule RetWeb.Router do
   end
 
   scope "/api/v1/postgrest" do
-    pipe_through([:secure_headers, :api, :admin_required, :rewrite_to_perms_bearer])
+    pipe_through([:secure_headers, :postgrest_api, :admin_required, :rewrite_to_perms_bearer])
     forward("/", ReverseProxyPlug, upstream: "http://localhost:3000")
   end
 
   scope "/api", RetWeb do
-    pipe_through([:secure_headers, :api] ++ if(Mix.env() == :prod, do: [:ssl_only, :canonicalize_domain], else: []))
+    pipe_through(
+      [:secure_headers, :parsed_body, :api] ++ if(Mix.env() == :prod, do: [:ssl_only, :canonicalize_domain], else: [])
+    )
 
     scope "/v1", as: :api_v1 do
       get("/meta", Api.V1.MetaController, :show)
@@ -103,14 +120,17 @@ defmodule RetWeb.Router do
   end
 
   scope "/", RetWeb do
-    pipe_through([:secure_headers, :browser] ++ if(Mix.env() == :prod, do: [:ssl_only], else: []))
+    pipe_through([:secure_headers, :parsed_body, :browser] ++ if(Mix.env() == :prod, do: [:ssl_only], else: []))
 
     head("/files/:id", FileController, :head)
     get("/files/:id", FileController, :show)
   end
 
   scope "/", RetWeb do
-    pipe_through([:secure_headers, :browser] ++ if(Mix.env() == :prod, do: [:ssl_only, :canonicalize_domain], else: []))
+    pipe_through(
+      [:secure_headers, :parsed_body, :browser] ++
+        if(Mix.env() == :prod, do: [:ssl_only, :canonicalize_domain], else: [])
+    )
 
     get("/*path", PageController, only: [:index])
   end
