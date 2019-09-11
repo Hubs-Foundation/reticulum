@@ -35,6 +35,7 @@ defmodule RetWeb.Router do
 
   pipeline :postgrest_api do
     plug(:accepts, ["json"])
+    plug(RetWeb.Plugs.RewriteAuthorizationHeaderToPerms)
   end
 
   pipeline :auth_optional do
@@ -44,10 +45,6 @@ defmodule RetWeb.Router do
   pipeline :auth_required do
     plug(RetWeb.Guardian.AuthPipeline)
     plug(RetWeb.Canary.AuthorizationPipeline)
-  end
-
-  pipeline :rewrite_to_perms_bearer do
-    plug(RetWeb.Plugs.RewriteAuthorizationHeaderToPerms)
   end
 
   pipeline :admin_required do
@@ -68,7 +65,7 @@ defmodule RetWeb.Router do
   end
 
   scope "/api/v1/postgrest" do
-    pipe_through([:secure_headers, :postgrest_api, :admin_required, :rewrite_to_perms_bearer])
+    pipe_through([:secure_headers, :postgrest_api, :admin_required])
     forward("/", ReverseProxyPlug, upstream: "http://localhost:3000")
   end
 
