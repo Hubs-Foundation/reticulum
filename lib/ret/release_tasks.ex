@@ -9,6 +9,4 @@ defmodule Ret.ReleaseTasks do
 
   def priv_dir(app), do: "#{:code.priv_dir(app)}"
   defp migrations_path(app), do: Path.join([priv_dir(app), "repo", "migrations"])
-
-  defp module_config(key), do: Application.get_env(:ret, __MODULE__)[key]
 end
