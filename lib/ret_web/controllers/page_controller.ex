@@ -35,7 +35,7 @@ defmodule RetWeb.PageController do
     avatar_meta_tags =
       Phoenix.View.render_to_string(RetWeb.PageView, "avatar-meta.html",
         avatar: avatar,
-        ret_meta: Ret.Meta.get_meta(include_repo: true)
+        ret_meta: Ret.Meta.get_meta(include_repo: false)
       )
 
     chunks =
