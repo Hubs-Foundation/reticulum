@@ -34,6 +34,15 @@ defmodule Ret.SceneListing do
     timestamps()
   end
 
+  def has_any_in_filter?(filter) do
+    %Ret.MediaSearchQuery{source: "scene_listings", cursor: "1", filter: filter, q: ""}
+    |> Ret.MediaSearch.search()
+    |> elem(1)
+    |> Map.get(:entries)
+    |> Enum.empty?()
+    |> Kernel.not()
+  end
+
   def changeset_for_listing_for_scene(
         %SceneListing{} = listing,
         scene,
