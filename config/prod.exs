@@ -128,4 +128,4 @@ config :sentry,
   }
 
 config :ret, Ret.RoomAssigner, balancer_weights: [{600, 1}, {300, 50}, {0, 500}]
-config :ret, Ret.Locking, lock_timeout_ms: 1000 * 60 * 5
+config :ret, Ret.Locking, lock_timeout_ms: 1000 * 60 * 15

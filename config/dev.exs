@@ -187,4 +187,4 @@ config :ret, RetWeb.PageController, skip_cache: true
 
 config :ret, Ret.HttpUtils, insecure_ssl: true
 
-config :ret, Ret.Locking, lock_timeout_ms: 1000 * 60 * 5
+config :ret, Ret.Locking, lock_timeout_ms: 1000 * 60 * 15
