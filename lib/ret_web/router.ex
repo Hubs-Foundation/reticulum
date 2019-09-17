@@ -72,7 +72,6 @@ defmodule RetWeb.Router do
       resources("/hubs", Api.V1.HubController, only: [:create, :delete])
       resources("/media/search", Api.V1.MediaSearchController, only: [:index])
       resources("/avatars", Api.V1.AvatarController, only: [:show])
-      post("/import/avatar", Api.V1.AvatarController, :import_avatar)
     end
 
     scope "/v1", as: :api_v1 do

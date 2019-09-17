@@ -174,14 +174,14 @@ defmodule Ret.Avatar do
     body |> Poison.decode!() |> get_in(["avatars", Access.at(0)])
   end
 
-  defp collapse_remote_avatar!(%{"parent_avatar_listing_id" => nil, "parent_avatar_id" => nil} = avatar, base_uri),
+  defp collapse_remote_avatar!(%{"parent_avatar_listing_id" => nil} = avatar, base_uri),
     do: avatar
 
   defp collapse_remote_avatar!(
-         %{"parent_avatar_listing_id" => parent_listing_id, "parent_avatar_id" => parent_id} = avatar,
+         %{"parent_avatar_listing_id" => parent_id} = avatar,
          base_uri
        ) do
-    parent_avatar = URI.merge(base_uri, parent_listing_id || parent_id) |> fetch_remote_avatar!()
+    parent_avatar = URI.merge(base_uri, parent_id) |> fetch_remote_avatar!()
 
     collapse_remote_avatar!(
       %{
@@ -192,7 +192,30 @@ defmodule Ret.Avatar do
               _k, v1, nil -> v1
               _k, _v1, v2 -> v2
             end),
-          "parent_avatar_listing_id" => parent_avatar["parent_avatar_listing_id"],
+          "parent_avatar_listing_id" => parent_avatar["parent_avatar_listing_id"]
+      },
+      base_uri
+    )
+  end
+
+  defp collapse_remote_avatar!(%{"parent_avatar_id" => nil} = avatar, base_uri),
+    do: avatar
+
+  defp collapse_remote_avatar!(
+         %{"parent_avatar_id" => parent_id} = avatar,
+         base_uri
+       ) do
+    parent_avatar = URI.merge(base_uri, parent_id) |> fetch_remote_avatar!()
+
+    collapse_remote_avatar!(
+      %{
+        avatar
+        | "files" =>
+            parent_avatar["files"]
+            |> Map.merge(avatar["files"], fn
+              _k, v1, nil -> v1
+              _k, _v1, v2 -> v2
+            end),
           "parent_avatar_id" => parent_avatar["parent_avatar_id"]
       },
       base_uri
@@ -200,7 +223,7 @@ defmodule Ret.Avatar do
   end
 
   def import_from_url!(uri, account) do
-    avatar = uri |> fetch_remote_avatar!() |> collapse_remote_avatar!(uri) |> IO.inspect()
+    avatar = uri |> fetch_remote_avatar!() |> collapse_remote_avatar!(uri)
 
     owned_files =
       avatar
@@ -210,7 +233,7 @@ defmodule Ret.Avatar do
           {:"#{k}_owned_file", nil}
 
         {k, url} ->
-          {:ok, owned_file} = url |> Storage.owned_file_from_url(account) |> IO.inspect()
+          {:ok, owned_file} = url |> Storage.owned_file_from_url(account)
           {:"#{k}_owned_file", owned_file}
       end)
       |> Enum.into(%{})
@@ -225,7 +248,6 @@ defmodule Ret.Avatar do
         allow_promotion: avatar["llow_promoti"]
       })
       |> Repo.insert_or_update()
-      |> IO.inspect()
 
     new_avatar
   end
