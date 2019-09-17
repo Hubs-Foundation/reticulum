@@ -169,6 +169,67 @@ defmodule Ret.Avatar do
     |> Repo.transaction()
   end
 
+  defp fetch_remote_avatar!(uri) do
+    %{body: body} = HTTPoison.get!(uri)
+    body |> Poison.decode!() |> get_in(["avatars", Access.at(0)])
+  end
+
+  defp collapse_remote_avatar!(%{"parent_avatar_listing_id" => nil, "parent_avatar_id" => nil} = avatar, base_uri),
+    do: avatar
+
+  defp collapse_remote_avatar!(
+         %{"parent_avatar_listing_id" => parent_listing_id, "parent_avatar_id" => parent_id} = avatar,
+         base_uri
+       ) do
+    parent_avatar = URI.merge(base_uri, parent_listing_id || parent_id) |> fetch_remote_avatar!()
+
+    collapse_remote_avatar!(
+      %{
+        avatar
+        | "files" =>
+            parent_avatar["files"]
+            |> Map.merge(avatar["files"], fn
+              _k, v1, nil -> v1
+              _k, _v1, v2 -> v2
+            end),
+          "parent_avatar_listing_id" => parent_avatar["parent_avatar_listing_id"],
+          "parent_avatar_id" => parent_avatar["parent_avatar_id"]
+      },
+      base_uri
+    )
+  end
+
+  def import_from_url!(uri, account) do
+    avatar = uri |> fetch_remote_avatar!() |> collapse_remote_avatar!(uri) |> IO.inspect()
+
+    owned_files =
+      avatar
+      |> Map.get("files")
+      |> Enum.map(fn
+        {k, nil} ->
+          {:"#{k}_owned_file", nil}
+
+        {k, url} ->
+          {:ok, owned_file} = url |> Storage.owned_file_from_url(account) |> IO.inspect()
+          {:"#{k}_owned_file", owned_file}
+      end)
+      |> Enum.into(%{})
+
+    {:ok, new_avatar} =
+      %Avatar{}
+      |> Avatar.changeset(account, owned_files, nil, nil, %{
+        name: avatar["name"],
+        description: avatar["description"],
+        attributions: avatar["ttribution"],
+        allow_remixing: avatar["allow_remixing"],
+        allow_promotion: avatar["llow_promoti"]
+      })
+      |> Repo.insert_or_update()
+      |> IO.inspect()
+
+    new_avatar
+  end
+
   @doc false
   def changeset(
         %Avatar{} = avatar,
