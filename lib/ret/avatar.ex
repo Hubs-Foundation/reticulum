@@ -243,7 +243,7 @@ defmodule Ret.Avatar do
       |> Avatar.changeset(account, owned_files, nil, nil, %{
         name: avatar["name"],
         description: avatar["description"],
-        attributions: avatar["ttribution"],
+        attributions: avatar["attribution"],
         allow_remixing: avatar["allow_remixing"],
         allow_promotion: avatar["llow_promoti"]
       })
