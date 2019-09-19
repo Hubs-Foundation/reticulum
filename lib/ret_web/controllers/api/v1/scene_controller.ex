@@ -5,16 +5,12 @@ defmodule RetWeb.Api.V1.SceneController do
 
   plug(RetWeb.Plugs.RateLimit when action in [:create, :update])
 
-  defp preload(scene) do
-    scene |> Repo.preload([:model_owned_file, :screenshot_owned_file, :scene_owned_file])
-  end
-
   defp preload(a) do
     preload(a, [])
   end
 
   defp preload(%Scene{} = a, preloads) do
-    a |> Repo.preload([:model_owned_file, :screenshot_owned_file, :scene_owned_file])++ preloads])
+    a |> Repo.preload([:model_owned_file, :screenshot_owned_file, :scene_owned_file] ++ preloads)
   end
 
   def show(conn, %{"id" => scene_sid}) do
