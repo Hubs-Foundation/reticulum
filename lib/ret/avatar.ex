@@ -245,7 +245,7 @@ defmodule Ret.Avatar do
         description: avatar["description"],
         attributions: avatar["attribution"],
         allow_remixing: avatar["allow_remixing"],
-        allow_promotion: avatar["llow_promoti"]
+        allow_promotion: avatar["allow_promotion"]
       })
       |> Repo.insert_or_update()
 

@@ -60,7 +60,7 @@ defmodule Ret.Scene do
         description: scene["description"],
         attributions: scene["attribution"],
         allow_remixing: scene["allow_remixing"],
-        allow_promotion: scene["llow_promoti"]
+        allow_promotion: scene["allow_promotion"]
       })
       |> Repo.insert_or_update()
 
