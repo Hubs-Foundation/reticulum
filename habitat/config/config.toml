@@ -116,6 +116,9 @@ slack_webhook_url = "{{ cfg.support.slack_webhook_url }}"
 [ret."Elixir.RetWeb.Plugs.AddCSP"]
 content_security_policy = "{{ cfg.security.content_security_policy }}"
 
+[ret."Ret.Repo.Migrations.AdminSchemaInit"]
+postgrest_password = "{{ cfg.db.postgrest_password }}"
+
 [web_push_encryption.vapid_details]
 subject = "{{ cfg.web_push.subject }}"
 public_key = "{{ cfg.web_push.public_key }}"

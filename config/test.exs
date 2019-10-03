@@ -38,3 +38,5 @@ config :sentry,
   tags: %{
     env: "test"
   }
+
+config :ret, Ret.Repo.Migrations.AdminSchemaInit, postgrest_password: "password"

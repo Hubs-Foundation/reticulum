@@ -45,6 +45,7 @@ do_build() {
     mix local.hex --force
     mix local.rebar --force
     mix deps.get --only prod
+    mix deps.clean mime --build
     mix compile
 }
 
