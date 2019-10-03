@@ -16,7 +16,7 @@ defmodule Ret.Repo.Migrations.AdminSchemaInit do
           FROM   pg_catalog.pg_roles
           WHERE  rolname = 'postgrest_authenticator') THEN
 
-          CREATE ROLE postgrest_authenticator PASSWORD '#{auth_password}';
+          CREATE ROLE postgrest_authenticator LOGIN PASSWORD '#{auth_password}';
        END IF;
     END
     $do$;
