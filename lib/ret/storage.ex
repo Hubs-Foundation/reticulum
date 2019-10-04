@@ -322,22 +322,32 @@ defmodule Ret.Storage do
     {:ok, owned_file}
   end
 
-  def owned_file_from_url(url, account) do
+  defp download!(url) do
     {:ok, content_type} = fetch_content_type(url)
     {:ok, download_path} = Temp.path()
 
     case Download.from(url, path: download_path) do
       {:ok, _path} ->
-        access_token = SecureRandom.hex()
-        promotion_token = SecureRandom.hex()
-        {:ok, file_uuid} = store(download_path, content_type, access_token, promotion_token)
-        {file_uuid, access_token, promotion_token}
+        {download_path, content_type}
 
-        promote(file_uuid, access_token, promotion_token, account)
-
-      error ->
-        {:error, error}
+      _error ->
+        throw("Error downloading #{url}")
     end
   end
 
+  def owned_files_from_urls!(urls, account) do
+    urls
+    |> Enum.map(&download!/1)
+    |> Enum.map(fn {download_path, content_type} ->
+      access_token = SecureRandom.hex()
+      promotion_token = SecureRandom.hex()
+
+      {:ok, file_uuid} = store(download_path, content_type, access_token, promotion_token)
+      {file_uuid, access_token, promotion_token}
+
+      {:ok, owned_file} = promote(file_uuid, access_token, promotion_token, account)
+
+      owned_file
+    end)
+  end
 end

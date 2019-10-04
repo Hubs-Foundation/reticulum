@@ -50,8 +50,8 @@ defmodule Ret.Scene do
   def import_from_url!(uri, account) do
     scene = uri |> fetch_remote_scene!()
 
-    {:ok, model_owned_file} = scene["model_url"] |> Storage.owned_file_from_url(account)
-    {:ok, screenshot_owned_file} = scene["screenshot_url"] |> Storage.owned_file_from_url(account)
+    [model_owned_file, screenshot_owned_file] =
+      [scene["model_url"], scene["screenshot_url"]] |> Storage.owned_files_from_urls!(account)
 
     {:ok, new_scene} =
       %Scene{}

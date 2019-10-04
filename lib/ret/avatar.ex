@@ -225,22 +225,23 @@ defmodule Ret.Avatar do
   def import_from_url!(uri, account) do
     avatar = uri |> fetch_remote_avatar!() |> collapse_remote_avatar!(uri)
 
-    owned_files =
+    {file_names, file_urls} =
       avatar
       |> Map.get("files")
-      |> Enum.map(fn
-        {k, nil} ->
-          {:"#{k}_owned_file", nil}
+      |> Enum.filter(fn {_, v} -> v end)
+      |> Enum.unzip()
 
-        {k, url} ->
-          {:ok, owned_file} = url |> Storage.owned_file_from_url(account)
-          {:"#{k}_owned_file", owned_file}
-      end)
+    owned_files = file_urls |> Storage.owned_files_from_urls!(account)
+
+    owned_files_map =
+      file_names
+      |> Enum.map(fn n -> :"#{n}_owned_file" end)
+      |> Enum.zip(owned_files)
       |> Enum.into(%{})
 
     {:ok, new_avatar} =
       %Avatar{}
-      |> Avatar.changeset(account, owned_files, nil, nil, %{
+      |> Avatar.changeset(account, owned_files_map, nil, nil, %{
         name: avatar["name"],
         description: avatar["description"],
         attributions: avatar["attribution"],
