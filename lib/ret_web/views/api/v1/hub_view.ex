@@ -34,6 +34,7 @@ defmodule RetWeb.Api.V1.HubView do
           entry_code: hub.entry_code,
           entry_mode: hub.entry_mode,
           host: hub.host,
+          port: janus_port(),
           scene: RetWeb.Api.V1.SceneView.render_scene(hub.scene || hub.scene_listing),
           embed_token:
             if embeddable do
@@ -57,6 +58,7 @@ defmodule RetWeb.Api.V1.HubView do
           entry_code: hub.entry_code,
           entry_mode: hub.entry_mode,
           host: hub.host,
+          port: janus_port(),
           topics: [
             %{
               topic_id: "#{hub.hub_sid}/#{hub.slug}",
@@ -68,5 +70,9 @@ defmodule RetWeb.Api.V1.HubView do
         }
       ]
     }
+  end
+
+  defp janus_port do
+    Application.get_env(:ret, Ret.JanusLoadStatus)[:janus_port]
   end
 end

@@ -37,3 +37,6 @@ cors_origins = "*"
 
 [pages]
 insecure_ssl = "false"
+
+[janus]
+janus_port = 443
