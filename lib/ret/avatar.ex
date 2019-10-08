@@ -169,6 +169,90 @@ defmodule Ret.Avatar do
     |> Repo.transaction()
   end
 
+  defp fetch_remote_avatar!(uri) do
+    %{body: body} = HTTPoison.get!(uri)
+    body |> Poison.decode!() |> get_in(["avatars", Access.at(0)])
+  end
+
+  defp collapse_remote_avatar!(%{"parent_avatar_listing_id" => nil} = avatar, base_uri),
+    do: avatar
+
+  defp collapse_remote_avatar!(
+         %{"parent_avatar_listing_id" => parent_id} = avatar,
+         base_uri
+       ) do
+    parent_avatar = URI.merge(base_uri, parent_id) |> fetch_remote_avatar!()
+
+    collapse_remote_avatar!(
+      %{
+        avatar
+        | "files" =>
+            parent_avatar["files"]
+            |> Map.merge(avatar["files"], fn
+              _k, v1, nil -> v1
+              _k, _v1, v2 -> v2
+            end),
+          "parent_avatar_listing_id" => parent_avatar["parent_avatar_listing_id"]
+      },
+      base_uri
+    )
+  end
+
+  defp collapse_remote_avatar!(%{"parent_avatar_id" => nil} = avatar, base_uri),
+    do: avatar
+
+  defp collapse_remote_avatar!(
+         %{"parent_avatar_id" => parent_id} = avatar,
+         base_uri
+       ) do
+    parent_avatar = URI.merge(base_uri, parent_id) |> fetch_remote_avatar!()
+
+    collapse_remote_avatar!(
+      %{
+        avatar
+        | "files" =>
+            parent_avatar["files"]
+            |> Map.merge(avatar["files"], fn
+              _k, v1, nil -> v1
+              _k, _v1, v2 -> v2
+            end),
+          "parent_avatar_id" => parent_avatar["parent_avatar_id"]
+      },
+      base_uri
+    )
+  end
+
+  def import_from_url!(uri, account) do
+    avatar = uri |> fetch_remote_avatar!() |> collapse_remote_avatar!(uri)
+
+    {file_names, file_urls} =
+      avatar
+      |> Map.get("files")
+      |> Enum.filter(fn {_, v} -> v end)
+      |> Enum.unzip()
+
+    owned_files = file_urls |> Storage.owned_files_from_urls!(account)
+
+    owned_files_map =
+      file_names
+      |> Enum.map(fn n -> :"#{n}_owned_file" end)
+      |> Enum.zip(owned_files)
+      |> Enum.into(%{})
+
+    {:ok, new_avatar} =
+      %Avatar{}
+      |> Avatar.changeset(account, owned_files_map, nil, nil, %{
+        name: avatar["name"],
+        description: avatar["description"],
+        attributions: avatar["attribution"],
+        allow_remixing: avatar["allow_remixing"],
+        allow_promotion: avatar["allow_promotion"]
+      })
+      |> Repo.insert_or_update()
+
+    new_avatar
+  end
+
   @doc false
   def changeset(
         %Avatar{} = avatar,

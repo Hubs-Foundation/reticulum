@@ -1,6 +1,8 @@
 defmodule Ret.Storage do
   require Logger
 
+  import Ret.HttpUtils
+
   @expiring_file_path "expiring"
   @owned_file_path "owned"
 
@@ -318,5 +320,34 @@ defmodule Ret.Storage do
       |> Repo.insert!()
 
     {:ok, owned_file}
+  end
+
+  defp download!(url) do
+    {:ok, content_type} = fetch_content_type(url)
+    {:ok, download_path} = Temp.path()
+
+    case Download.from(url, path: download_path) do
+      {:ok, _path} ->
+        {download_path, content_type}
+
+      _error ->
+        throw("Error downloading #{url}")
+    end
+  end
+
+  def owned_files_from_urls!(urls, account) do
+    urls
+    |> Enum.map(&download!/1)
+    |> Enum.map(fn {download_path, content_type} ->
+      access_token = SecureRandom.hex()
+      promotion_token = SecureRandom.hex()
+
+      {:ok, file_uuid} = store(download_path, content_type, access_token, promotion_token)
+      {file_uuid, access_token, promotion_token}
+
+      {:ok, owned_file} = promote(file_uuid, access_token, promotion_token, account)
+
+      owned_file
+    end)
   end
 end

@@ -25,6 +25,16 @@ defmodule RetWeb.Api.V1.AvatarController do
 
   defp preload(_avatar, _preloads), do: nil
 
+  def create(conn, %{"url" => url}) do
+    try do
+      account = Guardian.Plug.current_resource(conn)
+      new_avatar = url |> URI.parse() |> Avatar.import_from_url!(account)
+      conn |> render("create.json", avatar: new_avatar |> preload(), account: account)
+    rescue
+      e -> render_error_json(conn, 400)
+    end
+  end
+
   def create(conn, %{"avatar" => %{"parent_avatar_listing_id" => parent_sid} = params}) do
     account = conn |> Guardian.Plug.current_resource()
     avatar = parent_sid |> Avatar.new_avatar_from_parent_sid(account)

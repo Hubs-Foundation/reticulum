@@ -5,6 +5,14 @@ defmodule RetWeb.Api.V1.SceneController do
 
   plug(RetWeb.Plugs.RateLimit when action in [:create, :update])
 
+  defp preload(a) do
+    preload(a, [])
+  end
+
+  defp preload(%Scene{} = a, preloads) do
+    a |> Repo.preload([:model_owned_file, :screenshot_owned_file, :scene_owned_file] ++ preloads)
+  end
+
   def show(conn, %{"id" => scene_sid}) do
     case scene_sid |> get_scene() do
       %t{} = s when t in [Scene, SceneListing] -> conn |> render("show.json", scene: s)
@@ -16,6 +24,16 @@ defmodule RetWeb.Api.V1.SceneController do
     case scene_sid |> get_scene() do
       %Scene{} = scene -> create_or_update(conn, params, scene)
       _ -> conn |> send_resp(404, "not found")
+    end
+  end
+
+  def create(conn, %{"url" => url}) do
+    try do
+      account = Guardian.Plug.current_resource(conn)
+      new_scene = url |> URI.parse() |> Scene.import_from_url!(account)
+      conn |> render("create.json", scene: new_scene |> preload(), account: account)
+    rescue
+      e -> render_error_json(conn, 400)
     end
   end
 
