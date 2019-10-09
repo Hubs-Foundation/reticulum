@@ -26,9 +26,9 @@ defmodule Ret.Scene do
     field(:allow_remixing, :boolean)
     field(:allow_promotion, :boolean)
     belongs_to(:account, Ret.Account, references: :account_id)
-    belongs_to(:model_owned_file, Ret.OwnedFile, references: :owned_file_id)
-    belongs_to(:screenshot_owned_file, Ret.OwnedFile, references: :owned_file_id)
-    belongs_to(:scene_owned_file, Ret.OwnedFile, references: :owned_file_id)
+    belongs_to(:model_owned_file, Ret.OwnedFile, references: :owned_file_id, on_replace: :nilify)
+    belongs_to(:screenshot_owned_file, Ret.OwnedFile, references: :owned_file_id, on_replace: :nilify)
+    belongs_to(:scene_owned_file, Ret.OwnedFile, references: :owned_file_id, on_replace: :nilify)
     field(:state, Scene.State)
 
     timestamps()
