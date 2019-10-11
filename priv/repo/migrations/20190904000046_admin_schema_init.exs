@@ -3,6 +3,8 @@ defmodule Ret.Repo.Migrations.AdminSchemaInit do
   @disable_ddl_transaction true
 
   def up do
+    auth_password = Application.get_env(:ret, __MODULE__)[:postgrest_password]
+
     execute("create schema if not exists ret0_admin;")
 
     execute("""
@@ -14,7 +16,7 @@ defmodule Ret.Repo.Migrations.AdminSchemaInit do
           FROM   pg_catalog.pg_roles
           WHERE  rolname = 'postgrest_authenticator') THEN
 
-          CREATE ROLE postgrest_authenticator;
+          CREATE ROLE postgrest_authenticator LOGIN PASSWORD '#{auth_password}';
        END IF;
     END
     $do$;

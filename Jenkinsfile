@@ -69,6 +69,7 @@ pipeline {
               icon_emoji: ":gift:"
             ])
             sh "sudo /usr/bin/hab-pkg-promote '${packageIdent}' '${retPool}'"
+            sh "sudo /usr/bin/hab-pkg-promote '${packageIdent}' 'stable'"
             sh "curl -X POST --data-urlencode ${shellString(payload)} ${slackURL}"
         }
       }

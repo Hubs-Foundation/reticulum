@@ -7,14 +7,6 @@ defmodule Ret.ReleaseTasks do
     end)
   end
 
-  def migrate_post_start do
-    if module_config(:migrate_post_start) do
-      migrate()
-    end
-  end
-
   def priv_dir(app), do: "#{:code.priv_dir(app)}"
   defp migrations_path(app), do: Path.join([priv_dir(app), "repo", "migrations"])
-
-  defp module_config(key), do: Application.get_env(:ret, __MODULE__)[key]
 end

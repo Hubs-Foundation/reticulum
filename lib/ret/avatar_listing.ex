@@ -33,7 +33,11 @@ defmodule Ret.AvatarListing do
     belongs_to(:account, Account, references: :account_id)
     belongs_to(:parent_avatar_listing, AvatarListing, references: :avatar_listing_id)
 
-    has_many(:child_avatars, Avatar, references: :avatar_listing_id, foreign_key: :parent_avatar_listing_id, on_replace: :nilify)
+    has_many(:child_avatars, Avatar,
+      references: :avatar_listing_id,
+      foreign_key: :parent_avatar_listing_id,
+      on_replace: :nilify
+    )
 
     belongs_to(:gltf_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
     belongs_to(:bin_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
@@ -43,6 +47,15 @@ defmodule Ret.AvatarListing do
     belongs_to(:emissive_map_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
     belongs_to(:normal_map_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
     belongs_to(:orm_map_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
+  end
+
+  def has_any_in_filter?(filter) do
+    %Ret.MediaSearchQuery{source: "avatar_listings", cursor: "1", filter: filter, q: ""}
+    |> Ret.MediaSearch.search()
+    |> elem(1)
+    |> Map.get(:entries)
+    |> Enum.empty?()
+    |> Kernel.not()
   end
 
   def changeset_for_listing_for_avatar(

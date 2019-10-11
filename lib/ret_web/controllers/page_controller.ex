@@ -13,7 +13,10 @@ defmodule RetWeb.PageController do
 
   defp render_scene_content(%t{} = scene, conn) when t in [Scene, SceneListing] do
     scene_meta_tags =
-      Phoenix.View.render_to_string(RetWeb.PageView, "scene-meta.html", scene: scene, ret_meta: Ret.Meta.get_meta())
+      Phoenix.View.render_to_string(RetWeb.PageView, "scene-meta.html",
+        scene: scene,
+        ret_meta: Ret.Meta.get_meta(include_repo: false)
+      )
 
     chunks =
       chunks_for_page("scene.html", :hubs)
@@ -30,7 +33,10 @@ defmodule RetWeb.PageController do
 
   defp render_avatar_content(%t{} = avatar, conn) when t in [Avatar, AvatarListing] do
     avatar_meta_tags =
-      Phoenix.View.render_to_string(RetWeb.PageView, "avatar-meta.html", avatar: avatar, ret_meta: Ret.Meta.get_meta())
+      Phoenix.View.render_to_string(RetWeb.PageView, "avatar-meta.html",
+        avatar: avatar,
+        ret_meta: Ret.Meta.get_meta(include_repo: false)
+      )
 
     chunks =
       chunks_for_page("avatar.html", :hubs)
@@ -45,19 +51,12 @@ defmodule RetWeb.PageController do
     conn |> send_resp(404, "")
   end
 
-  def render_for_path("/", _params, conn) do
-    index_meta_tags =
-      Phoenix.View.render_to_string(RetWeb.PageView, "index-meta.html",
-        config_json: {:safe, Ret.AppConfig.config() |> Poison.encode!()}
-      )
-
-    chunks =
-      chunks_for_page("index.html", :hubs)
-      |> List.insert_at(1, index_meta_tags)
-
-    conn
-    |> put_resp_header("content-type", "text/html; charset=utf-8")
-    |> send_resp(200, chunks)
+  def render_for_path("/", params, conn) do
+    if !Enum.empty?(params) || Ret.Account.has_accounts?() do
+      conn |> render_index
+    else
+      conn |> redirect(to: "/admin")
+    end
   end
 
   def render_for_path("/scenes/" <> path, _params, conn) do
@@ -139,6 +138,21 @@ defmodule RetWeb.PageController do
     end
   end
 
+  def render_index(conn) do
+    index_meta_tags =
+      Phoenix.View.render_to_string(RetWeb.PageView, "index-meta.html",
+        config_json: {:safe, Ret.AppConfig.config() |> Poison.encode!()}
+      )
+
+    chunks =
+      chunks_for_page("index.html", :hubs)
+      |> List.insert_at(1, index_meta_tags)
+
+    conn
+    |> put_resp_header("content-type", "text/html; charset=utf-8")
+    |> send_resp(200, chunks)
+  end
+
   def render_hub_content(conn, nil, _) do
     conn |> send_resp(404, "Invalid URL.")
   end
@@ -158,7 +172,7 @@ defmodule RetWeb.PageController do
       Phoenix.View.render_to_string(RetWeb.PageView, "hub-meta.html",
         hub: hub,
         scene: hub.scene,
-        ret_meta: Ret.Meta.get_meta()
+        ret_meta: Ret.Meta.get_meta(include_repo: false)
       )
 
     chunks =

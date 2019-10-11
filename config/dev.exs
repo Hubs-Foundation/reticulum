@@ -1,5 +1,7 @@
 use Mix.Config
 
+# NOTE: this file contains some security keys/certs that are *not* secrets, and are only used for local development purposes.
+
 host = "hubs.local"
 cors_proxy_host = "hubs-proxy.local"
 
@@ -85,8 +87,6 @@ config :ret, Ret.Repo,
   template: "template0",
   pool_size: 10
 
-config :ret, Ret.ReleaseTasks, migrate_post_start: false
-
 config :ret, RetWeb.Plugs.HeaderAuthorization,
   header_name: "x-ret-admin-access-key",
   header_value: "admin-only"
@@ -141,7 +141,7 @@ websocket_hosts =
 script_shas =
   "'sha256-hsbRcgUBASABDq7qVGVTpbnWq/ns7B+ToTctZFJXYi8=' 'sha256-MIpWPgYj31kCgSUFc0UwHGQrV87W6N5ozotqfxxQG0w=' 'sha256-/S6PM16MxkmUT7zJN2lkEKFgvXR7yL4Z8PCrRrFu4Q8='"
 
-config :ret, RetWeb.AddCSPPlug,
+config :ret, RetWeb.Plugs.AddCSP,
   content_security_policy:
     "default-src 'none'; script-src 'self' #{script_shas} #{asset_hosts} https://cdn.rawgit.com https://aframe.io https://www.google-analytics.com 'unsafe-eval'; worker-src 'self' blob:; font-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://cdn.aframe.io #{
       asset_hosts
@@ -181,10 +181,12 @@ config :sentry,
 
 config :ret, Ret.Habitat, ip: "127.0.0.1", http_port: 9631
 
-config :ret, Ret.JanusLoadStatus, default_janus_host: dev_janus_host
+config :ret, Ret.JanusLoadStatus, default_janus_host: dev_janus_host, janus_port: 443
 
 config :ret, Ret.RoomAssigner, balancer_weights: [{600, 1}, {300, 50}, {0, 500}]
 
 config :ret, RetWeb.PageController, skip_cache: true
 
 config :ret, Ret.HttpUtils, insecure_ssl: true
+
+config :ret, Ret.Repo.Migrations.AdminSchemaInit, postgrest_password: "password"
