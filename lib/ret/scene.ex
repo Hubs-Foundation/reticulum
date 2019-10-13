@@ -25,6 +25,11 @@ defmodule Ret.Scene do
     field(:attributions, :map)
     field(:allow_remixing, :boolean)
     field(:allow_promotion, :boolean)
+
+    field(:imported_from_host, :string)
+    field(:imported_from_port, :integer)
+    field(:imported_from_sid, :string)
+
     belongs_to(:account, Ret.Account, references: :account_id)
     belongs_to(:model_owned_file, Ret.OwnedFile, references: :owned_file_id, on_replace: :nilify)
     belongs_to(:screenshot_owned_file, Ret.OwnedFile, references: :owned_file_id, on_replace: :nilify)
@@ -48,19 +53,38 @@ defmodule Ret.Scene do
   end
 
   def import_from_url!(uri, account) do
-    scene = uri |> fetch_remote_scene!()
+    remote_scene = uri |> fetch_remote_scene!()
+    [imported_from_host, imported_from_port] = [:host, :port] |> Enum.map(&(uri |> URI.parse() |> Map.get(&1)))
+    imported_from_sid = remote_scene["scene_id"]
 
     [model_owned_file, screenshot_owned_file] =
-      [scene["model_url"], scene["screenshot_url"]] |> Storage.owned_files_from_urls!(account)
+      [remote_scene["model_url"], remote_scene["screenshot_url"]] |> Storage.owned_files_from_urls!(account)
+
+    scene =
+      Scene
+      |> Repo.get_by(
+        imported_from_host: imported_from_host,
+        imported_from_port: imported_from_port,
+        imported_from_sid: imported_from_sid
+      )
+      |> Repo.preload([:account, :model_owned_file, :screenshot_owned_file, :scene_owned_file])
+
+    # Disallow non-admins from importing if account varies
+    if scene && scene.account_id != account.account_id && !account.is_admin do
+      raise "Cannot import existing scene, owned by another account."
+    end
 
     {:ok, new_scene} =
-      %Scene{}
+      (scene || %Scene{})
       |> Scene.changeset(account, model_owned_file, screenshot_owned_file, nil, %{
-        name: scene["name"],
-        description: scene["description"],
-        attributions: scene["attribution"],
-        allow_remixing: scene["allow_remixing"],
-        allow_promotion: scene["allow_promotion"]
+        name: remote_scene["name"],
+        description: remote_scene["description"],
+        attributions: remote_scene["attribution"],
+        allow_remixing: remote_scene["allow_remixing"],
+        imported_from_host: imported_from_host,
+        imported_from_port: imported_from_port,
+        imported_from_sid: imported_from_sid,
+        allow_promotion: true
       })
       |> Repo.insert_or_update()
 
@@ -83,6 +107,9 @@ defmodule Ret.Scene do
       :attributions,
       :allow_remixing,
       :allow_promotion,
+      :imported_from_host,
+      :imported_from_port,
+      :imported_from_sid,
       :state
     ])
     |> validate_required([

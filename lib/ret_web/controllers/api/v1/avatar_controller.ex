@@ -195,7 +195,7 @@ defmodule RetWeb.Api.V1.AvatarController do
   end
 
   def delete(conn, %Avatar{account_id: avatar_account_id} = avatar, %Account{account_id: account_id})
-       when not is_nil(avatar_account_id) and avatar_account_id == account_id do
+      when not is_nil(avatar_account_id) and avatar_account_id == account_id do
     avatar
     |> Avatar.delete_avatar_and_delist_listings()
     |> case do

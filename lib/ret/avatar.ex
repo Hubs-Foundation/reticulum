@@ -46,6 +46,10 @@ defmodule Ret.Avatar do
     field(:allow_remixing, :boolean)
     field(:allow_promotion, :boolean)
 
+    field(:imported_from_host, :string)
+    field(:imported_from_port, :integer)
+    field(:imported_from_sid, :string)
+
     belongs_to(:gltf_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
     belongs_to(:bin_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
     belongs_to(:thumbnail_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
@@ -58,6 +62,7 @@ defmodule Ret.Avatar do
     field(:state, Avatar.State)
 
     field(:reviewed_at, :utc_datetime)
+
     timestamps()
   end
 
@@ -223,10 +228,12 @@ defmodule Ret.Avatar do
   end
 
   def import_from_url!(uri, account) do
-    avatar = uri |> fetch_remote_avatar!() |> collapse_remote_avatar!(uri)
+    remote_avatar = uri |> fetch_remote_avatar!() |> collapse_remote_avatar!(uri)
+    [imported_from_host, imported_from_port] = [:host, :port] |> Enum.map(&(uri |> URI.parse() |> Map.get(&1)))
+    imported_from_sid = remote_avatar["avatar_id"]
 
     {file_names, file_urls} =
-      avatar
+      remote_avatar
       |> Map.get("files")
       |> Enum.filter(fn {_, v} -> v end)
       |> Enum.unzip()
@@ -239,14 +246,31 @@ defmodule Ret.Avatar do
       |> Enum.zip(owned_files)
       |> Enum.into(%{})
 
+    avatar =
+      Avatar
+      |> Repo.get_by(
+        imported_from_host: imported_from_host,
+        imported_from_port: imported_from_port,
+        imported_from_sid: imported_from_sid
+      )
+      |> load_parents(@file_columns)
+
+    # Disallow non-admins from importing if account varies
+    if avatar && avatar.account_id != account.account_id && !account.is_admin do
+      raise "Cannot import existing avatar, owned by another account."
+    end
+
     {:ok, new_avatar} =
-      %Avatar{}
+      (avatar || %Avatar{})
       |> Avatar.changeset(account, owned_files_map, nil, nil, %{
-        name: avatar["name"],
-        description: avatar["description"],
-        attributions: avatar["attribution"],
-        allow_remixing: avatar["allow_remixing"],
-        allow_promotion: avatar["allow_promotion"]
+        name: remote_avatar["name"],
+        description: remote_avatar["description"],
+        attributions: remote_avatar["attribution"],
+        allow_remixing: remote_avatar["allow_remixing"],
+        imported_from_host: imported_from_host,
+        imported_from_port: imported_from_port,
+        imported_from_sid: imported_from_sid,
+        allow_promotion: true
       })
       |> Repo.insert_or_update()
 
@@ -263,7 +287,16 @@ defmodule Ret.Avatar do
         attrs \\ %{}
       ) do
     avatar
-    |> cast(attrs, [:name, :description, :attributions, :allow_remixing, :allow_promotion])
+    |> cast(attrs, [
+      :name,
+      :description,
+      :attributions,
+      :allow_remixing,
+      :allow_promotion,
+      :imported_from_host,
+      :imported_from_port,
+      :imported_from_sid
+    ])
     |> validate_required([])
     |> maybe_add_avatar_sid_to_changeset
     |> unique_constraint(:avatar_sid)

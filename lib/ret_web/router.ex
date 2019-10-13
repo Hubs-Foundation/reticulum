@@ -65,7 +65,7 @@ defmodule RetWeb.Router do
   end
 
   scope "/api/postgrest" do
-    pipe_through([:secure_headers, :postgrest_api, :admin_required])
+    pipe_through([:secure_headers, :auth_optional, :postgrest_api, :admin_required])
     forward("/", ReverseProxyPlug, upstream: "http://localhost:3000")
   end
 
