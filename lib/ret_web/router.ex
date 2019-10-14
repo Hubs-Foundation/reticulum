@@ -114,6 +114,11 @@ defmodule RetWeb.Router do
         resources("/assets", Api.V1.ProjectAssetsController, only: [:index, :create, :delete])
       end
     end
+
+    scope "/v1", as: :api_v1 do
+      pipe_through([:admin_required])
+      resources("/app_configs", Api.V1.AppConfigController, only: [:create, :update, :delete])
+    end
   end
 
   scope "/", RetWeb do
