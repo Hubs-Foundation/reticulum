@@ -139,18 +139,38 @@ defmodule RetWeb.PageController do
   end
 
   def render_index(conn) do
+    app_config_json = Ret.AppConfig.get_config() |> Poison.encode!()
+    app_config_script = "window.APP_CONFIG = JSON.parse('#{app_config_json |> String.replace("'", "\\'")}')"
+
     index_meta_tags =
       Phoenix.View.render_to_string(RetWeb.PageView, "index-meta.html",
-        config_json: {:safe, Ret.AppConfig.config() |> Poison.encode!()}
+        app_config_script: {:safe, "<script>#{app_config_script}</script>"}
       )
 
     chunks =
       chunks_for_page("index.html", :hubs)
       |> List.insert_at(1, index_meta_tags)
 
+    app_config_csp = "'sha256-#{:crypto.hash(:sha256, app_config_script) |> :base64.encode()}'"
+
     conn
+    |> append_csp("script-src", app_config_csp)
     |> put_resp_header("content-type", "text/html; charset=utf-8")
     |> send_resp(200, chunks)
+  end
+
+  defp append_csp(conn, directive, source) do
+    csp_header = conn.resp_headers |> Enum.find(fn {key, _value} -> key == "content-security-policy" end)
+
+    new_directive = "#{directive} #{source}"
+
+    csp_value =
+      case csp_header do
+        nil -> new_directive
+        {_csp, csp_value} -> csp_value |> String.replace(directive, new_directive)
+      end
+
+    conn |> put_resp_header("content-security-policy", csp_value)
   end
 
   def render_hub_content(conn, nil, _) do

@@ -22,4 +22,4 @@
 <meta name="msapplication-starturl" content="/">
 <meta name="application-name" content="Hubs">
 <link rel="apple-touch-icon" sizes="180x180" href="https://assets-prod.reticulum.io/assets/images/pwaicon-180-hubs.png">
-<script>window.CONFIG = JSON.parse('<%= @config_json %>')</script>
+<%= @app_config_script %>

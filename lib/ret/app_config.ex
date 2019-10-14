@@ -2,7 +2,7 @@ defmodule Ret.AppConfig do
   use Ecto.Schema
   import Ecto.Changeset
 
-  alias Ret.{AppConfig}
+  alias Ret.{AppConfig, Repo}
 
   @schema_prefix "ret0"
   @primary_key {:app_config_id, :id, autogenerate: true}
@@ -20,9 +20,7 @@ defmodule Ret.AppConfig do
     |> unique_constraint(:value)
   end
 
-  def config() do
-    %{
-      hero_blurb: "A customized version of Hubs"
-    }
+  def get_config() do
+    AppConfig |> Repo.all() |> Map.new(&{&1.key, &1.value})
   end
 end
