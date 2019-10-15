@@ -2,7 +2,7 @@ defmodule Ret.Repo.Migrations.AllowNullSceneOwnedFile do
   use Ecto.Migration
 
   def up do
-    # Drops scene listings view and featured scenes view
+    # Drops scene listings view and featured, pending scenes view
     execute("drop view ret0_admin.scene_listings cascade")
 
     # Hosted spoke won't necessarily fill this file in
@@ -30,6 +30,18 @@ defmodule Ret.Repo.Migrations.AllowNullSceneOwnedFile do
     """)
 
     execute("grant select, update on ret0_admin.featured_scene_listings to ret_admin;")
+
+    execute("""
+    create or replace view ret0_admin.pending_scenes as (
+    		select scenes.id, scene_sid, scenes.slug, scenes.name, scenes.description, scenes.screenshot_owned_file_id, scenes.model_owned_file_id, scenes.scene_owned_file_id, 
+    		scenes.attributions, scene_listings.id as scene_listing_id, scenes.updated_at, scenes.allow_remixing as _allow_remixing, scenes.allow_promotion as _allow_promotion
+    		from ret0_admin.scenes
+    		left outer join ret0_admin.scene_listings on scene_listings.scene_id = scenes.id
+    		where ((scenes.reviewed_at is null or scenes.reviewed_at < scenes.updated_at) and scenes.allow_promotion and scenes.state = 'active')
+    );
+    """)
+
+    execute("grant select on ret0_admin.pending_scenes to ret_admin;")
   end
 
   def down do
@@ -57,5 +69,17 @@ defmodule Ret.Repo.Migrations.AllowNullSceneOwnedFile do
     """)
 
     execute("grant select, update on ret0_admin.featured_scene_listings to ret_admin;")
+
+    execute("""
+    create or replace view ret0_admin.pending_scenes as (
+    		select scenes.id, scene_sid, scenes.slug, scenes.name, scenes.description, scenes.screenshot_owned_file_id, scenes.model_owned_file_id, scenes.scene_owned_file_id, 
+    		scenes.attributions, scene_listings.id as scene_listing_id, scenes.updated_at, scenes.allow_remixing as _allow_remixing, scenes.allow_promotion as _allow_promotion
+    		from ret0_admin.scenes
+    		left outer join ret0_admin.scene_listings on scene_listings.scene_id = scenes.id
+    		where ((scenes.reviewed_at is null or scenes.reviewed_at < scenes.updated_at) and scenes.allow_promotion and scenes.state = 'active')
+    );
+    """)
+
+    execute("grant select on ret0_admin.pending_scenes to ret_admin;")
   end
 end
