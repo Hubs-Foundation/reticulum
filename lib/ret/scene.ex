@@ -60,6 +60,13 @@ defmodule Ret.Scene do
     [model_owned_file, screenshot_owned_file] =
       [remote_scene["model_url"], remote_scene["screenshot_url"]] |> Storage.owned_files_from_urls!(account)
 
+    scene_owned_file =
+      if remote_scene["scene_project_url"] do
+        [remote_scene["scene_project_url"]] |> Storage.owned_files_from_urls!(account) |> Enum.at(0)
+      else
+        nil
+      end
+
     scene =
       Scene
       |> Repo.get_by(
@@ -76,7 +83,7 @@ defmodule Ret.Scene do
 
     {:ok, new_scene} =
       (scene || %Scene{})
-      |> Scene.changeset(account, model_owned_file, screenshot_owned_file, nil, %{
+      |> Scene.changeset(account, model_owned_file, screenshot_owned_file, scene_owned_file, %{
         name: remote_scene["name"],
         description: remote_scene["description"],
         attributions: remote_scene["attribution"],
