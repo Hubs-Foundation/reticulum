@@ -179,13 +179,11 @@ defmodule Ret.Avatar do
     body |> Poison.decode!() |> get_in(["avatars", Access.at(0)])
   end
 
-  defp collapse_remote_avatar!(%{"parent_avatar_listing_id" => nil} = avatar, base_uri),
-    do: avatar
-
   defp collapse_remote_avatar!(
          %{"parent_avatar_listing_id" => parent_id} = avatar,
          base_uri
-       ) do
+       )
+       when parent_id != nil do
     parent_avatar = URI.merge(base_uri, parent_id) |> fetch_remote_avatar!()
 
     collapse_remote_avatar!(
@@ -203,13 +201,11 @@ defmodule Ret.Avatar do
     )
   end
 
-  defp collapse_remote_avatar!(%{"parent_avatar_id" => nil} = avatar, base_uri),
-    do: avatar
-
   defp collapse_remote_avatar!(
          %{"parent_avatar_id" => parent_id} = avatar,
          base_uri
-       ) do
+       )
+       when parent_id != nil do
     parent_avatar = URI.merge(base_uri, parent_id) |> fetch_remote_avatar!()
 
     collapse_remote_avatar!(
@@ -226,6 +222,8 @@ defmodule Ret.Avatar do
       base_uri
     )
   end
+
+  defp collapse_remote_avatar!(avatar, _base_uri), do: avatar
 
   def import_from_url!(uri, account) do
     remote_avatar = uri |> fetch_remote_avatar!() |> collapse_remote_avatar!(uri)
