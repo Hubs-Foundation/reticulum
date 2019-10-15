@@ -1,6 +1,6 @@
 defmodule Ret.MediaSearchQuery do
   @enforce_keys [:source]
-  defstruct [:source, :type, :user, :filter, :q, :cursor, :locale]
+  defstruct [:source, :type, :user, :filter, :q, :similar_to, :cursor, :locale]
 end
 
 defmodule Ret.MediaSearchResult do
@@ -40,8 +40,8 @@ defmodule Ret.MediaSearch do
     scene_search(cursor, query, filter, account_id)
   end
 
-  def search(%Ret.MediaSearchQuery{source: "avatar_listings", cursor: cursor, filter: filter, q: query}) do
-    avatar_listing_search(cursor, query, filter)
+  def search(%Ret.MediaSearchQuery{source: "avatar_listings", cursor: cursor, filter: filter, q: query, similar_to: similar_to}) do
+    avatar_listing_search(cursor, query, filter, similar_to)
   end
 
   def search(%Ret.MediaSearchQuery{source: "avatars", cursor: cursor, filter: filter, user: account_id, q: query}) do
@@ -453,7 +453,7 @@ defmodule Ret.MediaSearch do
     {:commit, results}
   end
 
-  defp avatar_listing_search(cursor, query, filter, order \\ [asc: :order, desc: :updated_at]) do
+  defp avatar_listing_search(cursor, query, filter, similar_to, order \\ [asc: :order, desc: :updated_at]) do
     page_number = (cursor || "1") |> Integer.parse() |> elem(0)
 
     results =
@@ -462,6 +462,7 @@ defmodule Ret.MediaSearch do
       |> where([l, a], l.state == ^"active" and a.state == ^"active" and a.allow_promotion == ^true)
       |> add_query_to_listing_search_query(query)
       |> add_tag_to_listing_search_query(filter)
+      |> add_similar_to_to_listing_search_query(similar_to)
       |> preload([:thumbnail_owned_file, :avatar])
       |> order_by(^order)
       |> Repo.paginate(%{page: page_number, page_size: @page_size})
@@ -506,6 +507,12 @@ defmodule Ret.MediaSearch do
 
   defp add_tag_to_listing_search_query(query, nil), do: query
   defp add_tag_to_listing_search_query(query, tag), do: query |> where(fragment("tags->'tags' \\? ?", ^tag))
+
+  defp add_similar_to_to_listing_search_query(query, nil), do: query
+  defp add_similar_to_to_listing_search_query(query, similar_listing_id) do
+    # TODO, filter by similar_listing_id's parent_avatar_listing_id matching the listings parent_avatar_listing_id
+    query
+  end
 
   defp result_for_page(page, page_number, source, entry_fn) do
     %Ret.MediaSearchResult{
