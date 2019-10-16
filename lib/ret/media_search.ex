@@ -40,7 +40,13 @@ defmodule Ret.MediaSearch do
     scene_search(cursor, query, filter, account_id)
   end
 
-  def search(%Ret.MediaSearchQuery{source: "avatar_listings", cursor: cursor, filter: filter, q: query, similar_to: similar_to}) do
+  def search(%Ret.MediaSearchQuery{
+        source: "avatar_listings",
+        cursor: cursor,
+        filter: filter,
+        q: query,
+        similar_to: similar_to
+      }) do
     avatar_listing_search(cursor, query, filter, similar_to)
   end
 
@@ -509,9 +515,18 @@ defmodule Ret.MediaSearch do
   defp add_tag_to_listing_search_query(query, tag), do: query |> where(fragment("tags->'tags' \\? ?", ^tag))
 
   defp add_similar_to_to_listing_search_query(query, nil), do: query
-  defp add_similar_to_to_listing_search_query(query, similar_listing_id) do
-    # TODO, filter by similar_listing_id's parent_avatar_listing_id matching the listings parent_avatar_listing_id
-    query
+
+  defp add_similar_to_to_listing_search_query(query, similar_sid) do
+    case Avatar.avatar_or_avatar_listing_by_sid(similar_sid) do
+      nil ->
+        query |> where(false)
+
+      %{parent_avatar_listing_id: nil} ->
+        query |> where([l], l.avatar_listing_sid == ^similar_sid)
+
+      %{parent_avatar_listing_id: similar_parent_id} ->
+        query |> where([l], l.parent_avatar_listing_id == ^similar_parent_id)
+    end
   end
 
   defp result_for_page(page, page_number, source, entry_fn) do
