@@ -525,7 +525,7 @@ defmodule Ret.MediaSearch do
         query
         |> where(
           [l],
-          l.avatar_listing_sid == ^similar_sid or l.avatar_listing_id == ^similar_parent_id or
+          l.avatar_listing_id == ^similar_id or l.avatar_listing_id == ^similar_parent_id or
             l.parent_avatar_listing_id == ^similar_parent_id or l.parent_avatar_listing_id == ^similar_id
         )
     end
