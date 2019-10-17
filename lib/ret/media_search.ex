@@ -517,15 +517,17 @@ defmodule Ret.MediaSearch do
   defp add_similar_to_to_listing_search_query(query, nil), do: query
 
   defp add_similar_to_to_listing_search_query(query, similar_sid) do
-    case Avatar.avatar_or_avatar_listing_by_sid(similar_sid) do
+    case AvatarListing |> Repo.get_by(avatar_listing_sid: similar_sid) do
       nil ->
         query |> where(false)
 
-      %{parent_avatar_listing_id: nil} ->
-        query |> where([l], l.avatar_listing_sid == ^similar_sid)
-
-      %{parent_avatar_listing_id: similar_parent_id} ->
-        query |> where([l], l.parent_avatar_listing_id == ^similar_parent_id)
+      %{parent_avatar_listing_id: similar_parent_id, avatar_listing_id: similar_id} ->
+        query
+        |> where(
+          [l],
+          l.avatar_listing_id == ^similar_id or l.avatar_listing_id == ^similar_parent_id or
+            l.parent_avatar_listing_id == ^similar_parent_id or l.parent_avatar_listing_id == ^similar_id
+        )
     end
   end
 
