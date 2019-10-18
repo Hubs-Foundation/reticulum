@@ -35,6 +35,7 @@ defmodule RetWeb.Router do
 
   pipeline :proxy_api do
     plug(:accepts, ["json"])
+    plug(RetWeb.Plugs.EnsureAdmin)
     plug(RetWeb.Plugs.RewriteAuthorizationHeaderToPerms)
   end
 
