@@ -42,7 +42,7 @@ defmodule RetWeb.Api.V1.MediaController do
         store_and_render_upload(conn, converted_upload, desired_content_type, promotion_token)
 
       _ ->
-        store_and_render_upload(conn, upload, content_type, promotion_token)
+        store_and_render_upload(conn, upload, desired_content_type || content_type, promotion_token)
     end
   end
 
