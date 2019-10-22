@@ -17,7 +17,7 @@ defmodule Ret.AppConfig do
   def changeset(%AppConfig{} = app_config, attrs) do
     # We wrap the config value in an outer %{value: ...} map because we want to be able to accept primitive
     # value types, but store them as json.
-    attrs = attrs |> Map.put("value", %{value: attrs["value"] |> Poison.decode!()})
+    attrs = attrs |> Map.put("value", %{value: attrs["value"]})
 
     app_config
     |> cast(attrs, [:key, :value])
