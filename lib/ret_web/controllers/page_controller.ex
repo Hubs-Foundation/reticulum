@@ -114,7 +114,7 @@ defmodule RetWeb.PageController do
     end
   end
 
-  def render_for_path("/admin", _params, conn), do: conn |> render_page("admin.html")
+  def render_for_path("/admin", _params, conn), do: conn |> render_page("admin.html", :admin)
 
   def render_for_path("/" <> path, params, conn) do
     embed_token = params["embed_token"]
