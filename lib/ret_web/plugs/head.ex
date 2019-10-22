@@ -1,4 +1,4 @@
-defmodule RetWeb.Head do
+defmodule RetWeb.Plugs.Head do
   # Copy of Plug.Head that also adds metadata indicating the original request
   alias Plug.Conn
 

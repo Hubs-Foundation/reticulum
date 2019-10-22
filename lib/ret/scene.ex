@@ -10,7 +10,7 @@ defmodule Ret.Scene do
   use Ecto.Schema
   import Ecto.Changeset
 
-  alias Ret.{Repo, Scene, SceneListing}
+  alias Ret.{Repo, Scene, SceneListing, Storage}
   alias Ret.Scene.{SceneSlug}
 
   @schema_prefix "ret0"
@@ -25,10 +25,15 @@ defmodule Ret.Scene do
     field(:attributions, :map)
     field(:allow_remixing, :boolean)
     field(:allow_promotion, :boolean)
+
+    field(:imported_from_host, :string)
+    field(:imported_from_port, :integer)
+    field(:imported_from_sid, :string)
+
     belongs_to(:account, Ret.Account, references: :account_id)
-    belongs_to(:model_owned_file, Ret.OwnedFile, references: :owned_file_id)
-    belongs_to(:screenshot_owned_file, Ret.OwnedFile, references: :owned_file_id)
-    belongs_to(:scene_owned_file, Ret.OwnedFile, references: :owned_file_id)
+    belongs_to(:model_owned_file, Ret.OwnedFile, references: :owned_file_id, on_replace: :nilify)
+    belongs_to(:screenshot_owned_file, Ret.OwnedFile, references: :owned_file_id, on_replace: :nilify)
+    belongs_to(:scene_owned_file, Ret.OwnedFile, references: :owned_file_id, on_replace: :nilify)
     field(:state, Scene.State)
 
     timestamps()
@@ -41,6 +46,57 @@ defmodule Ret.Scene do
   def to_sid(%Scene{} = scene), do: scene.scene_sid
   def to_sid(%SceneListing{} = scene_listing), do: scene_listing.scene_listing_sid
   def to_url(%t{} = s) when t in [Scene, SceneListing], do: "#{RetWeb.Endpoint.url()}/scenes/#{s |> to_sid}/#{s.slug}"
+
+  defp fetch_remote_scene!(uri) do
+    %{body: body} = HTTPoison.get!(uri)
+    body |> Poison.decode!() |> get_in(["scenes", Access.at(0)])
+  end
+
+  def import_from_url!(uri, account) do
+    remote_scene = uri |> fetch_remote_scene!()
+    [imported_from_host, imported_from_port] = [:host, :port] |> Enum.map(&(uri |> URI.parse() |> Map.get(&1)))
+    imported_from_sid = remote_scene["scene_id"]
+
+    [model_owned_file, screenshot_owned_file] =
+      [remote_scene["model_url"], remote_scene["screenshot_url"]] |> Storage.owned_files_from_urls!(account)
+
+    scene_owned_file =
+      if remote_scene["scene_project_url"] do
+        [remote_scene["scene_project_url"]] |> Storage.owned_files_from_urls!(account) |> Enum.at(0)
+      else
+        nil
+      end
+
+    scene =
+      Scene
+      |> Repo.get_by(
+        imported_from_host: imported_from_host,
+        imported_from_port: imported_from_port,
+        imported_from_sid: imported_from_sid
+      )
+      |> Repo.preload([:account, :model_owned_file, :screenshot_owned_file, :scene_owned_file])
+
+    # Disallow non-admins from importing if account varies
+    if scene && scene.account_id != account.account_id && !account.is_admin do
+      raise "Cannot import existing scene, owned by another account."
+    end
+
+    {:ok, new_scene} =
+      (scene || %Scene{})
+      |> Scene.changeset(account, model_owned_file, screenshot_owned_file, scene_owned_file, %{
+        name: remote_scene["name"],
+        description: remote_scene["description"],
+        attributions: remote_scene["attribution"],
+        allow_remixing: remote_scene["allow_remixing"],
+        imported_from_host: imported_from_host,
+        imported_from_port: imported_from_port,
+        imported_from_sid: imported_from_sid,
+        allow_promotion: true
+      })
+      |> Repo.insert_or_update()
+
+    new_scene
+  end
 
   def changeset(
         %Scene{} = scene,
@@ -58,6 +114,9 @@ defmodule Ret.Scene do
       :attributions,
       :allow_remixing,
       :allow_promotion,
+      :imported_from_host,
+      :imported_from_port,
+      :imported_from_sid,
       :state
     ])
     |> validate_required([
@@ -69,9 +128,9 @@ defmodule Ret.Scene do
     |> maybe_add_scene_sid_to_changeset
     |> unique_constraint(:scene_sid)
     |> put_assoc(:account, account)
-    |> put_change(:model_owned_file_id, model_owned_file.owned_file_id)
-    |> put_change(:screenshot_owned_file_id, screenshot_owned_file.owned_file_id)
-    |> put_change(:scene_owned_file_id, scene_owned_file.owned_file_id)
+    |> put_assoc(:model_owned_file, model_owned_file)
+    |> put_assoc(:screenshot_owned_file, screenshot_owned_file)
+    |> put_assoc(:scene_owned_file, scene_owned_file)
     |> SceneSlug.maybe_generate_slug()
   end
 

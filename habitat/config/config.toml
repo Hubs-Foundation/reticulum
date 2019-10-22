@@ -60,6 +60,7 @@ default_janus_host = "{{ cfg.janus.default_host }}"
 janus_service_name = "{{ cfg.janus.service_name }}"
 janus_admin_secret = "{{ cfg.janus.admin_secret }}"
 janus_admin_port = {{ cfg.janus.admin_port }}
+janus_port = {{ cfg.janus.janus_port }}
 
 [ret."Elixir.Ret.Guardian"]
 secret_key = "{{ cfg.guardian.secret_key }}"
@@ -113,8 +114,11 @@ password = "{{ cfg.email.password }}"
 [ret."Elixir.Ret.Support"]
 slack_webhook_url = "{{ cfg.support.slack_webhook_url }}"
 
-[ret."Elixir.RetWeb.AddCSPPlug"]
+[ret."Elixir.RetWeb.Plugs.AddCSP"]
 content_security_policy = "{{ cfg.security.content_security_policy }}"
+
+[ret."Ret.Repo.Migrations.AdminSchemaInit"]
+postgrest_password = "{{ cfg.db.postgrest_password }}"
 
 [web_push_encryption.vapid_details]
 subject = "{{ cfg.web_push.subject }}"

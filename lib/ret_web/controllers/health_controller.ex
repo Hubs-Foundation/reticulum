@@ -4,7 +4,7 @@ defmodule RetWeb.HealthController do
 
   def index(conn, _params) do
     # Check database
-    from(h in Ret.Hub, limit: 1) |> Ret.Repo.one!()
+    from(h in Ret.Hub, limit: 0) |> Ret.Repo.all()
 
     # Check page cache
     true = Cachex.get(:page_chunks, {:hubs, "index.html"}) |> elem(1) |> Enum.count() > 0

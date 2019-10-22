@@ -60,6 +60,17 @@ defmodule Ret.HttpUtils do
     end
   end
 
+  def content_type_from_headers(headers) do
+    headers |> Enum.find(fn h -> h |> elem(0) |> String.downcase() === "content-type" end) |> elem(1)
+  end
+
+  def fetch_content_type(url) do
+    case url |> retry_head_then_get_until_success([{"Range", "bytes=0-32768"}]) do
+      :error -> {:error, "Could not get content-type"}
+      %HTTPoison.Response{headers: headers} -> {:ok, headers |> content_type_from_headers}
+    end
+  end
+
   defp module_config(key) do
     Application.get_env(:ret, __MODULE__)[key]
   end

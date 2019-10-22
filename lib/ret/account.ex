@@ -19,6 +19,9 @@ defmodule Ret.Account do
     timestamps()
   end
 
+  def has_accounts?(), do: from(a in Account, limit: 1) |> Repo.exists?()
+  def has_admin_accounts?(), do: from(a in Account, limit: 1) |> where(is_admin: true) |> Repo.exists?()
+
   def account_for_email(email) do
     email |> identifier_hash_for_email |> account_for_identifier_hash
   end
@@ -32,7 +35,10 @@ defmodule Ret.Account do
     if login do
       Account |> Repo.get(login.account_id) |> Repo.preload(:login)
     else
-      Repo.insert!(%Account{login: %Login{identifier_hash: identifier_hash}})
+      # To bootstrap, the very first account in the system has its admin flag set to true.
+      is_admin = !Account.has_accounts?()
+
+      Repo.insert!(%Account{login: %Login{identifier_hash: identifier_hash}, is_admin: is_admin})
     end
   end
 
