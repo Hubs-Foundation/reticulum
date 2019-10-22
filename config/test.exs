@@ -40,3 +40,4 @@ config :sentry,
   }
 
 config :ret, Ret.Repo.Migrations.AdminSchemaInit, postgrest_password: "password"
+config :ret, Ret.Locking, lock_timeout_ms: 1000 * 60 * 15

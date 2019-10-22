@@ -1,7 +1,7 @@
 defmodule RetWeb.Api.V1.HubController do
   use RetWeb, :controller
 
-  alias Ret.{Hub, Scene, Repo}
+  alias Ret.{Hub, Scene, SceneListing, Repo}
 
   # Limit to 1 TPS
   plug(RetWeb.Plugs.RateLimit)
@@ -18,8 +18,10 @@ defmodule RetWeb.Api.V1.HubController do
   end
 
   def create(conn, %{"hub" => _hub_params} = params) do
+    scene_listing = SceneListing.get_random_default_scene_listing()
+
     %Hub{}
-    |> Hub.changeset(nil, params["hub"])
+    |> Hub.changeset(scene_listing, params["hub"])
     |> exec_create(conn)
   end
 

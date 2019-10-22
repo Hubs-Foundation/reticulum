@@ -28,7 +28,9 @@ defmodule Ret.Meta do
           featured: Ret.AvatarListing.has_any_in_filter?("featured")
         },
         scene_listings: %{
-          any: Ret.SceneListing.has_any_in_filter?(nil)
+          any: Ret.SceneListing.has_any_in_filter?(nil),
+          default: Ret.SceneListing.has_any_in_filter?("default"),
+          featured: Ret.SceneListing.has_any_in_filter?("featured")
         }
       }
     }

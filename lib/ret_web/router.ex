@@ -65,7 +65,7 @@ defmodule RetWeb.Router do
   end
 
   scope "/api/postgrest" do
-    pipe_through([:secure_headers, :auth_required, :proxy_api])
+    pipe_through([:secure_headers, :auth_required, :admin_required, :proxy_api])
     forward("/", RetWeb.Plugs.PostgrestProxy)
   end
 
@@ -76,7 +76,7 @@ defmodule RetWeb.Router do
   end
 
   scope "/api/ita" do
-    pipe_through([:secure_headers, :auth_required, :proxy_api])
+    pipe_through([:secure_headers, :auth_required, :admin_required, :proxy_api])
     forward("/", RetWeb.Plugs.ItaProxy)
   end
 

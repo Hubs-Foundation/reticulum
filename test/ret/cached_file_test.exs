@@ -25,6 +25,7 @@ defmodule Ret.CachedFileTest do
 
     assert uri_hot != nil
     assert uri_hot == uri_cold
+    assert uri_cold |> elem(0) === :ok
   end
 
   test "vaccuum shouldn't fail" do
