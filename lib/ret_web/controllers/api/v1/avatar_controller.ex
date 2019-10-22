@@ -31,7 +31,7 @@ defmodule RetWeb.Api.V1.AvatarController do
       new_avatar = url |> URI.parse() |> Avatar.import_from_url!(account)
       conn |> render("create.json", avatar: new_avatar |> preload(), account: account)
     rescue
-      e -> render_error_json(conn, 400)
+      _ -> render_error_json(conn, 400)
     end
   end
 
@@ -194,6 +194,8 @@ defmodule RetWeb.Api.V1.AvatarController do
     end
   end
 
+  def delete(conn, _avatar), do: conn |> send_resp(401, "You do not own this avatar")
+
   def delete(conn, %Avatar{account_id: avatar_account_id} = avatar, %Account{account_id: account_id})
       when not is_nil(avatar_account_id) and avatar_account_id == account_id do
     avatar
@@ -203,6 +205,4 @@ defmodule RetWeb.Api.V1.AvatarController do
       {:error, error} -> render_error_json(conn, error)
     end
   end
-
-  def delete(conn, _avatar), do: conn |> send_resp(401, "You do not own this avatar")
 end

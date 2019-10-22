@@ -33,7 +33,7 @@ defmodule RetWeb.Api.V1.SceneController do
       new_scene = url |> URI.parse() |> Scene.import_from_url!(account)
       conn |> render("create.json", scene: new_scene |> preload(), account: account)
     rescue
-      e -> render_error_json(conn, 400)
+      _ -> render_error_json(conn, 400)
     end
   end
 
