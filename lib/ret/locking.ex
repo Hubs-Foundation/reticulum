@@ -24,19 +24,21 @@ defmodule Ret.Locking do
       fn ->
         Ecto.Adapters.SQL.query!(Repo, "set idle_in_transaction_session_timeout = #{timeout};", [])
 
-        Repo.transaction(fn ->
-          <<lock_key::little-signed-integer-size(64), _::binary>> = :crypto.hash(:sha256, lock_name |> to_string)
+        res =
+          Repo.transaction(fn ->
+            <<lock_key::little-signed-integer-size(64), _::binary>> = :crypto.hash(:sha256, lock_name |> to_string)
 
-          case Ecto.Adapters.SQL.query!(Repo, "select pg_try_advisory_xact_lock($1);", [lock_key]) do
-            %Postgrex.Result{rows: [[true]]} ->
-              exec.()
+            case Ecto.Adapters.SQL.query!(Repo, "select pg_try_advisory_xact_lock($1);", [lock_key]) do
+              %Postgrex.Result{rows: [[true]]} ->
+                exec.()
 
-            _ ->
-              nil
-          end
-        end)
+              _ ->
+                nil
+            end
+          end)
 
         Ecto.Adapters.SQL.query!(Repo, "set idle_in_transaction_session_timeout = 0;", [])
+        res
       end,
       []
     )
@@ -49,15 +51,17 @@ defmodule Ret.Locking do
       fn ->
         Ecto.Adapters.SQL.query!(Repo, "set idle_in_transaction_session_timeout = #{timeout};", [])
 
-        Repo.transaction(fn ->
-          <<lock_key::little-signed-integer-size(64), _::binary>> = :crypto.hash(:sha256, lock_name |> to_string)
+        res =
+          Repo.transaction(fn ->
+            <<lock_key::little-signed-integer-size(64), _::binary>> = :crypto.hash(:sha256, lock_name |> to_string)
 
-          Ecto.Adapters.SQL.query!(Repo, "select pg_advisory_xact_lock($1);", [lock_key])
+            Ecto.Adapters.SQL.query!(Repo, "select pg_advisory_xact_lock($1);", [lock_key])
 
-          exec.()
-        end)
+            exec.()
+          end)
 
         Ecto.Adapters.SQL.query!(Repo, "set idle_in_transaction_session_timeout = 0;", [])
+        res
       end,
       []
     )
