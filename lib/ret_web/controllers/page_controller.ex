@@ -95,6 +95,7 @@ defmodule RetWeb.PageController do
   def render_for_path("/whats-new/", _params, conn), do: conn |> render_page("whats-new.html")
 
   def render_for_path("/hub.service.js", _params, conn), do: conn |> render_page("hub.service.js")
+  def render_for_path("/app-config-schema.toml", _params, conn), do: conn |> render_page("app-config-schema.toml")
 
   def render_for_path("/manifest.webmanifest", _params, conn) do
     ua =
