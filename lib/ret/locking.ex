@@ -18,26 +18,50 @@ defmodule Ret.Locking do
   end
 
   def exec_if_lockable(lock_name, exec) do
-    Repo.transaction(fn ->
-      <<lock_key::little-signed-integer-size(64), _::binary>> = :crypto.hash(:sha256, lock_name |> to_string)
+    timeout = module_config(:lock_timeout_ms)
 
-      case Ecto.Adapters.SQL.query!(Repo, "select pg_try_advisory_xact_lock($1);", [lock_key]) do
-        %Postgrex.Result{rows: [[true]]} ->
-          exec.()
+    Repo.checkout(
+      fn ->
+        Ecto.Adapters.SQL.query!(Repo, "set idle_in_transaction_session_timeout = #{timeout};", [])
 
-        _ ->
-          nil
-      end
-    end)
+        Repo.transaction(fn ->
+          <<lock_key::little-signed-integer-size(64), _::binary>> = :crypto.hash(:sha256, lock_name |> to_string)
+
+          case Ecto.Adapters.SQL.query!(Repo, "select pg_try_advisory_xact_lock($1);", [lock_key]) do
+            %Postgrex.Result{rows: [[true]]} ->
+              exec.()
+
+            _ ->
+              nil
+          end
+        end)
+
+        Ecto.Adapters.SQL.query!(Repo, "set idle_in_transaction_session_timeout = 0;", [])
+      end,
+      []
+    )
   end
 
   def exec_after_lock(lock_name, exec) do
-    Repo.transaction(fn ->
-      <<lock_key::little-signed-integer-size(64), _::binary>> = :crypto.hash(:sha256, lock_name |> to_string)
+    timeout = module_config(:lock_timeout_ms)
 
-      Ecto.Adapters.SQL.query!(Repo, "select pg_advisory_xact_lock($1);", [lock_key])
+    Repo.checkout(
+      fn ->
+        Ecto.Adapters.SQL.query!(Repo, "set idle_in_transaction_session_timeout = #{timeout};", [])
 
-      exec.()
-    end)
+        Repo.transaction(fn ->
+          <<lock_key::little-signed-integer-size(64), _::binary>> = :crypto.hash(:sha256, lock_name |> to_string)
+
+          Ecto.Adapters.SQL.query!(Repo, "select pg_advisory_xact_lock($1);", [lock_key])
+
+          exec.()
+        end)
+
+        Ecto.Adapters.SQL.query!(Repo, "set idle_in_transaction_session_timeout = 0;", [])
+      end,
+      []
+    )
   end
+
+  defp module_config(key), do: Application.get_env(:ret, __MODULE__)[key]
 end
