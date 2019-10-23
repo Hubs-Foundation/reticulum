@@ -10,7 +10,7 @@ defmodule Ret.SceneListing do
   use Ecto.Schema
   import Ecto.Changeset
 
-  alias Ret.{SceneListing}
+  alias Ret.{Repo, SceneListing}
   alias Ret.SceneListing.{SceneListingSlug}
 
   @schema_prefix "ret0"
@@ -60,6 +60,19 @@ defmodule Ret.SceneListing do
     |> put_change(:screenshot_owned_file_id, scene.screenshot_owned_file.owned_file_id)
     |> put_change(:scene_owned_file_id, scene.scene_owned_file.owned_file_id)
     |> SceneListingSlug.maybe_generate_slug()
+  end
+
+  def get_random_default_scene_listing do
+    {:commit, results} =
+      %Ret.MediaSearchQuery{source: "scene_listings", cursor: "1", filter: "default"}
+      |> Ret.MediaSearch.search()
+
+    if length(results.entries) > 0 do
+      scene_listing_sid = results.entries |> Enum.map(& &1[:id]) |> Enum.shuffle() |> Enum.at(0)
+      Repo.get_by(SceneListing, scene_listing_sid: scene_listing_sid) |> Repo.preload(:scene)
+    else
+      nil
+    end
   end
 
   defp maybe_add_scene_listing_sid_to_changeset(changeset) do

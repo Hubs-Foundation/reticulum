@@ -24,3 +24,4 @@ Run the following commands at the root of the reticulum directory:
 
 ### Start Reticulum
 Run `mix phx.server`
+

@@ -33,7 +33,7 @@ defmodule RetWeb.Router do
     plug(JaSerializer.Deserializer)
   end
 
-  pipeline :postgrest_api do
+  pipeline :proxy_api do
     plug(:accepts, ["json"])
     plug(RetWeb.Plugs.RewriteAuthorizationHeaderToPerms)
   end
@@ -65,8 +65,13 @@ defmodule RetWeb.Router do
   end
 
   scope "/api/postgrest" do
-    pipe_through([:secure_headers, :postgrest_api, :admin_required])
-    forward("/", ReverseProxyPlug, upstream: "http://localhost:3000")
+    pipe_through([:secure_headers, :auth_required, :admin_required, :proxy_api])
+    forward("/", RetWeb.Plugs.PostgrestProxy)
+  end
+
+  scope "/api/ita" do
+    pipe_through([:secure_headers, :auth_required, :admin_required, :proxy_api])
+    forward("/", RetWeb.Plugs.ItaProxy)
   end
 
   scope "/api", RetWeb do

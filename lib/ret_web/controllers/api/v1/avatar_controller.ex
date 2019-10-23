@@ -25,6 +25,16 @@ defmodule RetWeb.Api.V1.AvatarController do
 
   defp preload(_avatar, _preloads), do: nil
 
+  def create(conn, %{"url" => url}) do
+    try do
+      account = Guardian.Plug.current_resource(conn)
+      new_avatar = url |> URI.parse() |> Avatar.import_from_url!(account)
+      conn |> render("create.json", avatar: new_avatar |> preload(), account: account)
+    rescue
+      _ -> render_error_json(conn, 400)
+    end
+  end
+
   def create(conn, %{"avatar" => %{"parent_avatar_listing_id" => parent_sid} = params}) do
     account = conn |> Guardian.Plug.current_resource()
     avatar = parent_sid |> Avatar.new_avatar_from_parent_sid(account)
@@ -184,8 +194,10 @@ defmodule RetWeb.Api.V1.AvatarController do
     end
   end
 
+  def delete(conn, _avatar), do: conn |> send_resp(401, "You do not own this avatar")
+
   def delete(conn, %Avatar{account_id: avatar_account_id} = avatar, %Account{account_id: account_id})
-       when not is_nil(avatar_account_id) and avatar_account_id == account_id do
+      when not is_nil(avatar_account_id) and avatar_account_id == account_id do
     avatar
     |> Avatar.delete_avatar_and_delist_listings()
     |> case do
@@ -193,6 +205,4 @@ defmodule RetWeb.Api.V1.AvatarController do
       {:error, error} -> render_error_json(conn, error)
     end
   end
-
-  def delete(conn, _avatar), do: conn |> send_resp(401, "You do not own this avatar")
 end

@@ -2,9 +2,18 @@ defmodule RetWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :ret
   use Sentry.Phoenix.Endpoint
 
-  socket("/socket", RetWeb.SessionSocket, websocket: [check_origin: false])
+  socket("/socket", RetWeb.SessionSocket, websocket: [check_origin: { RetWeb.Endpoint, :allowed_origin?, [] } ] )
 
   def get_cors_origins, do: Application.get_env(:ret, RetWeb.Endpoint)[:allowed_origins] |> String.split(",")
+  def get_cors_origin_urls, do: get_cors_origins() |> Enum.filter(&(&1 != "*")) |> Enum.map(&URI.parse/1)
+
+  def allowed_origin?(%URI{ host: host, port: port, scheme: scheme }) do
+    if get_cors_origins() === ["*"] do
+      true
+    else
+      get_cors_origin_urls() |> Enum.any?(&(&1.host == host && &1.port == port && &1.scheme == scheme))
+    end
+  end
 
   # Serve at "/" the static files from "priv/static" directory.
   #
@@ -40,6 +49,7 @@ defmodule RetWeb.Endpoint do
   plug(RetWeb.Plugs.Head)
 
   plug(CORSPlug, origin: &RetWeb.Endpoint.get_cors_origins/0)
+  plug(RetWeb.Plugs.AddVary)
   plug(RetWeb.Router)
 
   @doc """

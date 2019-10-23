@@ -181,10 +181,13 @@ config :sentry,
 
 config :ret, Ret.Habitat, ip: "127.0.0.1", http_port: 9631
 
-config :ret, Ret.JanusLoadStatus, default_janus_host: dev_janus_host
+config :ret, Ret.JanusLoadStatus, default_janus_host: dev_janus_host, janus_port: 443
 
 config :ret, Ret.RoomAssigner, balancer_weights: [{600, 1}, {300, 50}, {0, 500}]
 
 config :ret, RetWeb.PageController, skip_cache: true
 
 config :ret, Ret.HttpUtils, insecure_ssl: true
+
+config :ret, Ret.Locking, lock_timeout_ms: 1000 * 60 * 15
+config :ret, Ret.Repo.Migrations.AdminSchemaInit, postgrest_password: "password"
