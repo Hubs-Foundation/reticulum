@@ -21,6 +21,7 @@ Run the following commands at the root of the reticulum directory:
     * If step 2 fails, you may need to change the password for the `postgres` role to match the password configured `dev.exs`.
     * From within the `psql` shell, enter `ALTER USER postgres WITH PASSWORD 'postgres';`
 3. `mix ecto.migrate`
+4. from the `assets` directory, `npm install`
 
 ### Start Reticulum
 Run `mix phx.server`
