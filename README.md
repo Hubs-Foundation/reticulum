@@ -7,7 +7,9 @@ A hybrid game networking and web API server, focused on Social Mixed Reality.
 ### Install Prerequisite Packages:
 #### PostgreSQL (recommended version 11.x):
 Linux: Use your package manager
+
 Windows: https://www.postgresql.org/download/windows/
+
 Windows WSL: https://github.com/michaeltreat/Windows-Subsystem-For-Linux-Setup-Guide/blob/master/readmes/installs/PostgreSQL.md
 
 #### Elixr + Phoenix
