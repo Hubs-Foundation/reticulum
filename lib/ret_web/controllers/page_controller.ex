@@ -177,8 +177,15 @@ defmodule RetWeb.PageController do
 
     csp_value =
       case csp_header do
-        nil -> new_directive
-        {_csp, csp_value} -> csp_value |> String.replace(directive, new_directive)
+        nil ->
+          new_directive
+
+        {_csp, csp_value} ->
+          if csp_value |> String.contains?(directive) do
+            csp_value |> String.replace(directive, new_directive)
+          else
+            "#{csp_value}; #{new_directive};"
+          end
       end
 
     conn |> put_resp_header("content-security-policy", csp_value)
