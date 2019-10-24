@@ -142,7 +142,15 @@ defmodule RetWeb.PageController do
   end
 
   def render_index(conn) do
-    app_config_json = Ret.AppConfig.get_config() |> Poison.encode!()
+    app_config =
+      if module_config(:skip_cache) do
+        Ret.AppConfig.get_config()
+      else
+        {:ok, app_config} = Cachex.get(:app_config, :app_config)
+        app_config
+      end
+
+    app_config_json = app_config |> Poison.encode!()
     app_config_script = "window.APP_CONFIG = JSON.parse('#{app_config_json |> String.replace("'", "\\'")}')"
 
     index_meta_tags =
