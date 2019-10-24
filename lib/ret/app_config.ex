@@ -25,6 +25,31 @@ defmodule Ret.AppConfig do
   end
 
   def get_config() do
-    AppConfig |> Repo.all() |> Map.new(&{&1.key, &1.value["value"]})
+    AppConfig |> Repo.all() |> Map.new(fn app_config -> expand_key(app_config.key, app_config.value["value"], true) end)
+  end
+
+  defp expand_key(key, val, first) do
+    if key |> String.contains?("|") do
+      [head, tail] = key |> String.split("|", parts: 2)
+
+      if first do
+        {head, expand_key(tail, val, false)}
+      else
+        %{head => expand_key(tail, val, false)}
+      end
+    else
+      if first do
+        {key, val}
+      else
+        %{key => val}
+      end
+    end
+  end
+
+  def collapse(config, parent_key \\ "") do
+    case config do
+      %{} -> config |> Enum.flat_map(fn {key, val} -> collapse(val, parent_key <> "|" <> key) end)
+      _ -> [{parent_key |> String.trim("|"), config}]
+    end
   end
 end

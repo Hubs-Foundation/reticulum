@@ -69,12 +69,6 @@ defmodule RetWeb.Router do
     forward("/", RetWeb.Plugs.PostgrestProxy)
   end
 
-  scope "/api/ita/configs" do
-    pipe_through([:secure_headers, :admin_required])
-    post("/app-config", RetWeb.Api.V1.AppConfigController, :create)
-    get("/app-config/ps", RetWeb.Api.V1.AppConfigController, :index)
-  end
-
   scope "/api/ita" do
     pipe_through([:secure_headers, :auth_required, :admin_required, :proxy_api])
     forward("/", RetWeb.Plugs.ItaProxy)
@@ -127,8 +121,7 @@ defmodule RetWeb.Router do
     end
 
     scope "/v1", as: :api_v1 do
-      pipe_through([:admin_required])
-      resources("/app_configs", Api.V1.AppConfigController, only: [:create, :update, :delete])
+      resources("/app_configs", Api.V1.AppConfigController, only: [:index, :create])
     end
   end
 
