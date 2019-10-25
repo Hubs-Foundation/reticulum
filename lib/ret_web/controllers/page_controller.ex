@@ -96,8 +96,8 @@ defmodule RetWeb.PageController do
 
   def render_for_path("/hub.service.js", _params, conn), do: conn |> render_page("hub.service.js")
 
-  def render_for_path("/app-config-schema.toml", _params, conn),
-    do: conn |> render_page("app-config-schema.toml", :hubs, true)
+  def render_for_path("/hubs/schema.toml", _params, conn),
+    do: conn |> render_page("app-config-schema.toml", :hubs)
 
   def render_for_path("/manifest.webmanifest", _params, conn) do
     ua =
@@ -235,15 +235,15 @@ defmodule RetWeb.PageController do
     end
   end
 
-  defp render_page(conn, page, source \\ :hubs, include_newlines \\ false)
+  defp render_page(conn, page, source \\ :hubs)
 
-  defp render_page(conn, nil, _source, _include_newlines) do
+  defp render_page(conn, nil, _source) do
     conn |> send_resp(404, "")
   end
 
-  defp render_page(conn, page, source, include_newlines) do
+  defp render_page(conn, page, source) do
     chunks = page |> chunks_for_page(source)
-    conn |> render_chunks(chunks, page |> content_type_for_page, include_newlines)
+    conn |> render_chunks(chunks, page |> content_type_for_page)
   end
 
   defp chunks_for_page(page, source) do
@@ -268,17 +268,10 @@ defmodule RetWeb.PageController do
     "text/html; charset=utf-8"
   end
 
-  defp render_chunks(conn, chunks, content_type, include_newlines) do
-    resp =
-      if include_newlines do
-        chunks |> List.flatten() |> Enum.join("\n")
-      else
-        chunks
-      end
-
+  defp render_chunks(conn, chunks, content_type) do
     conn
     |> put_resp_header("content-type", content_type)
-    |> send_resp(200, resp)
+    |> send_resp(200, chunks |> List.flatten() |> Enum.join("\n"))
   end
 
   defp cors_proxy(%Conn{request_path: "/" <> url, query_string: ""} = conn), do: cors_proxy(conn, url)
