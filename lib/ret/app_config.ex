@@ -32,10 +32,14 @@ defmodule Ret.AppConfig do
   end
 
   def get_config() do
-    AppConfig
-    |> Repo.all()
-    |> Enum.map(fn app_config -> expand_key(app_config.key, app_config.value["value"]) end)
-    |> Enum.reduce(%{}, fn config, acc -> deep_merge(acc, config) end)
+    try do
+      AppConfig
+      |> Repo.all()
+      |> Enum.map(fn app_config -> expand_key(app_config.key, app_config.value["value"]) end)
+      |> Enum.reduce(%{}, fn config, acc -> deep_merge(acc, config) end)
+    rescue
+      %{}
+    end
   end
 
   defp expand_key(key, val) do
