@@ -2,7 +2,7 @@ defmodule RetWeb.Api.V1.AppConfigController do
   use RetWeb, :controller
   alias Ret.{Repo, AppConfig}
 
-  def create(conn, params) do
+  def create(conn, _params) do
     {:ok, body, conn} = conn |> Plug.Conn.read_body()
 
     # We expect the request body to be a json object where the leaf nodes are the config values.
