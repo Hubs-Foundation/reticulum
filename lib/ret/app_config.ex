@@ -38,7 +38,10 @@ defmodule Ret.AppConfig do
       |> Enum.map(fn app_config -> expand_key(app_config.key, app_config.value["value"]) end)
       |> Enum.reduce(%{}, fn config, acc -> deep_merge(acc, config) end)
     rescue
-      %{}
+      # The page warmer fetches configs on startup, so we don't want to block startup if this fails.
+      # e.g. It will definitely fail the very first time since DB migrations need to run before configs
+      # are available.
+      _ -> %{}
     end
   end
 
