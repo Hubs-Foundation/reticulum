@@ -34,25 +34,29 @@ defmodule Ret.AppConfig do
   def get_config() do
     AppConfig
     |> Repo.all()
-    |> Map.new(fn app_config -> expand_key(app_config.key, app_config.value["value"], true) end)
+    |> Enum.map(fn app_config -> expand_key(app_config.key, app_config.value["value"]) end)
+    |> Enum.reduce(%{}, fn config, acc -> deep_merge(acc, config) end)
   end
 
-  defp expand_key(key, val, first) do
+  defp expand_key(key, val) do
     if key |> String.contains?("|") do
       [head, tail] = key |> String.split("|", parts: 2)
-
-      if first do
-        {head, expand_key(tail, val, false)}
-      else
-        %{head => expand_key(tail, val, false)}
-      end
+      %{head => expand_key(tail, val)}
     else
-      if first do
-        {key, val}
-      else
-        %{key => val}
-      end
+      %{key => val}
     end
+  end
+
+  defp deep_merge(left, right) do
+    Map.merge(left, right, &deep_resolve/3)
+  end
+
+  defp deep_resolve(_key, left = %{}, right = %{}) do
+    deep_merge(left, right)
+  end
+
+  defp deep_resolve(_key, _left, right) do
+    right
   end
 
   def collapse(config, parent_key \\ "") do
