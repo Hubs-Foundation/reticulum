@@ -95,6 +95,7 @@ speelycaptor_endpoint = "{{ cfg.speelycaptor.speelycaptor_endpoint }}"
 [ret."Elixir.Ret.PageOriginWarmer"]
 hubs_page_origin = "{{ cfg.pages.hubs_page_origin }}"
 spoke_page_origin = "{{ cfg.pages.spoke_page_origin }}"
+admin_page_origin = "{{ cfg.pages.admin_page_origin }}"
 insecure_ssl = {{ cfg.pages.insecure_ssl }}
 
 [ret."Elixir.Ret.Storage"]
