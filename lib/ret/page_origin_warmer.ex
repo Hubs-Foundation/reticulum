@@ -5,7 +5,8 @@ defmodule Ret.PageOriginWarmer do
   # @pages is a list of { source, page } tuples eg { :hubs, "scene.html" }
   @pages %{
            hubs:
-             ~w(index.html whats-new.html hub.html link.html scene.html avatar.html spoke.html discord.html admin.html hub.service.js manifest.webmanifest),
+             ~w(index.html whats-new.html hub.html link.html scene.html avatar.html spoke.html discord.html hub.service.js manifest.webmanifest app-config-schema.toml),
+           admin: ~w(admin.html),
            spoke: ~w(index.html)
          }
          |> Enum.map(fn {k, vs} -> vs |> Enum.map(&{k, &1}) end)
@@ -15,6 +16,7 @@ defmodule Ret.PageOriginWarmer do
 
   def execute(_state) do
     with hubs_page_origin when is_binary(hubs_page_origin) <- module_config(:hubs_page_origin),
+         admin_page_origin when is_binary(admin_page_origin) <- module_config(:admin_page_origin),
          spoke_page_origin when is_binary(spoke_page_origin) <- module_config(:spoke_page_origin) do
       cache_values =
         @pages
@@ -34,10 +36,10 @@ defmodule Ret.PageOriginWarmer do
 
   defp page_to_cache_entry(source, page) do
     config_key =
-      if source == :hubs do
-        :hubs_page_origin
-      else
-        :spoke_page_origin
+      case source do
+        :hubs -> :hubs_page_origin
+        :admin -> :admin_page_origin
+        :spoke -> :spoke_page_origin
       end
 
     # Split the HTML file into two parts, on the line that contains HUB_META_TAGS, so we can add meta tags

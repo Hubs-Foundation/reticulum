@@ -74,6 +74,18 @@ defmodule Ret.Application do
         id: :discord_api_cache
       ),
 
+      # App Config cache
+      worker(
+        Cachex,
+        [
+          :app_config,
+          [
+            warmers: [warmer(module: Ret.AppConfig)]
+          ]
+        ],
+        id: :app_config_cache
+      ),
+
       # Page origin chunk cache
       worker(
         Cachex,

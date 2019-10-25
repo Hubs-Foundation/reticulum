@@ -96,6 +96,9 @@ defmodule RetWeb.PageController do
 
   def render_for_path("/hub.service.js", _params, conn), do: conn |> render_page("hub.service.js")
 
+  def render_for_path("/hubs/schema.toml", _params, conn),
+    do: conn |> render_page("app-config-schema.toml", :hubs)
+
   def render_for_path("/manifest.webmanifest", _params, conn) do
     ua =
       conn
@@ -114,7 +117,7 @@ defmodule RetWeb.PageController do
     end
   end
 
-  def render_for_path("/admin", _params, conn), do: conn |> render_page("admin.html")
+  def render_for_path("/admin", _params, conn), do: conn |> render_page("admin.html", :admin)
 
   def render_for_path("/" <> path, params, conn) do
     embed_token = params["embed_token"]
@@ -139,15 +142,53 @@ defmodule RetWeb.PageController do
   end
 
   def render_index(conn) do
-    index_meta_tags = Phoenix.View.render_to_string(RetWeb.PageView, "index-meta.html", [])
+    app_config =
+      if module_config(:skip_cache) do
+        Ret.AppConfig.get_config()
+      else
+        {:ok, app_config} = Cachex.get(:app_config, :app_config)
+        app_config
+      end
+
+    app_config_json = app_config |> Poison.encode!()
+    app_config_script = "window.APP_CONFIG = JSON.parse('#{app_config_json |> String.replace("'", "\\'")}')"
+
+    index_meta_tags =
+      Phoenix.View.render_to_string(RetWeb.PageView, "index-meta.html",
+        app_config_script: {:safe, "<script>#{app_config_script}</script>"}
+      )
 
     chunks =
       chunks_for_page("index.html", :hubs)
       |> List.insert_at(1, index_meta_tags)
 
+    app_config_csp = "'sha256-#{:crypto.hash(:sha256, app_config_script) |> :base64.encode()}'"
+
     conn
+    |> append_csp("script-src", app_config_csp)
     |> put_resp_header("content-type", "text/html; charset=utf-8")
     |> send_resp(200, chunks)
+  end
+
+  defp append_csp(conn, directive, source) do
+    csp_header = conn.resp_headers |> Enum.find(fn {key, _value} -> key == "content-security-policy" end)
+
+    new_directive = "#{directive} #{source}"
+
+    csp_value =
+      case csp_header do
+        nil ->
+          new_directive
+
+        {_csp, csp_value} ->
+          if csp_value |> String.contains?(directive) do
+            csp_value |> String.replace(directive, new_directive)
+          else
+            "#{csp_value}; #{new_directive};"
+          end
+      end
+
+    conn |> put_resp_header("content-security-policy", csp_value)
   end
 
   def render_hub_content(conn, nil, _) do
@@ -230,7 +271,7 @@ defmodule RetWeb.PageController do
   defp render_chunks(conn, chunks, content_type) do
     conn
     |> put_resp_header("content-type", content_type)
-    |> send_resp(200, chunks)
+    |> send_resp(200, chunks |> List.flatten() |> Enum.join("\n"))
   end
 
   defp cors_proxy(%Conn{request_path: "/" <> url, query_string: ""} = conn), do: cors_proxy(conn, url)
