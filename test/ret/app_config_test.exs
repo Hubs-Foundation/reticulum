@@ -7,8 +7,6 @@ defmodule Ret.AppConfigTest do
     %Ret.AppConfig{key: "spam|bacon", value: %{value: "baz"}} |> Ret.Repo.insert()
     %Ret.AppConfig{key: "spam|cheese|bacon", value: %{value: "buz"}} |> Ret.Repo.insert()
 
-    IO.inspect(["BPDEBUG config", Ret.AppConfig.get_config()])
-
     expected = %{
       "foo" => "bar",
       "spam" => %{
