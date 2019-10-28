@@ -97,7 +97,7 @@ defmodule RetWeb.PageController do
   def render_for_path("/hub.service.js", _params, conn), do: conn |> render_page("hub.service.js")
 
   def render_for_path("/hubs/schema.toml", _params, conn),
-    do: conn |> render_page("app-config-schema.toml", :hubs)
+    do: conn |> render_page("schema.toml", :hubs)
 
   def render_for_path("/manifest.webmanifest", _params, conn) do
     ua =
