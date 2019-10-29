@@ -3,7 +3,7 @@ defmodule Ret.AppConfig do
   use Ecto.Schema
   import Ecto.Changeset
 
-  alias Ret.{AppConfig, Repo}
+  alias Ret.{AppConfig, Repo, OwnedFile}
 
   @schema_prefix "ret0"
   @primary_key {:app_config_id, :id, autogenerate: true}
@@ -21,10 +21,17 @@ defmodule Ret.AppConfig do
     {:ok, [{:app_config, get_config()}]}
   end
 
+  def changeset(%AppConfig{} = app_config, key, %OwnedFile{} = owned_file) do
+    app_config
+    |> cast(%{key: key}, [:key])
+    |> put_change(:owned_file_id, owned_file.owned_file_id)
+    |> unique_constraint(:key)
+  end
+
   def changeset(%AppConfig{} = app_config, attrs) do
     # We wrap the config value in an outer %{value: ...} map because we want to be able to accept primitive
     # value types, but store them as json.
-    attrs = attrs |> Map.put("value", %{value: attrs["value"]})
+    attrs = attrs |> Map.put(:value, %{value: attrs.value})
 
     app_config
     |> cast(attrs, [:key, :value])
@@ -35,7 +42,13 @@ defmodule Ret.AppConfig do
     try do
       AppConfig
       |> Repo.all()
-      |> Enum.map(fn app_config -> expand_key(app_config.key, app_config.value["value"]) end)
+      |> Repo.preload(:owned_file)
+      |> Enum.map(fn app_config ->
+        expand_key(
+          app_config.key,
+          app_config.value["value"] || app_config.owned_file |> OwnedFile.uri_for() |> URI.to_string()
+        )
+      end)
       |> Enum.reduce(%{}, fn config, acc -> deep_merge(acc, config) end)
     rescue
       # The page warmer fetches configs on startup, so we don't want to block startup if this fails.
@@ -68,6 +81,7 @@ defmodule Ret.AppConfig do
 
   def collapse(config, parent_key \\ "") do
     case config do
+      %{"file_id" => file_id} -> [{parent_key |> String.trim("|"), config}]
       %{} -> config |> Enum.flat_map(fn {key, val} -> collapse(val, parent_key <> "|" <> key) end)
       _ -> [{parent_key |> String.trim("|"), config}]
     end
