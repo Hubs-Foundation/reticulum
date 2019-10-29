@@ -18,4 +18,5 @@
 <meta name="ret:phx_port" value="<%= @ret_meta[:phx_port] %>" />
 <meta name="ret:pool" value="<%= @ret_meta[:pool] %>" />
 <title><%= @scene.name %> | Hubs by Mozilla</title>
+<%= @app_config_script %>
 <% end %>

@@ -12,10 +12,13 @@ defmodule RetWeb.PageController do
   end
 
   defp render_scene_content(%t{} = scene, conn) when t in [Scene, SceneListing] do
+    {app_config_script, app_config_csp} = generate_app_config()
+
     scene_meta_tags =
       Phoenix.View.render_to_string(RetWeb.PageView, "scene-meta.html",
         scene: scene,
-        ret_meta: Ret.Meta.get_meta(include_repo: false)
+        ret_meta: Ret.Meta.get_meta(include_repo: false),
+        app_config_script: {:safe, app_config_script}
       )
 
     chunks =
@@ -23,6 +26,7 @@ defmodule RetWeb.PageController do
       |> List.insert_at(1, scene_meta_tags)
 
     conn
+    |> append_csp("script-src", app_config_csp)
     |> put_resp_header("content-type", "text/html; charset=utf-8")
     |> send_resp(200, chunks)
   end
@@ -32,10 +36,13 @@ defmodule RetWeb.PageController do
   end
 
   defp render_avatar_content(%t{} = avatar, conn) when t in [Avatar, AvatarListing] do
+    {app_config_script, app_config_csp} = generate_app_config()
+
     avatar_meta_tags =
       Phoenix.View.render_to_string(RetWeb.PageView, "avatar-meta.html",
         avatar: avatar,
-        ret_meta: Ret.Meta.get_meta(include_repo: false)
+        ret_meta: Ret.Meta.get_meta(include_repo: false),
+        app_config_script: {:safe, app_config_script}
       )
 
     chunks =
@@ -43,6 +50,7 @@ defmodule RetWeb.PageController do
       |> List.insert_at(1, avatar_meta_tags)
 
     conn
+    |> append_csp("script-src", app_config_csp)
     |> put_resp_header("content-type", "text/html; charset=utf-8")
     |> send_resp(200, chunks)
   end
@@ -142,27 +150,14 @@ defmodule RetWeb.PageController do
   end
 
   def render_index(conn) do
-    app_config =
-      if module_config(:skip_cache) do
-        Ret.AppConfig.get_config()
-      else
-        {:ok, app_config} = Cachex.get(:app_config, :app_config)
-        app_config
-      end
-
-    app_config_json = app_config |> Poison.encode!()
-    app_config_script = "window.APP_CONFIG = JSON.parse('#{app_config_json |> String.replace("'", "\\'")}')"
+    {app_config_script, app_config_csp} = generate_app_config()
 
     index_meta_tags =
-      Phoenix.View.render_to_string(RetWeb.PageView, "index-meta.html",
-        app_config_script: {:safe, "<script>#{app_config_script}</script>"}
-      )
+      Phoenix.View.render_to_string(RetWeb.PageView, "index-meta.html", app_config_script: {:safe, app_config_script})
 
     chunks =
       chunks_for_page("index.html", :hubs)
       |> List.insert_at(1, index_meta_tags)
-
-    app_config_csp = "'sha256-#{:crypto.hash(:sha256, app_config_script) |> :base64.encode()}'"
 
     conn
     |> append_csp("script-src", app_config_csp)
@@ -205,12 +200,14 @@ defmodule RetWeb.PageController do
 
   def render_hub_content(conn, hub, _slug) do
     hub = hub |> Repo.preload(scene: [:screenshot_owned_file], scene_listing: [:screenshot_owned_file])
+    {app_config_script, app_config_csp} = generate_app_config()
 
     hub_meta_tags =
       Phoenix.View.render_to_string(RetWeb.PageView, "hub-meta.html",
         hub: hub,
         scene: hub.scene,
-        ret_meta: Ret.Meta.get_meta(include_repo: false)
+        ret_meta: Ret.Meta.get_meta(include_repo: false),
+        app_config_script: {:safe, app_config_script}
       )
 
     chunks =
@@ -218,8 +215,26 @@ defmodule RetWeb.PageController do
       |> List.insert_at(1, hub_meta_tags)
 
     conn
+    |> append_csp("script-src", app_config_csp)
     |> put_resp_header("content-type", "text/html; charset=utf-8")
     |> send_resp(200, chunks)
+  end
+
+  defp generate_app_config() do
+    app_config =
+      if module_config(:skip_cache) do
+        Ret.AppConfig.get_config()
+      else
+        {:ok, app_config} = Cachex.get(:app_config, :app_config)
+        app_config
+      end
+
+    app_config_json = app_config |> Poison.encode!()
+    app_config_script = "window.APP_CONFIG = JSON.parse('#{app_config_json |> String.replace("'", "\\'")}')"
+
+    app_config_csp = "'sha256-#{:crypto.hash(:sha256, app_config_script) |> :base64.encode()}'"
+
+    {"<script>#{app_config_script}</script>", app_config_csp}
   end
 
   # Redirect to the specified hub identifier, which can be a sid or an entry code
