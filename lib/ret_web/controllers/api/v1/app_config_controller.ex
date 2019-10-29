@@ -1,6 +1,6 @@
 defmodule RetWeb.Api.V1.AppConfigController do
   use RetWeb, :controller
-  alias Ret.{Repo, AppConfig, Storage}
+  alias Ret.{Repo, AppConfig, Storage, OwnedFile}
 
   def create(conn, _params) do
     {:ok, body, conn} = conn |> Plug.Conn.read_body()
@@ -18,7 +18,8 @@ defmodule RetWeb.Api.V1.AppConfigController do
         case val do
           %{"file_id" => file_id, "meta" => %{"access_token" => access_token, "promotion_token" => promotion_token}} ->
             {:ok, owned_file} = Storage.promote(file_id, access_token, promotion_token, account)
-            app_config |> AppConfig.changeset(key, owned_file)
+            file_uri = owned_file |> OwnedFile.uri_for() |> URI.to_string()
+            app_config |> AppConfig.changeset(owned_file, %{key: key, value: file_uri})
 
           _ ->
             app_config |> AppConfig.changeset(%{key: key, value: val})

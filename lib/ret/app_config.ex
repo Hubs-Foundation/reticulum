@@ -21,11 +21,9 @@ defmodule Ret.AppConfig do
     {:ok, [{:app_config, get_config()}]}
   end
 
-  def changeset(%AppConfig{} = app_config, key, %OwnedFile{} = owned_file) do
-    app_config
-    |> cast(%{key: key}, [:key])
+  def changeset(%AppConfig{} = app_config, %OwnedFile{} = owned_file, attrs) do
+    changeset(app_config, attrs)
     |> put_change(:owned_file_id, owned_file.owned_file_id)
-    |> unique_constraint(:key)
   end
 
   def changeset(%AppConfig{} = app_config, attrs) do
@@ -43,12 +41,7 @@ defmodule Ret.AppConfig do
       AppConfig
       |> Repo.all()
       |> Repo.preload(:owned_file)
-      |> Enum.map(fn app_config ->
-        expand_key(
-          app_config.key,
-          app_config.value["value"] || app_config.owned_file |> OwnedFile.uri_for() |> URI.to_string()
-        )
-      end)
+      |> Enum.map(fn app_config -> expand_key(app_config.key, app_config.value["value"]) end)
       |> Enum.reduce(%{}, fn config, acc -> deep_merge(acc, config) end)
     rescue
       # The page warmer fetches configs on startup, so we don't want to block startup if this fails.
