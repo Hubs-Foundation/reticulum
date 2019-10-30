@@ -257,8 +257,16 @@ defmodule RetWeb.PageController do
   end
 
   defp render_page(conn, page, source) do
-    chunks = page |> chunks_for_page(source)
-    conn |> render_chunks(chunks, page |> content_type_for_page)
+    {app_config_script, app_config_csp} = generate_app_config()
+
+    chunks =
+      page
+      |> chunks_for_page(source)
+      |> List.insert_at(1, app_config_script)
+
+    conn
+    |> append_csp("script-src", app_config_csp)
+    |> render_chunks(chunks, page |> content_type_for_page)
   end
 
   defp chunks_for_page(page, source) do
