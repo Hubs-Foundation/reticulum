@@ -102,10 +102,10 @@ defmodule RetWeb.PageController do
   def render_for_path("/whats-new", _params, conn), do: conn |> render_page("whats-new.html")
   def render_for_path("/whats-new/", _params, conn), do: conn |> render_page("whats-new.html")
 
-  def render_for_path("/hub.service.js", _params, conn), do: conn |> render_page("hub.service.js")
+  def render_for_path("/hub.service.js", _params, conn), do: conn |> render_asset("hub.service.js")
 
   def render_for_path("/hubs/schema.toml", _params, conn),
-    do: conn |> render_page("schema.toml", :hubs)
+    do: conn |> render_asset("schema.toml", :hubs)
 
   def render_for_path("/manifest.webmanifest", _params, conn) do
     ua =
@@ -119,7 +119,7 @@ defmodule RetWeb.PageController do
     supports_pwa = ua.family != "Safari" && ua.family != "Mobile Safari"
 
     if supports_pwa do
-      conn |> render_page("manifest.webmanifest")
+      conn |> render_asset("manifest.webmanifest")
     else
       conn |> send_resp(404, "Not found.")
     end
@@ -250,6 +250,17 @@ defmodule RetWeb.PageController do
     end
   end
 
+  defp render_asset(conn, asset, source \\ :hubs)
+
+  defp render_asset(conn, nil, _source) do
+    conn |> send_resp(404, "")
+  end
+
+  defp render_asset(conn, asset, source) do
+    chunks = asset |> chunks_for_page(source)
+    conn |> render_chunks(chunks, asset |> content_type_for_page)
+  end
+
   defp render_page(conn, page, source \\ :hubs)
 
   defp render_page(conn, nil, _source) do
@@ -286,10 +297,8 @@ defmodule RetWeb.PageController do
 
   defp content_type_for_page("hub.service.js"), do: "application/javascript; charset=utf-8"
   defp content_type_for_page("manifest.webmanifest"), do: "application/manifest+json"
-
-  defp content_type_for_page(_) do
-    "text/html; charset=utf-8"
-  end
+  defp content_type_for_page("schema.toml"), do: "text/plain"
+  defp content_type_for_page(_), do: "text/html; charset=utf-8"
 
   defp render_chunks(conn, chunks, content_type) do
     conn
