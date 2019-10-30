@@ -95,6 +95,7 @@ speelycaptor_endpoint = "{{ cfg.speelycaptor.speelycaptor_endpoint }}"
 [ret."Elixir.Ret.PageOriginWarmer"]
 hubs_page_origin = "{{ cfg.pages.hubs_page_origin }}"
 spoke_page_origin = "{{ cfg.pages.spoke_page_origin }}"
+# Intentionally re-using hubs_page_origin here, since they are currently deployed to the same S3 bucket.
 admin_page_origin = "{{ cfg.pages.hubs_page_origin }}"
 insecure_ssl = {{ cfg.pages.insecure_ssl }}
 
