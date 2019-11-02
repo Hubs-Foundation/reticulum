@@ -21,9 +21,11 @@ defmodule Ret.AppConfig do
     {:ok, [{:app_config, get_config()}]}
   end
 
-  def changeset(%AppConfig{} = app_config, %OwnedFile{} = owned_file, attrs) do
-    changeset(app_config, attrs)
+  def changeset(%AppConfig{} = app_config, key, %OwnedFile{} = owned_file) do
+    app_config
+    |> cast(%{key: key}, [:key])
     |> put_change(:owned_file_id, owned_file.owned_file_id)
+    |> unique_constraint(:key)
   end
 
   def changeset(%AppConfig{} = app_config, attrs) do
@@ -41,7 +43,7 @@ defmodule Ret.AppConfig do
       AppConfig
       |> Repo.all()
       |> Repo.preload(:owned_file)
-      |> Enum.map(fn app_config -> expand_key(app_config.key, app_config.value["value"]) end)
+      |> Enum.map(fn app_config -> expand_key(app_config.key, app_config) end)
       |> Enum.reduce(%{}, fn config, acc -> deep_merge(acc, config) end)
     rescue
       # The page warmer fetches configs on startup, so we don't want to block startup if this fails.
@@ -51,12 +53,18 @@ defmodule Ret.AppConfig do
     end
   end
 
-  defp expand_key(key, val) do
+  defp expand_key(key, app_config) do
     if key |> String.contains?("|") do
       [head, tail] = key |> String.split("|", parts: 2)
-      %{head => expand_key(tail, val)}
+      %{head => expand_key(tail, app_config)}
     else
-      %{key => val}
+      case app_config.owned_file do
+        %OwnedFile{} ->
+          %{key => app_config.owned_file |> OwnedFile.uri_for() |> URI.to_string()}
+
+        _ ->
+          %{key => app_config.value["value"]}
+      end
     end
   end
 

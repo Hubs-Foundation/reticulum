@@ -18,8 +18,7 @@ defmodule RetWeb.Api.V1.AppConfigController do
         case val do
           %{"file_id" => file_id, "meta" => %{"access_token" => access_token, "promotion_token" => promotion_token}} ->
             {:ok, owned_file} = Storage.promote(file_id, access_token, promotion_token, account)
-            file_uri = owned_file |> OwnedFile.uri_for() |> URI.to_string()
-            app_config |> AppConfig.changeset(owned_file, %{key: key, value: file_uri})
+            app_config |> AppConfig.changeset(key, owned_file)
 
           _ ->
             app_config |> AppConfig.changeset(%{key: key, value: val})
@@ -32,6 +31,8 @@ defmodule RetWeb.Api.V1.AppConfigController do
   end
 
   def index(conn, _params) do
-    conn |> send_resp(200, AppConfig.get_config() |> Poison.encode!())
+    conn
+    |> put_resp_header("content-type", "application/json")
+    |> send_resp(200, AppConfig.get_config() |> Poison.encode!())
   end
 end
