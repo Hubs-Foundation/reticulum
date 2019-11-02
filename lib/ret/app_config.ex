@@ -82,7 +82,7 @@ defmodule Ret.AppConfig do
 
   def collapse(config, parent_key \\ "") do
     case config do
-      %{"file_id" => file_id} -> [{parent_key |> String.trim("|"), config}]
+      %{"file_id" => _} -> [{parent_key |> String.trim("|"), config}]
       %{} -> config |> Enum.flat_map(fn {key, val} -> collapse(val, parent_key <> "|" <> key) end)
       _ -> [{parent_key |> String.trim("|"), config}]
     end

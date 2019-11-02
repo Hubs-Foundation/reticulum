@@ -1,12 +1,10 @@
 defmodule RetWeb.Api.V1.AppConfigController do
   use RetWeb, :controller
-  alias Ret.{Repo, AppConfig, Storage, OwnedFile}
+  alias Ret.{Repo, AppConfig, Storage}
 
-  def create(conn, _params) do
-    {:ok, body, conn} = conn |> Plug.Conn.read_body()
-
+  def create(conn, app_config_json) do
     # We expect the request body to be a json object where the leaf nodes are the config values.
-    collapsed_config = body |> Poison.decode!() |> AppConfig.collapse()
+    collapsed_config = app_config_json |> AppConfig.collapse()
 
     account = Guardian.Plug.current_resource(conn)
 
