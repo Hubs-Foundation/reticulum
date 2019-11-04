@@ -30,7 +30,6 @@ defmodule RetWeb.Router do
 
   pipeline :api do
     plug(:accepts, ["json"])
-    plug(JaSerializer.Deserializer)
   end
 
   pipeline :proxy_api do
