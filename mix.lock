@@ -49,7 +49,6 @@
   "hut": {:git, "git://github.com/tolbrino/hut.git", "025540398478ab6f95932c3234382ac5bb21ad3e", [tag: "v1.1.1"]},
   "idna": {:hex, :idna, "6.0.0", "689c46cbcdf3524c44d5f3dde8001f364cd7608a99556d8fbd8239a5798d4c10", [:rebar3], [{:unicode_util_compat, "0.4.1", [hex: :unicode_util_compat, repo: "hexpm", optional: false]}], "hexpm"},
   "inflex": {:hex, :inflex, "1.10.0", "8366a7696e70e1813aca102e61274addf85d99f4a072b2f9c7984054ea1b9d29", [:mix], [], "hexpm"},
-  "ja_serializer": {:hex, :ja_serializer, "0.15.0", "2d69d0aa68c6815d0978cac7d0939b02ffa05e4a13eb7a5b36a8d61a646d7c32", [:mix], [{:inflex, "~> 1.10", [hex: :inflex, repo: "hexpm", optional: false]}, {:plug, "> 1.0.0", [hex: :plug, repo: "hexpm", optional: false]}, {:scrivener, "~> 1.2 or ~> 2.0", [hex: :scrivener, repo: "hexpm", optional: true]}], "hexpm"},
   "jason": {:hex, :jason, "1.1.2", "b03dedea67a99223a2eaf9f1264ce37154564de899fd3d8b9a21b1a6fd64afe7", [:mix], [{:decimal, "~> 1.0", [hex: :decimal, repo: "hexpm", optional: true]}], "hexpm"},
   "jiffy": {:git, "git://github.com/davisp/jiffy.git", "137d3d94b6ee10001d761d412cbbe7f665680c98", [ref: "0.13.3"]},
   "jose": {:hex, :jose, "1.9.0", "4167c5f6d06ffaebffd15cdb8da61a108445ef5e85ab8f5a7ad926fdf3ada154", [:mix, :rebar3], [{:base64url, "~> 0.0.1", [hex: :base64url, repo: "hexpm", optional: false]}], "hexpm"},

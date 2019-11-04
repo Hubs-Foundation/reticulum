@@ -44,7 +44,6 @@ defmodule Ret.Mixfile do
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:gettext, "~> 0.17"},
       {:plug_cowboy, "~> 2.0"},
-      {:ja_serializer, "~> 0.15"},
       {:distillery, "~> 2.0"},
       {:peerage, "~> 1.0"},
       {:httpoison, "~> 1.5"},
