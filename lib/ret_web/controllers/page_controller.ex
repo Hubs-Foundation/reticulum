@@ -3,6 +3,8 @@ defmodule RetWeb.PageController do
   alias Ret.{Repo, Hub, Scene, SceneListing, Avatar, AppConfig, OwnedFile, AvatarListing, PageOriginWarmer, Storage}
   alias Plug.Conn
 
+  @default_app_icon "https://assets-prod.reticulum.io/assets/images/pwaicon-512-hubs.png"
+
   def call(conn, _params) do
     case conn.request_path do
       "/http://" <> _ -> cors_proxy(conn)
@@ -119,7 +121,17 @@ defmodule RetWeb.PageController do
     supports_pwa = ua.family != "Safari" && ua.family != "Mobile Safari"
 
     if supports_pwa do
-      conn |> render_asset("manifest.webmanifest")
+      default_app_description =
+        "Share a virtual room with friends. Watch videos, play with 3D objects, or just hang out."
+
+      manifest =
+        Phoenix.View.render_to_string(RetWeb.PageView, "manifest.webmanifest",
+          app_name: AppConfig.get_config_value("translations|en|app-name") || "Hubs",
+          app_description: AppConfig.get_config_value("translations|en|app-description") || default_app_description,
+          app_icon: AppConfig.get_config_owned_file_uri("images|app_icon") || @default_app_icon
+        )
+
+      conn |> send_resp(200, manifest)
     else
       conn |> send_resp(404, "Not found.")
     end
@@ -164,7 +176,12 @@ defmodule RetWeb.PageController do
     {app_config_script, app_config_csp} = generate_app_config()
 
     index_meta_tags =
-      Phoenix.View.render_to_string(RetWeb.PageView, "index-meta.html", app_config_script: {:safe, app_config_script})
+      Phoenix.View.render_to_string(
+        RetWeb.PageView,
+        "index-meta.html",
+        app_config_script: {:safe, app_config_script},
+        app_icon: AppConfig.get_config_owned_file_uri("images|app_icon") || @default_app_icon
+      )
 
     chunks =
       chunks_for_page("index.html", :hubs)
@@ -218,7 +235,8 @@ defmodule RetWeb.PageController do
         hub: hub,
         scene: hub.scene,
         ret_meta: Ret.Meta.get_meta(include_repo: false),
-        app_config_script: {:safe, app_config_script}
+        app_config_script: {:safe, app_config_script},
+        app_icon: AppConfig.get_config_owned_file_uri("images|app_icon") || @default_app_icon
       )
 
     chunks =
