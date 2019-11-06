@@ -19,6 +19,7 @@ config :ret, RetWeb.Endpoint,
     otp_app: :ret
   ],
   url: [scheme: "https", host: "", port: 443],
+  secondary_url: [scheme: "https", host: "", port: 443],
   static_url: [scheme: "https", host: "", port: 443],
   cors_proxy_url: [scheme: "https", host: "", port: 443],
   server: true,
