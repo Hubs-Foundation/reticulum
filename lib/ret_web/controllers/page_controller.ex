@@ -1,6 +1,6 @@
 defmodule RetWeb.PageController do
   use RetWeb, :controller
-  alias Ret.{Repo, Hub, Scene, SceneListing, Avatar, AvatarListing, PageOriginWarmer}
+  alias Ret.{Repo, Hub, Scene, SceneListing, Avatar, AppConfig, OwnedFile, AvatarListing, PageOriginWarmer, Storage}
   alias Plug.Conn
 
   def call(conn, _params) do
@@ -122,6 +122,17 @@ defmodule RetWeb.PageController do
       conn |> render_asset("manifest.webmanifest")
     else
       conn |> send_resp(404, "Not found.")
+    end
+  end
+
+  def render_for_path("/favicon.ico", _params, conn) do
+    app_config = AppConfig |> Repo.get_by(key: "images|favicon") |> Repo.preload(:owned_file)
+
+    with %AppConfig{owned_file: %OwnedFile{} = owned_file} <- app_config,
+         {:ok, _meta, stream} <- Storage.fetch(owned_file) do
+      conn |> send_resp(200, stream |> Enum.join(""))
+    else
+      _ -> conn |> render_asset("favicon.ico")
     end
   end
 
@@ -298,6 +309,7 @@ defmodule RetWeb.PageController do
   defp content_type_for_page("hub.service.js"), do: "application/javascript; charset=utf-8"
   defp content_type_for_page("manifest.webmanifest"), do: "application/manifest+json"
   defp content_type_for_page("schema.toml"), do: "text/plain"
+  defp content_type_for_page("favicon.ico"), do: "image/x-icon"
   defp content_type_for_page(_), do: "text/html; charset=utf-8"
 
   defp render_chunks(conn, chunks, content_type) do

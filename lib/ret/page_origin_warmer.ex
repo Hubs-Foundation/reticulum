@@ -5,7 +5,7 @@ defmodule Ret.PageOriginWarmer do
   # @pages is a list of { source, page } tuples eg { :hubs, "scene.html" }
   @pages %{
            hubs:
-             ~w(index.html whats-new.html hub.html link.html scene.html avatar.html spoke.html discord.html hub.service.js manifest.webmanifest schema.toml),
+             ~w(index.html whats-new.html hub.html link.html scene.html avatar.html spoke.html discord.html hub.service.js manifest.webmanifest schema.toml favicon.ico),
            admin: ~w(admin.html),
            spoke: ~w(index.html)
          }
