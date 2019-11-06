@@ -27,7 +27,7 @@ secret_key_base = "{{ cfg.phx.secret_key }}"
 
 {{#if cfg.phx.secondary_url_host }}
 [ret."Elixir.RetWeb.Endpoint".secondary_url]
-host = "{{ cfg.phx.secondary_url_host_prefix }}{{ cfg.phx.secondary_url_host }}"
+host = "{{ cfg.phx.url_host_prefix }}{{ cfg.phx.secondary_url_host }}"
 {{#if cfg.phx.secondary_url_port }}
 port = "{{ cfg.phx.secondary_url_port }}"
 {{/if}}
