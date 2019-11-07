@@ -130,6 +130,14 @@ content_security_policy = "{{ cfg.security.content_security_policy }}"
 [ret."Ret.Repo.Migrations.AdminSchemaInit"]
 postgrest_password = "{{ cfg.db.postgrest_password }}"
 
+[ret."Elixir.Ret.StatsJob"]
+{{#if cfg.stats.node_stats_enabled }}
+node_stats_enabled = {{ cfg.stats.node_stats_enabled }}
+{{/if}}
+{{#if cfg.stats.node_gauges_enabled }}
+node_gauges_enabled = {{ cfg.stats.node_gauges_enabled }}
+{{/if}}
+
 [web_push_encryption.vapid_details]
 subject = "{{ cfg.web_push.subject }}"
 public_key = "{{ cfg.web_push.public_key }}"

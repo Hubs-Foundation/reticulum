@@ -1,6 +1,7 @@
 defmodule Ret.PageOriginWarmer do
   use Cachex.Warmer
   use Retry
+  import Ret.HttpUtils
 
   # @pages is a list of { source, page } tuples eg { :hubs, "scene.html" }
   @pages %{
@@ -18,13 +19,23 @@ defmodule Ret.PageOriginWarmer do
     with hubs_page_origin when is_binary(hubs_page_origin) <- module_config(:hubs_page_origin),
          admin_page_origin when is_binary(admin_page_origin) <- module_config(:admin_page_origin),
          spoke_page_origin when is_binary(spoke_page_origin) <- module_config(:spoke_page_origin) do
-      cache_values =
-        @pages
-        |> Enum.map(fn {source, page} -> Task.async(fn -> page_to_cache_entry(source, page) end) end)
-        |> Enum.map(&Task.await(&1, 15_000))
-        |> Enum.reject(&is_nil/1)
+      # Don't bother with the full fetch if the aggregated etag hasn't changed
+      {:ok, last_aggregated_etag} = Cachex.get(:page_chunks, :last_aggregated_etag)
+      latest_aggregated_etag = get_aggregated_etag()
 
-      {:ok, cache_values}
+      if last_aggregated_etag !== latest_aggregated_etag do
+        cache_values =
+          @pages
+          |> Enum.map(fn {source, page} -> Task.async(fn -> page_to_cache_entry(source, page) end) end)
+          |> Enum.map(&Task.await(&1, 15_000))
+          |> Enum.reject(&is_nil/1)
+
+        Cachex.put(:page_chunks, :last_aggregated_etag, latest_aggregated_etag)
+
+        {:ok, cache_values}
+      else
+        :ignore
+      end
     else
       _ -> {:ok, []}
     end
@@ -34,16 +45,26 @@ defmodule Ret.PageOriginWarmer do
     {:ok, source |> page_to_cache_entry(page) |> elem(1)}
   end
 
-  defp page_to_cache_entry(source, page) do
-    config_key =
-      case source do
-        :hubs -> :hubs_page_origin
-        :admin -> :admin_page_origin
-        :spoke -> :spoke_page_origin
-      end
+  # Fetches and returns the latest last modified header for all of the pages
+  defp get_aggregated_etag() do
+    with hubs_page_origin when is_binary(hubs_page_origin) <- module_config(:hubs_page_origin),
+         admin_page_origin when is_binary(admin_page_origin) <- module_config(:admin_page_origin),
+         spoke_page_origin when is_binary(spoke_page_origin) <- module_config(:spoke_page_origin) do
+      etags =
+        @pages
+        |> Enum.map(fn {source, page} -> Task.async(fn -> page_to_etag(source, page) end) end)
+        |> Enum.map(&Task.await(&1, 15_000))
+        |> Enum.reject(&is_nil/1)
 
+      etags |> Enum.sort() |> Enum.join()
+    else
+      _ -> nil
+    end
+  end
+
+  defp page_to_cache_entry(source, page) do
     # Split the HTML file into two parts, on the line that contains HUB_META_TAGS, so we can add meta tags
-    case "#{module_config(config_key)}/#{page}"
+    case "#{module_config(config_key_for_source(source))}/#{page}"
          |> retry_get_until_success do
       :error ->
         # Nils are rejected after tasks are joined
@@ -61,26 +82,28 @@ defmodule Ret.PageOriginWarmer do
     end
   end
 
-  defp retry_get_until_success(url) do
-    retry with: exponential_backoff() |> randomize |> cap(5_000) |> expiry(10_000) do
-      hackney_options =
-        if module_config(:insecure_ssl) == true do
-          [:insecure]
-        else
-          []
-        end
+  defp page_to_etag(source, page) do
+    # Split the HTML file into two parts, on the line that contains HUB_META_TAGS, so we can add meta tags
+    case "#{module_config(config_key_for_source(source))}/#{page}"
+         |> retry_head_until_success do
+      :error ->
+        # Nils are rejected after tasks are joined
+        nil
 
-      # For local dev, allow insecure SSL because of webpack server
-      case HTTPoison.get(url, [], hackney: hackney_options) do
-        {:ok, %HTTPoison.Response{status_code: 200} = resp} -> resp
-        _ -> :error
-      end
-    after
-      result -> result
-    else
-      error -> error
+      res ->
+        header = res.headers |> Enum.find(&(&1 |> elem(0) |> String.downcase() === "etag"))
+
+        if header do
+          header |> elem(1)
+        else
+          nil
+        end
     end
   end
+
+  defp config_key_for_source(:hubs), do: :hubs_page_origin
+  defp config_key_for_source(:admin), do: :admin_page_origin
+  defp config_key_for_source(:spoke), do: :spoke_page_origin
 
   defp module_config(key) do
     Application.get_env(:ret, __MODULE__)[key]
