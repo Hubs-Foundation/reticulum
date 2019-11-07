@@ -132,4 +132,11 @@ config :ret, Ret.JanusLoadStatus, janus_port: 443
 config :ret, Ret.StatsJob, node_stats_enabled: false, node_gauges_enabled: false
 
 # Default repo check and page check to off so for polycosm hosts database + s3 hits can go idle
-config :ret, RetWeb.HealthController, check_repo: false
+config :ret, RetWeb.HealthController,
+  check_repo: false,
+  session_lock_db: [
+    username: "postgres",
+    password: "postgres",
+    database: "ret_production",
+    hostname: "localhost"
+  ]
