@@ -2,7 +2,12 @@ defmodule Ret.Locking do
   alias Ret.Repo
 
   def exec_if_session_lockable(lock_name, exec) do
-    [username: username, password: password, database: database, hostname: hostname] = module_config(:session_lock_db)
+    session_lock_db_config = module_config(:session_lock_db)
+    hostname = session_lock_db_config |> Keyword.get(:hostname)
+    username = session_lock_db_config |> Keyword.get(:username)
+    password = session_lock_db_config |> Keyword.get(:password)
+    database = session_lock_db_config |> Keyword.get(:database)
+
     {:ok, pid} = Postgrex.start_link(hostname: hostname, username: username, password: password, database: database)
 
     try do
