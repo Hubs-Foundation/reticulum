@@ -221,13 +221,7 @@ defmodule RetWeb.PageController do
   end
 
   defp generate_app_config() do
-    app_config =
-      if module_config(:skip_cache) do
-        Ret.AppConfig.get_config()
-      else
-        {:ok, app_config} = Cachex.get(:app_config, :app_config)
-        app_config
-      end
+    app_config = Ret.AppConfig.get_config(!!module_config(:skip_cache))
 
     app_config_json = app_config |> Poison.encode!()
     app_config_script = "window.APP_CONFIG = JSON.parse('#{app_config_json |> String.replace("'", "\\'")}')"

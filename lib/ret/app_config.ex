@@ -33,8 +33,8 @@ defmodule Ret.AppConfig do
     |> unique_constraint(:key)
   end
 
-  def get_config() do
-    {:commit, config} = Cachex.fetch(:app_config, "")
+  def get_config(skip_cache \\ false) do
+    {:commit, config} = if skip_cache do fetch_config("") else Cachex.fetch(:app_config, "") end 
     config
   end
 
