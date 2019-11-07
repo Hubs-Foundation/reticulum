@@ -98,9 +98,9 @@ config :ret, Ret.Scheduler,
     {{:cron, "0 10 * * *"}, {Ret.Storage, :vacuum, []}},
     {{:cron, "5 10 * * *"}, {Ret.Storage, :demote_inactive_owned_files, []}},
     {{:cron, "10 10 * * *"}, {Ret.LoginToken, :expire_stale, []}},
-    {{:cron, "15 10 * * *"}, {Ret.Hub, :vacuum_entry_codes, []}},
-    {{:cron, "20 10 * * *"}, {Ret.Hub, :vacuum_hosts, []}},
-    {{:cron, "25 10 * * *"}, {Ret.CachedFile, :vacuum, []}}
+    {{:cron, "11 10 * * *"}, {Ret.Hub, :vacuum_entry_codes, []}},
+    {{:cron, "12 10 * * *"}, {Ret.Hub, :vacuum_hosts, []}},
+    {{:cron, "13 10 * * *"}, {Ret.CachedFile, :vacuum, []}}
   ]
 
 config :ret, RetWeb.Plugs.HeaderAuthorization, header_name: "x-ret-admin-access-key"
