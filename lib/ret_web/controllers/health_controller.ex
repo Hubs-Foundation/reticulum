@@ -8,12 +8,9 @@ defmodule RetWeb.HealthController do
       from(h in Ret.Hub, limit: 0) |> Ret.Repo.all()
     end
 
-    # Check page cache
-    if module_config(:check_pages) do
-      true = Cachex.get(:page_chunks, {:hubs, "index.html"}) |> elem(1) |> Enum.count() > 0
-      true = Cachex.get(:page_chunks, {:hubs, "hub.html"}) |> elem(1) |> Enum.count() > 0
-      true = Cachex.get(:page_chunks, {:spoke, "index.html"}) |> elem(1) |> Enum.count() > 0
-    end
+    true = Cachex.get(:page_chunks, {:hubs, "index.html"}) |> elem(1) |> Enum.count() > 0
+    true = Cachex.get(:page_chunks, {:hubs, "hub.html"}) |> elem(1) |> Enum.count() > 0
+    true = Cachex.get(:page_chunks, {:spoke, "index.html"}) |> elem(1) |> Enum.count() > 0
 
     # Check room routing
     true = Ret.RoomAssigner.get_available_host("") != nil

@@ -144,6 +144,11 @@ node_stats_enabled = {{ cfg.stats.node_stats_enabled }}
 node_gauges_enabled = {{ cfg.stats.node_gauges_enabled }}
 {{/if}}
 
+[ret."Elixir.RetWeb.HealthController"]
+{{#if cfg.health.check_repo }}
+check_repo = {{ cfg.health.check_repo }}
+{{/if}}
+
 [web_push_encryption.vapid_details]
 subject = "{{ cfg.web_push.subject }}"
 public_key = "{{ cfg.web_push.public_key }}"
