@@ -121,31 +121,64 @@ defmodule RetWeb.PageController do
     supports_pwa = ua.family != "Safari" && ua.family != "Mobile Safari"
 
     if supports_pwa do
-      default_app_description =
-        "Share a virtual room with friends. Watch videos, play with 3D objects, or just hang out."
-
       manifest =
-        Phoenix.View.render_to_string(RetWeb.PageView, "manifest.webmanifest",
-          app_name: AppConfig.get_config_value("translations|en|app-name") || "Hubs",
-          app_description: AppConfig.get_config_value("translations|en|app-description") || default_app_description,
-          app_icon: AppConfig.get_config_owned_file_uri("images|app_icon") || @default_app_icon
-        )
+        case Cachex.get(:assets, :manifest) do
+          {:ok, nil} ->
+            default_app_description =
+              "Share a virtual room with friends. Watch videos, play with 3D objects, or just hang out."
 
-      conn |> send_resp(200, manifest)
+            manifest =
+              Phoenix.View.render_to_string(RetWeb.PageView, "manifest.webmanifest",
+                app_name: get_app_config_value("translations|en|app-name") || "Hubs",
+                app_description: get_app_config_value("translations|en|app-description") || default_app_description,
+                app_icon: get_app_config_owned_file_uri("images|app_icon") || @default_app_icon
+              )
+
+            unless module_config(:skip_cache) do
+              Cachex.put(:assets, :manifest, manifest, ttl: :timer.seconds(15))
+            end
+
+            manifest
+
+          {:ok, manifest} ->
+            manifest
+        end
+
+      conn
+      |> put_resp_header("content-type", "application/manifest+json")
+      |> send_resp(200, manifest)
     else
       conn |> send_resp(404, "Not found.")
     end
   end
 
   def render_for_path("/favicon.ico", _params, conn) do
-    app_config = AppConfig |> Repo.get_by(key: "images|favicon") |> Repo.preload(:owned_file)
+    favicon =
+      case Cachex.get(:assets, :app_config_favicon) do
+        {:ok, nil} ->
+          app_config = AppConfig |> Repo.get_by(key: "images|favicon") |> Repo.preload(:owned_file)
 
-    with %AppConfig{owned_file: %OwnedFile{} = owned_file} <- app_config,
-         {:ok, _meta, stream} <- Storage.fetch(owned_file) do
-      conn |> send_resp(200, stream |> Enum.join(""))
-    else
-      _ -> conn |> render_asset("favicon.ico")
-    end
+          favicon =
+            with %AppConfig{owned_file: %OwnedFile{} = owned_file} <- app_config,
+                 {:ok, _meta, stream} <- Storage.fetch(owned_file) do
+              stream |> Enum.join("")
+            else
+              _ -> chunks_for_page("favicon.ico", :hubs) |> List.flatten() |> Enum.join("\n")
+            end
+
+          unless module_config(:skip_cache) do
+            Cachex.put(:assets, :app_config_favicon, favicon, ttl: :timer.seconds(15))
+          end
+
+          favicon
+
+        {:ok, favicon} ->
+          favicon
+      end
+
+    conn
+    |> put_resp_header("content-type", "image/x-icon")
+    |> send_resp(200, favicon)
   end
 
   def render_for_path("/admin", _params, conn), do: conn |> render_page("admin.html", :admin)
@@ -180,7 +213,7 @@ defmodule RetWeb.PageController do
         RetWeb.PageView,
         "index-meta.html",
         app_config_script: {:safe, app_config_script},
-        app_icon: AppConfig.get_config_owned_file_uri("images|app_icon") || @default_app_icon
+        app_icon: get_app_config_owned_file_uri("images|app_icon") || @default_app_icon
       )
 
     chunks =
@@ -191,6 +224,22 @@ defmodule RetWeb.PageController do
     |> append_csp("script-src", app_config_csp)
     |> put_resp_header("content-type", "text/html; charset=utf-8")
     |> send_resp(200, chunks)
+  end
+
+  defp get_app_config_value(key) do
+    if module_config(:skip_cache) do
+      AppConfig.get_config_value(key)
+    else
+      AppConfig.get_cached_config_value(key)
+    end
+  end
+
+  defp get_app_config_owned_file_uri(key) do
+    if module_config(:skip_cache) do
+      AppConfig.get_config_owned_file_uri(key)
+    else
+      AppConfig.get_cached_config_owned_file_uri(key)
+    end
   end
 
   defp append_csp(conn, directive, source) do
@@ -236,7 +285,7 @@ defmodule RetWeb.PageController do
         scene: hub.scene,
         ret_meta: Ret.Meta.get_meta(include_repo: false),
         app_config_script: {:safe, app_config_script},
-        app_icon: AppConfig.get_config_owned_file_uri("images|app_icon") || @default_app_icon
+        app_icon: get_app_config_owned_file_uri("images|app_icon") || @default_app_icon
       )
 
     chunks =
@@ -325,9 +374,7 @@ defmodule RetWeb.PageController do
   end
 
   defp content_type_for_page("hub.service.js"), do: "application/javascript; charset=utf-8"
-  defp content_type_for_page("manifest.webmanifest"), do: "application/manifest+json"
   defp content_type_for_page("schema.toml"), do: "text/plain"
-  defp content_type_for_page("favicon.ico"), do: "image/x-icon"
   defp content_type_for_page(_), do: "text/html; charset=utf-8"
 
   defp render_chunks(conn, chunks, content_type) do

@@ -104,4 +104,16 @@ defmodule Ret.AppConfig do
       _ -> nil
     end
   end
+
+  def get_cached_config_value(key) do
+    case Cachex.fetch(:app_config_value, key) do
+      {status, result} when status in [:commit, :ok] -> result
+    end
+  end
+
+  def get_cached_config_owned_file_uri(key) do
+    case Cachex.fetch(:app_config_owned_file_uri, key) do
+      {status, result} when status in [:commit, :ok] -> result
+    end
+  end
 end

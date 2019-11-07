@@ -86,6 +86,39 @@ defmodule Ret.Application do
         id: :app_config_cache
       ),
 
+      # App Config value cache
+      worker(
+        Cachex,
+        [
+          :app_config_value,
+          [
+            expiration: expiration(default: :timer.seconds(15)),
+            fallback: fallback(default: &Ret.AppConfig.get_config_value/1)
+          ]
+        ],
+        id: :app_config_value_cache
+      ),
+
+      # App Config owned file uri cache
+      worker(
+        Cachex,
+        [
+          :app_config_owned_file_uri,
+          [
+            expiration: expiration(default: :timer.seconds(15)),
+            fallback: fallback(default: &Ret.AppConfig.get_config_owned_file_uri/1)
+          ]
+        ],
+        id: :app_config_owned_file_uri_cache
+      ),
+
+      # General asset cache
+      worker(
+        Cachex,
+        [:assets, []],
+        id: :asset_cache
+      ),
+
       # Page origin chunk cache
       worker(
         Cachex,
