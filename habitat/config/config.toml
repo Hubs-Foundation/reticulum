@@ -58,6 +58,9 @@ database = "{{ cfg.db.database }}"
 hostname = "{{ cfg.db.hostname }}"
 template = "{{ cfg.db.template }}"
 pool_size = {{ cfg.db.pool_size }}
+{{#if cfg.db.idle_interval }}
+idle_interval = {{ cfg.db.idle_interval }}
+{{/if}}
 
 [ret."Elixir.Ret.Locking".session_lock_db]
 username = "{{ cfg.session_lock_db.username }}"
