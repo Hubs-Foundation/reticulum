@@ -168,7 +168,7 @@ defmodule RetWeb.PageController do
     |> send_resp(200, thumbnail)
   end
 
-  defd get_configurable_asset(cache_key, config_key, fallback_file) do
+  defp get_configurable_asset(cache_key, config_key, fallback_file) do
     case Cachex.get(:assets, cache_key) do
       {:ok, nil} ->
         app_config = AppConfig |> Repo.get_by(key: config_key) |> Repo.preload(:owned_file)
