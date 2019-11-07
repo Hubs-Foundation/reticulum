@@ -125,18 +125,20 @@ config :sentry,
   }
 
 config :ret, Ret.RoomAssigner, balancer_weights: [{600, 1}, {300, 50}, {0, 500}]
-config :ret, Ret.Locking, lock_timeout_ms: 1000 * 60 * 15
-config :ret, Ret.JanusLoadStatus, janus_port: 443
 
-# Default stats job to off so for polycosm hosts the database can go idle
-config :ret, Ret.StatsJob, node_stats_enabled: false, node_gauges_enabled: false
-
-# Default repo check and page check to off so for polycosm hosts database + s3 hits can go idle
-config :ret, RetWeb.HealthController,
-  check_repo: false,
+config :ret, Ret.Locking,
+  lock_timeout_ms: 1000 * 60 * 15,
   session_lock_db: [
     username: "postgres",
     password: "postgres",
     database: "ret_production",
     hostname: "localhost"
   ]
+
+config :ret, Ret.JanusLoadStatus, janus_port: 443
+
+# Default stats job to off so for polycosm hosts the database can go idle
+config :ret, Ret.StatsJob, node_stats_enabled: false, node_gauges_enabled: false
+
+# Default repo check and page check to off so for polycosm hosts database + s3 hits can go idle
+config :ret, RetWeb.HealthController, check_repo: false
