@@ -2,12 +2,12 @@ defmodule RetWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :ret
   use Sentry.Phoenix.Endpoint
 
-  socket("/socket", RetWeb.SessionSocket, websocket: [check_origin: { RetWeb.Endpoint, :allowed_origin?, [] } ] )
+  socket("/socket", RetWeb.SessionSocket, websocket: [check_origin: {RetWeb.Endpoint, :allowed_origin?, []}])
 
   def get_cors_origins, do: Application.get_env(:ret, RetWeb.Endpoint)[:allowed_origins] |> String.split(",")
   def get_cors_origin_urls, do: get_cors_origins() |> Enum.filter(&(&1 != "*")) |> Enum.map(&URI.parse/1)
 
-  def allowed_origin?(%URI{ host: host, port: port, scheme: scheme }) do
+  def allowed_origin?(%URI{host: host, port: port, scheme: scheme}) do
     if get_cors_origins() === ["*"] do
       true
     else
@@ -26,7 +26,7 @@ defmodule RetWeb.Endpoint do
     gzip: false,
     # Due to cloudfront, we want to include max-age in responses	
     cache_control_for_etags: "public, max-age=31536000",
-    only: ~w(robots.txt favicon.ico hub-preview.png favicon-spoke.ico spoke-preview.png),
+    only: ~w(robots.txt favicon.ico favicon-spoke.ico spoke-preview.png),
     headers: [{"access-control-allow-origin", "*"}]
   )
 

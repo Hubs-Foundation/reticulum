@@ -15,6 +15,7 @@ defmodule Ret.PageOriginWarmer do
              hub.service.js
              schema.toml
              favicon.ico
+             app-thumbnail.png
            ),
            admin: ~w(admin.html),
            spoke: ~w(index.html)

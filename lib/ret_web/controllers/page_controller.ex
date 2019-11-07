@@ -153,32 +153,43 @@ defmodule RetWeb.PageController do
   end
 
   def render_for_path("/favicon.ico", _params, conn) do
-    favicon =
-      case Cachex.get(:assets, :app_config_favicon) do
-        {:ok, nil} ->
-          app_config = AppConfig |> Repo.get_by(key: "images|favicon") |> Repo.preload(:owned_file)
-
-          favicon =
-            with %AppConfig{owned_file: %OwnedFile{} = owned_file} <- app_config,
-                 {:ok, _meta, stream} <- Storage.fetch(owned_file) do
-              stream |> Enum.join("")
-            else
-              _ -> chunks_for_page("favicon.ico", :hubs) |> List.flatten() |> Enum.join("\n")
-            end
-
-          unless module_config(:skip_cache) do
-            Cachex.put(:assets, :app_config_favicon, favicon, ttl: :timer.seconds(15))
-          end
-
-          favicon
-
-        {:ok, favicon} ->
-          favicon
-      end
+    favicon = get_configurable_asset(:app_config_favicon, "images|favicon", "favicon.ico")
 
     conn
     |> put_resp_header("content-type", "image/x-icon")
     |> send_resp(200, favicon)
+  end
+
+  def render_for_path("/app-thumbnail.png", _params, conn) do
+    thumbnail = get_configurable_asset(:app_config_app_thumbnail, "images|app_thumbnail", "app-thumbnail.png")
+
+    conn
+    |> put_resp_header("content-type", "image/png")
+    |> send_resp(200, thumbnail)
+  end
+
+  defd get_configurable_asset(cache_key, config_key, fallback_file) do
+    case Cachex.get(:assets, cache_key) do
+      {:ok, nil} ->
+        app_config = AppConfig |> Repo.get_by(key: config_key) |> Repo.preload(:owned_file)
+
+        asset =
+          with %AppConfig{owned_file: %OwnedFile{} = owned_file} <- app_config,
+               {:ok, _meta, stream} <- Storage.fetch(owned_file) do
+            stream |> Enum.join("")
+          else
+            _ -> chunks_for_page(fallback_file, :hubs) |> List.flatten() |> Enum.join("\n")
+          end
+
+        unless module_config(:skip_cache) do
+          Cachex.put(:assets, cache_key, asset, ttl: :timer.seconds(15))
+        end
+
+        asset
+
+      {:ok, asset} ->
+        asset
+    end
   end
 
   def render_for_path("/admin", _params, conn), do: conn |> render_page("admin.html", :admin)
@@ -212,6 +223,7 @@ defmodule RetWeb.PageController do
       Phoenix.View.render_to_string(
         RetWeb.PageView,
         "index-meta.html",
+        root_url: RetWeb.Endpoint.url(),
         app_config_script: {:safe, app_config_script},
         app_icon: get_app_config_owned_file_uri("images|app_icon") || @default_app_icon
       )
