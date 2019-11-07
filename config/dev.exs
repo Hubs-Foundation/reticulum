@@ -194,6 +194,14 @@ config :ret, Ret.HttpUtils, insecure_ssl: true
 
 config :ret, Ret.Meta, phx_host: host
 
-config :ret, Ret.Locking, lock_timeout_ms: 1000 * 60 * 15
+config :ret, Ret.Locking,
+  lock_timeout_ms: 1000 * 60 * 15,
+  session_lock_db: [
+    username: "postgres",
+    password: "postgres",
+    database: "ret_dev",
+    hostname: if(env_db_host == "", do: "localhost", else: env_db_host)
+  ]
+
 config :ret, Ret.Repo.Migrations.AdminSchemaInit, postgrest_password: "password"
 config :ret, Ret.StatsJob, node_stats_enabled: false, node_gauges_enabled: false
