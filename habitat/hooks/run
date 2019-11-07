@@ -3,12 +3,6 @@
 set -e
 exec 2>&1
 
-# If ita is running, wait for services to be configured before starting.
-if [[ -d "/hab/svc/ita" && ! -f "/hab/svc/ita/var/ready" ]] ; then
-    echo "ita found but not ready. exiting."
-    exit 1
-fi
-
 export HOME={{ pkg.svc_var_path }}
 export LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
 export REPLACE_OS_VARS=true # Inlines OS vars into vm args
