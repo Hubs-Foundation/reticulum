@@ -83,7 +83,6 @@ defmodule Ret.PageOriginWarmer do
   end
 
   defp page_to_etag(source, page) do
-    # Split the HTML file into two parts, on the line that contains HUB_META_TAGS, so we can add meta tags
     case "#{module_config(config_key_for_source(source))}/#{page}"
          |> retry_head_until_success do
       :error ->

@@ -34,8 +34,6 @@ config :ret, Ret.Repo,
   database: "ret_production",
   hostname: "localhost",
   template: "template0",
-  # Disable prepared queries bc of pgbouncer
-  prepare: :unnamed,
   pool_size: 10
 
 # ## SSL Support
@@ -82,7 +80,9 @@ import_config "prod.secret.exs"
 
 # Filter out media search API params
 config :phoenix, :filter_parameters, ["q", "filter", "cursor"]
-config :ret, Ret.Repo, adapter: Ecto.Adapters.Postgres
+
+# Disable prepared queries bc of pgbouncer
+config :ret, Ret.Repo, adapter: Ecto.Adapters.Postgres, prepare: :unnamed
 
 config :peerage, via: Ret.PeerageProvider
 
