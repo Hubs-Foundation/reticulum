@@ -63,24 +63,24 @@ defmodule Ret.MediaSearch do
     favorites_search(cursor, type, account_id, q)
   end
 
-  def search(%Ret.MediaSearchQuery{source: "sketchfab", cursor: cursor, filter: nil, collection: nil, q: q}) do
-    if q == nil || q == "" do
-      search(%Ret.MediaSearchQuery{source: "sketchfab", cursor: cursor, filter: "featured", q: q})
-    else
-      query =
-        URI.encode_query(
-          type: :models,
-          downloadable: true,
-          count: @page_size,
-          max_face_count: @max_face_count,
-          max_filesizes: "gltf:#{@max_file_size_bytes}",
-          processing_status: :succeeded,
-          cursor: cursor,
-          q: q
-        )
+  def search(%Ret.MediaSearchQuery{source: "sketchfab", cursor: cursor, filter: nil, collection: nil, q: q}) when q == nil or q == "" do
+    search(%Ret.MediaSearchQuery{source: "sketchfab", cursor: cursor, filter: "featured", q: q})
+  end
 
-      sketchfab_search(query)
-    end
+  def search(%Ret.MediaSearchQuery{source: "sketchfab", cursor: cursor, filter: nil, collection: nil, q: q}) do
+    query =
+      URI.encode_query(
+        type: :models,
+        downloadable: true,
+        count: @page_size,
+        max_face_count: @max_face_count,
+        max_filesizes: "gltf:#{@max_file_size_bytes}",
+        processing_status: :succeeded,
+        cursor: cursor,
+        q: q
+      )
+
+    sketchfab_search(query)
   end
 
   def search(%Ret.MediaSearchQuery{source: "sketchfab", cursor: cursor, filter: "featured", q: q}) do
