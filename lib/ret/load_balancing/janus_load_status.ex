@@ -14,7 +14,7 @@ defmodule Ret.JanusLoadStatus do
           module_config(:janus_service_name)
           |> Ret.Habitat.get_service_members()
           |> Enum.map(fn {host, ip} -> Task.async(fn -> {host, janus_ip_to_ccu(ip)} end) end)
-          |> Enum.map(&Task.await(&1, 30_000))
+          |> Enum.map(&Task.await(&1, 10_000))
 
         {:ok, [{:host_to_ccu, entries}]}
     end

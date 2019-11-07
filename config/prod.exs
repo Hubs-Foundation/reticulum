@@ -34,6 +34,8 @@ config :ret, Ret.Repo,
   database: "ret_production",
   hostname: "localhost",
   template: "template0",
+  # Disable prepared queries bc of pgbouncer
+  prepare: :unnamed,
   pool_size: 10
 
 # ## SSL Support
