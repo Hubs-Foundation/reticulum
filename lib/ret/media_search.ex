@@ -1,6 +1,6 @@
 defmodule Ret.MediaSearchQuery do
   @enforce_keys [:source]
-  defstruct [:source, :type, :user, :filter, :q, :similar_to, :cursor, :locale]
+  defstruct [:source, :type, :user, :collection, :filter, :q, :similar_to, :cursor, :locale]
 end
 
 defmodule Ret.MediaSearchResult do
@@ -27,6 +27,7 @@ defmodule Ret.MediaSearch do
   # HACK for now to reduce page size for scene listings -- real fix will be to expose page_size to API
   @scene_page_size 23
   @max_face_count 60000
+  @max_file_size_bytes 20 * 1048576
 
   def search(%Ret.MediaSearchQuery{source: "scene_listings", cursor: cursor, filter: "featured", q: query}) do
     scene_listing_search(cursor, query, "featured", asc: :order)
@@ -62,16 +63,66 @@ defmodule Ret.MediaSearch do
     favorites_search(cursor, type, account_id, q)
   end
 
+  def search(%Ret.MediaSearchQuery{source: "sketchfab", cursor: cursor, filter: nil, collection: nil, q: q}) do
+    if q == nil || q == "" do
+      search(%Ret.MediaSearchQuery{source: "sketchfab", cursor: cursor, filter: "featured", q: q})
+    else
+      query =
+        URI.encode_query(
+          type: :models,
+          downloadable: true,
+          count: @page_size,
+          max_face_count: @max_face_count,
+          max_filesizes: "gltf:#{@max_file_size_bytes}",
+          processing_status: :succeeded,
+          cursor: cursor,
+          q: q
+        )
+
+      sketchfab_search(query)
+    end
+  end
+
   def search(%Ret.MediaSearchQuery{source: "sketchfab", cursor: cursor, filter: "featured", q: q}) do
+    query =
+      URI.encode_query(
+        type: :models,
+        downloadable: true,
+        staffpicked: true,
+        count: @page_size,
+        max_face_count: @max_face_count,
+        max_filesizes: "gltf:#{@max_file_size_bytes}",
+        processing_status: :succeeded,
+        sort_by:
+          if q == nil || q == "" do
+            "-publishedAt"
+          else
+            nil
+          end,
+        cursor: cursor,
+        q: q
+      )
+
+    sketchfab_search(query)
+  end
+
+  def search(%Ret.MediaSearchQuery{source: "sketchfab", cursor: cursor, filter: nil, collection: collection_id, q: q}) do
     query =
       URI.encode_query(
         type: :models,
         downloadable: true,
         count: @page_size,
         max_face_count: @max_face_count,
+        max_filesizes: "gltf:#{@max_file_size_bytes}",
         processing_status: :succeeded,
-        sort_by: "-likeCount",
+        sort_by:
+          if q == nil || q == "" do
+            "-publishedAt"
+          else
+            nil
+          end,
         cursor: cursor,
+        collection: collection_id,
         q: q
       )
 
@@ -85,15 +136,16 @@ defmodule Ret.MediaSearch do
         downloadable: true,
         count: @page_size,
         max_face_count: @max_face_count,
+        max_filesizes: "gltf:#{@max_file_size_bytes}",
         processing_status: :succeeded,
-        cursor: cursor,
-        categories: filter,
         sort_by:
           if q == nil || q == "" do
-            "-likeCount"
+            "-publishedAt"
           else
             nil
           end,
+        cursor: cursor,
+        categories: filter,
         q: q
       )
 
