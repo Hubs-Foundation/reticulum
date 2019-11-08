@@ -58,6 +58,15 @@ database = "{{ cfg.db.database }}"
 hostname = "{{ cfg.db.hostname }}"
 template = "{{ cfg.db.template }}"
 pool_size = {{ cfg.db.pool_size }}
+{{#if cfg.db.idle_interval }}
+idle_interval = {{ cfg.db.idle_interval }}
+{{/if}}
+
+[ret."Elixir.Ret.Locking".session_lock_db]
+username = "{{ cfg.session_lock_db.username }}"
+password = "{{ cfg.session_lock_db.password }}"
+database = "{{ cfg.session_lock_db.database }}"
+hostname = "{{ cfg.session_lock_db.hostname }}"
 
 [ret."Elixir.Ret.Habitat"]
 ip = "{{ cfg.habitat.ip }}"
@@ -129,6 +138,19 @@ content_security_policy = "{{ cfg.security.content_security_policy }}"
 
 [ret."Ret.Repo.Migrations.AdminSchemaInit"]
 postgrest_password = "{{ cfg.db.postgrest_password }}"
+
+[ret."Elixir.Ret.StatsJob"]
+{{#if cfg.stats.node_stats_enabled }}
+node_stats_enabled = {{ cfg.stats.node_stats_enabled }}
+{{/if}}
+{{#if cfg.stats.node_gauges_enabled }}
+node_gauges_enabled = {{ cfg.stats.node_gauges_enabled }}
+{{/if}}
+
+[ret."Elixir.RetWeb.HealthController"]
+{{#if cfg.health.check_repo }}
+check_repo = {{ cfg.health.check_repo }}
+{{/if}}
 
 [web_push_encryption.vapid_details]
 subject = "{{ cfg.web_push.subject }}"
