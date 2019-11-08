@@ -19,4 +19,5 @@
 <meta name="ret:pool" value="<%= @ret_meta[:pool] %>" />
 <link rel="apple-touch-icon" sizes="180x180" href="https://assets-prod.reticulum.io/assets/images/pwaicon-180-hubs.png">
 <title><%= @hub.name %> | Hubs by Mozilla</title>
+<%= @available_integrations_script %>
 <%= @app_config_script %>

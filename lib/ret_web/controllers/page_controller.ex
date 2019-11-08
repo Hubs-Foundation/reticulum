@@ -200,13 +200,18 @@ defmodule RetWeb.PageController do
 
   def render_hub_content(conn, hub, _slug) do
     hub = hub |> Repo.preload(scene: [:screenshot_owned_file], scene_listing: [:screenshot_owned_file])
+
     {app_config_script, app_config_csp} = generate_app_config()
+
+    {available_integrations_script, available_integrations_csp} =
+      Ret.Meta.available_integrations_meta() |> generate_config("AVAILABLE_INTEGRATIONS")
 
     hub_meta_tags =
       Phoenix.View.render_to_string(RetWeb.PageView, "hub-meta.html",
         hub: hub,
         scene: hub.scene,
         ret_meta: Ret.Meta.get_meta(include_repo: false),
+        available_integrations_script: {:safe, available_integrations_script},
         app_config_script: {:safe, app_config_script}
       )
 
@@ -216,19 +221,22 @@ defmodule RetWeb.PageController do
 
     conn
     |> append_csp("script-src", app_config_csp)
+    |> append_csp("script-src", available_integrations_csp)
     |> put_resp_header("content-type", "text/html; charset=utf-8")
     |> send_resp(200, chunks)
   end
 
-  defp generate_app_config() do
-    app_config = Ret.AppConfig.get_config(!!module_config(:skip_cache))
+  def generate_app_config() do
+    Ret.AppConfig.get_config(!!module_config(:skip_cache)) |> generate_config("APP_CONFIG")
+  end
 
-    app_config_json = app_config |> Poison.encode!()
-    app_config_script = "window.APP_CONFIG = JSON.parse('#{app_config_json |> String.replace("'", "\\'")}')"
+  defp generate_config(config, name) do
+    config_json = config |> Poison.encode!()
+    config_script = "window.#{name} = JSON.parse('#{config_json |> String.replace("'", "\\'")}')"
 
-    app_config_csp = "'sha256-#{:crypto.hash(:sha256, app_config_script) |> :base64.encode()}'"
+    config_csp = "'sha256-#{:crypto.hash(:sha256, config_script) |> :base64.encode()}'"
 
-    {"<script>#{app_config_script}</script>", app_config_csp}
+    {"<script>#{config_script}</script>", config_csp}
   end
 
   # Redirect to the specified hub identifier, which can be a sid or an entry code
