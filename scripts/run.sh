@@ -2,11 +2,11 @@ HUBS_OPS_SECRETS_PATH=${1:-"../hubs-ops-secrets"}
 RET_DEV_VARS="roles/ret/vars/dev.yml"
 
 PERMS_KEY="$(
-  ansible-vault view "$HUBS_OPS_SECRETS_PATH/$RET_DEV_VARS" |
+  ansible-vault view --ask-vault-pass "$HUBS_OPS_SECRETS_PATH/$RET_DEV_VARS" |
     grep guardian_perms_key |
     cut -d':' -f2 |
-    sed 's/\\\\\\\\n/\\n/g' | # un-escape
-    sed 's/^[ \t"]\+\|[ \t"]\+$//g' # trim
+    sed -E 's/\\\\\\\\n/\\n/g' | # un-escape
+    sed -E 's/^[ \t"]+|[ \t"]+$//g' # trim
 )"
 
 if [ -z "$PERMS_KEY" ]; then
