@@ -130,24 +130,25 @@ defmodule Ret.MediaSearch do
   end
 
   def search(%Ret.MediaSearchQuery{source: "sketchfab", cursor: cursor, filter: filter, q: q}) do
-    query =
-      URI.encode_query(
-        type: :models,
-        downloadable: true,
-        count: @page_size,
-        max_face_count: @max_face_count,
-        max_filesizes: "gltf:#{@max_file_size_bytes}",
-        processing_status: :succeeded,
-        sort_by:
-          if q == nil || q == "" do
-            "-publishedAt"
-          else
-            nil
-          end,
-        cursor: cursor,
-        categories: filter,
-        q: q
-      )
+    additional_params = if q == nil || q == "" do
+      [staffpicked: true, sort_by: "-publishedAt"]
+    else
+      []
+    end
+
+    query_params = Keyword.merge([
+      type: :models,
+      downloadable: true,
+      count: @page_size,
+      max_face_count: @max_face_count,
+      max_filesizes: "gltf:#{@max_file_size_bytes}",
+      processing_status: :succeeded,
+      cursor: cursor,
+      categories: filter,
+      q: q
+    ], additional_params)
+
+    query = URI.encode_query(query_params)
 
     sketchfab_search(query)
   end
