@@ -80,7 +80,9 @@ import_config "prod.secret.exs"
 
 # Filter out media search API params
 config :phoenix, :filter_parameters, ["q", "filter", "cursor"]
-config :ret, Ret.Repo, adapter: Ecto.Adapters.Postgres
+
+# Disable prepared queries bc of pgbouncer
+config :ret, Ret.Repo, adapter: Ecto.Adapters.Postgres, prepare: :unnamed
 
 config :peerage, via: Ret.PeerageProvider
 
@@ -96,9 +98,9 @@ config :ret, Ret.Scheduler,
     {{:cron, "0 10 * * *"}, {Ret.Storage, :vacuum, []}},
     {{:cron, "5 10 * * *"}, {Ret.Storage, :demote_inactive_owned_files, []}},
     {{:cron, "10 10 * * *"}, {Ret.LoginToken, :expire_stale, []}},
-    {{:cron, "15 10 * * *"}, {Ret.Hub, :vacuum_entry_codes, []}},
-    {{:cron, "20 10 * * *"}, {Ret.Hub, :vacuum_hosts, []}},
-    {{:cron, "25 10 * * *"}, {Ret.CachedFile, :vacuum, []}}
+    {{:cron, "11 10 * * *"}, {Ret.Hub, :vacuum_entry_codes, []}},
+    {{:cron, "12 10 * * *"}, {Ret.Hub, :vacuum_hosts, []}},
+    {{:cron, "13 10 * * *"}, {Ret.CachedFile, :vacuum, []}}
   ]
 
 config :ret, RetWeb.Plugs.HeaderAuthorization, header_name: "x-ret-admin-access-key"
@@ -123,5 +125,20 @@ config :sentry,
   }
 
 config :ret, Ret.RoomAssigner, balancer_weights: [{600, 1}, {300, 50}, {0, 500}]
-config :ret, Ret.Locking, lock_timeout_ms: 1000 * 60 * 15
+
+config :ret, Ret.Locking,
+  lock_timeout_ms: 1000 * 60 * 15,
+  session_lock_db: [
+    username: "postgres",
+    password: "postgres",
+    database: "ret_production",
+    hostname: "localhost"
+  ]
+
 config :ret, Ret.JanusLoadStatus, janus_port: 443
+
+# Default stats job to off so for polycosm hosts the database can go idle
+config :ret, Ret.StatsJob, node_stats_enabled: false, node_gauges_enabled: false
+
+# Default repo check and page check to off so for polycosm hosts database + s3 hits can go idle
+config :ret, RetWeb.HealthController, check_repo: false

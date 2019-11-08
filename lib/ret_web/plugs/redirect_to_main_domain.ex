@@ -28,7 +28,7 @@ defmodule RetWeb.Plugs.RedirectToMainDomain do
     end
   end
 
-  defp matches_host(conn, nil), do: false
-  defp matches_host(conn, ""), do: false
+  defp matches_host(_conn, nil), do: false
+  defp matches_host(_conn, ""), do: false
   defp matches_host(conn, host), do: Regex.match?(~r/\A#{conn.host}\z/i, host)
 end

@@ -1,5 +1,4 @@
 defmodule Ret.AppConfig do
-  use Cachex.Warmer
   use Ecto.Schema
   import Ecto.Changeset
 
@@ -16,10 +15,6 @@ defmodule Ret.AppConfig do
   end
 
   def interval, do: :timer.seconds(15)
-
-  def execute(_state) do
-    {:ok, [{:app_config, get_config()}]}
-  end
 
   def changeset(%AppConfig{} = app_config, key, %OwnedFile{} = owned_file) do
     app_config
@@ -38,19 +33,23 @@ defmodule Ret.AppConfig do
     |> unique_constraint(:key)
   end
 
-  def get_config() do
-    try do
+  def get_config(skip_cache \\ false) do
+    result = if skip_cache do fetch_config("") else Cachex.fetch(:app_config, "") end 
+
+    case result do
+      { status, config } when status in [:commit, :ok] -> config
+    end
+  end
+
+  def fetch_config(_arg) do
+    config =
       AppConfig
       |> Repo.all()
       |> Repo.preload(:owned_file)
       |> Enum.map(fn app_config -> expand_key(app_config.key, app_config) end)
       |> Enum.reduce(%{}, fn config, acc -> deep_merge(acc, config) end)
-    rescue
-      # The page warmer fetches configs on startup, so we don't want to block startup if this fails.
-      # e.g. It will definitely fail the very first time since DB migrations need to run before configs
-      # are available.
-      _ -> %{}
-    end
+
+    {:commit, config}
   end
 
   defp expand_key(key, app_config) do
