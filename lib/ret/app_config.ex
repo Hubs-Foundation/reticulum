@@ -38,6 +38,11 @@ defmodule Ret.AppConfig do
 
     case result do
       { status, config } when status in [:commit, :ok] -> config
+
+  def get_config_value(key) do
+    case AppConfig |> Repo.get_by(key: key) do
+      %AppConfig{} = app_config -> app_config.value["value"]
+      nil -> nil
     end
   end
 
