@@ -34,10 +34,17 @@ defmodule Ret.AppConfig do
   end
 
   def get_config(skip_cache \\ false) do
-    result = if skip_cache do fetch_config("") else Cachex.fetch(:app_config, "") end 
+    result =
+      if skip_cache do
+        fetch_config("")
+      else
+        Cachex.fetch(:app_config, "")
+      end
 
     case result do
-      { status, config } when status in [:commit, :ok] -> config
+      {status, config} when status in [:commit, :ok] -> config
+    end
+  end
 
   def get_config_value(key) do
     case AppConfig |> Repo.get_by(key: key) do
