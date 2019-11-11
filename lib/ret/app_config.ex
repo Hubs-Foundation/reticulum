@@ -86,4 +86,33 @@ defmodule Ret.AppConfig do
       _ -> [{parent_key |> String.trim("|"), config}]
     end
   end
+
+  def get_config_value(key) do
+    case AppConfig |> Repo.get_by(key: key) do
+      %AppConfig{} = app_config -> app_config.value["value"]
+      nil -> nil
+    end
+  end
+
+  def get_config_owned_file_uri(key) do
+    app_config = AppConfig |> Repo.get_by(key: key) |> Repo.preload(:owned_file)
+
+    with %AppConfig{owned_file: %OwnedFile{} = owned_file} <- app_config do
+      owned_file |> OwnedFile.uri_for() |> URI.to_string()
+    else
+      _ -> nil
+    end
+  end
+
+  def get_cached_config_value(key) do
+    case Cachex.fetch(:app_config_value, key) do
+      {status, result} when status in [:commit, :ok] -> result
+    end
+  end
+
+  def get_cached_config_owned_file_uri(key) do
+    case Cachex.fetch(:app_config_owned_file_uri, key) do
+      {status, result} when status in [:commit, :ok] -> result
+    end
+  end
 end
