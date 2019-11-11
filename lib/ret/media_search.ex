@@ -326,6 +326,14 @@ defmodule Ret.MediaSearch do
     end
   end
 
+  def available?(:poly), do: has_resolver_config?(:google_poly_api_key)
+  def available?(:bing_images), do: has_resolver_config?(:bing_search_api_key)
+  def available?(:bing_videos), do: has_resolver_config?(:bing_search_api_key)
+  def available?(:youtube_videos), do: has_resolver_config?(:youtube_api_key)
+  def available?(:sketchfab), do: has_resolver_config?(:sketchfab_api_key)
+  def available?(:tenor), do: has_resolver_config?(:tenor_api_key)
+  def available?(:twitch), do: has_resolver_config?(:twitch_client_id)
+
   defp sketchfab_search(query) do
     with api_key when is_binary(api_key) <- resolver_config(:sketchfab_api_key) do
       res =
@@ -833,6 +841,10 @@ defmodule Ret.MediaSearch do
       url: result["channel"]["url"],
       images: %{preview: %{url: result["preview"]["large"]}}
     }
+  end
+
+  defp has_resolver_config?(key) do
+    !!resolver_config(key)
   end
 
   defp resolver_config(key) do

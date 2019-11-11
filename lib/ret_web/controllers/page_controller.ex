@@ -174,30 +174,6 @@ defmodule RetWeb.PageController do
     |> send_resp(200, thumbnail)
   end
 
-  defp get_configurable_asset(cache_key, config_key, fallback_file) do
-    case Cachex.get(:assets, cache_key) do
-      {:ok, nil} ->
-        app_config = AppConfig |> Repo.get_by(key: config_key) |> Repo.preload(:owned_file)
-
-        asset =
-          with %AppConfig{owned_file: %OwnedFile{} = owned_file} <- app_config,
-               {:ok, _meta, stream} <- Storage.fetch(owned_file) do
-            stream |> Enum.join("")
-          else
-            _ -> chunks_for_page(fallback_file, :hubs) |> List.flatten() |> Enum.join("\n")
-          end
-
-        unless module_config(:skip_cache) do
-          Cachex.put(:assets, cache_key, asset, ttl: :timer.seconds(15))
-        end
-
-        asset
-
-      {:ok, asset} ->
-        asset
-    end
-  end
-
   def render_for_path("/admin", _params, conn), do: conn |> render_page("admin.html", :admin)
 
   def render_for_path("/" <> path, params, conn) do
@@ -219,6 +195,30 @@ defmodule RetWeb.PageController do
         end
 
       render_hub_content(conn, hub, subresource |> Enum.at(0))
+    end
+  end
+
+  defp get_configurable_asset(cache_key, config_key, fallback_file) do
+    case Cachex.get(:assets, cache_key) do
+      {:ok, nil} ->
+        app_config = AppConfig |> Repo.get_by(key: config_key) |> Repo.preload(:owned_file)
+
+        asset =
+          with %AppConfig{owned_file: %OwnedFile{} = owned_file} <- app_config,
+               {:ok, _meta, stream} <- Storage.fetch(owned_file) do
+            stream |> Enum.join("")
+          else
+            _ -> chunks_for_page(fallback_file, :hubs) |> List.flatten() |> Enum.join("\n")
+          end
+
+        unless module_config(:skip_cache) do
+          Cachex.put(:assets, cache_key, asset, ttl: :timer.seconds(15))
+        end
+
+        asset
+
+      {:ok, asset} ->
+        asset
     end
   end
 
@@ -248,14 +248,6 @@ defmodule RetWeb.PageController do
       AppConfig.get_config_value(key)
     else
       AppConfig.get_cached_config_value(key)
-    end
-  end
-
-  defp get_app_config_owned_file_uri(key) do
-    if module_config(:skip_cache) do
-      AppConfig.get_config_owned_file_uri(key)
-    else
-      AppConfig.get_cached_config_owned_file_uri(key)
     end
   end
 
@@ -294,13 +286,18 @@ defmodule RetWeb.PageController do
 
   def render_hub_content(conn, hub, _slug) do
     hub = hub |> Repo.preload(scene: [:screenshot_owned_file], scene_listing: [:screenshot_owned_file])
+
     {app_config_script, app_config_csp} = generate_app_config()
+
+    {available_integrations_script, available_integrations_csp} =
+      Ret.Meta.available_integrations_meta() |> generate_config("AVAILABLE_INTEGRATIONS")
 
     hub_meta_tags =
       Phoenix.View.render_to_string(RetWeb.PageView, "hub-meta.html",
         hub: hub,
         scene: hub.scene,
         ret_meta: Ret.Meta.get_meta(include_repo: false),
+        available_integrations_script: {:safe, available_integrations_script},
         app_config_script: {:safe, app_config_script}
       )
 
@@ -310,19 +307,22 @@ defmodule RetWeb.PageController do
 
     conn
     |> append_csp("script-src", app_config_csp)
+    |> append_csp("script-src", available_integrations_csp)
     |> put_resp_header("content-type", "text/html; charset=utf-8")
     |> send_resp(200, chunks)
   end
 
-  defp generate_app_config() do
-    app_config = Ret.AppConfig.get_config(!!module_config(:skip_cache))
+  def generate_app_config() do
+    Ret.AppConfig.get_config(!!module_config(:skip_cache)) |> generate_config("APP_CONFIG")
+  end
 
-    app_config_json = app_config |> Poison.encode!()
-    app_config_script = "window.APP_CONFIG = JSON.parse('#{app_config_json |> String.replace("'", "\\'")}')"
+  defp generate_config(config, name) do
+    config_json = config |> Poison.encode!()
+    config_script = "window.#{name} = JSON.parse('#{config_json |> String.replace("'", "\\'")}')"
 
-    app_config_csp = "'sha256-#{:crypto.hash(:sha256, app_config_script) |> :base64.encode()}'"
+    config_csp = "'sha256-#{:crypto.hash(:sha256, config_script) |> :base64.encode()}'"
 
-    {"<script>#{app_config_script}</script>", app_config_csp}
+    {"<script>#{config_script}</script>", config_csp}
   end
 
   # Redirect to the specified hub identifier, which can be a sid or an entry code

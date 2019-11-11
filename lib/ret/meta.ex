@@ -36,6 +36,19 @@ defmodule Ret.Meta do
     }
   end
 
+  def available_integrations_meta do
+    %{
+      twitter: Ret.TwitterClient.available?(),
+      poly: Ret.MediaSearch.available?(:poly),
+      bing_images: Ret.MediaSearch.available?(:bing_images),
+      bing_videos: Ret.MediaSearch.available?(:bing_videos),
+      youtube_videos: Ret.MediaSearch.available?(:youtube_videos),
+      sketchfab: Ret.MediaSearch.available?(:sketchfab),
+      tenor: Ret.MediaSearch.available?(:tenor),
+      twitch: Ret.MediaSearch.available?(:twitch)
+    }
+  end
+
   defp module_config(key) do
     Application.get_env(:ret, __MODULE__)[key]
   end

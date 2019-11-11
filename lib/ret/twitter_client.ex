@@ -89,6 +89,11 @@ defmodule Ret.TwitterClient do
     end
   end
 
+  def available?() do
+    !!(module_config(:consumer_key) && module_config(:consumer_secret) && module_config(:access_token) &&
+         module_config(:access_token_secret))
+  end
+
   defp wait_for_upload_finished(media_id, creds, iteration \\ 0) do
     if iteration < 60 do
       url = "#{@twitter_upload_api_base}/1.1/media/upload.json"

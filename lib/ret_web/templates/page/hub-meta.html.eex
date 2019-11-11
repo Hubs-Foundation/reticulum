@@ -19,4 +19,5 @@
 <meta name="ret:pool" value="<%= @ret_meta[:pool] %>" />
 <link rel="apple-touch-icon" href="/app-icon.png">
 <title><%= @hub.name %> | Hubs by Mozilla</title>
+<%= @available_integrations_script %>
 <%= @app_config_script %>

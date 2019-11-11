@@ -34,10 +34,15 @@ defmodule Ret.AppConfig do
   end
 
   def get_config(skip_cache \\ false) do
-    result = if skip_cache do fetch_config("") else Cachex.fetch(:app_config, "") end 
+    result =
+      if skip_cache do
+        fetch_config("")
+      else
+        Cachex.fetch(:app_config, "")
+      end
 
     case result do
-      { status, config } when status in [:commit, :ok] -> config
+      {status, config} when status in [:commit, :ok] -> config
     end
   end
 
@@ -50,33 +55,6 @@ defmodule Ret.AppConfig do
       |> Enum.reduce(%{}, fn config, acc -> deep_merge(acc, config) end)
 
     {:commit, config}
-  end
-
-  defp expand_key(key, app_config) do
-    if key |> String.contains?("|") do
-      [head, tail] = key |> String.split("|", parts: 2)
-      %{head => expand_key(tail, app_config)}
-    else
-      case app_config.owned_file do
-        %OwnedFile{} ->
-          %{key => app_config.owned_file |> OwnedFile.uri_for() |> URI.to_string()}
-
-        _ ->
-          %{key => app_config.value["value"]}
-      end
-    end
-  end
-
-  defp deep_merge(left, right) do
-    Map.merge(left, right, &deep_resolve/3)
-  end
-
-  defp deep_resolve(_key, left = %{}, right = %{}) do
-    deep_merge(left, right)
-  end
-
-  defp deep_resolve(_key, _left, right) do
-    right
   end
 
   def collapse(config, parent_key \\ "") do
@@ -114,5 +92,32 @@ defmodule Ret.AppConfig do
     case Cachex.fetch(:app_config_owned_file_uri, key) do
       {status, result} when status in [:commit, :ok] -> result
     end
+  end
+
+  defp expand_key(key, app_config) do
+    if key |> String.contains?("|") do
+      [head, tail] = key |> String.split("|", parts: 2)
+      %{head => expand_key(tail, app_config)}
+    else
+      case app_config.owned_file do
+        %OwnedFile{} ->
+          %{key => app_config.owned_file |> OwnedFile.uri_for() |> URI.to_string()}
+
+        _ ->
+          %{key => app_config.value["value"]}
+      end
+    end
+  end
+
+  defp deep_merge(left, right) do
+    Map.merge(left, right, &deep_resolve/3)
+  end
+
+  defp deep_resolve(_key, left = %{}, right = %{}) do
+    deep_merge(left, right)
+  end
+
+  defp deep_resolve(_key, _left, right) do
+    right
   end
 end
