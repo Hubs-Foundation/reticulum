@@ -21,5 +21,5 @@
 <meta name="msapplication-tooltip" content="Share a virtual room with friends.">
 <meta name="msapplication-starturl" content="/">
 <meta name="application-name" content="Hubs">
-<link rel="apple-touch-icon" href="<%= @app_icon %>">
+<link rel="apple-touch-icon" href="<%= @root_url %>/app-icon.png">
 <%= @app_config_script %>

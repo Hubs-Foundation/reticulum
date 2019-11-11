@@ -17,6 +17,7 @@ defmodule Ret.PageOriginWarmer do
              schema.toml
              favicon.ico
              app-thumbnail.png
+             app-icon.png
            ),
            admin: ~w(admin.html),
            spoke: ~w(index.html)

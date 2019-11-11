@@ -17,6 +17,6 @@
 <meta name="ret:phx_host" value="<%= @ret_meta[:phx_host] %>" />
 <meta name="ret:phx_port" value="<%= @ret_meta[:phx_port] %>" />
 <meta name="ret:pool" value="<%= @ret_meta[:pool] %>" />
-<link rel="apple-touch-icon" href="<%= @app_icon %>">
+<link rel="apple-touch-icon" href=/app-icon.png>">
 <title><%= @hub.name %> | Hubs by Mozilla</title>
 <%= @app_config_script %>

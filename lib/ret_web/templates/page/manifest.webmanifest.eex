@@ -6,22 +6,22 @@
   "short_name": "<%= @app_name %>",
   "icons": [
     {
-      "src": "<%= @app_icon %>",
+      "src": "<%= @root_url %>/app-icon.png",
       "sizes": "120x120",
       "type": "image/png"
     },
     {
-      "src": "<%= @app_icon %>",
+      "src": "<%= @root_url %>/app-icon.png",
       "sizes": "180x180",
       "type": "image/png"
     },
     {
-      "src": "<%= @app_icon %>",
+      "src": "<%= @root_url %>/app-icon.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "<%= @app_icon %>",
+      "src": "<%= @root_url %>/app-icon.png",
       "sizes": "512x512",
       "type": "image/png"
     }

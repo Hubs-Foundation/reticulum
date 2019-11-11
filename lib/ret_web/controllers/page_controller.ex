@@ -3,7 +3,8 @@ defmodule RetWeb.PageController do
   alias Ret.{Repo, Hub, Scene, SceneListing, Avatar, AppConfig, OwnedFile, AvatarListing, PageOriginWarmer, Storage}
   alias Plug.Conn
 
-  @default_app_icon "https://assets-prod.reticulum.io/assets/images/pwaicon-512-hubs.png"
+  @default_app_name "Hubs"
+  @default_app_description "Share a virtual room with friends. Watch videos, play with 3D objects, or just hang out."
 
   def call(conn, _params) do
     case conn.request_path do
@@ -124,14 +125,11 @@ defmodule RetWeb.PageController do
       manifest =
         case Cachex.get(:assets, :manifest) do
           {:ok, nil} ->
-            default_app_description =
-              "Share a virtual room with friends. Watch videos, play with 3D objects, or just hang out."
-
             manifest =
               Phoenix.View.render_to_string(RetWeb.PageView, "manifest.webmanifest",
-                app_name: get_app_config_value("translations|en|app-name") || "Hubs",
-                app_description: get_app_config_value("translations|en|app-description") || default_app_description,
-                app_icon: get_app_config_owned_file_uri("images|app_icon") || @default_app_icon
+                root_url: RetWeb.Endpoint.url(),
+                app_name: get_app_config_value("translations|en|app-name") || @default_app_name,
+                app_description: get_app_config_value("translations|en|app-description") || @default_app_description
               )
 
             unless module_config(:skip_cache) do
@@ -158,6 +156,14 @@ defmodule RetWeb.PageController do
     conn
     |> put_resp_header("content-type", "image/x-icon")
     |> send_resp(200, favicon)
+  end
+
+  def render_for_path("/app-icon.png", _params, conn) do
+    icon = get_configurable_asset(:app_config_app_icon, "images|app_icon", "app-icon.png")
+
+    conn
+    |> put_resp_header("content-type", "image/png")
+    |> send_resp(200, icon)
   end
 
   def render_for_path("/app-thumbnail.png", _params, conn) do
@@ -224,8 +230,7 @@ defmodule RetWeb.PageController do
         RetWeb.PageView,
         "index-meta.html",
         root_url: RetWeb.Endpoint.url(),
-        app_config_script: {:safe, app_config_script},
-        app_icon: get_app_config_owned_file_uri("images|app_icon") || @default_app_icon
+        app_config_script: {:safe, app_config_script}
       )
 
     chunks =
@@ -296,8 +301,7 @@ defmodule RetWeb.PageController do
         hub: hub,
         scene: hub.scene,
         ret_meta: Ret.Meta.get_meta(include_repo: false),
-        app_config_script: {:safe, app_config_script},
-        app_icon: get_app_config_owned_file_uri("images|app_icon") || @default_app_icon
+        app_config_script: {:safe, app_config_script}
       )
 
     chunks =
