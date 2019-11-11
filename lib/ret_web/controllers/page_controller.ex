@@ -174,30 +174,6 @@ defmodule RetWeb.PageController do
     |> send_resp(200, thumbnail)
   end
 
-  defp get_configurable_asset(cache_key, config_key, fallback_file) do
-    case Cachex.get(:assets, cache_key) do
-      {:ok, nil} ->
-        app_config = AppConfig |> Repo.get_by(key: config_key) |> Repo.preload(:owned_file)
-
-        asset =
-          with %AppConfig{owned_file: %OwnedFile{} = owned_file} <- app_config,
-               {:ok, _meta, stream} <- Storage.fetch(owned_file) do
-            stream |> Enum.join("")
-          else
-            _ -> chunks_for_page(fallback_file, :hubs) |> List.flatten() |> Enum.join("\n")
-          end
-
-        unless module_config(:skip_cache) do
-          Cachex.put(:assets, cache_key, asset, ttl: :timer.seconds(15))
-        end
-
-        asset
-
-      {:ok, asset} ->
-        asset
-    end
-  end
-
   def render_for_path("/admin", _params, conn), do: conn |> render_page("admin.html", :admin)
 
   def render_for_path("/" <> path, params, conn) do
@@ -219,6 +195,30 @@ defmodule RetWeb.PageController do
         end
 
       render_hub_content(conn, hub, subresource |> Enum.at(0))
+    end
+  end
+
+  defp get_configurable_asset(cache_key, config_key, fallback_file) do
+    case Cachex.get(:assets, cache_key) do
+      {:ok, nil} ->
+        app_config = AppConfig |> Repo.get_by(key: config_key) |> Repo.preload(:owned_file)
+
+        asset =
+          with %AppConfig{owned_file: %OwnedFile{} = owned_file} <- app_config,
+               {:ok, _meta, stream} <- Storage.fetch(owned_file) do
+            stream |> Enum.join("")
+          else
+            _ -> chunks_for_page(fallback_file, :hubs) |> List.flatten() |> Enum.join("\n")
+          end
+
+        unless module_config(:skip_cache) do
+          Cachex.put(:assets, cache_key, asset, ttl: :timer.seconds(15))
+        end
+
+        asset
+
+      {:ok, asset} ->
+        asset
     end
   end
 
@@ -248,14 +248,6 @@ defmodule RetWeb.PageController do
       AppConfig.get_config_value(key)
     else
       AppConfig.get_cached_config_value(key)
-    end
-  end
-
-  defp get_app_config_owned_file_uri(key) do
-    if module_config(:skip_cache) do
-      AppConfig.get_config_owned_file_uri(key)
-    else
-      AppConfig.get_cached_config_owned_file_uri(key)
     end
   end
 
