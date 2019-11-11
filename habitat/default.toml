@@ -8,6 +8,7 @@ secret_key = "txlMOtlaY5x3crvOCko4uV5PM29ul3zGo1oBGNO3cDXx+7GHLKqt0gR9qzgThxb5"
 url_host_prefix = ""
 static_url_host_prefix = ""
 admin_access_key = ""
+secondary_url_host = ""
 
 [guardian]
 secret_key = "txlMOtlaY5x3crvOCko4uV5PM29ul3zGo1oBGNO3cDXx+7GHLKqt0gR9qzgThxb5"

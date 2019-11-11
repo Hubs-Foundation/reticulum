@@ -39,3 +39,6 @@ log
 
 # Storage
 /storage/
+
+#VS Code
+.vscode

@@ -80,7 +80,8 @@ defmodule Ret.Application do
         [
           :app_config,
           [
-            warmers: [warmer(module: Ret.AppConfig)]
+            expiration: expiration(default: :timer.seconds(10)),
+            fallback: fallback(default: &Ret.AppConfig.fetch_config/1)
           ]
         ],
         id: :app_config_cache
