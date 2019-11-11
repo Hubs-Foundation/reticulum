@@ -27,7 +27,7 @@ defmodule Ret.MediaSearch do
   # HACK for now to reduce page size for scene listings -- real fix will be to expose page_size to API
   @scene_page_size 23
   @max_face_count 60000
-  @max_file_size_bytes 20 * 1048576
+  @max_file_size_bytes 20 * 1_048_576
 
   def search(%Ret.MediaSearchQuery{source: "scene_listings", cursor: cursor, filter: "featured", q: query}) do
     scene_listing_search(cursor, query, "featured", asc: :order)
@@ -63,7 +63,8 @@ defmodule Ret.MediaSearch do
     favorites_search(cursor, type, account_id, q)
   end
 
-  def search(%Ret.MediaSearchQuery{source: "sketchfab", cursor: cursor, filter: nil, collection: nil, q: q}) when q == nil or q == "" do
+  def search(%Ret.MediaSearchQuery{source: "sketchfab", cursor: cursor, filter: nil, collection: nil, q: q})
+      when q == nil or q == "" do
     search(%Ret.MediaSearchQuery{source: "sketchfab", cursor: cursor, filter: "featured", q: q})
   end
 
@@ -130,23 +131,28 @@ defmodule Ret.MediaSearch do
   end
 
   def search(%Ret.MediaSearchQuery{source: "sketchfab", cursor: cursor, filter: filter, q: q}) do
-    additional_params = if q == nil || q == "" do
-      [staffpicked: true, sort_by: "-publishedAt"]
-    else
-      []
-    end
+    additional_params =
+      if q == nil || q == "" do
+        [staffpicked: true, sort_by: "-publishedAt"]
+      else
+        []
+      end
 
-    query_params = Keyword.merge([
-      type: :models,
-      downloadable: true,
-      count: @page_size,
-      max_face_count: @max_face_count,
-      max_filesizes: "gltf:#{@max_file_size_bytes}",
-      processing_status: :succeeded,
-      cursor: cursor,
-      categories: filter,
-      q: q
-    ], additional_params)
+    query_params =
+      Keyword.merge(
+        [
+          type: :models,
+          downloadable: true,
+          count: @page_size,
+          max_face_count: @max_face_count,
+          max_filesizes: "gltf:#{@max_file_size_bytes}",
+          processing_status: :succeeded,
+          cursor: cursor,
+          categories: filter,
+          q: q
+        ],
+        additional_params
+      )
 
     query = URI.encode_query(query_params)
 
@@ -616,7 +622,7 @@ defmodule Ret.MediaSearch do
       if scene_or_scene_listing do
         scene_or_scene_listing_to_entry(scene_or_scene_listing).images
       else
-        %{preview: %{url: "#{RetWeb.Endpoint.url()}/hub-preview.png"}}
+        %{preview: %{url: "#{RetWeb.Endpoint.url()}/app-thumbnail.png"}}
       end
 
     %{
