@@ -28,6 +28,7 @@ defmodule Ret.SceneListing do
     belongs_to(:screenshot_owned_file, Ret.OwnedFile, references: :owned_file_id)
     belongs_to(:scene_owned_file, Ret.OwnedFile, references: :owned_file_id)
     has_one(:account, through: [:scene, :account])
+    has_one(:project, through: [:scene, :project])
     field(:order, :integer)
     field(:state, SceneListing.State)
 

@@ -1,6 +1,6 @@
 defmodule RetWeb.Api.V1.SceneView do
   use RetWeb, :view
-  alias Ret.{OwnedFile, Scene, SceneListing}
+  alias Ret.{OwnedFile, Scene, SceneListing, Project}
 
   def render("create.json", %{scene: scene}) do
     %{scenes: [render_scene(scene)]}
@@ -17,6 +17,9 @@ defmodule RetWeb.Api.V1.SceneView do
   def render_scene(scene) do
     map = %{
       scene_id: scene |> Scene.to_sid(),
+      parent_scene_id: scene.parent_scene |> Scene.to_sid(),
+      parent_scene_listing_id: scene.parent_scene_listing |> Scene.to_sid(),
+      project_id: scene.project |> Project.to_sid(),
       name: scene.name,
       description: scene.description,
       attributions: scene.attributions,

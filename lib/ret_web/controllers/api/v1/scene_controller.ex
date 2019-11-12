@@ -10,7 +10,10 @@ defmodule RetWeb.Api.V1.SceneController do
   end
 
   defp preload(%Scene{} = a, preloads) do
-    a |> Repo.preload([:model_owned_file, :screenshot_owned_file, :scene_owned_file] ++ preloads)
+    a
+    |> Repo.preload(
+      [:model_owned_file, :screenshot_owned_file, :scene_owned_file, :parent_scene, :parent_scene_listing, :project] ++ preloads
+    )
   end
 
   def show(conn, %{"id" => scene_sid}) do
@@ -24,6 +27,18 @@ defmodule RetWeb.Api.V1.SceneController do
     case scene_sid |> get_scene() do
       %Scene{} = scene -> create_or_update(conn, params, scene)
       _ -> conn |> send_resp(404, "not found")
+    end
+  end
+
+  def create(conn, %{"parent_scene_id" => scene_sid}) do
+    account = Guardian.Plug.current_resource(conn)
+
+    case scene_sid |> get_scene() do
+      %t{} = s when t in [Scene, SceneListing] ->
+        conn |> render("show.json", scene: s |> Scene.new_scene_from_parent_scene(account))
+
+      _ ->
+        conn |> send_resp(404, "not found")
     end
   end
 
@@ -42,9 +57,10 @@ defmodule RetWeb.Api.V1.SceneController do
   end
 
   defp get_scene(scene_sid) do
-    scene_sid
-    |> Scene.scene_or_scene_listing_by_sid()
-    |> Repo.preload([:account, :model_owned_file, :screenshot_owned_file, :scene_owned_file])
+    case scene_sid |> Scene.scene_or_scene_listing_by_sid() do
+      nil -> nil
+      scene -> scene |> preload([:account])
+    end
   end
 
   defp create_or_update(conn, params, scene \\ %Scene{}) do

@@ -1,6 +1,6 @@
 defmodule RetWeb.Api.V1.ProjectView do
   use RetWeb, :view
-  alias Ret.{OwnedFile}
+  alias Ret.{OwnedFile, Scene}
 
   defp url_for_file(%Ret.OwnedFile{} = f), do: f |> OwnedFile.uri_for() |> URI.to_string()
   defp url_for_file(_), do: nil
@@ -10,7 +10,8 @@ defmodule RetWeb.Api.V1.ProjectView do
       project_id: project.project_sid,
       name: project.name,
       project_url: url_for_file(project.project_owned_file),
-      thumbnail_url: url_for_file(project.thumbnail_owned_file)
+      thumbnail_url: url_for_file(project.thumbnail_owned_file),
+      scene_id: project.scene |> Scene.to_sid()
     }
   end
 
