@@ -20,21 +20,26 @@ defmodule Ret.PageOriginWarmer do
          admin_page_origin when is_binary(admin_page_origin) <- module_config(:admin_page_origin),
          spoke_page_origin when is_binary(spoke_page_origin) <- module_config(:spoke_page_origin) do
       # Don't bother with the full fetch if the aggregated etag hasn't changed
-      {:ok, last_aggregated_etag} = Cachex.get(:page_chunks, :last_aggregated_etag)
-      latest_aggregated_etag = get_aggregated_etag()
+      case Cachex.get(:page_chunks, :last_aggregated_etag) do
+        {:ok, last_aggregated_etag} ->
+          latest_aggregated_etag = get_aggregated_etag()
 
-      if last_aggregated_etag !== latest_aggregated_etag do
-        cache_values =
-          @pages
-          |> Enum.map(fn {source, page} -> Task.async(fn -> page_to_cache_entry(source, page) end) end)
-          |> Enum.map(&Task.await(&1, 15_000))
-          |> Enum.reject(&is_nil/1)
+          if last_aggregated_etag !== latest_aggregated_etag do
+            cache_values =
+              @pages
+              |> Enum.map(fn {source, page} -> Task.async(fn -> page_to_cache_entry(source, page) end) end)
+              |> Enum.map(&Task.await(&1, 15_000))
+              |> Enum.reject(&is_nil/1)
 
-        Cachex.put(:page_chunks, :last_aggregated_etag, latest_aggregated_etag)
+            Cachex.put(:page_chunks, :last_aggregated_etag, latest_aggregated_etag)
 
-        {:ok, cache_values}
-      else
-        :ignore
+            {:ok, cache_values}
+          else
+            :ignore
+          end
+
+        _ ->
+          :ignore
       end
     else
       _ -> {:ok, []}

@@ -201,12 +201,12 @@ defmodule Ret.Repo.Migrations.AdminSchemaInit do
     -- Create a view with the primary key renamed to id 
     execute 'create or replace view ret0_admin.' || name
     || ' as (select ' || pk || ' as id, '
-    || ' cast(' || pk || ' as varchar) as _text_id, ' || extra_columns
+    || ' cast(' || pk || ' as varchar) as _text_id, '
     || array_to_string(ARRAY(SELECT 'o' || '.' || c.column_name
             FROM information_schema.columns As c
                 WHERE table_name = name AND table_schema = 'ret0'
                 AND  c.column_name NOT IN(pk)
-        ), ',') ||
+        ), ',') || extra_columns ||
     				' from ret0.' || name || ' as o ' || extra_clauses || ')';
 
     end
