@@ -39,17 +39,21 @@ defmodule RetWeb.Api.V1.SceneView do
   end
 
   defp add_scene_or_listing_fields(map, %SceneListing{} = scene_listing) do
-    map |> add_scene_or_listing_fields(scene_listing.scene)
+    map
+    |> add_scene_or_listing_fields(scene_listing.scene)
+    |> Meap.merge(%{
+      type: "scene_listing"
+    })
   end
 
   defp add_scene_or_listing_fields(map, %Scene{} = scene) do
-    fields = %{
+    map
+    |> Map.merge(%{
       attribution: scene.attribution,
       allow_remixing: scene.allow_remixing,
-      allow_promotion: scene.allow_promotion
-    }
-
-    map |> Map.merge(fields)
+      allow_promotion: scene.allow_promotion,
+      type: "scene"
+    })
   end
 
   defp allow_remixing?(%SceneListing{} = scene_listing), do: scene_listing.scene.allow_remixing
