@@ -27,9 +27,9 @@ defmodule Ret.MediaSearch do
   # HACK for now to reduce page size for scene listings -- real fix will be to expose page_size to API
   @scene_page_size 23
   @max_face_count 60000
-  @max_collection_face_count 200000
-  @max_file_size_bytes 20 * 1_048_576
-  @max_collection_file_size_bytes 100 * 1_048_576
+  @max_collection_face_count 200_000
+  @max_file_size_bytes 20 * 1024 * 1024
+  @max_collection_file_size_bytes 100 * 1024 * 1024
 
   def search(%Ret.MediaSearchQuery{source: "scene_listings", cursor: cursor, filter: "featured", q: query}) do
     scene_listing_search(cursor, query, "featured", asc: :order)
