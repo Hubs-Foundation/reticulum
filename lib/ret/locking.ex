@@ -17,18 +17,20 @@ defmodule Ret.Locking do
         password: password,
         database: database,
         queue_interval: 60_000,
-        timeout: 60_000
+        after_connect_timeout: 60_000,
+        timeout: 300_000,
+        ownership_timeout: 300_000
       )
 
     try do
       <<lock_key::little-signed-integer-size(64), _::binary>> = :crypto.hash(:sha256, lock_name |> to_string)
 
-      case Postgrex.query!(pid, "select pg_try_advisory_lock($1)", [lock_key]) do
+      case Postgrex.query!(pid, "select pg_try_advisory_lock($1)", [lock_key], timeout: 60_000) do
         %Postgrex.Result{rows: [[true]]} ->
           try do
             exec.()
           after
-            Postgrex.query!(pid, "select pg_advisory_unlock($1)", [lock_key])
+            Postgrex.query!(pid, "select pg_advisory_unlock($1)", [lock_key], timeout: 60_000)
           end
 
         _ ->
