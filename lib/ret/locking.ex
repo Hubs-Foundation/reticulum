@@ -16,7 +16,8 @@ defmodule Ret.Locking do
         username: username,
         password: password,
         database: database,
-        queue_interval: 40_000
+        queue_interval: 60_000,
+        timeout: 60_000
       )
 
     try do
