@@ -8,7 +8,16 @@ defmodule Ret.Locking do
     password = session_lock_db_config |> Keyword.get(:password)
     database = session_lock_db_config |> Keyword.get(:database)
 
-    {:ok, pid} = Postgrex.start_link(hostname: hostname, username: username, password: password, database: database)
+    # Set a long queue timeout here, since we need this to work even if the database is cold and 
+    # is starting up (eg AWS aurora)
+    {:ok, pid} =
+      Postgrex.start_link(
+        hostname: hostname,
+        username: username,
+        password: password,
+        database: database,
+        queue_interval: 40_000
+      )
 
     try do
       <<lock_key::little-signed-integer-size(64), _::binary>> = :crypto.hash(:sha256, lock_name |> to_string)
