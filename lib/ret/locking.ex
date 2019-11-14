@@ -30,7 +30,7 @@ defmodule Ret.Locking do
           try do
             exec.()
           after
-            Postgrex.query!(pid, "select pg_advisory_unlock($1)", [lock_key], timeout: 60_000)
+            Postgrex.query!(pid, "select pg_advisory_unlock($1)", [lock_key])
           end
 
         _ ->
@@ -46,7 +46,7 @@ defmodule Ret.Locking do
 
     Repo.checkout(
       fn ->
-        Ecto.Adapters.SQL.query!(Repo, "set idle_in_transaction_session_timeout = #{timeout};", [])
+        Ecto.Adapters.SQL.query!(Repo, "set idle_in_transaction_session_timeout = #{timeout};", [], timeout: 60_000)
 
         res =
           Repo.transaction(fn ->
@@ -73,7 +73,7 @@ defmodule Ret.Locking do
 
     Repo.checkout(
       fn ->
-        Ecto.Adapters.SQL.query!(Repo, "set idle_in_transaction_session_timeout = #{timeout};", [])
+        Ecto.Adapters.SQL.query!(Repo, "set idle_in_transaction_session_timeout = #{timeout};", [], timeout: 60_000)
 
         res =
           Repo.transaction(fn ->
