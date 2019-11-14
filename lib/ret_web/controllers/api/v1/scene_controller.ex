@@ -12,13 +12,15 @@ defmodule RetWeb.Api.V1.SceneController do
   defp preload(%Scene{} = a, preloads) do
     a
     |> Repo.preload(
-      [:model_owned_file, :screenshot_owned_file, :scene_owned_file, :parent_scene, :parent_scene_listing, :project] ++ preloads
+      [:model_owned_file, :screenshot_owned_file, :scene_owned_file, :parent_scene, :parent_scene_listing, :project, :account] ++
+        preloads
     )
   end
 
   def show(conn, %{"id" => scene_sid}) do
+    account = Guardian.Plug.current_resource(conn)
     case scene_sid |> get_scene() do
-      %t{} = s when t in [Scene, SceneListing] -> conn |> render("show.json", scene: s)
+      %t{} = s when t in [Scene, SceneListing] -> conn |> render("show.json", scene: s, account: account)
       _ -> conn |> send_resp(404, "not found")
     end
   end
@@ -35,7 +37,7 @@ defmodule RetWeb.Api.V1.SceneController do
 
     case scene_sid |> get_scene() do
       %t{} = s when t in [Scene, SceneListing] ->
-        conn |> render("show.json", scene: s |> Scene.new_scene_from_parent_scene(account))
+        conn |> render("show.json", account: account, scene: s |> Scene.new_scene_from_parent_scene(account) |> preload())
 
       _ ->
         conn |> send_resp(404, "not found")
@@ -113,7 +115,7 @@ defmodule RetWeb.Api.V1.SceneController do
 
         case result do
           :ok ->
-            conn |> render("create.json", scene: scene)
+            conn |> render("create.json", scene: scene, account: account)
 
           :error ->
             conn |> send_resp(422, "invalid scene")

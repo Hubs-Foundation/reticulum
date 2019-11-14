@@ -2,19 +2,19 @@ defmodule RetWeb.Api.V1.SceneView do
   use RetWeb, :view
   alias Ret.{OwnedFile, Scene, SceneListing, Project}
 
-  def render("create.json", %{scene: scene}) do
-    %{scenes: [render_scene(scene)]}
+  def render("create.json", %{scene: scene, account: account}) do
+    %{scenes: [render_scene(scene, account)]}
   end
 
-  def render("show.json", %{scene: scene}) do
-    %{scenes: [render_scene(scene)]}
+  def render("show.json", %{scene: scene, account: account}) do
+    %{scenes: [render_scene(scene, account)]}
   end
 
-  def render_scene(%Scene{state: :removed}), do: nil
-  def render_scene(%SceneListing{state: :delisted}), do: nil
+  def render_scene(%Scene{state: :removed}, account), do: nil
+  def render_scene(%SceneListing{state: :delisted}, account), do: nil
 
   # scene var passed in can be either a Ret.Scene or Ret.SceneListing
-  def render_scene(scene) do
+  def render_scene(scene, account) do
     map = %{
       scene_id: scene |> Scene.to_sid(),
       parent_scene_id: scene.parent_scene |> Scene.to_sid(),
@@ -35,20 +35,21 @@ defmodule RetWeb.Api.V1.SceneView do
         %{}
       end
 
-    map |> add_scene_or_listing_fields(scene) |> Map.merge(remix_fields)
+    map |> add_scene_or_listing_fields(scene, account) |> Map.merge(remix_fields)
   end
 
-  defp add_scene_or_listing_fields(map, %SceneListing{} = scene_listing) do
+  defp add_scene_or_listing_fields(map, %SceneListing{} = scene_listing, account) do
     map
-    |> add_scene_or_listing_fields(scene_listing.scene)
+    |> add_scene_or_listing_fields(scene_listing.scene, account)
     |> Meap.merge(%{
       type: "scene_listing"
     })
   end
 
-  defp add_scene_or_listing_fields(map, %Scene{} = scene) do
+  defp add_scene_or_listing_fields(map, %Scene{} = scene, account) do
     map
     |> Map.merge(%{
+      account_id: account && scene.account_id == account.account_id && scene.account_id |> Integer.to_string(),
       attribution: scene.attribution,
       allow_remixing: scene.allow_remixing,
       allow_promotion: scene.allow_promotion,

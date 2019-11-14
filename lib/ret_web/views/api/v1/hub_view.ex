@@ -35,7 +35,7 @@ defmodule RetWeb.Api.V1.HubView do
           entry_mode: hub.entry_mode,
           host: hub.host,
           port: janus_port(),
-          scene: RetWeb.Api.V1.SceneView.render_scene(hub.scene || hub.scene_listing),
+          scene: RetWeb.Api.V1.SceneView.render_scene(hub.scene || hub.scene_listing, nil),
           embed_token:
             if embeddable do
               hub.embed_token
