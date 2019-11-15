@@ -115,6 +115,7 @@ defmodule RetWeb.Router do
       post("/twitter/tweets", Api.V1.TwitterController, :tweets)
 
       resources("/projects", Api.V1.ProjectController, only: [:index, :show, :create, :update, :delete]) do
+        post("/publish", Api.V1.ProjectController, :publish)
         resources("/assets", Api.V1.ProjectAssetsController, only: [:index, :create, :delete])
       end
     end

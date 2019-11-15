@@ -49,6 +49,12 @@ defmodule Ret.Project do
     |> Repo.insert
   end
 
+  def add_scene_to_project(%Project{} = project, scene) do
+    project
+    |> put_assoc(:scene, scene)
+    |> Repo.update
+  end
+
   # Create a Project
   def changeset(%Project{} = project, account, params \\ %{}) do
     project
