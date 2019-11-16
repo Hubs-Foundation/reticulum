@@ -71,6 +71,9 @@ pipeline {
             sh "sudo /usr/bin/hab-pkg-promote '${packageIdent}' '${retPool}'"
             sh "sudo /usr/bin/hab-pkg-promote '${packageIdent}' 'stable'"
             sh "curl -X POST --data-urlencode ${shellString(payload)} ${slackURL}"
+
+            // Upload to ret depot after publishing to slack to minimize wait
+            sh 'sudo /usr/bin/hab-ret-pkg-upload $(ls -rt results/*.hart | head -n 1)'
         }
       }
     }
