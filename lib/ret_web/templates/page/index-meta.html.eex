@@ -14,12 +14,12 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:site" content="@byhubs">
 <meta name="twitter:title" content="Hubs by Mozilla">
-<meta name="twitter:image" content="https://hubs.mozilla.com/hub-preview.png">
+<meta name="twitter:image" content="<%= @root_url %>/app-thumbnail.png">
 <meta name="twitter:description" content="Private social VR in your web browser.">
 <!-- Microsoft Edge -->
 <meta name="application-name" content="Hubs by Mozilla">
 <meta name="msapplication-tooltip" content="Share a virtual room with friends.">
 <meta name="msapplication-starturl" content="/">
 <meta name="application-name" content="Hubs">
-<link rel="apple-touch-icon" sizes="180x180" href="https://assets-prod.reticulum.io/assets/images/pwaicon-180-hubs.png">
+<link rel="apple-touch-icon" href="/app-icon.png">
 <%= @app_config_script %>

@@ -50,6 +50,13 @@ defmodule Ret.Hub do
     pin_objects: true
   }
 
+  @default_restrictive_member_permissions %{
+    spawn_and_move_media: false,
+    spawn_camera: false,
+    spawn_drawing: false,
+    pin_objects: false
+  }
+
   schema "hubs" do
     field(:name, :string)
     field(:hub_sid, :string)
@@ -215,7 +222,7 @@ defmodule Ret.Hub do
   end
 
   def image_url_for(%Hub{scene: nil, scene_listing: nil}) do
-    "#{RetWeb.Endpoint.url()}/hub-preview.png"
+    "#{RetWeb.Endpoint.url()}/app-thumbnail.png"
   end
 
   def image_url_for(%Hub{scene: scene}) when scene != nil do
@@ -333,7 +340,11 @@ defmodule Ret.Hub do
   end
 
   defp add_default_member_permissions_to_changeset(changeset) do
-    changeset |> put_change(:member_permissions, @default_member_permissions |> member_permissions_to_int)
+    if Ret.AppConfig.get_config_value("features|permissive_rooms") do
+      changeset |> put_change(:member_permissions, @default_member_permissions |> member_permissions_to_int)
+    else
+      changeset |> put_change(:member_permissions, @default_restrictive_member_permissions |> member_permissions_to_int)
+    end
   end
 
   def add_owner!(%Hub{created_by_account_id: created_by_account_id} = hub, %Account{account_id: account_id})

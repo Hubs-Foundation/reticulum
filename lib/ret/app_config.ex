@@ -34,10 +34,15 @@ defmodule Ret.AppConfig do
   end
 
   def get_config(skip_cache \\ false) do
-    result = if skip_cache do fetch_config("") else Cachex.fetch(:app_config, "") end 
+    result =
+      if skip_cache do
+        fetch_config("")
+      else
+        Cachex.fetch(:app_config, "")
+      end
 
     case result do
-      { status, config } when status in [:commit, :ok] -> config
+      {status, config} when status in [:commit, :ok] -> config
     end
   end
 
@@ -50,6 +55,43 @@ defmodule Ret.AppConfig do
       |> Enum.reduce(%{}, fn config, acc -> deep_merge(acc, config) end)
 
     {:commit, config}
+  end
+
+  def collapse(config, parent_key \\ "") do
+    case config do
+      %{"file_id" => _} -> [{parent_key |> String.trim("|"), config}]
+      %{} -> config |> Enum.flat_map(fn {key, val} -> collapse(val, parent_key <> "|" <> key) end)
+      _ -> [{parent_key |> String.trim("|"), config}]
+    end
+  end
+
+  def get_config_value(key) do
+    case AppConfig |> Repo.get_by(key: key) do
+      %AppConfig{} = app_config -> app_config.value["value"]
+      nil -> nil
+    end
+  end
+
+  def get_config_owned_file_uri(key) do
+    app_config = AppConfig |> Repo.get_by(key: key) |> Repo.preload(:owned_file)
+
+    with %AppConfig{owned_file: %OwnedFile{} = owned_file} <- app_config do
+      owned_file |> OwnedFile.uri_for() |> URI.to_string()
+    else
+      _ -> nil
+    end
+  end
+
+  def get_cached_config_value(key) do
+    case Cachex.fetch(:app_config_value, key) do
+      {status, result} when status in [:commit, :ok] -> result
+    end
+  end
+
+  def get_cached_config_owned_file_uri(key) do
+    case Cachex.fetch(:app_config_owned_file_uri, key) do
+      {status, result} when status in [:commit, :ok] -> result
+    end
   end
 
   defp expand_key(key, app_config) do
@@ -77,13 +119,5 @@ defmodule Ret.AppConfig do
 
   defp deep_resolve(_key, _left, right) do
     right
-  end
-
-  def collapse(config, parent_key \\ "") do
-    case config do
-      %{"file_id" => _} -> [{parent_key |> String.trim("|"), config}]
-      %{} -> config |> Enum.flat_map(fn {key, val} -> collapse(val, parent_key <> "|" <> key) end)
-      _ -> [{parent_key |> String.trim("|"), config}]
-    end
   end
 end
