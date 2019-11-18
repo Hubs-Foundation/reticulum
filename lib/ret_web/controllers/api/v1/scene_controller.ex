@@ -12,13 +12,22 @@ defmodule RetWeb.Api.V1.SceneController do
   defp preload(%Scene{} = a, preloads) do
     a
     |> Repo.preload(
-      [:model_owned_file, :screenshot_owned_file, :scene_owned_file, :parent_scene, :parent_scene_listing, :project, :account] ++
+      [
+        :model_owned_file,
+        :screenshot_owned_file,
+        :scene_owned_file,
+        :parent_scene,
+        :parent_scene_listing,
+        :project,
+        :account
+      ] ++
         preloads
     )
   end
 
   def show(conn, %{"id" => scene_sid}) do
     account = Guardian.Plug.current_resource(conn)
+
     case scene_sid |> get_scene() do
       %t{} = s when t in [Scene, SceneListing] -> conn |> render("show.json", scene: s, account: account)
       _ -> conn |> send_resp(404, "not found")
@@ -37,7 +46,8 @@ defmodule RetWeb.Api.V1.SceneController do
 
     case scene_sid |> get_scene() do
       %t{} = s when t in [Scene, SceneListing] ->
-        conn |> render("show.json", account: account, scene: s |> Scene.new_scene_from_parent_scene(account) |> preload())
+        new_scene = s |> Scene.new_scene_from_parent_scene(account) |> preload()
+        conn |> render("show.json", account: account, scene: new_scene)
 
       _ ->
         conn |> send_resp(404, "not found")
@@ -105,9 +115,7 @@ defmodule RetWeb.Api.V1.SceneController do
           |> Scene.changeset(account, model_file, screenshot_file, scene_file, params)
           |> Repo.insert_or_update()
 
-        scene =
-          scene
-          |> preload()
+        scene = scene |> preload()
 
         if scene.allow_promotion do
           Task.async(fn -> scene |> Ret.Support.send_notification_of_new_scene() end)
