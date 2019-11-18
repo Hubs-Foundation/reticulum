@@ -39,7 +39,7 @@ defmodule Ret.Account do
       is_admin = with admin_email when is_binary(admin_email) <- module_config(:admin_email) do
         identifier_hash === admin_email |> identifier_hash_for_email
       else
-        false
+        _ -> false
       end
 
       Repo.insert!(%Account{login: %Login{identifier_hash: identifier_hash}, is_admin: is_admin})

@@ -64,7 +64,7 @@ defmodule RetWeb.Api.V1.MediaSearchController do
     end
   end
 
-  def index(conn, %{"source" => source} = params) when source in ["favorites"] do
+  def index(conn, %{"source" => source}) when source in ["favorites"] do
     conn |> send_resp(401, "Missing account id for favorites search.")
   end
 
