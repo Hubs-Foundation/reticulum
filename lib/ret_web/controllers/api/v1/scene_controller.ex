@@ -107,7 +107,7 @@ defmodule RetWeb.Api.V1.SceneController do
 
         scene =
           scene
-          |> Repo.preload([:model_owned_file, :screenshot_owned_file, :scene_owned_file])
+          |> preload()
 
         if scene.allow_promotion do
           Task.async(fn -> scene |> Ret.Support.send_notification_of_new_scene() end)

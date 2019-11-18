@@ -46,7 +46,7 @@ defmodule RetWeb.Api.V1.ProjectController do
            Storage.promote(promotion_params, account),
          {:ok, project} <-
            project |> Project.changeset(account, project_file, thumbnail_file, params) |> Repo.insert_or_update() do
-      project = Repo.preload(project, [:project_owned_file, :thumbnail_owned_file])
+      project = Repo.preload(project, [:project_owned_file, :thumbnail_owned_file, :scene])
       render(conn, "show.json", project: project)
     else
       {:error, error} -> render_error_json(conn, error)
