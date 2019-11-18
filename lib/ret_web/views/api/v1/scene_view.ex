@@ -10,8 +10,8 @@ defmodule RetWeb.Api.V1.SceneView do
     %{scenes: [render_scene(scene, account)]}
   end
 
-  def render_scene(%Scene{state: :removed}, account), do: nil
-  def render_scene(%SceneListing{state: :delisted}, account), do: nil
+  def render_scene(%Scene{state: :removed}, _account), do: nil
+  def render_scene(%SceneListing{state: :delisted}, _account), do: nil
 
   # scene var passed in can be either a Ret.Scene or Ret.SceneListing
   def render_scene(scene, account) do
@@ -41,7 +41,7 @@ defmodule RetWeb.Api.V1.SceneView do
   defp add_scene_or_listing_fields(map, %SceneListing{} = scene_listing, account) do
     map
     |> add_scene_or_listing_fields(scene_listing.scene, account)
-    |> Meap.merge(%{
+    |> Map.merge(%{
       type: "scene_listing"
     })
   end

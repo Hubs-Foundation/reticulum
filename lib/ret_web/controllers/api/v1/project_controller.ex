@@ -71,7 +71,7 @@ defmodule RetWeb.Api.V1.ProjectController do
     conn |> publish_project(scene_params, project_sid |> Project.project_by_sid_for_account(account), account)
   end
 
-  def publish(conn, %{"project_id" => project_sid}) do
+  def publish(conn, %{"project_id" => _project_sid}) do
     conn |> render_error_json(400, "You must provide a valid scene to publish")
   end
 

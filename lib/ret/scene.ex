@@ -82,10 +82,9 @@ defmodule Ret.Scene do
           )
           |> Repo.insert!()
 
-        new_project =
-          %Project{}
-          |> Project.changeset(account, scene_owned_file, screenshot_owned_file, new_scene, %{name: new_scene.name})
-          |> Repo.insert!()
+        %Project{}
+        |> Project.changeset(account, scene_owned_file, screenshot_owned_file, new_scene, %{name: new_scene.name})
+        |> Repo.insert!()
 
         new_scene
       end)

@@ -78,7 +78,7 @@ defmodule Ret.Project do
 
   def changeset(%Project{} = project, account, %OwnedFile{} = project_owned_file, %OwnedFile{} = thumbnail_owned_file, scene, params) do
     project
-    |> changeset(account, params)
+    |> changeset(account, project_owned_file, thumbnail_owned_file, params)
     |> put_assoc(:scene, scene)
   end
 
