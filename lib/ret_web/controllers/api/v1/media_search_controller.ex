@@ -64,6 +64,10 @@ defmodule RetWeb.Api.V1.MediaSearchController do
     end
   end
 
+  def index(conn, %{"source" => source} = params) when source in ["favorites"] do
+    conn |> send_resp(401, "Missing account id for favorites search.")
+  end
+
   def index(conn, %{"source" => source} = params)
       when source in ["sketchfab", "poly", "tenor", "youtube_videos", "bing_videos", "bing_images", "twitch"] do
     query = %Ret.MediaSearchQuery{
