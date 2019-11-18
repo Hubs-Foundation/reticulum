@@ -35,8 +35,12 @@ defmodule Ret.Account do
     if login do
       Account |> Repo.get(login.account_id) |> Repo.preload(:login)
     else
-      # To bootstrap, the very first account in the system has its admin flag set to true.
-      is_admin = !Account.has_accounts?()
+      # Set the account to be an administrator if admin_email matches
+      is_admin = with admin_email when is_binary(admin_email) <- module_config(:admin_email) do
+        identifier_hash === admin_email |> identifier_hash_for_email
+      else
+        false
+      end
 
       Repo.insert!(%Account{login: %Login{identifier_hash: identifier_hash}, is_admin: is_admin})
     end
@@ -85,4 +89,8 @@ defmodule Ret.Account do
   end
 
   def oauth_provider_for_source(nil, _source), do: nil
+
+  defp module_config(key) do
+    Application.get_env(:ret, __MODULE__)[key]
+  end
 end
