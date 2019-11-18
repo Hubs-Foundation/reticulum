@@ -96,11 +96,11 @@ config :ret, Ret.Scheduler,
     # Flush stats to db every 5 minutes
     {{:cron, "*/5 * * * *"}, {Ret.StatsJob, :save_node_stats, []}},
     {{:cron, "0 10 * * *"}, {Ret.Storage, :vacuum, []}},
-    {{:cron, "5 10 * * *"}, {Ret.Storage, :demote_inactive_owned_files, []}},
-    {{:cron, "10 10 * * *"}, {Ret.LoginToken, :expire_stale, []}},
-    {{:cron, "11 10 * * *"}, {Ret.Hub, :vacuum_entry_codes, []}},
-    {{:cron, "12 10 * * *"}, {Ret.Hub, :vacuum_hosts, []}},
-    {{:cron, "13 10 * * *"}, {Ret.CachedFile, :vacuum, []}}
+    {{:cron, "3 10 * * *"}, {Ret.Storage, :demote_inactive_owned_files, []}},
+    {{:cron, "4 10 * * *"}, {Ret.LoginToken, :expire_stale, []}},
+    {{:cron, "5 10 * * *"}, {Ret.Hub, :vacuum_entry_codes, []}},
+    {{:cron, "6 10 * * *"}, {Ret.Hub, :vacuum_hosts, []}},
+    {{:cron, "7 10 * * *"}, {Ret.CachedFile, :vacuum, []}}
   ]
 
 config :ret, RetWeb.Plugs.HeaderAuthorization, header_name: "x-ret-admin-access-key"

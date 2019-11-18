@@ -8,12 +8,24 @@ defmodule Ret.Locking do
     password = session_lock_db_config |> Keyword.get(:password)
     database = session_lock_db_config |> Keyword.get(:database)
 
-    {:ok, pid} = Postgrex.start_link(hostname: hostname, username: username, password: password, database: database)
+    # Set a long queue timeout here, since we need this to work even if the database is cold and 
+    # is starting up (eg AWS aurora)
+    {:ok, pid} =
+      Postgrex.start_link(
+        hostname: hostname,
+        username: username,
+        password: password,
+        database: database,
+        queue_interval: 60_000,
+        after_connect_timeout: 60_000,
+        timeout: 300_000,
+        ownership_timeout: 300_000
+      )
 
     try do
       <<lock_key::little-signed-integer-size(64), _::binary>> = :crypto.hash(:sha256, lock_name |> to_string)
 
-      case Postgrex.query!(pid, "select pg_try_advisory_lock($1)", [lock_key]) do
+      case Postgrex.query!(pid, "select pg_try_advisory_lock($1)", [lock_key], timeout: 60_000) do
         %Postgrex.Result{rows: [[true]]} ->
           try do
             exec.()
@@ -34,7 +46,7 @@ defmodule Ret.Locking do
 
     Repo.checkout(
       fn ->
-        Ecto.Adapters.SQL.query!(Repo, "set idle_in_transaction_session_timeout = #{timeout};", [])
+        Ecto.Adapters.SQL.query!(Repo, "set idle_in_transaction_session_timeout = #{timeout};", [], timeout: 60_000)
 
         res =
           Repo.transaction(fn ->
@@ -61,7 +73,7 @@ defmodule Ret.Locking do
 
     Repo.checkout(
       fn ->
-        Ecto.Adapters.SQL.query!(Repo, "set idle_in_transaction_session_timeout = #{timeout};", [])
+        Ecto.Adapters.SQL.query!(Repo, "set idle_in_transaction_session_timeout = #{timeout};", [], timeout: 60_000)
 
         res =
           Repo.transaction(fn ->

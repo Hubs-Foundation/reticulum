@@ -61,6 +61,12 @@ pool_size = {{ cfg.db.pool_size }}
 {{#if cfg.db.idle_interval }}
 idle_interval = {{ cfg.db.idle_interval }}
 {{/if}}
+{{#if cfg.db.queue_interval }}
+queue_interval = {{ cfg.db.queue_interval }}
+{{/if}}
+{{#if cfg.db.timeout }}
+timeout = {{ cfg.db.timeout }}
+{{/if}}
 
 [ret."Elixir.Ret.Locking".session_lock_db]
 username = "{{ cfg.session_lock_db.username }}"
