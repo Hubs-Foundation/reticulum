@@ -21,13 +21,17 @@ defmodule Ret.Storage do
   # Given a path to a file, a content-type, and an optional encryption key, returns an id
   # that can be used to fetch a stream to the uploaded file after this call.
   def store(path, content_type, key, promotion_token) do
-    case File.stat(path) do
-      {:ok, %{size: source_size}} ->
-        source_stream = path |> File.stream!([], @chunk_size)
-        store_stream(source_stream, source_size, content_type, key, promotion_token, @expiring_file_path)
+    if in_quota?() do
+      case File.stat(path) do
+        {:ok, %{size: source_size}} ->
+          source_stream = path |> File.stream!([], @chunk_size)
+          store_stream(source_stream, source_size, content_type, key, promotion_token, @expiring_file_path)
 
-      {:error, _reason} = err ->
-        err
+        {:error, _reason} = err ->
+          err
+      end
+    else
+      { :error, :quota }
     end
   end
 
@@ -281,10 +285,6 @@ defmodule Ret.Storage do
     Ret.Crypto.encrypt_stream_to_file(source_stream, source_size, destination_path, key |> Ret.Crypto.hash())
   end
 
-  defp module_config(key) do
-    Application.get_env(:ret, __MODULE__)[key]
-  end
-
   defp paths_for_uuid(uuid, subpath) do
     path = "#{module_config(:storage_path)}/#{subpath}/#{String.slice(uuid, 0, 2)}/#{String.slice(uuid, 2, 2)}"
 
@@ -350,4 +350,19 @@ defmodule Ret.Storage do
       owned_file
     end)
   end
+
+  def in_quota?() do
+    with storage_path when is_binary(storage_path) <- module_config(:storage_path),
+         quota_gb when is_integer(quota_gb) and quota_gb > 0 <- module_config(:quota_gb) do
+      case Cachex.get(:storage_used, :storage_used) do
+        { :ok, 0 } -> true
+        { :ok, kbytes } -> kbytes < quota_gb * 1024 * 1024
+        _ -> false
+      end
+    else
+      _ -> true
+    end
+  end
+
+  defp module_config(key), do: Application.get_env(:ret, __MODULE__)[key]
 end

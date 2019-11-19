@@ -143,6 +143,18 @@ defmodule Ret.Application do
         ],
         id: :janus_load_status
       ),
+
+      # Storage used space cache
+      worker(
+        Cachex,
+        [
+          :storage_used,
+          [
+            warmers: [warmer(module: Ret.StorageUsed)]
+          ]
+        ],
+        id: :storage_used
+      ),
       supervisor(TheEnd.Of.Phoenix, [[timeout: 10_000, endpoint: RetWeb.Endpoint]])
     ]
 

@@ -62,6 +62,9 @@ defmodule RetWeb.Api.V1.MediaController do
           meta: %{access_token: access_token, promotion_token: promotion_token, expected_content_type: content_type}
         )
 
+      {:error, :quota} ->
+        conn |> send_resp(400, "Unable to store additional content.")
+
       {:error, :not_allowed} ->
         conn |> send_resp(401, "")
     end

@@ -31,6 +31,9 @@ defmodule Ret.Meta do
           any: Ret.SceneListing.has_any_in_filter?(nil),
           default: Ret.SceneListing.has_any_in_filter?("default"),
           featured: Ret.SceneListing.has_any_in_filter?("featured")
+        },
+        storage: %{
+          in_quota: Ret.Storage.in_quota?()
         }
       }
     }
