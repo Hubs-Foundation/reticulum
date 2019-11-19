@@ -64,7 +64,7 @@ defmodule Ret.Project do
   end
 
   def add_scene_to_project(%Project{} = project, scene) do
-    project |> put_assoc(:scene, scene) |> Repo.update()
+    project |> change() |> put_assoc(:scene, scene) |> Repo.update()
   end
 
   # Create a Project
