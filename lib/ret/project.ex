@@ -14,7 +14,13 @@ defmodule Ret.Project do
     belongs_to(:created_by_account, Ret.Account, references: :account_id)
     belongs_to(:project_owned_file, Ret.OwnedFile, references: :owned_file_id)
     belongs_to(:thumbnail_owned_file, Ret.OwnedFile, references: :owned_file_id)
-    many_to_many(:assets, Ret.Asset, join_through: Ret.ProjectAsset, join_keys: [project_id: :project_id, asset_id: :asset_id], on_replace: :delete)
+
+    many_to_many(:assets, Ret.Asset,
+      join_through: Ret.ProjectAsset,
+      join_keys: [project_id: :project_id, asset_id: :asset_id],
+      on_replace: :delete
+    )
+
     belongs_to(:scene, Scene, references: :scene_id, on_replace: :nilify)
 
     timestamps()
@@ -33,26 +39,32 @@ defmodule Ret.Project do
   def project_by_sid_for_account(project_sid, account) do
     from(p in Project,
       where: p.project_sid == ^project_sid and p.created_by_account_id == ^account.account_id,
-      preload: [:created_by_account, :project_owned_file, :thumbnail_owned_file, :scene, assets: [:asset_owned_file, :thumbnail_owned_file]])
-    |> Repo.one
+      preload: [
+        :created_by_account,
+        :project_owned_file,
+        :thumbnail_owned_file,
+        :scene,
+        assets: [:asset_owned_file, :thumbnail_owned_file]
+      ]
+    )
+    |> Repo.one()
   end
 
   def projects_for_account(account) do
-    Repo.all from p in Project,
-      where: p.created_by_account_id == ^account.account_id,
-      preload: [:project_owned_file, :thumbnail_owned_file, :scene]
+    Repo.all(
+      from(p in Project,
+        where: p.created_by_account_id == ^account.account_id,
+        preload: [:project_owned_file, :thumbnail_owned_file, :scene]
+      )
+    )
   end
 
   def add_asset_to_project(project, asset) do
-    %ProjectAsset{}
-    |> ProjectAsset.changeset(project, asset)
-    |> Repo.insert
+    %ProjectAsset{} |> ProjectAsset.changeset(project, asset) |> Repo.insert()
   end
 
   def add_scene_to_project(%Project{} = project, scene) do
-    project
-    |> put_assoc(:scene, scene)
-    |> Repo.update
+    project |> put_assoc(:scene, scene) |> Repo.update()
   end
 
   # Create a Project
@@ -69,14 +81,27 @@ defmodule Ret.Project do
   end
 
   # Update a Project with new project and thumbnail files
-  def changeset(%Project{} = project, account, %OwnedFile{} = project_owned_file, %OwnedFile{} = thumbnail_owned_file, params) do
+  def changeset(
+        %Project{} = project,
+        account,
+        %OwnedFile{} = project_owned_file,
+        %OwnedFile{} = thumbnail_owned_file,
+        params
+      ) do
     project
     |> changeset(account, params)
     |> put_change(:project_owned_file_id, project_owned_file.owned_file_id)
     |> put_change(:thumbnail_owned_file_id, thumbnail_owned_file.owned_file_id)
   end
 
-  def changeset(%Project{} = project, account, %OwnedFile{} = project_owned_file, %OwnedFile{} = thumbnail_owned_file, scene, params) do
+  def changeset(
+        %Project{} = project,
+        account,
+        %OwnedFile{} = project_owned_file,
+        %OwnedFile{} = thumbnail_owned_file,
+        scene,
+        params
+      ) do
     project
     |> changeset(account, project_owned_file, thumbnail_owned_file, params)
     |> put_assoc(:scene, scene)

@@ -102,8 +102,11 @@ defmodule RetWeb.Api.V1.ProjectController do
            {:ok, project} <- project |> Project.add_scene_to_project(scene) do
         conn |> render("show.json", project: project)
       else
-        {:error, :not_found} -> conn |> render_error_json(400, "You must provide a valid model, screenshot, and scene file")
-        {:error, error} -> conn |> render_error_json(error)
+        {:error, :not_found} ->
+          conn |> render_error_json(400, "You must provide a valid model, screenshot, and scene file")
+
+        {:error, error} ->
+          conn |> render_error_json(error)
       end
     end)
   end
