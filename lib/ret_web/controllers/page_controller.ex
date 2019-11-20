@@ -107,10 +107,10 @@ defmodule RetWeb.PageController do
   def render_for_path("/whats-new/", _params, conn),
     do: conn |> render_page("whats-new.html", :hubs, "whats-new-meta.html")
 
-  def render_for_path("/hub.service.js", _params, conn), do: conn |> render_asset("hub.service.js")
+  def render_for_path("/hub.service.js", _params, conn),
+    do: conn |> render_asset("hub.service.js", :hubs, "hub.service-meta.js")
 
-  def render_for_path("/hubs/schema.toml", _params, conn),
-    do: conn |> render_asset("schema.toml", :hubs)
+  def render_for_path("/hubs/schema.toml", _params, conn), do: conn |> render_asset("schema.toml")
 
   def render_for_path("/manifest.webmanifest", _params, conn) do
     ua =
@@ -343,14 +343,27 @@ defmodule RetWeb.PageController do
     end
   end
 
-  defp render_asset(conn, asset, source \\ :hubs)
+  defp render_asset(conn, asset, source \\ :hubs, meta_template \\ nil)
 
-  defp render_asset(conn, nil, _source) do
+  defp render_asset(conn, nil, _source, _meta_template) do
     conn |> send_resp(404, "")
   end
 
-  defp render_asset(conn, asset, source) do
-    chunks = asset |> chunks_for_page(source)
+  defp render_asset(conn, asset, source, meta_template) do
+    app_config = Ret.AppConfig.get_config(!!module_config(:skip_cache))
+
+    meta_content =
+      if meta_template do
+        Phoenix.View.render_to_string(RetWeb.PageView, meta_template, translations: app_config["translations"]["en"])
+      else
+        []
+      end
+
+    chunks =
+      asset
+      |> chunks_for_page(source)
+      |> List.insert_at(1, meta_content)
+
     conn |> render_chunks(chunks, asset |> content_type_for_page)
   end
 
