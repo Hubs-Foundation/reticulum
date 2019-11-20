@@ -46,6 +46,7 @@ do_build() {
     mix local.rebar --force
     mix deps.get --only prod
     mix deps.clean mime --build
+    rm -rf _build
     mix compile
 }
 
