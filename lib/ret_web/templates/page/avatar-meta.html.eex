@@ -1,17 +1,21 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="<%= @avatar |> Ret.Avatar.url %>" />
-<meta property="og:title" content="<%= @avatar.name %> | Hubs by Mozilla" />
-<meta property="og:description" content="&quot;<%= @avatar.name %>&quot; is an avatar you can use in Hubs." />
+<meta property="og:title" content="<%= @avatar.name %> | <%= @translations["app-full-name"] || @translations["app-name"] %>" />
+<meta property="og:description" content="&quot;<%= @avatar.name %>&quot; is an avatar you can use in <%= @translations["app-name"] %>." />
 <meta property="og:image" content="<%= @avatar.thumbnail_owned_file |> Ret.OwnedFile.uri_for |> URI.to_string %>"/>
+
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:domain" value="<%= RetWeb.Endpoint.host %>" />
-<meta name="twitter:title" value="<%= @avatar.name %> | Hubs by Mozilla" />
-<meta name="twitter:description" content="&quot;<%= @avatar.name %>&quot; is an avatar you can use in Hubs." />
+<meta name="twitter:domain" content="<%= RetWeb.Endpoint.host %>" />
+<meta name="twitter:title" content="<%= @avatar.name %> | <%= @translations["app-full-name"] || @translations["app-name"] %>" />
+<meta name="twitter:description" content="&quot;<%= @avatar.name %>&quot; is an avatar you can use in <%= @translations["app-name"] %>." />
 <meta property="twitter:image" content="<%= @avatar.thumbnail_owned_file |> Ret.OwnedFile.uri_for |> URI.to_string %>"/>
-<meta name="twitter:url" value="<%= @avatar |> Ret.Avatar.url %>" />
+<meta name="twitter:url" content="<%= @avatar |> Ret.Avatar.url %>" />
+
 <meta name="ret:version" value="<%= @ret_meta[:version] %>" />
 <meta name="ret:phx_host" value="<%= @ret_meta[:phx_host] %>" />
 <meta name="ret:phx_port" value="<%= @ret_meta[:phx_port] %>" />
 <meta name="ret:pool" value="<%= @ret_meta[:pool] %>" />
-<title><%= @avatar.name %> | Hubs by Mozilla</title>
+
+<title><%= @avatar.name %> | <%= @translations["app-full-name"] || @translations["app-name"] %></title>
+
 <%= @app_config_script %>

@@ -1,0 +1,1 @@
+<title>Enter Code | <%= @translations["app-full-name"] || @translations["app-name"] %></title>

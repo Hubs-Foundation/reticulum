@@ -2,7 +2,7 @@ defmodule RetWeb.FileController do
   use RetWeb, :controller
   require Logger
 
-  alias Ret.{OwnedFile, Storage, Repo}
+  alias Ret.{OwnedFile, Storage, Repo, AppConfig}
 
   def show(conn, params) do
     case conn |> get_req_header("x-original-method") do
@@ -24,7 +24,15 @@ defmodule RetWeb.FileController do
           |> Map.put(:query, URI.encode_query(token: token))
           |> URI.to_string()
 
-        conn |> render("show.html", image_url: image_url)
+        app_name =
+          AppConfig.get_cached_config_value("translations|en|app-full-name") ||
+            AppConfig.get_cached_config_value("translations|en|app-name")
+
+        conn
+        |> render("show.html",
+          image_url: image_url,
+          app_name: app_name
+        )
 
       {:error, :not_found} ->
         conn |> send_resp(404, "")
@@ -187,7 +195,8 @@ defmodule RetWeb.FileController do
         # Multiple ranges not supported yet in chunked responses until we upgrade cowboy, for now just return the whole thing
         if length(parsed_ranges) === 1 do
           conn =
-            conn |> put_resp_header("content-range", "bytes #{response_ranges_for_ranges(parsed_ranges)}/#{content_length}")
+            conn
+            |> put_resp_header("content-range", "bytes #{response_ranges_for_ranges(parsed_ranges)}/#{content_length}")
 
           {:ok, conn, parsed_ranges, true}
         else

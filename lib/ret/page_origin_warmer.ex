@@ -11,13 +11,9 @@ defmodule Ret.PageOriginWarmer do
              link.html
              scene.html
              avatar.html
-             spoke.html
              discord.html
              hub.service.js
              schema.toml
-             favicon.ico
-             app-thumbnail.png
-             app-icon.png
            ),
            admin: ~w(admin.html),
            spoke: ~w(index.html)
@@ -80,7 +76,7 @@ defmodule Ret.PageOriginWarmer do
   end
 
   defp page_to_cache_entry(source, page) do
-    # Split the HTML file into two parts, on the line that contains HUB_META_TAGS, so we can add meta tags
+    # Split the HTML file into two parts, on the line that contains META_TAGS, so we can add meta tags
     case "#{module_config(config_key_for_source(source))}/#{page}"
          |> retry_get_until_success do
       :error ->

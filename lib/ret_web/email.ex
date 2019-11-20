@@ -1,13 +1,17 @@
 defmodule RetWeb.Email do
   use Bamboo.Phoenix, view: RetWeb.EmailView
+  alias Ret.{AppConfig}
 
   def auth_email(to_address, signin_args) do
+    app_name = AppConfig.get_cached_config_value("translations|en|app-name")
+    app_full_name = AppConfig.get_cached_config_value("translations|en|app-full-name") || app_name
+
     new_email()
     |> to(to_address)
-    |> from({"Hubs by Mozilla", from_address()})
-    |> subject("Your Hubs Sign-In Link")
+    |> from({app_full_name, from_address()})
+    |> subject("Your #{app_name} Sign-In Link")
     |> text_body(
-      "To sign-in to Hubs, please visit the link below. If you did not make this request, please ignore this e-mail.\n\n#{
+      "To sign-in to #{app_name}, please visit the link below. If you did not make this request, please ignore this e-mail.\n\n#{
         RetWeb.Endpoint.url()
       }/?#{URI.encode_query(signin_args)}"
     )

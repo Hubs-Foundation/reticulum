@@ -1,0 +1,1 @@
+<title>What's New | <%= @translations["app-full-name"] || @translations["app-name"] %></title>

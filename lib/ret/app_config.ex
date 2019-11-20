@@ -67,8 +67,15 @@ defmodule Ret.AppConfig do
 
   def get_config_value(key) do
     case AppConfig |> Repo.get_by(key: key) do
-      %AppConfig{} = app_config -> app_config.value["value"]
-      nil -> nil
+      %AppConfig{} = app_config ->
+        if app_config.value["value"] === "" do
+          nil
+        else
+          app_config.value["value"]
+        end
+
+      nil ->
+        nil
     end
   end
 
@@ -104,7 +111,14 @@ defmodule Ret.AppConfig do
           %{key => app_config.owned_file |> OwnedFile.uri_for() |> URI.to_string()}
 
         _ ->
-          %{key => app_config.value["value"]}
+          %{
+            key =>
+              if app_config.value["value"] === "" do
+                nil
+              else
+                app_config.value["value"]
+              end
+          }
       end
     end
   end
