@@ -42,5 +42,5 @@ insecure_ssl = "false"
 [janus]
 janus_port = 443
 
-[storage]
+[uploads]
 quota_gb = 0
