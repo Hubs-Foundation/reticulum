@@ -154,27 +154,18 @@ defmodule RetWeb.PageController do
   end
 
   def render_for_path("/favicon.ico", _params, conn) do
-    favicon = get_configurable_asset(:app_config_favicon, "images|favicon")
-
     conn
-    |> put_resp_header("content-type", "image/x-icon")
-    |> send_resp(200, favicon)
+    |> respond_with_configurable_asset(:app_config_favicon, "images|favicon", "image/x-icon")
   end
 
   def render_for_path("/app-icon.png", _params, conn) do
-    icon = get_configurable_asset(:app_config_app_icon, "images|app_icon")
-
     conn
-    |> put_resp_header("content-type", "image/png")
-    |> send_resp(200, icon)
+    |> respond_with_configurable_asset(:app_config_app_icon, "images|app_icon", "image/png")
   end
 
   def render_for_path("/app-thumbnail.png", _params, conn) do
-    thumbnail = get_configurable_asset(:app_config_app_thumbnail, "images|app_thumbnail")
-
     conn
-    |> put_resp_header("content-type", "image/png")
-    |> send_resp(200, thumbnail)
+    |> respond_with_configurable_asset(:app_config_app_thumbnail, "images|app_thumbnail", "image/png")
   end
 
   def render_for_path("/admin", _params, conn), do: conn |> render_page("admin.html", :admin)
@@ -201,27 +192,37 @@ defmodule RetWeb.PageController do
     end
   end
 
-  defp get_configurable_asset(cache_key, config_key) do
-    case Cachex.get(:assets, cache_key) do
-      {:ok, nil} ->
-        app_config = AppConfig |> Repo.get_by(key: config_key) |> Repo.preload(:owned_file)
+  defp respond_with_configurable_asset(conn, cache_key, config_key, content_type) do
+    asset =
+      case Cachex.get(:assets, cache_key) do
+        {:ok, nil} ->
+          app_config = AppConfig |> Repo.get_by(key: config_key) |> Repo.preload(:owned_file)
 
-        asset =
-          with %AppConfig{owned_file: %OwnedFile{} = owned_file} <- app_config,
-               {:ok, _meta, stream} <- Storage.fetch(owned_file) do
-            stream |> Enum.join("")
-          else
-            _ -> ""
+          asset =
+            with %AppConfig{owned_file: %OwnedFile{} = owned_file} <- app_config,
+                 {:ok, _meta, stream} <- Storage.fetch(owned_file) do
+              stream |> Enum.join("")
+            else
+              _ -> ""
+            end
+
+          unless module_config(:skip_cache) do
+            Cachex.put(:assets, cache_key, asset, ttl: :timer.seconds(15))
           end
 
-        unless module_config(:skip_cache) do
-          Cachex.put(:assets, cache_key, asset, ttl: :timer.seconds(15))
-        end
+          asset
 
-        asset
+        {:ok, asset} ->
+          asset
+      end
 
-      {:ok, asset} ->
-        asset
+    if asset === "" do
+      conn
+      |> send_resp(404, "")
+    else
+      conn
+      |> put_resp_header("content-type", content_type)
+      |> send_resp(200, asset)
     end
   end
 
