@@ -8,8 +8,8 @@ defmodule Ret.AccountTest do
     assert account.login.identifier_hash == Ret.Crypto.hash("test@mozilla.com")
   end
 
-  test "ensure the first account, but not subsequent accounts, are admins" do
-    account = Account.account_for_email("test@mozilla.com")
+  test "ensure the admin account, but not subsequent accounts, are admins" do
+    account = Account.account_for_email("admin@mozilla.com")
     account2 = Account.account_for_email("test2@mozilla.com")
     account3 = Account.account_for_email("test3@mozilla.com")
     assert account.is_admin === true

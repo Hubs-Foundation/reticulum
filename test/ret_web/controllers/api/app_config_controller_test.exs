@@ -8,7 +8,7 @@ defmodule RetWeb.AppConfigControllerTest do
 
   test "admins can create app configs", %{conn: conn} do
     conn
-    |> Ret.TestHelpers.put_auth_header_for_account("test@mozilla.com")
+    |> Ret.TestHelpers.put_auth_header_for_account("admin@mozilla.com")
     |> create_app_config(%{"test-config" => "foo"})
     |> response(200)
 
