@@ -31,7 +31,7 @@ defmodule Ret.Storage do
           err
       end
     else
-      { :error, :quota }
+      {:error, :quota}
     end
   end
 
@@ -197,30 +197,34 @@ defmodule Ret.Storage do
         # TODO figure out what to do about owned files -- that structure increase over time
         for type <- [@expiring_file_path] do
           root_path = "#{storage_path}/#{type}"
-          {:ok, dirs} = :file.list_dir(root_path)
 
-          # Walk sub directories and remove them if they are empty.
-          for d <- dirs do
-            sub_path = Path.join(root_path, d)
-            {:ok, subdirs} = :file.list_dir(sub_path)
+          with {:ok, dirs} <- :file.list_dir(root_path) do
+            # Walk sub directories and remove them if they are empty.
+            for d <- dirs do
+              sub_path = Path.join(root_path, d)
 
-            for sd <- subdirs do
-              path = Path.join(sub_path, sd)
-              {:ok, files} = :file.list_dir(path)
+              with {:ok, subdirs} <- :file.list_dir(sub_path) do
+                for sd <- subdirs do
+                  path = Path.join(sub_path, sd)
 
-              if files |> length === 0 do
-                File.rmdir(path)
+                  with {:ok, files} <- :file.list_dir(path) do
+                    if files |> length === 0 do
+                      File.rmdir(path)
+                    end
+                  end
+                end
               end
             end
-          end
 
-          # Check if we've removed all the sub directories.
-          for d <- dirs do
-            sub_path = Path.join(root_path, d)
-            {:ok, subdirs} = :file.list_dir(sub_path)
+            # Check if we've removed all the sub directories.
+            for d <- dirs do
+              sub_path = Path.join(root_path, d)
 
-            if subdirs |> length === 0 do
-              File.rmdir(sub_path)
+              with {:ok, subdirs} <- :file.list_dir(sub_path) do
+                if subdirs |> length === 0 do
+                  File.rmdir(sub_path)
+                end
+              end
             end
           end
         end
@@ -355,8 +359,8 @@ defmodule Ret.Storage do
     with storage_path when is_binary(storage_path) <- module_config(:storage_path),
          quota_gb when is_integer(quota_gb) and quota_gb > 0 <- module_config(:quota_gb) do
       case Cachex.get(:storage_used, :storage_used) do
-        { :ok, 0 } -> true
-        { :ok, kbytes } -> kbytes < quota_gb * 1024 * 1024
+        {:ok, 0} -> true
+        {:ok, kbytes} -> kbytes < quota_gb * 1024 * 1024
         _ -> false
       end
     else
