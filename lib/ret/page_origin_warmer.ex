@@ -11,7 +11,6 @@ defmodule Ret.PageOriginWarmer do
              link.html
              scene.html
              avatar.html
-             spoke.html
              discord.html
              hub.service.js
              schema.toml
