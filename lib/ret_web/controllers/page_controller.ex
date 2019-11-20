@@ -15,12 +15,13 @@ defmodule RetWeb.PageController do
   end
 
   defp render_scene_content(%t{} = scene, conn) when t in [Scene, SceneListing] do
-    {app_config_script, app_config_csp} = generate_app_config()
+    {app_config, app_config_script, app_config_csp} = generate_app_config()
 
     scene_meta_tags =
       Phoenix.View.render_to_string(RetWeb.PageView, "scene-meta.html",
         scene: scene,
         ret_meta: Ret.Meta.get_meta(include_repo: false),
+        translations: app_config["translations"]["en"],
         app_config_script: {:safe, app_config_script}
       )
 
@@ -39,12 +40,13 @@ defmodule RetWeb.PageController do
   end
 
   defp render_avatar_content(%t{} = avatar, conn) when t in [Avatar, AvatarListing] do
-    {app_config_script, app_config_csp} = generate_app_config()
+    {app_config, app_config_script, app_config_csp} = generate_app_config()
 
     avatar_meta_tags =
       Phoenix.View.render_to_string(RetWeb.PageView, "avatar-meta.html",
         avatar: avatar,
         ret_meta: Ret.Meta.get_meta(include_repo: false),
+        translations: app_config["translations"]["en"],
         app_config_script: {:safe, app_config_script}
       )
 
@@ -88,8 +90,8 @@ defmodule RetWeb.PageController do
     |> render_avatar_content(conn)
   end
 
-  def render_for_path("/link", _params, conn), do: conn |> render_page("link.html")
-  def render_for_path("/link/", _params, conn), do: conn |> render_page("link.html")
+  def render_for_path("/link", _params, conn), do: conn |> render_page("link.html", :hubs, "link-meta.html")
+  def render_for_path("/link/", _params, conn), do: conn |> render_page("link.html", :hubs, "link-meta.html")
 
   def render_for_path("/link/" <> hub_identifier_and_slug, _params, conn) do
     hub_identifier = hub_identifier_and_slug |> String.split("/") |> List.first()
@@ -102,8 +104,11 @@ defmodule RetWeb.PageController do
   def render_for_path("/spoke", _params, conn), do: conn |> render_page("index.html", :spoke)
   def render_for_path("/spoke/" <> _path, _params, conn), do: conn |> render_page("index.html", :spoke)
 
-  def render_for_path("/whats-new", _params, conn), do: conn |> render_page("whats-new.html")
-  def render_for_path("/whats-new/", _params, conn), do: conn |> render_page("whats-new.html")
+  def render_for_path("/whats-new", _params, conn),
+    do: conn |> render_page("whats-new.html", :hubs, "whats-new-meta.html")
+
+  def render_for_path("/whats-new/", _params, conn),
+    do: conn |> render_page("whats-new.html", :hubs, "whats-new-meta.html")
 
   def render_for_path("/hub.service.js", _params, conn), do: conn |> render_asset("hub.service.js")
 
@@ -223,13 +228,14 @@ defmodule RetWeb.PageController do
   end
 
   def render_index(conn) do
-    {app_config_script, app_config_csp} = generate_app_config()
+    {app_config, app_config_script, app_config_csp} = generate_app_config()
 
     index_meta_tags =
       Phoenix.View.render_to_string(
         RetWeb.PageView,
         "index-meta.html",
         root_url: RetWeb.Endpoint.url(),
+        translations: app_config["translations"]["en"],
         app_config_script: {:safe, app_config_script}
       )
 
@@ -287,9 +293,9 @@ defmodule RetWeb.PageController do
   def render_hub_content(conn, hub, _slug) do
     hub = hub |> Repo.preload(scene: [:screenshot_owned_file], scene_listing: [:screenshot_owned_file])
 
-    {app_config_script, app_config_csp} = generate_app_config()
+    {app_config, app_config_script, app_config_csp} = generate_app_config()
 
-    {available_integrations_script, available_integrations_csp} =
+    {_, available_integrations_script, available_integrations_csp} =
       Ret.Meta.available_integrations_meta() |> generate_config("AVAILABLE_INTEGRATIONS")
 
     hub_meta_tags =
@@ -298,6 +304,7 @@ defmodule RetWeb.PageController do
         scene: hub.scene,
         ret_meta: Ret.Meta.get_meta(include_repo: false),
         available_integrations_script: {:safe, available_integrations_script},
+        translations: app_config["translations"]["en"],
         app_config_script: {:safe, app_config_script}
       )
 
@@ -322,7 +329,7 @@ defmodule RetWeb.PageController do
 
     config_csp = "'sha256-#{:crypto.hash(:sha256, config_script) |> :base64.encode()}'"
 
-    {"<script>#{config_script}</script>", config_csp}
+    {config, "<script>#{config_script}</script>", config_csp}
   end
 
   # Redirect to the specified hub identifier, which can be a sid or an entry code
@@ -349,19 +356,27 @@ defmodule RetWeb.PageController do
     conn |> render_chunks(chunks, asset |> content_type_for_page)
   end
 
-  defp render_page(conn, page, source \\ :hubs)
+  defp render_page(conn, page, source \\ :hubs, meta_template \\ nil)
 
-  defp render_page(conn, nil, _source) do
+  defp render_page(conn, nil, _source, _meta_template) do
     conn |> send_resp(404, "")
   end
 
-  defp render_page(conn, page, source) do
-    {app_config_script, app_config_csp} = generate_app_config()
+  defp render_page(conn, page, source, meta_template) do
+    {app_config, app_config_script, app_config_csp} = generate_app_config()
+
+    meta_tags =
+      if meta_template do
+        Phoenix.View.render_to_string(RetWeb.PageView, meta_template, translations: app_config["translations"]["en"])
+      else
+        []
+      end
 
     chunks =
       page
       |> chunks_for_page(source)
       |> List.insert_at(1, app_config_script)
+      |> List.insert_at(1, meta_tags)
 
     conn
     |> append_csp("script-src", app_config_csp)

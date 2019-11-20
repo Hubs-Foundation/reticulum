@@ -6,15 +6,15 @@
 
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:domain" value="<%= RetWeb.Endpoint.host %>" />
-    <meta name="twitter:title" value="Photo taken in Hubs by Mozilla" />
+    <meta name="twitter:title" value="Photo taken in <%= @app_name %>" />
     <meta property="twitter:image" content="<%= @image_url %>"/>
     <meta name="twitter:url" value="<%= @image_url %>" />
 
     <meta property="og:type" content="website" />
     <meta property="og:url" content="<%= @image_url %>" />
-    <meta property="og:title" content="Photo taken in Hubs by Mozilla" />
+    <meta property="og:title" content="Photo taken in <%= @app_name %>" />
     <meta property="og:image" content="<%= @image_url %>"/>
-    <title>Photo taken in Hubs by Mozilla</title>
+    <title>Photo taken in <%= @app_name %></title>
     <style>
       body {
           display: flex;

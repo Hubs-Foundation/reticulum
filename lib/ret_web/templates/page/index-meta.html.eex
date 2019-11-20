@@ -1,25 +1,36 @@
 <!-- iOS (for "Add to Homescreen") -->
 <meta name="mobile-web-app-capable" content="yes">
+
 <!-- Description for search engines -->
-<meta name="description" content="Share a private virtual room with friends. Watch videos, play with 3D objects, or just hang out.">
+<meta name="description" content="<%= @translations["app-description"] |> String.replace("\\n", " ") %>">
+
 <!-- Schema.org for Google -->
-<meta itemprop="name" content="Hubs by Mozilla">
-<meta itemprop="description" content="Share a private virtual room with friends. Watch videos, play with 3D objects, or just hang out.">
+<meta itemprop="name" content="<%= @translations["app-full-name"] || @translations["app-name"] %>">
+<meta itemprop="description" content="<%= @translations["app-description"] |> String.replace("\\n", " ") %>">
+
 <!-- OpenGraph for Facebook -->
 <meta property="og:type" content="website">
-<meta property="og:title" content="Hubs by Mozilla">
-<meta property="og:description" content="Private social VR in your web browser.">
+<meta property="og:title" content="<%= @translations["app-full-name"] %>">
+<meta property="og:description" content="<%= @translations["app-description"] |> String.replace("\\n", " ") %>">
 <meta property="og:url" content="/">
+
 <!-- Twitter -->
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:site" content="@byhubs">
-<meta name="twitter:title" content="Hubs by Mozilla">
+
+<%= if @translations["app-twitter-user"] do %>
+<meta name="twitter:site" content="<%= @translations["app-twitter-user"] %>">
+<% end %>
+
+<meta name="twitter:title" content="<%= @translations["app-full-name"] || @translations["app-name"] %>">
 <meta name="twitter:image" content="<%= @root_url %>/app-thumbnail.png">
-<meta name="twitter:description" content="Private social VR in your web browser.">
+<meta name="twitter:description" content="<%= @translations["app-tagline"] %>">
+
 <!-- Microsoft Edge -->
-<meta name="application-name" content="Hubs by Mozilla">
-<meta name="msapplication-tooltip" content="Share a virtual room with friends.">
+<meta name="application-name" content="<%= @translations["app-full-name"] || @translations["app-name"] %>">
+<meta name="msapplication-tooltip" content="<%= @translations["app-tagline"] %>">
 <meta name="msapplication-starturl" content="/">
-<meta name="application-name" content="Hubs">
 <link rel="apple-touch-icon" href="/app-icon.png">
+
+<title><%= @translations["app-name"] %> - <%= @translations["app-tagline"] %></title>
+
 <%= @app_config_script %>

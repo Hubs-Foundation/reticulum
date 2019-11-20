@@ -1,22 +1,28 @@
 <%= if @scene.state == :active do %>
+
 <meta property="og:type" content="website" />
 <meta property="og:url" content="<%= @scene |> Ret.Scene.to_url %>" />
-<meta property="og:title" content="<%= @scene.name %> | Hubs by Mozilla" />
+<meta property="og:title" content="<%= @scene.name %> | <%= @translations["app-full-name"] || @translations["app-name"] %>" />
 <meta property="og:description" content="Join others in <%= @scene.name %>, right in your browser." />
 <meta property="og:image" content="<%= @scene.screenshot_owned_file |> Ret.OwnedFile.uri_for |> URI.to_string %>"/>
+
 <meta name="description" content="Join others in <%= @scene.name %>, right in your browser." />
-<meta itemprop="name" content="<%= @scene.name %> | Hubs by Mozilla" />
+
+<meta itemprop="name" content="<%= @scene.name %> | <%= @translations["app-full-name"] || @translations["app-name"] %>" />
 <meta itemprop="description" content="Join others in <%= @scene.name %>, right in your browser." />
+
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:domain" value="<%= RetWeb.Endpoint.host %>" />
-<meta name="twitter:title" value="<%= @scene.name %> | Hubs by Mozilla" />
+<meta name="twitter:domain" content="<%= RetWeb.Endpoint.host %>" />
+<meta name="twitter:title" content="<%= @scene.name %> | <%= @translations["app-full-name"] || @translations["app-name"] %>" />
 <meta name="twitter:description" content="Join others in <%= @scene.name %>, right in your browser." />
 <meta property="twitter:image" content="<%= @scene.screenshot_owned_file |> Ret.OwnedFile.uri_for |> URI.to_string %>"/>
-<meta name="twitter:url" value="<%= @scene |> Ret.Scene.to_url %>" />
+<meta name="twitter:url" content="<%= @scene |> Ret.Scene.to_url %>" />
+
 <meta name="ret:version" value="<%= @ret_meta[:version] %>" />
 <meta name="ret:phx_host" value="<%= @ret_meta[:phx_host] %>" />
 <meta name="ret:phx_port" value="<%= @ret_meta[:phx_port] %>" />
 <meta name="ret:pool" value="<%= @ret_meta[:pool] %>" />
-<title><%= @scene.name %> | Hubs by Mozilla</title>
+
+<title><%= @scene.name %> | <%= @translations["app-full-name"] || @translations["app-name"] %></title>
 <%= @app_config_script %>
 <% end %>
