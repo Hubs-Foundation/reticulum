@@ -2,16 +2,16 @@
 <meta name="mobile-web-app-capable" content="yes">
 
 <!-- Description for search engines -->
-<meta name="description" content="<%= @translations["app-description"] |> String.replace("\\n", " ") %>">
+<meta name="description" content="<%= (@translations["app-description"] || "") |> String.replace("\\n", " ") %>">
 
 <!-- Schema.org for Google -->
 <meta itemprop="name" content="<%= @translations["app-full-name"] || @translations["app-name"] %>">
-<meta itemprop="description" content="<%= @translations["app-description"] |> String.replace("\\n", " ") %>">
+<meta itemprop="description" content="<%= (@translations["app-description"] || "") |> String.replace("\\n", " ") %>">
 
 <!-- OpenGraph for Facebook -->
 <meta property="og:type" content="website">
 <meta property="og:title" content="<%= @translations["app-full-name"] %>">
-<meta property="og:description" content="<%= @translations["app-description"] |> String.replace("\\n", " ") %>">
+<meta property="og:description" content="<%= (@translations["app-description"] || "") |> String.replace("\\n", " ") %>">
 <meta property="og:url" content="/">
 
 <!-- Twitter -->

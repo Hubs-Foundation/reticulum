@@ -131,7 +131,8 @@ defmodule RetWeb.PageController do
               Phoenix.View.render_to_string(RetWeb.PageView, "manifest.webmanifest",
                 root_url: RetWeb.Endpoint.url(),
                 app_name: get_app_config_value("translations|en|app-name") || "",
-                app_description: get_app_config_value("translations|en|app-description") || ""
+                app_description:
+                  (get_app_config_value("translations|en|app-description") || "") |> String.replace("\\n", " ")
               )
 
             unless module_config(:skip_cache) do
@@ -153,7 +154,7 @@ defmodule RetWeb.PageController do
   end
 
   def render_for_path("/favicon.ico", _params, conn) do
-    favicon = get_configurable_asset(:app_config_favicon, "images|favicon", "favicon.ico")
+    favicon = get_configurable_asset(:app_config_favicon, "images|favicon")
 
     conn
     |> put_resp_header("content-type", "image/x-icon")
@@ -161,7 +162,7 @@ defmodule RetWeb.PageController do
   end
 
   def render_for_path("/app-icon.png", _params, conn) do
-    icon = get_configurable_asset(:app_config_app_icon, "images|app_icon", "app-icon.png")
+    icon = get_configurable_asset(:app_config_app_icon, "images|app_icon")
 
     conn
     |> put_resp_header("content-type", "image/png")
@@ -169,7 +170,7 @@ defmodule RetWeb.PageController do
   end
 
   def render_for_path("/app-thumbnail.png", _params, conn) do
-    thumbnail = get_configurable_asset(:app_config_app_thumbnail, "images|app_thumbnail", "app-thumbnail.png")
+    thumbnail = get_configurable_asset(:app_config_app_thumbnail, "images|app_thumbnail")
 
     conn
     |> put_resp_header("content-type", "image/png")
@@ -200,7 +201,7 @@ defmodule RetWeb.PageController do
     end
   end
 
-  defp get_configurable_asset(cache_key, config_key, fallback_file) do
+  defp get_configurable_asset(cache_key, config_key) do
     case Cachex.get(:assets, cache_key) do
       {:ok, nil} ->
         app_config = AppConfig |> Repo.get_by(key: config_key) |> Repo.preload(:owned_file)
@@ -210,7 +211,7 @@ defmodule RetWeb.PageController do
                {:ok, _meta, stream} <- Storage.fetch(owned_file) do
             stream |> Enum.join("")
           else
-            _ -> chunks_for_page(fallback_file, :hubs) |> List.flatten() |> Enum.join("\n")
+            _ -> ""
           end
 
         unless module_config(:skip_cache) do

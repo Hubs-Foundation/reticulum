@@ -14,9 +14,6 @@ defmodule Ret.PageOriginWarmer do
              discord.html
              hub.service.js
              schema.toml
-             favicon.ico
-             app-thumbnail.png
-             app-icon.png
            ),
            admin: ~w(admin.html),
            spoke: ~w(index.html)
