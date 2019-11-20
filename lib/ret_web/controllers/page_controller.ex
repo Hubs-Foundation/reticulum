@@ -3,9 +3,6 @@ defmodule RetWeb.PageController do
   alias Ret.{Repo, Hub, Scene, SceneListing, Avatar, AppConfig, OwnedFile, AvatarListing, PageOriginWarmer, Storage}
   alias Plug.Conn
 
-  @default_app_name "Hubs"
-  @default_app_description "Share a virtual room with friends. Watch videos, play with 3D objects, or just hang out."
-
   def call(conn, _params) do
     case conn.request_path do
       "/http://" <> _ -> cors_proxy(conn)
@@ -133,8 +130,8 @@ defmodule RetWeb.PageController do
             manifest =
               Phoenix.View.render_to_string(RetWeb.PageView, "manifest.webmanifest",
                 root_url: RetWeb.Endpoint.url(),
-                app_name: get_app_config_value("translations|en|app-name") || @default_app_name,
-                app_description: get_app_config_value("translations|en|app-description") || @default_app_description
+                app_name: get_app_config_value("translations|en|app-name") || "",
+                app_description: get_app_config_value("translations|en|app-description") || ""
               )
 
             unless module_config(:skip_cache) do
