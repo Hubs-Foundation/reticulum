@@ -63,7 +63,7 @@ defmodule RetWeb.Api.V1.MediaController do
         )
 
       {:error, :quota} ->
-        conn |> send_resp(400, "Unable to store additional content.")
+        conn |> send_resp(413, "Unable to store additional content.")
 
       {:error, :not_allowed} ->
         conn |> send_resp(401, "")
