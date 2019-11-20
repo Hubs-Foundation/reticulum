@@ -27,4 +27,3 @@ Run the following commands at the root of the reticulum directory:
 
 ### Start Reticulum
 Run `scripts/run.sh` if you have the hubs secret repo cloned. Otherwise `iex -S mix phx.server`
-
