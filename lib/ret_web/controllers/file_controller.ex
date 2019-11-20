@@ -24,12 +24,14 @@ defmodule RetWeb.FileController do
           |> Map.put(:query, URI.encode_query(token: token))
           |> URI.to_string()
 
+        app_name =
+          AppConfig.get_cached_config_value("translations|en|app-full-name") ||
+            AppConfig.get_cached_config_value("translations|en|app-name")
+
         conn
         |> render("show.html",
           image_url: image_url,
-          app_name:
-            AppConfig.get_cached_config_value("translations|en|app-full-name") ||
-              AppConfig.get_cached_config_value("translations|en|app-name")
+          app_name: app_name
         )
 
       {:error, :not_found} ->
