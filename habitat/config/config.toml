@@ -159,6 +159,11 @@ node_gauges_enabled = {{ cfg.stats.node_gauges_enabled }}
 check_repo = {{ cfg.health.check_repo }}
 {{/if}}
 
+[ret."Elixir.Ret.Account"]
+{{#if cfg.accounts.admin_email }}
+admin_email = "{{ cfg.accounts.admin_email }}"
+{{/if}}
+
 [web_push_encryption.vapid_details]
 subject = "{{ cfg.web_push.subject }}"
 public_key = "{{ cfg.web_push.public_key }}"
