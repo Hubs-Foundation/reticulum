@@ -126,6 +126,7 @@ insecure_ssl = {{ cfg.pages.insecure_ssl }}
 storage_path = "{{ cfg.uploads.storage_path }}"
 ttl = {{ cfg.uploads.ttl }}
 host = "{{ cfg.uploads.host }}"
+quota_gb = {{ cfg.uploads.quota_gb }}
 
 [ret."Elixir.RetWeb.Email"]
 from = "{{ cfg.email.from }}"
