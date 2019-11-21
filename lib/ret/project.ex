@@ -43,7 +43,7 @@ defmodule Ret.Project do
         :created_by_account,
         :project_owned_file,
         :thumbnail_owned_file,
-        :scene,
+        scene: [:account, :model_owned_file, :screenshot_owned_file, :scene_owned_file],
         assets: [:asset_owned_file, :thumbnail_owned_file]
       ]
     )
@@ -54,7 +54,11 @@ defmodule Ret.Project do
     Repo.all(
       from(p in Project,
         where: p.created_by_account_id == ^account.account_id,
-        preload: [:project_owned_file, :thumbnail_owned_file, :scene]
+        preload: [
+          :project_owned_file,
+          :thumbnail_owned_file,
+          scene: [:account, :model_owned_file, :screenshot_owned_file, :scene_owned_file]
+        ]
       )
     )
   end
