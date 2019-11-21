@@ -7,24 +7,15 @@ defmodule RetWeb.Api.V1.MediaSearchController do
     conn |> render("index.json", results: results)
   end
 
-  def index(conn, %{"source" => "scene_listings", "filter" => "featured"} = params) do
-    {:commit, results} =
-      %Ret.MediaSearchQuery{source: "scene_listings", cursor: params["cursor"] || "1", filter: "featured"}
-      |> Ret.MediaSearch.search()
-
-    conn |> render("index.json", results: results)
-  end
-
-  def index(conn, %{"source" => "scene_listings", "q" => q} = params) do
-    {:commit, results} =
-      %Ret.MediaSearchQuery{source: "scene_listings", cursor: params["cursor"] || "1", q: q} |> Ret.MediaSearch.search()
-
-    conn |> render("index.json", results: results)
-  end
-
   def index(conn, %{"source" => "scene_listings"} = params) do
     {:commit, results} =
-      %Ret.MediaSearchQuery{source: "scene_listings", cursor: params["cursor"] || "1"} |> Ret.MediaSearch.search()
+      %Ret.MediaSearchQuery{
+        source: "scene_listings",
+        q: params["q"],
+        filter: params["filter"],
+        cursor: params["cursor"] || "1"
+      }
+      |> Ret.MediaSearch.search()
 
     conn |> render("index.json", results: results)
   end
