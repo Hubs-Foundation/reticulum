@@ -229,25 +229,32 @@ defmodule RetWeb.PageController do
   end
 
   def render_index(conn) do
-    {app_config, app_config_script, app_config_csp} = generate_app_config()
+    if conn |> get_req_header("x-original-method") |> Enum.at(0) === "HEAD" do
+      conn
+      |> put_resp_header("hubs-server", "true")
+      |> send_resp(200, "")
+    else
+      {app_config, app_config_script, app_config_csp} = generate_app_config()
 
-    index_meta_tags =
-      Phoenix.View.render_to_string(
-        RetWeb.PageView,
-        "index-meta.html",
-        root_url: RetWeb.Endpoint.url(),
-        translations: app_config["translations"]["en"],
-        app_config_script: {:safe, app_config_script}
-      )
+      index_meta_tags =
+        Phoenix.View.render_to_string(
+          RetWeb.PageView,
+          "index-meta.html",
+          root_url: RetWeb.Endpoint.url(),
+          translations: app_config["translations"]["en"],
+          app_config_script: {:safe, app_config_script}
+        )
 
-    chunks =
-      chunks_for_page("index.html", :hubs)
-      |> List.insert_at(1, index_meta_tags)
+      chunks =
+        chunks_for_page("index.html", :hubs)
+        |> List.insert_at(1, index_meta_tags)
 
-    conn
-    |> append_csp("script-src", app_config_csp)
-    |> put_resp_header("content-type", "text/html; charset=utf-8")
-    |> send_resp(200, chunks)
+      conn
+      |> append_csp("script-src", app_config_csp)
+      |> put_resp_header("content-type", "text/html; charset=utf-8")
+      |> put_resp_header("hubs-server", "true")
+      |> send_resp(200, chunks)
+    end
   end
 
   defp get_app_config_value(key) do
