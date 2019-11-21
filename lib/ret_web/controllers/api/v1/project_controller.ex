@@ -75,7 +75,7 @@ defmodule RetWeb.Api.V1.ProjectController do
     conn |> render_error_json(400, "You must provide a valid scene to publish")
   end
 
-  defp publish_project(conn, _scen_params, _project = nil, _account) do
+  defp publish_project(conn, _scene_params, _project = nil, _account) do
     conn |> render_error_json(:not_found)
   end
 
