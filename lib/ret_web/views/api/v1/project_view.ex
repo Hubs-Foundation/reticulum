@@ -11,7 +11,7 @@ defmodule RetWeb.Api.V1.ProjectView do
       name: project.name,
       project_url: url_for_file(project.project_owned_file),
       thumbnail_url: url_for_file(project.thumbnail_owned_file),
-      scene_id: project.scene |> Scene.to_sid()
+      scene: RetWeb.Api.V1.SceneView.render_scene(project.scene, nil)
     }
   end
 
@@ -23,7 +23,7 @@ defmodule RetWeb.Api.V1.ProjectView do
 
   def render("show.json", %{project: project}) do
     Map.merge(
-      %{ status: :ok },
+      %{status: :ok},
       render_project(project)
     )
   end
