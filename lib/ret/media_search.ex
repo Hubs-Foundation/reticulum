@@ -33,6 +33,10 @@ defmodule Ret.MediaSearch do
     scene_listing_search(cursor, query, "featured", asc: :order)
   end
 
+  def search(%Ret.MediaSearchQuery{source: "scene_listings", cursor: cursor, filter: "remixable", q: query}) do
+    scene_listing_remixable_search(cursor, query)
+  end
+
   def search(%Ret.MediaSearchQuery{source: "scene_listings", cursor: cursor, filter: filter, q: query}) do
     scene_listing_search(cursor, query, filter)
   end
@@ -540,6 +544,22 @@ defmodule Ret.MediaSearch do
       |> order_by(^order)
       |> Repo.paginate(%{page: page_number, page_size: @page_size})
       |> result_for_page(page_number, :avatar_listings, &avatar_listing_to_entry/1)
+
+    {:commit, results}
+  end
+
+  defp scene_listing_remixable_search(cursor, query, order \\ [desc: :updated_at]) do
+    page_number = (cursor || "1") |> Integer.parse() |> elem(0)
+
+    results =
+      SceneListing
+      |> join(:inner, [l], s in assoc(l, :scene))
+      |> where([l, s], l.state == ^"active" and s.state == ^"active" and s.allow_promotion == ^true and s.allow_remixing == ^true)
+      |> add_query_to_listing_search_query(query)
+      |> preload([:screenshot_owned_file, :model_owned_file, :scene_owned_file])
+      |> order_by(^order)
+      |> Repo.paginate(%{page: page_number, page_size: @scene_page_size})
+      |> result_for_page(page_number, :scene_listings, &scene_or_scene_listing_to_entry/1)
 
     {:commit, results}
   end
