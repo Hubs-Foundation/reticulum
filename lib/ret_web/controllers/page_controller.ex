@@ -230,15 +230,15 @@ defmodule RetWeb.PageController do
     end
   end
 
+  defp render_index(conn) do
+    method = conn |> get_req_header("x-original-method") |> Enum.at(0)
+    conn |> render_index(method)
+  end
+
   defp render_index(conn, "HEAD") do
     conn
     |> put_hub_headers("hub")
     |> send_resp(200, "")
-  end
-
-  defp render_index(conn) do
-    method = conn |> get_req_header("x-original-method") |> Enum.at(0)
-    conn |> render_index(method)
   end
 
   defp render_index(conn, _method) do
