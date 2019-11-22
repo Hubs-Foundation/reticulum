@@ -174,6 +174,14 @@ defmodule RetWeb.PageController do
 
   def render_for_path("/admin", _params, conn), do: conn |> render_page("admin.html", :admin)
 
+  def render_for_path("/robots.txt", _params, conn) do
+    allow_crawlers = Application.get_env(:ret, RetWeb.Endpoint)[:allow_crawlers] || false
+    robots_txt = Phoenix.View.render_to_string(RetWeb.PageView, "robots.txt", allow_crawlers: allow_crawlers)
+
+    conn
+    |> send_resp(200, robots_txt)
+  end
+
   def render_for_path("/" <> path, params, conn) do
     embed_token = params["embed_token"]
 

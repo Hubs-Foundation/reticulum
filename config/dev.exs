@@ -32,6 +32,7 @@ config :ret, RetWeb.Endpoint,
   check_origin: false,
   secret_key_base: "txlMOtlaY5x3crvOCko4uV5PM29ul3zGo1oBGNO3cDXx+7GHLKqt0gR9qzgThxb5",
   allowed_origins: "*",
+  allow_crawlers: true,
   watchers: [
     node: [
       "node_modules/brunch/bin/brunch",
