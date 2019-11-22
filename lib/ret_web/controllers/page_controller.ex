@@ -28,6 +28,7 @@ defmodule RetWeb.PageController do
 
     conn
     |> append_csp("script-src", app_config_csp)
+    |> put_hub_headers("scene")
     |> put_resp_header("content-type", "text/html; charset=utf-8")
     |> send_resp(200, chunks)
   end
@@ -53,6 +54,7 @@ defmodule RetWeb.PageController do
 
     conn
     |> append_csp("script-src", app_config_csp)
+    |> put_hub_headers("avatar")
     |> put_resp_header("content-type", "text/html; charset=utf-8")
     |> send_resp(200, chunks)
   end
@@ -228,7 +230,18 @@ defmodule RetWeb.PageController do
     end
   end
 
-  def render_index(conn) do
+  defp render_index(conn) do
+    method = conn |> get_req_header("x-original-method") |> Enum.at(0)
+    conn |> render_index(method)
+  end
+
+  defp render_index(conn, "HEAD") do
+    conn
+    |> put_hub_headers("hub")
+    |> send_resp(200, "")
+  end
+
+  defp render_index(conn, _method) do
     {app_config, app_config_script, app_config_csp} = generate_app_config()
 
     index_meta_tags =
@@ -246,8 +259,21 @@ defmodule RetWeb.PageController do
 
     conn
     |> append_csp("script-src", app_config_csp)
+    |> put_hub_headers("hub")
     |> put_resp_header("content-type", "text/html; charset=utf-8")
     |> send_resp(200, chunks)
+  end
+
+  defp put_hub_headers(conn, entity_type) do
+    conn
+    |> put_resp_header(
+      "hub-name",
+      get_app_config_value("translations|en|app-full-name") || get_app_config_value("translations|en|app-name") || ""
+    )
+    |> put_resp_header(
+      "hub-entity-type",
+      entity_type
+    )
   end
 
   defp get_app_config_value(key) do
@@ -316,6 +342,7 @@ defmodule RetWeb.PageController do
     conn
     |> append_csp("script-src", app_config_csp)
     |> append_csp("script-src", available_integrations_csp)
+    |> put_hub_headers("room")
     |> put_resp_header("content-type", "text/html; charset=utf-8")
     |> send_resp(200, chunks)
   end
