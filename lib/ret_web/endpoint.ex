@@ -15,21 +15,6 @@ defmodule RetWeb.Endpoint do
     end
   end
 
-  # Serve at "/" the static files from "priv/static" directory.
-  #
-  # You should set gzip to true if you are running phoenix.digest
-  # when deploying your static files in production.
-  plug(
-    Plug.Static,
-    at: "/",
-    from: :ret,
-    gzip: false,
-    # Due to cloudfront, we want to include max-age in responses	
-    cache_control_for_etags: "public, max-age=31536000",
-    only: ~w(robots.txt),
-    headers: [{"access-control-allow-origin", "*"}]
-  )
-
   # Code reloading can be explicitly enabled under the
   # :code_reloader configuration of your endpoint.
   if code_reloading? do

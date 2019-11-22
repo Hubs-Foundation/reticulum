@@ -1,0 +1,13 @@
+<%=if @allow_crawlers do %>
+User-agent: *
+Allow: /
+<% else %>
+User-agent: *
+Disallow: /
+
+User-agent: Twitterbot
+Allow: /
+
+User-agent: facebookexternalhit
+Allow: /
+<% end %>
