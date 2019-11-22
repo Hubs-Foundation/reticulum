@@ -124,6 +124,10 @@ defmodule Ret.TestHelpers do
     {:ok, thumbnail_owned_file: generate_fixture_owned_file(account, thumbnail_file, "image/png")}
   end
 
+  def create_model_owned_file(%{account: account}) do
+    {:ok, model_owned_file: generate_temp_owned_file(account)}
+  end
+
   def create_project(%{
         account: account,
         project_owned_file: project_owned_file,
@@ -132,7 +136,7 @@ defmodule Ret.TestHelpers do
     {:ok, project} =
       %Project{}
       |> Project.changeset(account, project_owned_file, thumbnail_owned_file, %{
-        name: "Test Scene"
+        name: "Test Project"
       })
       |> Repo.insert_or_update()
 

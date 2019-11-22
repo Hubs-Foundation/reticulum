@@ -83,7 +83,8 @@ defmodule Ret.Scene do
           |> Repo.insert!()
 
         %Project{}
-        |> Project.changeset(account, scene_owned_file, screenshot_owned_file, new_scene, %{name: new_scene.name})
+        |> Project.changeset(account, scene_owned_file, screenshot_owned_file, %{name: new_scene.name})
+        |> put_assoc(:scene, new_scene)
         |> Repo.insert!()
 
         new_scene
@@ -179,6 +180,18 @@ defmodule Ret.Scene do
     |> put_assoc(:screenshot_owned_file, screenshot_owned_file)
     |> put_assoc(:scene_owned_file, scene_owned_file)
     |> SceneSlug.maybe_generate_slug()
+  end
+
+  def changeset(
+        %Scene{} = scene,
+        account,
+        model_owned_file,
+        screenshot_owned_file,
+        scene_owned_file,
+        nil = _parent_scene,
+        params
+      ) do
+    changeset(scene, account, model_owned_file, screenshot_owned_file, scene_owned_file, params)
   end
 
   def changeset(

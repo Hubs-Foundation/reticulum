@@ -3,10 +3,20 @@ defmodule Ret.Project do
   import Ecto.Changeset
   import Ecto.Query
 
-  alias Ret.{Repo, Project, ProjectAsset, Scene, OwnedFile}
+  alias Ret.{Repo, Project, ProjectAsset, Scene, SceneListing, OwnedFile}
 
   @schema_prefix "ret0"
   @primary_key {:project_id, :id, autogenerate: true}
+
+  @scene_preloads [
+    :parent_scene,
+    :parent_scene_listing,
+    :account,
+    :project,
+    :model_owned_file,
+    :screenshot_owned_file,
+    :scene_owned_file
+  ]
 
   schema "projects" do
     field(:project_sid, :string)
@@ -14,6 +24,9 @@ defmodule Ret.Project do
     belongs_to(:created_by_account, Ret.Account, references: :account_id)
     belongs_to(:project_owned_file, Ret.OwnedFile, references: :owned_file_id)
     belongs_to(:thumbnail_owned_file, Ret.OwnedFile, references: :owned_file_id)
+
+    belongs_to(:parent_scene, Scene, references: :scene_id, on_replace: :nilify)
+    belongs_to(:parent_scene_listing, SceneListing, references: :scene_listing_id, on_replace: :nilify)
 
     many_to_many(:assets, Ret.Asset,
       join_through: Ret.ProjectAsset,
@@ -43,7 +56,9 @@ defmodule Ret.Project do
         :created_by_account,
         :project_owned_file,
         :thumbnail_owned_file,
-        scene: [:account, :model_owned_file, :screenshot_owned_file, :scene_owned_file],
+        scene: ^@scene_preloads,
+        parent_scene: ^@scene_preloads,
+        parent_scene_listing: ^@scene_preloads,
         assets: [:asset_owned_file, :thumbnail_owned_file]
       ]
     )
@@ -57,7 +72,9 @@ defmodule Ret.Project do
         preload: [
           :project_owned_file,
           :thumbnail_owned_file,
-          scene: [:account, :model_owned_file, :screenshot_owned_file, :scene_owned_file]
+          scene: ^@scene_preloads,
+          parent_scene: ^@scene_preloads,
+          parent_scene_listing: ^@scene_preloads
         ]
       )
     )
@@ -103,12 +120,37 @@ defmodule Ret.Project do
         account,
         %OwnedFile{} = project_owned_file,
         %OwnedFile{} = thumbnail_owned_file,
-        scene,
+        nil = _parent_scene,
         params
       ) do
     project
     |> changeset(account, project_owned_file, thumbnail_owned_file, params)
-    |> put_assoc(:scene, scene)
+  end
+
+  def changeset(
+        %Project{} = project,
+        account,
+        %OwnedFile{} = project_owned_file,
+        %OwnedFile{} = thumbnail_owned_file,
+        %Scene{} = parent_scene,
+        params
+      ) do
+    project
+    |> changeset(account, project_owned_file, thumbnail_owned_file, params)
+    |> put_assoc(:parent_scene, parent_scene)
+  end
+
+  def changeset(
+        %Project{} = project,
+        account,
+        %OwnedFile{} = project_owned_file,
+        %OwnedFile{} = thumbnail_owned_file,
+        %SceneListing{} = parent_scene_listing,
+        params
+      ) do
+    project
+    |> changeset(account, project_owned_file, thumbnail_owned_file, params)
+    |> put_assoc(:parent_scene_listing, parent_scene_listing)
   end
 
   defp maybe_add_project_sid_to_changeset(changeset) do
