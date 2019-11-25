@@ -609,6 +609,7 @@ defmodule RetWeb.HubChannel do
     hub = socket |> hub_for_socket
 
     cond do
+      template |> String.ends_with?("-waypoint") -> true
       template |> String.ends_with?("-avatar") -> true
       template |> String.ends_with?("-media") -> account |> can?(spawn_and_move_media(hub))
       template |> String.ends_with?("-camera") -> account |> can?(spawn_camera(hub))
