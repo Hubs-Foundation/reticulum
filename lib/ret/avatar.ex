@@ -263,7 +263,7 @@ defmodule Ret.Avatar do
       |> Avatar.changeset(account, owned_files_map, nil, nil, %{
         name: remote_avatar["name"],
         description: remote_avatar["description"],
-        attributions: remote_avatar["attribution"],
+        attributions: remote_avatar["attributions"],
         allow_remixing: remote_avatar["allow_remixing"],
         imported_from_host: imported_from_host,
         imported_from_port: imported_from_port,
