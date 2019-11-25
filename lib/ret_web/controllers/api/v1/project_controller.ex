@@ -11,9 +11,9 @@ defmodule RetWeb.Api.V1.ProjectController do
     |> Repo.preload([
       :project_owned_file,
       :thumbnail_owned_file,
-      scene: [:parent_scene, :parent_scene_listing, :project],
-      parent_scene: [:parent_scene, :parent_scene_listing, :project],
-      parent_scene_listing: [:parent_scene, :parent_scene_listing, :project]
+      scene: Scene.scene_preloads(),
+      parent_scene: Scene.scene_preloads(),
+      parent_scene_listing: Scene.scene_preloads()
     ])
   end
 

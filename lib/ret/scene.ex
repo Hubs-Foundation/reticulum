@@ -16,6 +16,17 @@ defmodule Ret.Scene do
   @schema_prefix "ret0"
   @primary_key {:scene_id, :id, autogenerate: true}
 
+  @scene_preloads [
+    :parent_scene,
+    :parent_scene_listing,
+    :account,
+    :project,
+    :model_owned_file,
+    :screenshot_owned_file,
+    :scene_owned_file
+  ]
+  def scene_preloads, do: @scene_preloads
+
   schema "scenes" do
     field(:scene_sid, :string)
     field(:slug, SceneSlug.Type)
@@ -44,7 +55,8 @@ defmodule Ret.Scene do
   end
 
   def scene_or_scene_listing_by_sid(sid) do
-    Scene |> Repo.get_by(scene_sid: sid) || SceneListing |> Repo.get_by(scene_listing_sid: sid) |> Repo.preload(:scene)
+    Scene |> Repo.get_by(scene_sid: sid) ||
+      SceneListing |> Repo.get_by(scene_listing_sid: sid) |> Repo.preload([scene: Scene.scene_preloads()])
   end
 
   def to_sid(nil), do: nil
@@ -115,14 +127,7 @@ defmodule Ret.Scene do
         imported_from_port: imported_from_port,
         imported_from_sid: imported_from_sid
       )
-      |> Repo.preload([
-        :account,
-        :model_owned_file,
-        :screenshot_owned_file,
-        :scene_owned_file,
-        :parent_scene,
-        :parent_scene_listing
-      ])
+      |> Repo.preload(Scene.scene_preloads())
 
     # Disallow non-admins from importing if account varies
     if scene && scene.account_id != account.account_id && !account.is_admin do
