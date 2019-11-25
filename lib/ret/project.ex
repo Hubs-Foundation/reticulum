@@ -8,16 +8,6 @@ defmodule Ret.Project do
   @schema_prefix "ret0"
   @primary_key {:project_id, :id, autogenerate: true}
 
-  @scene_preloads [
-    :parent_scene,
-    :parent_scene_listing,
-    :account,
-    :project,
-    :model_owned_file,
-    :screenshot_owned_file,
-    :scene_owned_file
-  ]
-
   schema "projects" do
     field(:project_sid, :string)
     field(:name, :string)
@@ -56,9 +46,9 @@ defmodule Ret.Project do
         :created_by_account,
         :project_owned_file,
         :thumbnail_owned_file,
-        scene: ^@scene_preloads,
-        parent_scene: ^@scene_preloads,
-        parent_scene_listing: ^@scene_preloads,
+        scene: ^Scene.scene_preloads(),
+        parent_scene: ^Scene.scene_preloads(),
+        parent_scene_listing: ^Scene.scene_preloads(),
         assets: [:asset_owned_file, :thumbnail_owned_file]
       ]
     )
@@ -72,9 +62,9 @@ defmodule Ret.Project do
         preload: [
           :project_owned_file,
           :thumbnail_owned_file,
-          scene: ^@scene_preloads,
-          parent_scene: ^@scene_preloads,
-          parent_scene_listing: ^@scene_preloads
+          scene: ^Scene.scene_preloads(),
+          parent_scene: ^Scene.scene_preloads(),
+          parent_scene_listing: ^Scene.scene_preloads()
         ]
       )
     )

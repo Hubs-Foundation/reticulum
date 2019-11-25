@@ -25,7 +25,7 @@ defmodule RetWeb.HubChannel do
   intercept(["hub_refresh", "mute", "add_owner", "remove_owner", "naf", "message", "block", "unblock"])
 
   @hub_preloads [
-    scene: [:model_owned_file, :screenshot_owned_file, :scene_owned_file],
+    scene: Scene.scene_preloads(),
     scene_listing: [:model_owned_file, :screenshot_owned_file, :scene_owned_file, :scene],
     web_push_subscriptions: [],
     hub_bindings: [],

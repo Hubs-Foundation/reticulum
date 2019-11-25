@@ -70,7 +70,11 @@ defmodule Ret.SceneListing do
 
     if length(results.entries) > 0 do
       scene_listing_sid = results.entries |> Enum.map(& &1[:id]) |> Enum.shuffle() |> Enum.at(0)
-      Repo.get_by(SceneListing, scene_listing_sid: scene_listing_sid) |> Repo.preload(:scene)
+
+      Repo.get_by(SceneListing, scene_listing_sid: scene_listing_sid)
+      |> Repo.preload(
+        scene: Scene.scene_preloads()
+      )
     else
       nil
     end
