@@ -662,7 +662,7 @@ defmodule Ret.MediaSearch do
   end
 
   defp scene_or_scene_listing_to_entry(%SceneListing{} = s) do
-    scene_or_scene_listing_to_entry(s, "scene_listings")
+    scene_or_scene_listing_to_entry(s, "scene_listing")
     |> Map.put(:allow_remixing, s.scene !== nil and s.scene.allow_remixing)
   end
 
