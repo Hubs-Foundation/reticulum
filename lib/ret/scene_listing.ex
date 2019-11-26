@@ -10,7 +10,7 @@ defmodule Ret.SceneListing do
   use Ecto.Schema
   import Ecto.Changeset
 
-  alias Ret.{Repo, SceneListing}
+  alias Ret.{Repo, SceneListing, Scene}
   alias Ret.SceneListing.{SceneListingSlug}
 
   @schema_prefix "ret0"
