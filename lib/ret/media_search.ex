@@ -35,6 +35,10 @@ defmodule Ret.MediaSearch do
     scene_listing_search(cursor, query, "featured", asc: :order)
   end
 
+  def search(%Ret.MediaSearchQuery{source: "scene_listings", cursor: cursor, filter: "remixable", q: query}) do
+    scene_listing_remixable_search(cursor, query)
+  end
+
   def search(%Ret.MediaSearchQuery{source: "scene_listings", cursor: cursor, filter: filter, q: query}) do
     scene_listing_search(cursor, query, filter)
   end
@@ -471,7 +475,7 @@ defmodule Ret.MediaSearch do
     results =
       AccountFavorite
       |> where([a], a.account_id == ^account_id)
-      |> preload(hub: [scene: [:screenshot_owned_file], scene_listing: [:screenshot_owned_file]])
+      |> preload(hub: [scene: [:screenshot_owned_file], scene_listing: [:scene, :screenshot_owned_file]])
       |> order_by(^order)
       |> Repo.paginate(%{page: page_number, page_size: @page_size})
       |> result_for_page(page_number, :favorites, &favorite_to_entry/1)
@@ -546,6 +550,22 @@ defmodule Ret.MediaSearch do
     {:commit, results}
   end
 
+  defp scene_listing_remixable_search(cursor, query, order \\ [desc: :updated_at]) do
+    page_number = (cursor || "1") |> Integer.parse() |> elem(0)
+
+    results =
+      SceneListing
+      |> join(:inner, [l], s in assoc(l, :scene))
+      |> where([l, s], l.state == ^"active" and s.state == ^"active" and s.allow_promotion == ^true and s.allow_remixing == ^true)
+      |> add_query_to_listing_search_query(query)
+      |> preload([:screenshot_owned_file, :model_owned_file, :scene_owned_file, :scene])
+      |> order_by(^order)
+      |> Repo.paginate(%{page: page_number, page_size: @scene_page_size})
+      |> result_for_page(page_number, :scene_listings, &scene_or_scene_listing_to_entry/1)
+
+    {:commit, results}
+  end
+
   defp scene_listing_search(cursor, query, filter, order \\ [desc: :updated_at]) do
     page_number = (cursor || "1") |> Integer.parse() |> elem(0)
 
@@ -555,7 +575,7 @@ defmodule Ret.MediaSearch do
       |> where([l, s], l.state == ^"active" and s.state == ^"active" and s.allow_promotion == ^true)
       |> add_query_to_listing_search_query(query)
       |> add_tag_to_listing_search_query(filter)
-      |> preload([:screenshot_owned_file, :model_owned_file, :scene_owned_file])
+      |> preload([:screenshot_owned_file, :model_owned_file, :scene_owned_file, :scene])
       |> order_by(^order)
       |> Repo.paginate(%{page: page_number, page_size: @scene_page_size})
       |> result_for_page(page_number, :scene_listings, &scene_or_scene_listing_to_entry/1)
@@ -637,10 +657,14 @@ defmodule Ret.MediaSearch do
     }
   end
 
-  defp scene_or_scene_listing_to_entry(%Scene{} = scene), do: scene_or_scene_listing_to_entry(scene, "scene")
+  defp scene_or_scene_listing_to_entry(%Scene{} = s) do
+    scene_or_scene_listing_to_entry(s, "scene") |> Map.put(:allow_remixing, s.allow_remixing)
+  end
 
-  defp scene_or_scene_listing_to_entry(%SceneListing{} = scene),
-    do: scene_or_scene_listing_to_entry(scene, "scene_listing")
+  defp scene_or_scene_listing_to_entry(%SceneListing{} = s) do
+    scene_or_scene_listing_to_entry(s, "scene_listing")
+    |> Map.put(:allow_remixing, s.scene !== nil and s.scene.allow_remixing)
+  end
 
   defp scene_or_scene_listing_to_entry(s, type) do
     %{

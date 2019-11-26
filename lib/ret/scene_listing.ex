@@ -10,7 +10,7 @@ defmodule Ret.SceneListing do
   use Ecto.Schema
   import Ecto.Changeset
 
-  alias Ret.{Repo, SceneListing}
+  alias Ret.{Repo, SceneListing, Scene}
   alias Ret.SceneListing.{SceneListingSlug}
 
   @schema_prefix "ret0"
@@ -28,6 +28,7 @@ defmodule Ret.SceneListing do
     belongs_to(:screenshot_owned_file, Ret.OwnedFile, references: :owned_file_id)
     belongs_to(:scene_owned_file, Ret.OwnedFile, references: :owned_file_id)
     has_one(:account, through: [:scene, :account])
+    has_one(:project, through: [:scene, :project])
     field(:order, :integer)
     field(:state, SceneListing.State)
 
@@ -69,7 +70,11 @@ defmodule Ret.SceneListing do
 
     if length(results.entries) > 0 do
       scene_listing_sid = results.entries |> Enum.map(& &1[:id]) |> Enum.shuffle() |> Enum.at(0)
-      Repo.get_by(SceneListing, scene_listing_sid: scene_listing_sid) |> Repo.preload(:scene)
+
+      Repo.get_by(SceneListing, scene_listing_sid: scene_listing_sid)
+      |> Repo.preload(
+        scene: Scene.scene_preloads()
+      )
     else
       nil
     end

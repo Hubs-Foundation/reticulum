@@ -4,7 +4,13 @@ defmodule RetWeb.ProjectsControllerTest do
 
   alias Ret.{Project, Repo, Account}
 
-  setup [:create_account, :create_project_owned_file, :create_thumbnail_owned_file, :create_project]
+  setup [
+    :create_account,
+    :create_project_owned_file,
+    :create_thumbnail_owned_file,
+    :create_project,
+    :create_model_owned_file
+  ]
 
   setup do
     on_exit(fn ->
@@ -31,7 +37,7 @@ defmodule RetWeb.ProjectsControllerTest do
       ]
     } = response
 
-    assert name == "Test Scene"
+    assert name == "Test Project"
     assert thumbnail_url != nil
     assert project_url != nil
     assert project_id != nil
@@ -52,7 +58,7 @@ defmodule RetWeb.ProjectsControllerTest do
       "name" => name
     } = response
 
-    assert name == "Test Scene"
+    assert name == "Test Project"
     assert thumbnail_url != nil
     assert project_url != nil
     assert project_id != nil
@@ -63,7 +69,11 @@ defmodule RetWeb.ProjectsControllerTest do
   end
 
   @tag :authenticated
-  test "projects create works when logged in", %{conn: conn, project_owned_file: project_owned_file, thumbnail_owned_file: thumbnail_owned_file} do
+  test "projects create works when logged in", %{
+    conn: conn,
+    project_owned_file: project_owned_file,
+    thumbnail_owned_file: thumbnail_owned_file
+  } do
     params = %{
       project: %{
         name: "Test Project",
@@ -140,6 +150,51 @@ defmodule RetWeb.ProjectsControllerTest do
     assert project_id != nil
   end
 
+  @tag :authenticated
+  test "projects with no scene creates a new scene on publish", %{
+    conn: conn,
+    project: project,
+    project_owned_file: scene_owned_file,
+    thumbnail_owned_file: screenshot_owned_file,
+    model_owned_file: model_owned_file
+  } do
+    params = %{
+      scene: %{
+        name: "Test Publish",
+        model_file_id: model_owned_file.owned_file_uuid,
+        model_file_token: model_owned_file.key,
+        screenshot_file_id: screenshot_owned_file.owned_file_uuid,
+        screenshot_file_token: screenshot_owned_file.key,
+        scene_file_id: scene_owned_file.owned_file_uuid,
+        scene_file_token: scene_owned_file.key
+      }
+    }
+
+    # Publishing the first time should create a new scene
+    project = project |> Repo.preload([:scene])
+    assert project.scene == nil
+
+    response_project =
+      conn |> post(api_v1_project_project_path(conn, :publish, project.project_sid, params)) |> json_response(200)
+
+    new_scene_sid = response_project["scene"]["scene_id"]
+
+    updated_project = Project |> Repo.get_by(project_sid: project.project_sid) |> Repo.preload([:scene])
+    assert updated_project.scene.scene_sid == new_scene_sid
+    assert response_project["name"] == "Test Project"
+    assert response_project["scene"]["name"] == "Test Publish"
+
+
+    # Republishing should not create a new scene
+    params = params |> put_in([:scene, :name], "Test Republish")
+
+    response_project =
+      conn |> post(api_v1_project_project_path(conn, :publish, project.project_sid, params)) |> json_response(200)
+
+    assert response_project["scene"]["name"] == "Test Republish"
+    assert response_project["scene"]["scene_id"] == new_scene_sid
+  end
+
   test "projects delete 401's when not logged in", %{conn: conn, project: project} do
     conn |> delete(api_v1_project_path(conn, :delete, project.project_sid)) |> response(401)
   end
@@ -164,7 +219,7 @@ defmodule RetWeb.ProjectsControllerTest do
     {:ok, project} =
       %Project{}
       |> Project.changeset(other_account, project_owned_file, thumbnail_owned_file, %{
-        name: "Test Scene"
+        name: "Test Project"
       })
       |> Repo.insert_or_update()
 
