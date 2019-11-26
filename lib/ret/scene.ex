@@ -56,7 +56,7 @@ defmodule Ret.Scene do
 
   def scene_or_scene_listing_by_sid(sid) do
     Scene |> Repo.get_by(scene_sid: sid) ||
-      SceneListing |> Repo.get_by(scene_listing_sid: sid) |> Repo.preload([scene: Scene.scene_preloads()])
+      SceneListing |> Repo.get_by(scene_listing_sid: sid) |> Repo.preload(scene: Scene.scene_preloads())
   end
 
   def to_sid(nil), do: nil
@@ -67,6 +67,26 @@ defmodule Ret.Scene do
   defp fetch_remote_scene!(uri) do
     %{body: body} = HTTPoison.get!(uri)
     body |> Poison.decode!() |> get_in(["scenes", Access.at(0)])
+  end
+
+  defp get_scene_params(%Scene{} = scene) do
+    %{
+      name: scene.name,
+      description: scene.description,
+      attributions: scene.attributions,
+      allow_remixing: scene.allow_remixing,
+      allow_promotion: scene.allow_promotion
+    }
+  end
+
+  defp get_scene_params(%SceneListing{} = scene) do
+    %{
+      name: scene.name,
+      description: scene.description,
+      attributions: scene.attributions,
+      allow_remixing: scene.scene.allow_remixing,
+      allow_promotion: scene.scene.allow_promotion
+    }
   end
 
   def new_scene_from_parent_scene(parent_scene, account) do
@@ -84,13 +104,7 @@ defmodule Ret.Scene do
             screenshot_owned_file,
             scene_owned_file,
             parent_scene,
-            %{
-              name: parent_scene.name,
-              description: parent_scene.description,
-              attributions: parent_scene.attributions,
-              allow_remixing: parent_scene.allow_remixing,
-              allow_promotion: parent_scene.allow_promotion
-            }
+            get_scene_params(parent_scene)
           )
           |> Repo.insert!()
 
