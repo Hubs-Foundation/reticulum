@@ -18,7 +18,6 @@ defmodule RetWeb.Api.V1.SceneView do
   def render_scene(scene, account) do
     map = %{
       scene_id: scene |> Scene.to_sid(),
-      parent_scene_id: (scene.parent_scene_listing || scene.parent_scene) |> Scene.to_sid(),
       project_id: scene.project |> Project.to_sid(),
       name: scene.name,
       description: scene.description,
@@ -50,6 +49,7 @@ defmodule RetWeb.Api.V1.SceneView do
     map
     |> Map.merge(%{
       account_id: account && scene.account_id == account.account_id && scene.account_id |> Integer.to_string(),
+      parent_scene_id: (scene.parent_scene_listing || scene.parent_scene) |> Scene.to_sid(),
       attribution: scene.attribution,
       allow_remixing: scene.allow_remixing,
       allow_promotion: scene.allow_promotion,
