@@ -68,6 +68,9 @@ queue_interval = {{ cfg.db.queue_interval }}
 {{#if cfg.db.timeout }}
 timeout = {{ cfg.db.timeout }}
 {{/if}}
+{{#if cfg.db.port }}
+port = {{ cfg.db.port }}
+{{/if}}
 
 [ret."Elixir.Ret.Locking".session_lock_db]
 username = "{{ cfg.session_lock_db.username }}"
