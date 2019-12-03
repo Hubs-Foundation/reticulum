@@ -17,6 +17,7 @@ defmodule Ret.Locking do
         username: username,
         password: password,
         database: database,
+        ssl: true,
         port: port,
         queue_interval: 60_000,
         after_connect_timeout: 60_000,

@@ -34,6 +34,7 @@ config :ret, Ret.Repo,
   database: "ret_production",
   hostname: "localhost",
   template: "template0",
+  ssl: true,
   pool_size: 10
 
 # ## SSL Support
