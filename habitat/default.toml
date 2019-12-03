@@ -34,6 +34,9 @@ template = "template0"
 port = 5432
 pool_size = 16
 
+[session_lock_db]
+port = 5432
+
 [security]
 content_security_policy = "default-src 'self'"
 cors_origins = "*"

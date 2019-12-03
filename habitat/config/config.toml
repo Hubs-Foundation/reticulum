@@ -77,6 +77,7 @@ username = "{{ cfg.session_lock_db.username }}"
 password = "{{ cfg.session_lock_db.password }}"
 database = "{{ cfg.session_lock_db.database }}"
 hostname = "{{ cfg.session_lock_db.hostname }}"
+port = "{{ cfg.session_lock_db.port }}"
 
 [ret."Elixir.Ret.Habitat"]
 ip = "{{ cfg.habitat.ip }}"
