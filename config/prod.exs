@@ -18,6 +18,10 @@ config :ret, RetWeb.Endpoint,
     port: 4000,
     otp_app: :ret
   ],
+  http: [
+    port: 4001,
+    otp_app: :ret
+  ],
   url: [scheme: "https", host: "", port: 443],
   secondary_url: [scheme: "https", host: "", port: 443],
   static_url: [scheme: "https", host: "", port: 443],
