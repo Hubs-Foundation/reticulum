@@ -22,6 +22,8 @@ config :ret, RetWeb.Endpoint,
   secondary_url: [scheme: "https", host: "", port: 443],
   static_url: [scheme: "https", host: "", port: 443],
   cors_proxy_url: [scheme: "https", host: "", port: 443],
+  assets_url: [scheme: "https", host: "", port: 443],
+  link_url: [scheme: "https", host: "", port: 443],
   server: true,
   root: "."
 

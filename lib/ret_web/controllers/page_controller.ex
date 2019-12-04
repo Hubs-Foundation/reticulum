@@ -2,12 +2,28 @@ defmodule RetWeb.PageController do
   use RetWeb, :controller
   alias Ret.{Repo, Hub, Scene, SceneListing, Avatar, AppConfig, OwnedFile, AvatarListing, PageOriginWarmer, Storage}
   alias Plug.Conn
+  import Ret.ConnUtils
 
   def call(conn, _params) do
-    case conn.request_path do
-      "/http://" <> _ -> cors_proxy(conn)
-      "/https://" <> _ -> cors_proxy(conn)
-      _ -> render_for_path(conn.request_path, conn.query_params, conn)
+    assets_host = RetWeb.Endpoint.config(:assets_url)[:host]
+    link_host = RetWeb.Endpoint.config(:link_url)[:host]
+
+    cond do
+      matches_host(conn, assets_host) ->
+        render_asset(conn)
+
+      matches_host(conn, link_host) ->
+        case conn.request_path do
+          "/" -> conn |> redirect(to: "/link")
+          _ -> conn |> redirect(to: "/link#{conn.request_path}")
+        end
+
+      true ->
+        case conn.request_path do
+          "/http://" <> _ -> cors_proxy(conn)
+          "/https://" <> _ -> cors_proxy(conn)
+          _ -> render_for_path(conn.request_path, conn.query_params, conn)
+        end
     end
   end
 
@@ -489,6 +505,11 @@ defmodule RetWeb.PageController do
     else
       conn |> send_resp(401, "Bad request.")
     end
+  end
+
+  defp render_asset(conn) do
+    static_options = Plug.Static.init(at: "/", from: module_config(:assets_path), gzip: true, brotli: true)
+    Plug.Static.call(conn, static_options)
   end
 
   defp module_config(key) do
