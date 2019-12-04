@@ -93,7 +93,7 @@ username = "{{ cfg.session_lock_db.username }}"
 password = "{{ cfg.session_lock_db.password }}"
 database = "{{ cfg.session_lock_db.database }}"
 hostname = "{{ cfg.session_lock_db.hostname }}"
-port = "{{ cfg.session_lock_db.port }}"
+port = {{ cfg.session_lock_db.port }}
 
 [ret."Elixir.Ret.Habitat"]
 ip = "{{ cfg.habitat.ip }}"
@@ -182,7 +182,7 @@ check_repo = {{ cfg.health.check_repo }}
 
 {{#if cfg.assets.assets_path}}
 [ret."Elixir.RetWeb.PageController"]
-assets_path = {{ cfg.assets.assets_path }}
+assets_path = "{{ cfg.assets.assets_path }}"
 {{/if}}
 
 [ret."Elixir.Ret.Account"]
