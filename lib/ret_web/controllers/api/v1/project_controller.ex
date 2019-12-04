@@ -13,7 +13,14 @@ defmodule RetWeb.Api.V1.ProjectController do
       :thumbnail_owned_file,
       scene: Scene.scene_preloads(),
       parent_scene: Scene.scene_preloads(),
-      parent_scene_listing: [:model_owned_file, :screenshot_owned_file, :scene_owned_file, :project, :account, scene: Scene.scene_preloads()],
+      parent_scene_listing: [
+        :model_owned_file,
+        :screenshot_owned_file,
+        :scene_owned_file,
+        :project,
+        :account,
+        scene: Scene.scene_preloads()
+      ]
     ])
   end
 
@@ -132,7 +139,9 @@ defmodule RetWeb.Api.V1.ProjectController do
                  project.parent_scene_listing || project.parent_scene,
                  scene_params
                ),
-             {:ok, updated_project} <- project |> Project.add_scene_to_project(scene_changes) do
+             {:ok, updated_project} <- project |> Project.add_scene_to_project(scene_changes),
+             scene <- updated_project.scene do
+          if scene.allow_promotion, do: Task.async(fn -> scene |> Ret.Support.send_notification_of_new_scene() end)
           conn |> render("show.json", project: updated_project |> preload())
         else
           {:error, :not_found} ->
