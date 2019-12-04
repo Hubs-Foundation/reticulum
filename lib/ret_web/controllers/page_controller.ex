@@ -188,8 +188,6 @@ defmodule RetWeb.PageController do
       @configurable_assets
       |> Enum.find(fn {_, {f, _, _}} -> f === file end)
 
-    {_file, path, mime_type} = @configurable_assets |> Map.get(asset_key)
-
     conn |> respond_with_configurable_asset(asset_key, path, mime_type)
   end
 
