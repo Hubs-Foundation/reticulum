@@ -4,18 +4,28 @@ defmodule RetWeb.PageController do
   alias Plug.Conn
   import Ret.ConnUtils
 
+  @configurable_assets %{
+    app_config_favicon: {"favicon.ico", "images|favicon", "image/x-icon"},
+    app_config_app_icon: {"app-icon.png", "images|app_icon", "image/png"},
+    app_config_app_thumbnail: {"app-thumbnail.png", "images|app_thumbnail", "image/png"}
+  }
+
+  @configurable_asset_files @configurable_assets |> Map.values() |> Enum.map(&elem(&1, 0))
+  @configurable_asset_paths @configurable_asset_files |> Enum.map(&"/#{&1}")
+
   def call(conn, _params) do
     assets_host = RetWeb.Endpoint.config(:assets_url)[:host]
     link_host = RetWeb.Endpoint.config(:link_url)[:host]
+    is_configurable_asset = @configurable_asset_paths |> Enum.any?(&(&1 === conn.request_path))
 
     cond do
-      matches_host(conn, assets_host) ->
+      matches_host(conn, assets_host) && !is_configurable_asset ->
         render_asset(conn)
 
       matches_host(conn, link_host) ->
         case conn.request_path do
-          "/" -> conn |> redirect(to: "/link")
-          _ -> conn |> redirect(to: "/link#{conn.request_path}")
+          "/" -> conn |> redirect(external: "#{RetWeb.Endpoint.url()}/link")
+          _ -> conn |> redirect(external: "#{RetWeb.Endpoint.url()}/link#{conn.request_path}")
         end
 
       true ->
@@ -173,19 +183,14 @@ defmodule RetWeb.PageController do
     end
   end
 
-  def render_for_path("/favicon.ico", _params, conn) do
-    conn
-    |> respond_with_configurable_asset(:app_config_favicon, "images|favicon", "image/x-icon")
-  end
+  def render_for_path("/" <> file, _params, conn) when file in @configurable_asset_files do
+    {asset_key, {_file, path, mime_type}} =
+      @configurable_assets
+      |> Enum.find(fn {_, {f, _, _}} -> f === file end)
 
-  def render_for_path("/app-icon.png", _params, conn) do
-    conn
-    |> respond_with_configurable_asset(:app_config_app_icon, "images|app_icon", "image/png")
-  end
+    {_file, path, mime_type} = @configurable_assets |> Map.get(asset_key)
 
-  def render_for_path("/app-thumbnail.png", _params, conn) do
-    conn
-    |> respond_with_configurable_asset(:app_config_app_thumbnail, "images|app_thumbnail", "image/png")
+    conn |> respond_with_configurable_asset(asset_key, path, mime_type)
   end
 
   def render_for_path("/admin", _params, conn), do: conn |> render_page("admin.html", :admin)
