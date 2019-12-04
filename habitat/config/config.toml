@@ -180,6 +180,11 @@ node_gauges_enabled = {{ cfg.stats.node_gauges_enabled }}
 check_repo = {{ cfg.health.check_repo }}
 {{/if}}
 
+{{#if cfg.assets.assets_path}}
+[ret."Elixir.RetWeb.PageController"]
+assets_path = {{ cfg.assets.assets_path }}
+{{/if}}
+
 [ret."Elixir.Ret.Account"]
 {{#if cfg.accounts.admin_email }}
 admin_email = "{{ cfg.accounts.admin_email }}"
