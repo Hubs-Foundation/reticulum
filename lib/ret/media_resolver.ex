@@ -212,7 +212,7 @@ defmodule Ret.MediaResolver do
         content_type = headers |> content_type_from_headers
 
         if content_type |> String.starts_with?("text/html") do
-          if !is_local_url && photomnemonic_endpoint do
+          if !is_local_url && photomnemonic_endpoint && photomnemonic_endpoint != "" do
             case uri |> screenshot_commit_for_uri(content_type) do
               :error -> uri |> og_tag_commit_for_uri()
               commit -> commit
