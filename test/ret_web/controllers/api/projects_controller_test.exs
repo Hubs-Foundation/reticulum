@@ -161,6 +161,7 @@ defmodule RetWeb.ProjectsControllerTest do
     params = %{
       scene: %{
         name: "Test Publish",
+        allow_promotion: true,
         model_file_id: model_owned_file.owned_file_uuid,
         model_file_token: model_owned_file.key,
         screenshot_file_id: screenshot_owned_file.owned_file_uuid,
