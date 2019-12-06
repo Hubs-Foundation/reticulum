@@ -40,6 +40,17 @@ host = "{{ cfg.phx.url_host_prefix }}{{ cfg.phx.cors_proxy_url_host }}"
 port = "{{ cfg.phx.cors_proxy_url_port }}"
 {{/if}}
 
+{{#if cfg.phx.imgproxy_url_host }}
+[ret."Elixir.RetWeb.Endpoint".imgproxy_url]
+host = "{{ cfg.phx.imgproxy_url_host }}"
+{{#if cfg.phx.imgproxy_url_port }}
+port = "{{ cfg.phx.imgproxy_url_port }}"
+{{/if}}
+{{#if cfg.phx.imgproxy_url_scheme }}
+scheme = "{{ cfg.phx.imgproxy_url_scheme }}"
+{{/if}}
+{{/if}}
+
 {{#if cfg.phx.assets_url_host }}
 [ret."Elixir.RetWeb.Endpoint".assets_url]
 host = "{{ cfg.phx.url_host_prefix }}{{ cfg.phx.assets_url_host }}"

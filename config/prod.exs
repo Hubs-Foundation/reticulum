@@ -28,6 +28,7 @@ config :ret, RetWeb.Endpoint,
   cors_proxy_url: [scheme: "https", host: "", port: 443],
   assets_url: [scheme: "https", host: "", port: 443],
   link_url: [scheme: "https", host: "", port: 443],
+  imgproxy_url: [scheme: "http", host: "", port: 5000],
   server: true,
   root: "."
 

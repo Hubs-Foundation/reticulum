@@ -30,6 +30,7 @@ defmodule RetWeb.PageController do
 
       true ->
         case conn.request_path do
+          "/thumbnail/" <> _ -> imgproxy_proxy(conn)
           "/http://" <> _ -> cors_proxy(conn)
           "/https://" <> _ -> cors_proxy(conn)
           _ -> render_for_path(conn.request_path, conn.query_params, conn)
@@ -474,6 +475,32 @@ defmodule RetWeb.PageController do
     conn
     |> put_resp_header("content-type", content_type)
     |> send_resp(200, chunks |> List.flatten() |> Enum.join("\n"))
+  end
+
+  defp imgproxy_proxy(%Conn{request_path: "/thumbnail/" <> encoded_url, query_string: qs} = conn) do
+    with imgproxy_url <- Application.get_env(:ret, RetWeb.Endpoint)[:imgproxy_url],
+         [scheme, port, host] = [:scheme, :port, :host] |> Enum.map(&Keyword.get(imgproxy_url, &1)),
+         %{"w" => width, "h" => height} <- qs |> URI.decode_query() do
+      thumbnail_url = "#{scheme}://#{host}:#{port}//auto/#{width}/#{height}/sm/1/#{encoded_url}"
+
+      opts =
+        ReverseProxyPlug.init(
+          upstream: thumbnail_url,
+          client_options: [ssl: [{:versions, [:"tlsv1.2"]}]]
+        )
+
+      body = ReverseProxyPlug.read_body(conn)
+
+      %Conn{}
+      |> Map.merge(conn)
+      # Need to strip path_info since proxy plug reads it
+      |> Map.put(:path_info, [])
+      |> ReverseProxyPlug.request(body, opts)
+      |> ReverseProxyPlug.response(conn, opts)
+    else
+      _ ->
+        conn |> send_resp(401, "Bad request")
+    end
   end
 
   defp cors_proxy(%Conn{request_path: "/" <> url, query_string: ""} = conn), do: cors_proxy(conn, url)
