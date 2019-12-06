@@ -9,11 +9,13 @@ client_id = "{{ cfg.discord_client.client_id }}"
 client_secret = "{{ cfg.discord_client.client_secret }}"
 bot_token = "{{ cfg.discord_client.bot_token }}"
 
+{{ #if cfg.twitter_client.consumer_secret }}
 [ret."Elixir.Ret.TwitterClient"]
 consumer_key = "{{ cfg.twitter_client.consumer_key }}"
 consumer_secret = "{{ cfg.twitter_client.consumer_secret }}"
 access_token = "{{ cfg.twitter_client.access_token }}"
 access_token_secret = "{{ cfg.twitter_client.access_token_secret }}"
+{{/if}}
 
 [ret."Elixir.RetWeb.Endpoint".https]
 port = {{ cfg.phx.port }}
@@ -120,21 +122,41 @@ bot_access_key = "{{ cfg.ret.bot_access_key }}"
 
 [ret."Elixir.Ret.MediaResolver"]
 ytdl_host = "{{ cfg.resolver.ytdl_host }}"
+{{ #if cfg.resolver.giphy_api_key }}
 giphy_api_key = "{{ cfg.resolver.giphy_api_key }}"
+{{/if}}
+{{ #if cfg.resolver.deviantart_client_id }}
 deviantart_client_id = "{{ cfg.resolver.deviantart_client_id }}"
 deviantart_client_secret = "{{ cfg.resolver.deviantart_client_secret }}"
+{{/if}}
+{{ #if cfg.resolver.imgur_mashape_api_key }}
 imgur_mashape_api_key = "{{ cfg.resolver.imgur_mashape_api_key }}"
-imgur_client_id = "{{ cfg.resolver.imgur_client_id }}"
 google_poly_api_key = "{{ cfg.resolver.google_poly_api_key }}"
+{{/if}}
+imgur_client_id = "{{ cfg.resolver.imgur_client_id }}"
+{{ #if cfg.resolver.youtube_api_key }}
 youtube_api_key = "{{ cfg.resolver.youtube_api_key }}"
+{{/if}}
+{{ #if cfg.resolver.sketchfab_api_key }}
 sketchfab_api_key = "{{ cfg.resolver.sketchfab_api_key }}"
+{{/if}}
+{{ #if cfg.resolver.tenor_api_key }}
 tenor_api_key = "{{ cfg.resolver.tenor_api_key }}"
+{{/if}}
+{{ #if cfg.resolver.bing_search_api_key }}
 bing_search_api_key = "{{ cfg.resolver.bing_search_api_key }}"
+{{/if}}
+{{ #if cfg.resolver.twitch_client_id }}
 twitch_client_id = "{{ cfg.resolver.twitch_client_id }}"
+{{/if}}
+{{ #if cfg.resolver.photomnemonic_endpoint }}
 photomnemonic_endpoint = "{{ cfg.resolver.photomnemonic_endpoint }}"
+{{/if}}
 
+{{ #if cfg.speelycaptor.speelycaptor_endpoint }}
 [ret."Elixir.Ret.Speelycaptor"]
 speelycaptor_endpoint = "{{ cfg.speelycaptor.speelycaptor_endpoint }}"
+{{/if}}
 
 [ret."Elixir.Ret.PageOriginWarmer"]
 hubs_page_origin = "{{ cfg.pages.hubs_page_origin }}"
