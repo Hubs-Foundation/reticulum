@@ -30,7 +30,7 @@ defmodule RetWeb.PageController do
     |> append_csp("script-src", app_config_csp)
     |> put_hub_headers("scene")
     |> put_resp_header("content-type", "text/html; charset=utf-8")
-    |> send_resp(200, chunks)
+    |> send_resp(200, chunks |> List.flatten() |> Enum.join("\n"))
   end
 
   defp render_scene_content(nil, conn) do
@@ -56,7 +56,7 @@ defmodule RetWeb.PageController do
     |> append_csp("script-src", app_config_csp)
     |> put_hub_headers("avatar")
     |> put_resp_header("content-type", "text/html; charset=utf-8")
-    |> send_resp(200, chunks)
+    |> send_resp(200, chunks |> List.flatten() |> Enum.join("\n"))
   end
 
   defp render_avatar_content(nil, conn) do
@@ -269,7 +269,7 @@ defmodule RetWeb.PageController do
     |> append_csp("script-src", app_config_csp)
     |> put_hub_headers("hub")
     |> put_resp_header("content-type", "text/html; charset=utf-8")
-    |> send_resp(200, chunks)
+    |> send_resp(200, chunks |> List.flatten() |> Enum.join("\n"))
   end
 
   defp put_hub_headers(conn, entity_type) do
@@ -352,7 +352,7 @@ defmodule RetWeb.PageController do
     |> append_csp("script-src", available_integrations_csp)
     |> put_hub_headers("room")
     |> put_resp_header("content-type", "text/html; charset=utf-8")
-    |> send_resp(200, chunks)
+    |> send_resp(200, chunks |> List.flatten() |> Enum.join("\n"))
   end
 
   def generate_app_config() do
