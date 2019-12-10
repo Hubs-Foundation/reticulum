@@ -198,7 +198,7 @@ defmodule Ret.DiscordClient do
 
       permissions =
         if overwrite_member do
-          (permissions &&& ~~~overwrite_member.deny) ||| overwrite_member.allow
+          (permissions &&& ~~~overwrite_member["deny"]) ||| overwrite_member["allow"]
         else
           permissions
         end

@@ -42,7 +42,8 @@ defmodule Ret.DiscordClientTest do
     Cachex.put(:discord_api, "/channels/#{@restricted_channel_id}", %{
       "permission_overwrites" => [
         %{"id" => @community_id, "allow" => @none, "deny" => @view_channel},
-        %{"id" => @moderator_role, "allow" => @view_channel, "deny" => @none}
+        %{"id" => @moderator_role, "allow" => @view_channel, "deny" => @none},
+        %{"id" => @regular_user_id, "allow" => @none, "deny" => @none}
       ]
     })
 
