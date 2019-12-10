@@ -100,6 +100,9 @@ timeout = {{ cfg.db.timeout }}
 {{#if cfg.db.port }}
 port = {{ cfg.db.port }}
 {{/if}}
+{{#if cfg.db.ssl }}
+ssl = {{ cfg.db.ssl }}
+{{/if}}
 
 [ret."Elixir.Ret.Locking".session_lock_db]
 username = "{{ cfg.session_lock_db.username }}"
@@ -107,6 +110,9 @@ password = "{{ cfg.session_lock_db.password }}"
 database = "{{ cfg.session_lock_db.database }}"
 hostname = "{{ cfg.session_lock_db.hostname }}"
 port = {{ cfg.session_lock_db.port }}
+{{#if cfg.session_lock_db.ssl }}
+ssl = {{ cfg.session_lock_db.ssl }}
+{{/if}}
 
 [ret."Elixir.Ret.Habitat"]
 ip = "{{ cfg.habitat.ip }}"
