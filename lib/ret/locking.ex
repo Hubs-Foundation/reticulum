@@ -8,6 +8,7 @@ defmodule Ret.Locking do
     password = session_lock_db_config |> Keyword.get(:password)
     database = session_lock_db_config |> Keyword.get(:database)
     port = session_lock_db_config |> Keyword.get(:port)
+    ssl = session_lock_db_config |> Keyword.get(:ssl)
 
     # Set a long queue timeout here, since we need this to work even if the database is cold and 
     # is starting up (eg AWS aurora)
@@ -17,7 +18,7 @@ defmodule Ret.Locking do
         username: username,
         password: password,
         database: database,
-        ssl: true,
+        ssl: ssl || false,
         port: port,
         queue_interval: 60_000,
         after_connect_timeout: 60_000,

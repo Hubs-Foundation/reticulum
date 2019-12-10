@@ -91,8 +91,7 @@ config :ret, Ret.Repo,
   database: "ret_dev",
   hostname: if(env_db_host == "", do: "localhost", else: env_db_host),
   template: "template0",
-  pool_size: 10,
-  ssl: true
+  pool_size: 10
 
 config :ret, RetWeb.Plugs.HeaderAuthorization,
   header_name: "x-ret-admin-access-key",
