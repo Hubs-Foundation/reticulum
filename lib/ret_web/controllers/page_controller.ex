@@ -2,12 +2,39 @@ defmodule RetWeb.PageController do
   use RetWeb, :controller
   alias Ret.{Repo, Hub, Scene, SceneListing, Avatar, AppConfig, OwnedFile, AvatarListing, PageOriginWarmer, Storage}
   alias Plug.Conn
+  import Ret.ConnUtils
+
+  @configurable_assets %{
+    app_config_favicon: {"favicon.ico", "images|favicon", "image/x-icon"},
+    app_config_app_icon: {"app-icon.png", "images|app_icon", "image/png"},
+    app_config_app_thumbnail: {"app-thumbnail.png", "images|app_thumbnail", "image/png"}
+  }
+
+  @configurable_asset_files @configurable_assets |> Map.values() |> Enum.map(&elem(&1, 0))
+  @configurable_asset_paths @configurable_asset_files |> Enum.map(&"/#{&1}")
 
   def call(conn, _params) do
-    case conn.request_path do
-      "/http://" <> _ -> cors_proxy(conn)
-      "/https://" <> _ -> cors_proxy(conn)
-      _ -> render_for_path(conn.request_path, conn.query_params, conn)
+    assets_host = RetWeb.Endpoint.config(:assets_url)[:host]
+    link_host = RetWeb.Endpoint.config(:link_url)[:host]
+    is_configurable_asset = @configurable_asset_paths |> Enum.any?(&(&1 === conn.request_path))
+
+    cond do
+      matches_host(conn, assets_host) && !is_configurable_asset ->
+        render_asset(conn)
+
+      matches_host(conn, link_host) ->
+        case conn.request_path do
+          "/" -> conn |> redirect(external: "#{RetWeb.Endpoint.url()}/link")
+          _ -> conn |> redirect(external: "#{RetWeb.Endpoint.url()}/link#{conn.request_path}")
+        end
+
+      true ->
+        case conn.request_path do
+          "/thumbnail/" <> _ -> imgproxy_proxy(conn)
+          "/http://" <> _ -> cors_proxy(conn)
+          "/https://" <> _ -> cors_proxy(conn)
+          _ -> render_for_path(conn.request_path, conn.query_params, conn)
+        end
     end
   end
 
@@ -157,19 +184,12 @@ defmodule RetWeb.PageController do
     end
   end
 
-  def render_for_path("/favicon.ico", _params, conn) do
-    conn
-    |> respond_with_configurable_asset(:app_config_favicon, "images|favicon", "image/x-icon")
-  end
+  def render_for_path("/" <> file, _params, conn) when file in @configurable_asset_files do
+    {asset_key, {_file, path, mime_type}} =
+      @configurable_assets
+      |> Enum.find(fn {_, {f, _, _}} -> f === file end)
 
-  def render_for_path("/app-icon.png", _params, conn) do
-    conn
-    |> respond_with_configurable_asset(:app_config_app_icon, "images|app_icon", "image/png")
-  end
-
-  def render_for_path("/app-thumbnail.png", _params, conn) do
-    conn
-    |> respond_with_configurable_asset(:app_config_app_thumbnail, "images|app_thumbnail", "image/png")
+    conn |> respond_with_configurable_asset(asset_key, path, mime_type)
   end
 
   def render_for_path("/admin", _params, conn), do: conn |> render_page("admin.html", :admin)
@@ -457,6 +477,32 @@ defmodule RetWeb.PageController do
     |> send_resp(200, chunks |> List.flatten() |> Enum.join("\n"))
   end
 
+  defp imgproxy_proxy(%Conn{request_path: "/thumbnail/" <> encoded_url, query_string: qs} = conn) do
+    with imgproxy_url <- Application.get_env(:ret, RetWeb.Endpoint)[:imgproxy_url],
+         [scheme, port, host] = [:scheme, :port, :host] |> Enum.map(&Keyword.get(imgproxy_url, &1)),
+         %{"w" => width, "h" => height} <- qs |> URI.decode_query() do
+      thumbnail_url = "#{scheme}://#{host}:#{port}//auto/#{width}/#{height}/sm/1/#{encoded_url}"
+
+      opts =
+        ReverseProxyPlug.init(
+          upstream: thumbnail_url,
+          client_options: [ssl: [{:versions, [:"tlsv1.2"]}]]
+        )
+
+      body = ReverseProxyPlug.read_body(conn)
+
+      %Conn{}
+      |> Map.merge(conn)
+      # Need to strip path_info since proxy plug reads it
+      |> Map.put(:path_info, [])
+      |> ReverseProxyPlug.request(body, opts)
+      |> ReverseProxyPlug.response(conn, opts)
+    else
+      _ ->
+        conn |> send_resp(401, "Bad request")
+    end
+  end
+
   defp cors_proxy(%Conn{request_path: "/" <> url, query_string: ""} = conn), do: cors_proxy(conn, url)
   defp cors_proxy(%Conn{request_path: "/" <> url, query_string: qs} = conn), do: cors_proxy(conn, "#{url}?#{qs}")
 
@@ -489,6 +535,11 @@ defmodule RetWeb.PageController do
     else
       conn |> send_resp(401, "Bad request.")
     end
+  end
+
+  defp render_asset(conn) do
+    static_options = Plug.Static.init(at: "/", from: module_config(:assets_path), gzip: true, brotli: true)
+    Plug.Static.call(conn, static_options)
   end
 
   defp module_config(key) do

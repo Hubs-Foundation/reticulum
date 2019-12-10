@@ -18,10 +18,17 @@ config :ret, RetWeb.Endpoint,
     port: 4000,
     otp_app: :ret
   ],
+  http: [
+    port: 4001,
+    otp_app: :ret
+  ],
   url: [scheme: "https", host: "", port: 443],
   secondary_url: [scheme: "https", host: "", port: 443],
   static_url: [scheme: "https", host: "", port: 443],
   cors_proxy_url: [scheme: "https", host: "", port: 443],
+  assets_url: [scheme: "https", host: "", port: 443],
+  link_url: [scheme: "https", host: "", port: 443],
+  imgproxy_url: [scheme: "http", host: "", port: 5000],
   server: true,
   root: "."
 
@@ -34,6 +41,7 @@ config :ret, Ret.Repo,
   database: "ret_production",
   hostname: "localhost",
   template: "template0",
+  ssl: true,
   pool_size: 10
 
 # ## SSL Support

@@ -9,11 +9,13 @@ client_id = "{{ cfg.discord_client.client_id }}"
 client_secret = "{{ cfg.discord_client.client_secret }}"
 bot_token = "{{ cfg.discord_client.bot_token }}"
 
+{{ #if cfg.twitter_client.consumer_secret }}
 [ret."Elixir.Ret.TwitterClient"]
 consumer_key = "{{ cfg.twitter_client.consumer_key }}"
 consumer_secret = "{{ cfg.twitter_client.consumer_secret }}"
 access_token = "{{ cfg.twitter_client.access_token }}"
 access_token_secret = "{{ cfg.twitter_client.access_token_secret }}"
+{{/if}}
 
 [ret."Elixir.RetWeb.Endpoint".https]
 port = {{ cfg.phx.port }}
@@ -38,6 +40,33 @@ port = "{{ cfg.phx.secondary_url_port }}"
 host = "{{ cfg.phx.url_host_prefix }}{{ cfg.phx.cors_proxy_url_host }}"
 {{#if cfg.phx.cors_proxy_url_port }}
 port = "{{ cfg.phx.cors_proxy_url_port }}"
+{{/if}}
+
+{{#if cfg.phx.imgproxy_url_host }}
+[ret."Elixir.RetWeb.Endpoint".imgproxy_url]
+host = "{{ cfg.phx.imgproxy_url_host }}"
+{{#if cfg.phx.imgproxy_url_port }}
+port = "{{ cfg.phx.imgproxy_url_port }}"
+{{/if}}
+{{#if cfg.phx.imgproxy_url_scheme }}
+scheme = "{{ cfg.phx.imgproxy_url_scheme }}"
+{{/if}}
+{{/if}}
+
+{{#if cfg.phx.assets_url_host }}
+[ret."Elixir.RetWeb.Endpoint".assets_url]
+host = "{{ cfg.phx.url_host_prefix }}{{ cfg.phx.assets_url_host }}"
+{{#if cfg.phx.assets_url_port }}
+port = "{{ cfg.phx.assets_url_port }}"
+{{/if}}
+{{/if}}
+
+{{#if cfg.phx.link_url_host }}
+[ret."Elixir.RetWeb.Endpoint".link_url]
+host = "{{ cfg.phx.url_host_prefix }}{{ cfg.phx.link_url_host }}"
+{{#if cfg.phx.link_url_port }}
+port = "{{ cfg.phx.link_url_port }}"
+{{/if}}
 {{/if}}
 
 [ret."Elixir.RetWeb.Endpoint".url]
@@ -68,12 +97,16 @@ queue_interval = {{ cfg.db.queue_interval }}
 {{#if cfg.db.timeout }}
 timeout = {{ cfg.db.timeout }}
 {{/if}}
+{{#if cfg.db.port }}
+port = {{ cfg.db.port }}
+{{/if}}
 
 [ret."Elixir.Ret.Locking".session_lock_db]
 username = "{{ cfg.session_lock_db.username }}"
 password = "{{ cfg.session_lock_db.password }}"
 database = "{{ cfg.session_lock_db.database }}"
 hostname = "{{ cfg.session_lock_db.hostname }}"
+port = {{ cfg.session_lock_db.port }}
 
 [ret."Elixir.Ret.Habitat"]
 ip = "{{ cfg.habitat.ip }}"
@@ -100,21 +133,41 @@ bot_access_key = "{{ cfg.ret.bot_access_key }}"
 
 [ret."Elixir.Ret.MediaResolver"]
 ytdl_host = "{{ cfg.resolver.ytdl_host }}"
+{{ #if cfg.resolver.giphy_api_key }}
 giphy_api_key = "{{ cfg.resolver.giphy_api_key }}"
+{{/if}}
+{{ #if cfg.resolver.deviantart_client_id }}
 deviantart_client_id = "{{ cfg.resolver.deviantart_client_id }}"
 deviantart_client_secret = "{{ cfg.resolver.deviantart_client_secret }}"
+{{/if}}
+{{ #if cfg.resolver.imgur_mashape_api_key }}
 imgur_mashape_api_key = "{{ cfg.resolver.imgur_mashape_api_key }}"
-imgur_client_id = "{{ cfg.resolver.imgur_client_id }}"
 google_poly_api_key = "{{ cfg.resolver.google_poly_api_key }}"
+{{/if}}
+imgur_client_id = "{{ cfg.resolver.imgur_client_id }}"
+{{ #if cfg.resolver.youtube_api_key }}
 youtube_api_key = "{{ cfg.resolver.youtube_api_key }}"
+{{/if}}
+{{ #if cfg.resolver.sketchfab_api_key }}
 sketchfab_api_key = "{{ cfg.resolver.sketchfab_api_key }}"
+{{/if}}
+{{ #if cfg.resolver.tenor_api_key }}
 tenor_api_key = "{{ cfg.resolver.tenor_api_key }}"
+{{/if}}
+{{ #if cfg.resolver.bing_search_api_key }}
 bing_search_api_key = "{{ cfg.resolver.bing_search_api_key }}"
+{{/if}}
+{{ #if cfg.resolver.twitch_client_id }}
 twitch_client_id = "{{ cfg.resolver.twitch_client_id }}"
+{{/if}}
+{{ #if cfg.resolver.photomnemonic_endpoint }}
 photomnemonic_endpoint = "{{ cfg.resolver.photomnemonic_endpoint }}"
+{{/if}}
 
+{{ #if cfg.speelycaptor.speelycaptor_endpoint }}
 [ret."Elixir.Ret.Speelycaptor"]
 speelycaptor_endpoint = "{{ cfg.speelycaptor.speelycaptor_endpoint }}"
+{{/if}}
 
 [ret."Elixir.Ret.PageOriginWarmer"]
 hubs_page_origin = "{{ cfg.pages.hubs_page_origin }}"
@@ -158,6 +211,11 @@ node_gauges_enabled = {{ cfg.stats.node_gauges_enabled }}
 [ret."Elixir.RetWeb.HealthController"]
 {{#if cfg.health.check_repo }}
 check_repo = {{ cfg.health.check_repo }}
+{{/if}}
+
+{{#if cfg.assets.assets_path}}
+[ret."Elixir.RetWeb.PageController"]
+assets_path = "{{ cfg.assets.assets_path }}"
 {{/if}}
 
 [ret."Elixir.Ret.Account"]
