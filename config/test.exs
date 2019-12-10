@@ -19,8 +19,7 @@ config :ret, Ret.Repo,
   hostname: "localhost",
   template: "template0",
   pool_size: 10,
-  pool: Ecto.Adapters.SQL.Sandbox,
-  ssl: true
+  pool: Ecto.Adapters.SQL.Sandbox
 
 config :ret, RetWeb.Plugs.AddCSP, content_security_policy: nil
 
