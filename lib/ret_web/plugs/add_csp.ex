@@ -27,7 +27,7 @@ defmodule RetWeb.Plugs.AddCSP do
     janus_port = Application.get_env(:ret, Ret.JanusLoadStatus)[:janus_port]
     ret_host = Ret.Meta.get_meta(include_repo: false)[:phx_host]
     ret_domain = ret_host |> String.split(".") |> Enum.take(-2) |> Enum.join(".")
-    ret_port = RetWeb.Endpoint.url |> Keyword.get(:port)
+    ret_port = RetWeb.Endpoint.config(:url) |> Keyword.get(:port)
     is_subdomain = ret_host |> String.split(".") |> length > 2
     link_url = config_url(:link_url)
     thumbnail_url = config_url(:thumbnail_url)
