@@ -44,7 +44,7 @@ defmodule RetWeb.Plugs.AddCSP do
   defp config_url(key) do
     url = RetWeb.Endpoint.config(key)
 
-    if url do
+    if url && Keyword.get(url, :host) != "" do
       [ scheme, host, port ] = [:scheme, :host, :port] |> Enum.map(&Keyword.get(url, &1))
       port_string = if port do ":#{port}" else "" end
       "#{scheme || "https"}://#{host}#{port_string}"
