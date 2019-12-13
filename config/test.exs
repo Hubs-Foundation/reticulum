@@ -6,6 +6,7 @@ config :ret, RetWeb.Endpoint,
   http: [port: 4001],
   allowed_origins: "*",
   secret_key_base: "txlMOtlaY5x3crvOCko4uV5PM29ul3zGo1oBGNO3cDXx+4GHLKqt0gR9qzgThxa5",
+  cors_proxy_url: [scheme: "https", host: "hubs-proxy.local", port: 4000],
   server: false
 
 # Print only warnings and errors during test
