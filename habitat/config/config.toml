@@ -42,6 +42,14 @@ host = "{{ cfg.phx.url_host_prefix }}{{ cfg.phx.cors_proxy_url_host }}"
 port = "{{ cfg.phx.cors_proxy_url_port }}"
 {{/if}}
 
+{{#if cfg.phx.thumbnail_url_host }}
+[ret."Elixir.RetWeb.Endpoint".thumbnail_url]
+host = "{{ cfg.phx.url_host_prefix }}{{ cfg.phx.thumbnail_url_host }}"
+{{#if cfg.phx.thumbnail_url_port }}
+port = "{{ cfg.phx.thumbnail_url_port }}"
+{{/if}}
+{{/if}}
+
 {{#if cfg.phx.imgproxy_url_host }}
 [ret."Elixir.RetWeb.Endpoint".imgproxy_url]
 host = "{{ cfg.phx.imgproxy_url_host }}"
@@ -201,7 +209,7 @@ password = "{{ cfg.email.password }}"
 slack_webhook_url = "{{ cfg.support.slack_webhook_url }}"
 
 [ret."Elixir.RetWeb.Plugs.AddCSP"]
-content_security_policy = "{{ cfg.security.content_security_policy }}"
+content_security_policy = "{{ cfg.security.csp }}"
 
 [ret."Ret.Repo.Migrations.AdminSchemaInit"]
 postgrest_password = "{{ cfg.db.postgrest_password }}"
