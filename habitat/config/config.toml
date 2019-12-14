@@ -232,6 +232,11 @@ check_repo = {{ cfg.health.check_repo }}
 assets_path = "{{ cfg.assets.assets_path }}"
 {{/if}}
 
+{{#if cfg.assets.docs_path}}
+[ret."Elixir.RetWeb.PageController"]
+docs_path = "{{ cfg.assets.docs_path }}"
+{{/if}}
+
 [ret."Elixir.Ret.Account"]
 {{#if cfg.accounts.admin_email }}
 admin_email = "{{ cfg.accounts.admin_email }}"
