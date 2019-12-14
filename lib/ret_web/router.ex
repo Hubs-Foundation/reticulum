@@ -73,11 +73,6 @@ defmodule RetWeb.Router do
     forward("/", RetWeb.Plugs.ItaProxy)
   end
 
-  scope "/docs" do
-    pipe_through([:secure_headers])
-    forward("/", RetWeb.Plugs.DocsProxy)
-  end
-
   scope "/api", RetWeb do
     pipe_through(
       [:secure_headers, :parsed_body, :api] ++ if(Mix.env() == :prod, do: [:ssl_only, :canonicalize_domain], else: [])
