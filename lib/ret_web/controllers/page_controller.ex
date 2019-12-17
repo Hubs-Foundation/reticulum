@@ -551,7 +551,7 @@ defmodule RetWeb.PageController do
   end
 
   defp render_docs(conn) do
-    static_options = Plug.Static.init(at: "/docs", from: module_config(:docs_path), gzip: true, brotli: true)
+    static_options = Plug.Static.init(at: "/docs/docs", from: module_config(:docs_path), gzip: true, brotli: true)
     Plug.Static.call(conn, static_options)
   end
 
