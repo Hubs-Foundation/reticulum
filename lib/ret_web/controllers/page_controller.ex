@@ -550,6 +550,10 @@ defmodule RetWeb.PageController do
     )
   end
 
+  defp render_docs(%Plug.Conn{request_path: request_path} = conn)
+       when request_path == "/docs" or request_path == "/docs/",
+       do: conn |> redirect(to: "/docs/docs/welcome.html")
+
   defp render_docs(conn) do
     static_options = Plug.Static.init(at: "/docs", from: module_config(:docs_path), gzip: true, brotli: true)
     Plug.Static.call(conn, static_options)
