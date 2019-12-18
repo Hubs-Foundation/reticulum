@@ -30,8 +30,8 @@ defmodule RetWeb.PageController do
 
       true ->
         case conn.request_path do
-          "/docs" -> render_docs_index(conn)
-          "/docs/" -> render_docs_index(conn)
+          "/docs" -> conn |> redirect(to: "/docs/docs/welcome.html")
+          "/docs/" -> conn |> redirect(to: "/docs/docs/welcome.html")
           "/docs" <> _ -> render_docs(conn)
           "/thumbnail/" <> _ -> imgproxy_proxy(conn)
           "/http://" <> _ -> cors_proxy(conn)
@@ -540,19 +540,6 @@ defmodule RetWeb.PageController do
     static_options = Plug.Static.init(at: "/", from: module_config(:assets_path), gzip: true, brotli: true)
     Plug.Static.call(conn, static_options)
   end
-
-  defp render_docs_index(conn) do
-    static_options = Plug.Static.init(at: "/docs", from: module_config(:docs_path), gzip: true, brotli: true)
-
-    Plug.Static.call(
-      conn |> Map.put(:request_path, "/docs/index.html") |> Map.put(:path_info, ["docs", "index.html"]),
-      static_options
-    )
-  end
-
-  defp render_docs(%Plug.Conn{request_path: request_path} = conn)
-       when request_path == "/docs" or request_path == "/docs/",
-       do: conn |> redirect(to: "/docs/docs/welcome.html")
 
   defp render_docs(conn) do
     static_options = Plug.Static.init(at: "/docs", from: module_config(:docs_path), gzip: true, brotli: true)
