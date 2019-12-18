@@ -21,7 +21,7 @@ defmodule Ret.MediaSearch do
   import Ret.HttpUtils
   import Ecto.Query
 
-  alias Ret.{Repo, OwnedFile, Scene, SceneListing, Asset, Avatar, AvatarListing, AccountFavorite, Hub}
+  alias Ret.{Repo, OwnedFile, Scene, SceneListing, Asset, Avatar, AvatarListing, AccountFavorite, Hub, Project}
 
   @page_size 24
   # HACK for now to reduce page size for scene listings -- real fix will be to expose page_size to API
@@ -575,7 +575,7 @@ defmodule Ret.MediaSearch do
       |> where([l, s], l.state == ^"active" and s.state == ^"active" and s.allow_promotion == ^true)
       |> add_query_to_listing_search_query(query)
       |> add_tag_to_listing_search_query(filter)
-      |> preload([:screenshot_owned_file, :model_owned_file, :scene_owned_file, :scene])
+      |> preload([:screenshot_owned_file, :model_owned_file, :scene_owned_file, scene: [:project]])
       |> order_by(^order)
       |> Repo.paginate(%{page: page_number, page_size: @scene_page_size})
       |> result_for_page(page_number, :scene_listings, &scene_or_scene_listing_to_entry/1)
@@ -589,7 +589,7 @@ defmodule Ret.MediaSearch do
     results =
       Scene
       |> where([a], a.account_id == ^account_id)
-      |> preload([:screenshot_owned_file, :model_owned_file, :scene_owned_file])
+      |> preload([:screenshot_owned_file, :model_owned_file, :scene_owned_file, :project])
       |> order_by(^order)
       |> Repo.paginate(%{page: page_number, page_size: @scene_page_size})
       |> result_for_page(page_number, :scenes, &scene_or_scene_listing_to_entry/1)
@@ -674,6 +674,7 @@ defmodule Ret.MediaSearch do
       name: s.name,
       description: s.description,
       attributions: s.attributions,
+      project_id: s.project |> Project.to_sid(),
       images: %{
         preview: %{url: s.screenshot_owned_file |> OwnedFile.uri_for() |> URI.to_string()}
       }
