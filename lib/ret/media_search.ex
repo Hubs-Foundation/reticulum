@@ -475,7 +475,9 @@ defmodule Ret.MediaSearch do
     results =
       AccountFavorite
       |> where([a], a.account_id == ^account_id)
-      |> preload(hub: [scene: [:screenshot_owned_file], scene_listing: [:scene, :screenshot_owned_file]])
+      |> preload(
+        hub: [scene: [:screenshot_owned_file, :project], scene_listing: [:screenshot_owned_file, scene: [:project]]]
+      )
       |> order_by(^order)
       |> Repo.paginate(%{page: page_number, page_size: @page_size})
       |> result_for_page(page_number, :favorites, &favorite_to_entry/1)
