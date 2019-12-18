@@ -475,9 +475,7 @@ defmodule Ret.MediaSearch do
     results =
       AccountFavorite
       |> where([a], a.account_id == ^account_id)
-      |> preload(
-        hub: [scene: [:screenshot_owned_file, :project], scene_listing: [:screenshot_owned_file, scene: [:project]]]
-      )
+      |> preload(hub: [scene: [:screenshot_owned_file], scene_listing: [:scene, :screenshot_owned_file]])
       |> order_by(^order)
       |> Repo.paginate(%{page: page_number, page_size: @page_size})
       |> result_for_page(page_number, :favorites, &favorite_to_entry/1)
@@ -644,7 +642,7 @@ defmodule Ret.MediaSearch do
 
     images =
       if scene_or_scene_listing do
-        scene_or_scene_listing_to_entry(scene_or_scene_listing).images
+        %{preview: %{url: scene_or_scene_listing.screenshot_owned_file |> OwnedFile.uri_for() |> URI.to_string()}}
       else
         %{preview: %{url: "#{RetWeb.Endpoint.url()}/app-thumbnail.png"}}
       end
