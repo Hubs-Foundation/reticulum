@@ -556,9 +556,12 @@ defmodule Ret.MediaSearch do
     results =
       SceneListing
       |> join(:inner, [l], s in assoc(l, :scene))
-      |> where([l, s], l.state == ^"active" and s.state == ^"active" and s.allow_promotion == ^true and s.allow_remixing == ^true)
+      |> where(
+        [l, s],
+        l.state == ^"active" and s.state == ^"active" and s.allow_promotion == ^true and s.allow_remixing == ^true
+      )
       |> add_query_to_listing_search_query(query)
-      |> preload([:screenshot_owned_file, :model_owned_file, :scene_owned_file, :scene])
+      |> preload([:screenshot_owned_file, :model_owned_file, :scene_owned_file, :project, scene: [:project]])
       |> order_by(^order)
       |> Repo.paginate(%{page: page_number, page_size: @scene_page_size})
       |> result_for_page(page_number, :scene_listings, &scene_or_scene_listing_to_entry/1)
