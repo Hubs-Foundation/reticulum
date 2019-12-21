@@ -30,8 +30,8 @@ defmodule RetWeb.PageController do
 
       true ->
         case conn.request_path do
-          "/docs" -> conn |> redirect(to: "/docs/docs/welcome.html")
-          "/docs/" -> conn |> redirect(to: "/docs/docs/welcome.html")
+          "/docs" -> conn |> redirect(to: "/docs/welcome.html")
+          "/docs/" -> conn |> redirect(to: "/docs/welcome.html")
           "/docs" <> _ -> render_docs(conn)
           "/thumbnail/" <> _ -> imgproxy_proxy(conn)
           "/http://" <> _ -> cors_proxy(conn)
