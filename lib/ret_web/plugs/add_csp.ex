@@ -23,7 +23,14 @@ defmodule RetWeb.Plugs.AddCSP do
   end
 
   defp generate_csp() do
-    assets_url = Application.get_env(:ret, Ret.Storage)[:host]
+    assets_url =
+      if RetWeb.Endpoint.config(:assets_url)[:host] != "" do
+        "https://#{RetWeb.Endpoint.config(:assets_url)[:host]}"
+      else
+        ""
+      end
+
+    storage_url = Application.get_env(:ret, Ret.Storage)[:host]
     cors_proxy_url = config_url(:cors_proxy_url)
     janus_port = Application.get_env(:ret, Ret.JanusLoadStatus)[:janus_port]
     ret_host = Ret.Meta.get_meta(include_repo: false)[:phx_host]
@@ -43,21 +50,21 @@ defmodule RetWeb.Plugs.AddCSP do
         "wss://#{ret_host}:#{janus_port} wss://#{ret_host}:#{ret_port}"
       end
 
-    "default-src 'none'; manifest-src 'self'; script-src #{assets_url} 'self' 'sha256-ViVvpb0oYlPAp7R8ZLxlNI6rsf7E7oz8l1SgCIXgMvM=' 'sha256-hsbRcgUBASABDq7qVGVTpbnWq/ns7B+ToTctZFJXYi8=' 'sha256-MIpWPgYj31kCgSUFc0UwHGQrV87W6N5ozotqfxxQG0w=' 'sha256-buF6N8Z4p2PuaaeRUjm7mxBpPNf4XlCT9Fep83YabbM=' 'sha256-/S6PM16MxkmUT7zJN2lkEKFgvXR7yL4Z8PCrRrFu4Q8=' https://www.google-analytics.com #{
-      assets_url
-    } https://aframe.io https://www.youtube.com https://s.ytimg.com 'unsafe-eval'; prefetch-src 'self' #{assets_url}; child-src 'self' blob:; worker-src #{
-      assets_url
-    } 'self' blob:; font-src 'self' https://fonts.googleapis.com https://cdn.jsdelivr.net https://fonts.gstatic.com https://cdn.aframe.io #{
-      assets_url
-    } #{cors_proxy_url}; style-src 'self' https://fonts.googleapis.com https://cdn.jsdelivr.net #{cors_proxy_url} #{
-      assets_url
-    } 'unsafe-inline'; connect-src 'self' #{cors_proxy_url} #{assets_url} #{link_url} https://dpdb.webvr.rocks #{
-      thumbnail_url
-    } #{wss_connect} https://cdn.aframe.io https://www.youtube.com https://api.github.com data: blob:; img-src 'self' https://www.google-analytics.com #{
-      assets_url
-    } #{cors_proxy_url} #{thumbnail_url} https://cdn.aframe.io https://www.youtube.com https://user-images.githubusercontent.com https://cdn.jsdelivr.net data: blob:; media-src 'self' #{
+    "default-src 'none'; manifest-src 'self'; script-src #{storage_url} #{assets_url} 'self' 'sha256-ViVvpb0oYlPAp7R8ZLxlNI6rsf7E7oz8l1SgCIXgMvM=' 'sha256-hsbRcgUBASABDq7qVGVTpbnWq/ns7B+ToTctZFJXYi8=' 'sha256-MIpWPgYj31kCgSUFc0UwHGQrV87W6N5ozotqfxxQG0w=' 'sha256-buF6N8Z4p2PuaaeRUjm7mxBpPNf4XlCT9Fep83YabbM=' 'sha256-/S6PM16MxkmUT7zJN2lkEKFgvXR7yL4Z8PCrRrFu4Q8=' https://www.google-analytics.com #{
+      storage_url
+    } #{assets_url} https://aframe.io https://www.youtube.com https://s.ytimg.com 'unsafe-eval'; prefetch-src 'self' #{
+      storage_url
+    } #{assets_url}; child-src 'self' blob:; worker-src #{storage_url} #{assets_url} 'self' blob:; font-src 'self' https://fonts.googleapis.com https://cdn.jsdelivr.net https://fonts.gstatic.com https://cdn.aframe.io #{
+      storage_url
+    } #{assets_url} #{cors_proxy_url}; style-src 'self' https://fonts.googleapis.com https://cdn.jsdelivr.net #{
       cors_proxy_url
-    } #{assets_url} #{thumbnail_url} https://www.youtube.com *.googlevideo.com data: blob:; frame-src https://www.youtube.com https://docs.google.com 'self'; base-uri 'none'; form-action 'self';"
+    } #{storage_url} #{assets_url} 'unsafe-inline'; connect-src 'self' #{cors_proxy_url} #{storage_url} #{assets_url} #{
+      link_url
+    } https://dpdb.webvr.rocks #{thumbnail_url} #{wss_connect} https://cdn.aframe.io https://www.youtube.com https://api.github.com data: blob:; img-src 'self' https://www.google-analytics.com #{
+      storage_url
+    } #{assets_url} #{cors_proxy_url} #{thumbnail_url} https://cdn.aframe.io https://www.youtube.com https://user-images.githubusercontent.com https://cdn.jsdelivr.net data: blob:; media-src 'self' #{
+      cors_proxy_url
+    } #{storage_url} #{assets_url} #{thumbnail_url} https://www.youtube.com *.googlevideo.com data: blob:; frame-src https://www.youtube.com https://docs.google.com 'self'; base-uri 'none'; form-action 'self';"
   end
 
   defp config_url(key) do
