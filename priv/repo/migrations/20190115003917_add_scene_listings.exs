@@ -1,5 +1,5 @@
 defmodule Ret.Repo.Migrations.AddSceneListings do
-  use Ret.Migration
+  use Ecto.Migration
 
   def change do
     Ret.SceneListing.State.create_type()

@@ -1,5 +1,5 @@
 defmodule Ret.Repo.Migrations.AddProviderAccessTokens do
-  use Ret.Migration
+  use Ecto.Migration
 
   def change do
     alter table("oauth_providers") do

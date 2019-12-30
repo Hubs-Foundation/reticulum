@@ -1,5 +1,5 @@
 defmodule Ret.Repo.Migrations.AddIsAdminColumn do
-  use Ret.Migration
+  use Ecto.Migration
 
   def change do
     alter table("accounts") do

@@ -1,5 +1,5 @@
 defmodule Ret.Repo.Migrations.CreateHubsTable do
-  use Ret.Migration
+  use Ecto.Migration
 
   def change do
     create table(:hubs, prefix: "ret0", primary_key: false) do

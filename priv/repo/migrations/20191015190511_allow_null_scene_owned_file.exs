@@ -1,5 +1,5 @@
 defmodule Ret.Repo.Migrations.AllowNullSceneOwnedFile do
-  use Ret.Migration
+  use Ecto.Migration
 
   def up do
     # Drops scene listings view and featured, pending scenes view

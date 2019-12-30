@@ -1,5 +1,5 @@
 defmodule Ret.Repo.Migrations.AddHubBindingsTable do
-  use Ret.Migration
+  use Ecto.Migration
 
   def change do
     Ret.HubBinding.Type.create_type()

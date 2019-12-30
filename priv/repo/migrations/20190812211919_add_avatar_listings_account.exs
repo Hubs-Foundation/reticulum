@@ -1,5 +1,5 @@
 defmodule Ret.Repo.Migrations.AddAvatarListingsAccount do
-  use Ret.Migration
+  use Ecto.Migration
   import Ecto.Query
 
   alias Ret.{Repo, Avatar}

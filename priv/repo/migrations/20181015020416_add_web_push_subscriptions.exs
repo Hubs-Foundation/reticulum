@@ -1,5 +1,5 @@
 defmodule Ret.Repo.Migrations.AddWebPushSubscriptions do
-  use Ret.Migration
+  use Ecto.Migration
 
   def change do
     create table(:web_push_subscriptions, prefix: "ret0", primary_key: false) do

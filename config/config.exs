@@ -39,7 +39,7 @@ config :logger, :console,
 
 config :ret, Ret.Repo,
   migration_source: "schema_migrations",
-  after_connect: {Ret.Repo, :set_search_path, ["ret0, public"]},
+  after_connect: {Ret.Repo, :set_search_path, ["public, ret0"]},
   # Downloads from Sketchfab to file cache hold connections open
   ownership_timeout: 60_000,
   timeout: 60_000

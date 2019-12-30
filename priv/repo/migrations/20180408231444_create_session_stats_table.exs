@@ -1,5 +1,5 @@
 defmodule Ret.Repo.Migrations.CreateSessionStatsTable do
-  use Ret.Migration
+  use Ecto.Migration
 
   @max_year 2030
 

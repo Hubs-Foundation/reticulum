@@ -1,5 +1,5 @@
 defmodule Ret.Repo.Migrations.CreateStateEnums do
-  use Ret.Migration
+  use Ecto.Migration
 
   def up do
     Ret.OwnedFile.State.create_type()

@@ -1,5 +1,5 @@
 defmodule Ret.Repo.Migrations.CreateHubRoleMemberships do
-  use Ret.Migration
+  use Ecto.Migration
 
   def change do
     create table(:hub_role_memberships, prefix: "ret0", primary_key: false) do

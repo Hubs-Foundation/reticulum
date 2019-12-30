@@ -1,5 +1,5 @@
 defmodule Ret.Repo.Migrations.CreateProjects do
-  use Ret.Migration
+  use Ecto.Migration
 
   def change do
     create table(:projects, prefix: "ret0", primary_key: false) do

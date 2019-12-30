@@ -1,5 +1,5 @@
 defmodule Ret.Repo.Migrations.CreateAppConfigsTable do
-  use Ret.Migration
+  use Ecto.Migration
 
   def change do
     create table(:app_configs, prefix: "ret0", primary_key: false) do

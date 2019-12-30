@@ -1,5 +1,5 @@
 defmodule Ret.Repo.Migrations.CreateRoomObjectsTable do
-  use Ret.Migration
+  use Ecto.Migration
 
   def change do
     create table(:room_objects, prefix: "ret0", primary_key: false) do

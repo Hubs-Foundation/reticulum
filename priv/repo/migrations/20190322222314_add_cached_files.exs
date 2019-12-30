@@ -1,5 +1,5 @@
 defmodule Ret.Repo.Migrations.AddCachedFiles do
-  use Ret.Migration
+  use Ecto.Migration
 
   def change do
     create table(:cached_files, prefix: "ret0", primary_key: false) do

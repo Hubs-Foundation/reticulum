@@ -1,5 +1,5 @@
 defmodule Ret.Repo.Migrations.CreateAvatarListings do
-  use Ret.Migration
+  use Ecto.Migration
 
   def change do
     Ret.AvatarListing.State.create_type()

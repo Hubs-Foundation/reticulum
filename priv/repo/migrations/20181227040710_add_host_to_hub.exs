@@ -1,5 +1,5 @@
 defmodule Ret.Repo.Migrations.AddHostToHub do
-  use Ret.Migration
+  use Ecto.Migration
 
   def change do
     alter table("hubs") do

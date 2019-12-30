@@ -1,5 +1,5 @@
 defmodule Ret.Repo.Migrations.AddEntryModeToHub do
-  use Ret.Migration
+  use Ecto.Migration
 
   def up do
     Ret.Hub.EntryMode.create_type()

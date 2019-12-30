@@ -1,5 +1,5 @@
 defmodule Ret.Repo.Migrations.CreateFilesTable do
-  use Ret.Migration
+  use Ecto.Migration
 
   def change do
     create table(:owned_files, prefix: "ret0", primary_key: false) do

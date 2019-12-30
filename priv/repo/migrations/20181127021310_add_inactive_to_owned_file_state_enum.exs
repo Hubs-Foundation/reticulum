@@ -1,5 +1,5 @@
 defmodule Ret.Repo.Migrations.AddInactiveToOwnedFileStateEnum do
-  use Ret.Migration
+  use Ecto.Migration
   @disable_ddl_transaction true
 
   def change do
