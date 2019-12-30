@@ -1,5 +1,5 @@
 defmodule Ret.Repo.Migrations.AddOauthProvidersTable do
-  use Ecto.Migration
+  use Ret.Migration
 
   def change do
     Ret.OAuthProvider.Source.create_type()

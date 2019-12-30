@@ -1,5 +1,5 @@
 defmodule Ret.Repo.Migrations.CreateScenesTable do
-  use Ecto.Migration
+  use Ret.Migration
 
   def change do
     create table(:scenes, prefix: "ret0", primary_key: false) do

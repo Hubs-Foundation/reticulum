@@ -1,5 +1,5 @@
 defmodule Ret.Repo.Migrations.UpdateAvatarConstraints do
-  use Ecto.Migration
+  use Ret.Migration
 
   def up do
     drop constraint(:avatars, :gltf_or_parent)

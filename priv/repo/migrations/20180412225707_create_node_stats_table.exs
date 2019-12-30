@@ -1,5 +1,5 @@
 defmodule Ret.Repo.Migrations.NodeStatsTable do
-  use Ecto.Migration
+  use Ret.Migration
 
   @max_year 2022
 

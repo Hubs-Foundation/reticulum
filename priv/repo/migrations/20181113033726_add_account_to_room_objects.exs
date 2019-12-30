@@ -1,5 +1,5 @@
 defmodule Ret.Repo.Migrations.AddAccountToRoomObjects do
-  use Ecto.Migration
+  use Ret.Migration
 
   def change do
     alter table("room_objects") do

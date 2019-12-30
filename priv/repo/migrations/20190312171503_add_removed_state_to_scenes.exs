@@ -1,5 +1,5 @@
 defmodule Ret.Repo.Migrations.AddRemovedStateToScenes do
-  use Ecto.Migration
+  use Ret.Migration
   @disable_ddl_transaction true
 
   def change do

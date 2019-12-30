@@ -1,6 +1,6 @@
 defmodule Ret.Repo.Migrations.AddPermissionsToHubs do
   use Bitwise
-  use Ecto.Migration
+  use Ret.Migration
 
   def change do
     alter table("hubs") do

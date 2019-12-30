@@ -1,5 +1,5 @@
 defmodule Ret.Repo.Migrations.AdminSchemaInit do
-  use Ecto.Migration
+  use Ret.Migration
   @disable_ddl_transaction true
 
   def up do

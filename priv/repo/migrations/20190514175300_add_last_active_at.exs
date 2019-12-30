@@ -1,5 +1,5 @@
 defmodule Ret.Repo.Migrations.AddLastActiveAt do
-  use Ecto.Migration
+  use Ret.Migration
 
   def change do
     alter table("hubs") do

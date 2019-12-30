@@ -1,5 +1,5 @@
 defmodule Ret.Repo.Migrations.AddMinTokenIssuedAtToAccount do
-  use Ecto.Migration
+  use Ret.Migration
 
   def change do
     epoch = DateTime.from_unix!(0, :second) |> DateTime.truncate(:second) |> DateTime.to_iso8601()

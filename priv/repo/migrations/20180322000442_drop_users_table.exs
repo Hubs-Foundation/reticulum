@@ -1,5 +1,5 @@
 defmodule Ret.Repo.Migrations.DropUsersTable do
-  use Ecto.Migration
+  use Ret.Migration
 
   def change do
     drop(table(:users, prefix: "ret0"))

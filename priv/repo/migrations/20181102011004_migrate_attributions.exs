@@ -1,5 +1,5 @@
 defmodule Ret.Repo.Migrations.MigrateAttributions do
-  use Ecto.Migration
+  use Ret.Migration
 
   def up do
     execute("update scenes set attributions = json_build_object('extras', scenes.attribution)")
