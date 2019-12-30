@@ -1,5 +1,5 @@
 defmodule Ret.Repo.Migrations.AddAccountHubFavorites do
-  use Ecto.Migration
+  use Ret.Migration
 
   def change do
     create table(:account_favorites, prefix: "ret0", primary_key: false) do

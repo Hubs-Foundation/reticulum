@@ -1,5 +1,5 @@
 defmodule Ret.Repo.Migrations.AddSupportSubscriptionsTable do
-  use Ecto.Migration
+  use Ret.Migration
 
   def change do
     create table(:support_subscriptions, prefix: "ret0", primary_key: false) do

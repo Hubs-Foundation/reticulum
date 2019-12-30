@@ -1,5 +1,5 @@
 defmodule Ret.Repo.Migrations.CreateAssetsTables do
-  use Ecto.Migration
+  use Ret.Migration
 
   def change do
     create table(:assets, prefix: "ret0", primary_key: false) do

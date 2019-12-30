@@ -1,5 +1,5 @@
 defmodule Ret.Repo.Migrations.CreateUsers do
-  use Ecto.Migration
+  use Ret.Migration
 
   def change do
     create table(:users, prefix: "ret0", primary_key: false) do
