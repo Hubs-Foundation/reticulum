@@ -36,7 +36,7 @@ defmodule Ret.Support do
   end
 
   defp notify_slack(emoji, message) do
-    with slack_url when is_binary(slack_url) <- module_config(:slack_webhook_url) do
+    with slack_url when is_binary(slack_url) and slack_url != "" <- module_config(:slack_webhook_url) do
       payload =
         %{
           "icon_emoji" => emoji,
