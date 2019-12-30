@@ -21,7 +21,8 @@ config :mime, :types, %{
   "model/gltf-binary" => ["glb"],
   "application/vnd.spoke.scene" => ["spoke"],
   "application/vnd.pgrst.object+json" => ["json"],
-  "application/wasm" => ["wasm"],
+  "application/json" => ["json"],
+  "application/wasm" => ["wasm"]
 }
 
 # Configures the endpoint
