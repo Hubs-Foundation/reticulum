@@ -2,7 +2,7 @@ defmodule Ret.Repo.Migrations.CreateAvatars do
   use Ecto.Migration
 
   def change do
-    create table(:avatars, prefix: "ret0", primary_key: false) do
+    create table(:avatars, primary_key: false) do
       add(:avatar_id, :bigint, default: fragment("ret0.next_id()"), primary_key: true)
       add(:avatar_sid, :string)
       add(:slug, :string, null: false)

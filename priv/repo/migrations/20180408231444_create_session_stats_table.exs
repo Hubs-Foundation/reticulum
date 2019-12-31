@@ -6,7 +6,6 @@ defmodule Ret.Repo.Migrations.CreateSessionStatsTable do
   def up do
     create table(
              :session_stats,
-             prefix: "ret0",
              primary_key: false,
              options: "partition by range (started_at)"
            ) do
@@ -33,6 +32,6 @@ defmodule Ret.Repo.Migrations.CreateSessionStatsTable do
       execute("drop table ret0.session_stats_y#{year}_m#{month + 1}")
     end
 
-    drop(table(:session_stats, prefix: "ret0"))
+    drop(table(:session_stats))
   end
 end

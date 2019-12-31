@@ -2,7 +2,7 @@ defmodule Ret.Repo.Migrations.CreateAppConfigsTable do
   use Ecto.Migration
 
   def change do
-    create table(:app_configs, prefix: "ret0", primary_key: false) do
+    create table(:app_configs, primary_key: false) do
       add(:app_config_id, :bigint, default: fragment("ret0.next_id()"), primary_key: true)
       add(:key, :string, null: false)
       add(:value, :jsonb)

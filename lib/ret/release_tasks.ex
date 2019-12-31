@@ -3,7 +3,12 @@ defmodule Ret.ReleaseTasks do
     {:ok, _} = Application.ensure_all_started(:ret)
 
     Ret.Locking.exec_if_session_lockable("ret_migration", fn ->
-      Ecto.Migrator.run(Ret.Repo, migrations_path(:ret), :up, all: true)
+      Ecto.Adapters.SQL.query!(Ret.Repo, "CREATE SCHEMA IF NOT EXISTS ret0")
+
+      # Legacy, migrations table used to be under public schema
+      Ecto.Adapters.SQL.query!(Ret.Repo, "ALTER TABLE IF EXISTS public.schema_migrations SET SCHEMA ret0")
+
+      Ecto.Migrator.run(Ret.Repo, migrations_path(:ret), :up, all: true, prefix: "ret0")
     end)
   end
 
