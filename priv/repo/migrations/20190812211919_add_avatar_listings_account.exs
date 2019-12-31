@@ -1,11 +1,11 @@
 defmodule Ret.Repo.Migrations.AddAvatarListingsAccount do
-  use Ret.Migration
+  use Ecto.Migration
   import Ecto.Query
 
   alias Ret.{Repo, Avatar}
 
   def up do
-    alter table(:avatar_listings, prefix: "ret0") do
+    alter table(:avatar_listings) do
       add(:account_id, references(:accounts, column: :account_id, null: false))
     end
     execute "ALTER TABLE ret0.avatar_listings ALTER COLUMN avatar_id DROP NOT NULL"
@@ -22,7 +22,7 @@ defmodule Ret.Repo.Migrations.AddAvatarListingsAccount do
   end
 
   def down do
-    alter table(:avatar_listings, prefix: "ret0") do
+    alter table(:avatar_listings) do
       remove :account_id
     end
     drop constraint(:avatar_listings, :avatar_required_for_listed)

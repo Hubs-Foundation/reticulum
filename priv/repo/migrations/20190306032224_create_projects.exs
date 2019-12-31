@@ -1,8 +1,8 @@
 defmodule Ret.Repo.Migrations.CreateProjects do
-  use Ret.Migration
+  use Ecto.Migration
 
   def change do
-    create table(:projects, prefix: "ret0", primary_key: false) do
+    create table(:projects, primary_key: false) do
       add(:project_id, :bigint, default: fragment("ret0.next_id()"), primary_key: true)
       add(:project_sid, :string)
       add(:name, :string, null: false)

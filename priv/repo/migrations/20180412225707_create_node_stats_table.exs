@@ -1,12 +1,11 @@
 defmodule Ret.Repo.Migrations.NodeStatsTable do
-  use Ret.Migration
+  use Ecto.Migration
 
   @max_year 2022
 
   def up do
     create table(
              :node_stats,
-             prefix: "ret0",
              primary_key: false,
              options: "partition by range (measured_at)"
            ) do
@@ -34,6 +33,6 @@ defmodule Ret.Repo.Migrations.NodeStatsTable do
       execute("drop table ret0.node_stats_y#{year}_m#{month + 1}")
     end
 
-    drop(table(:node_stats, prefix: "ret0"))
+    drop(table(:node_stats))
   end
 end

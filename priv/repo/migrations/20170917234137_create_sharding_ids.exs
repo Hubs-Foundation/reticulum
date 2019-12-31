@@ -1,8 +1,8 @@
 defmodule Ret.Repo.Migrations.CreateShardingIds do
-  use Ret.Migration
+  use Ecto.Migration
 
   def up do
-    execute("create schema ret0")
+    execute("create schema if not exists ret0")
     execute("create sequence ret0.table_id_seq")
 
     execute("""

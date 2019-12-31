@@ -1,8 +1,8 @@
 defmodule Ret.Repo.Migrations.CreateRoomObjectsTable do
-  use Ret.Migration
+  use Ecto.Migration
 
   def change do
-    create table(:room_objects, prefix: "ret0", primary_key: false) do
+    create table(:room_objects, primary_key: false) do
       add(:room_object_id, :bigint, default: fragment("ret0.next_id()"), primary_key: true)
       add(:object_id, :string, null: false)
       add(:hub_id, references(:hubs, column: :hub_id), null: false)

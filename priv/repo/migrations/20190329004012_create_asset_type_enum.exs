@@ -1,5 +1,5 @@
 defmodule Ret.Repo.Migrations.CreateAssetTypeEnum do
-  use Ret.Migration
+  use Ecto.Migration
 
   def up do
     Ret.Asset.Type.create_type()

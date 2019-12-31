@@ -1,10 +1,10 @@
 defmodule Ret.Repo.Migrations.AddSceneListings do
-  use Ret.Migration
+  use Ecto.Migration
 
   def change do
     Ret.SceneListing.State.create_type()
 
-    create table(:scene_listings, prefix: "ret0", primary_key: false) do
+    create table(:scene_listings, primary_key: false) do
       add(:scene_listing_id, :bigint, default: fragment("ret0.next_id()"), primary_key: true)
       add(:scene_listing_sid, :string)
       add(:scene_id, :bigint, null: false)

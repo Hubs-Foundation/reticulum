@@ -1,8 +1,8 @@
 defmodule Ret.Repo.Migrations.AddRemovedStateToScenes do
-  use Ret.Migration
+  use Ecto.Migration
   @disable_ddl_transaction true
 
   def change do
-    Ecto.Migration.execute("ALTER TYPE scene_state ADD VALUE IF NOT EXISTS 'removed'")
+    Ecto.Migration.execute("ALTER TYPE ret0.scene_state ADD VALUE IF NOT EXISTS 'removed'")
   end
 end

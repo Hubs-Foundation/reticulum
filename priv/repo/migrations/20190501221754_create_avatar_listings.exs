@@ -1,10 +1,10 @@
 defmodule Ret.Repo.Migrations.CreateAvatarListings do
-  use Ret.Migration
+  use Ecto.Migration
 
   def change do
     Ret.AvatarListing.State.create_type()
 
-    create table(:avatar_listings, prefix: "ret0", primary_key: false) do
+    create table(:avatar_listings, primary_key: false) do
       add(:avatar_listing_id, :bigint, default: fragment("ret0.next_id()"), primary_key: true)
       add(:avatar_listing_sid, :string, null: false)
       add(:slug, :string, null: false)

@@ -1,8 +1,8 @@
 defmodule Ret.Repo.Migrations.CreateAssetsTables do
-  use Ret.Migration
+  use Ecto.Migration
 
   def change do
-    create table(:assets, prefix: "ret0", primary_key: false) do
+    create table(:assets, primary_key: false) do
       add(:asset_id, :bigint, default: fragment("ret0.next_id()"), primary_key: true)
       add(:asset_sid, :string, null: false)
       add(:name, :string, null: false)
@@ -17,7 +17,7 @@ defmodule Ret.Repo.Migrations.CreateAssetsTables do
     create(index(:assets, [:asset_sid], unique: true))
     create(index(:assets, [:account_id]))
 
-    create table(:project_assets, prefix: "ret0", primary_key: false) do
+    create table(:project_assets, primary_key: false) do
       add(:project_asset_id, :bigint, default: fragment("ret0.next_id()"), primary_key: true)
       add(:project_id, references(:projects, column: :project_id, on_delete: :delete_all), primary_key: true)
       add(:asset_id, references(:assets, column: :asset_id, on_delete: :delete_all), primary_key: true)

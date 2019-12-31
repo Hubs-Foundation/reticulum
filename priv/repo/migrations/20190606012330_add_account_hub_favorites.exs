@@ -1,8 +1,8 @@
 defmodule Ret.Repo.Migrations.AddAccountHubFavorites do
-  use Ret.Migration
+  use Ecto.Migration
 
   def change do
-    create table(:account_favorites, prefix: "ret0", primary_key: false) do
+    create table(:account_favorites, primary_key: false) do
       add(:account_favorite_id, :bigint, default: fragment("ret0.next_id()"), primary_key: true)
       add(:account_id, references(:accounts, column: :account_id), null: false)
       add(:hub_id, references(:hubs, column: :hub_id))

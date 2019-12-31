@@ -1,8 +1,8 @@
 defmodule Ret.Repo.Migrations.AddCachedFiles do
-  use Ret.Migration
+  use Ecto.Migration
 
   def change do
-    create table(:cached_files, prefix: "ret0", primary_key: false) do
+    create table(:cached_files, primary_key: false) do
       add(:cached_file_id, :bigint, default: fragment("ret0.next_id()"), primary_key: true)
       add(:cache_key, :string, null: false)
       add(:file_uuid, :string, null: false)

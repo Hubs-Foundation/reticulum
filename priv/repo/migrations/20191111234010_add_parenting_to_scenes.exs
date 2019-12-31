@@ -1,5 +1,5 @@
 defmodule Ret.Repo.Migrations.AddParentingToScenes do
-  use Ret.Migration
+  use Ecto.Migration
 
   def change do
     alter table("scenes") do

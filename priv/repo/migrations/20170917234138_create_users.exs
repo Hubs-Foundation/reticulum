@@ -1,8 +1,8 @@
 defmodule Ret.Repo.Migrations.CreateUsers do
-  use Ret.Migration
+  use Ecto.Migration
 
   def change do
-    create table(:users, prefix: "ret0", primary_key: false) do
+    create table(:users, primary_key: false) do
       add(:user_id, :bigint, default: fragment("ret0.next_id()"), primary_key: true)
       add(:email, :string, null: false)
       add(:auth_provider, :string, null: false)
@@ -14,6 +14,6 @@ defmodule Ret.Repo.Migrations.CreateUsers do
       timestamps()
     end
 
-    create(index(:users, [:email], unique: true, prefix: "ret0"))
+    create(index(:users, [:email], unique: true))
   end
 end

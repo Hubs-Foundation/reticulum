@@ -1,5 +1,5 @@
 defmodule Ret.Repo.Migrations.AddHasMediaObjectsBit do
-  use Ret.Migration
+  use Ecto.Migration
 
   def change do
     alter table("hubs") do

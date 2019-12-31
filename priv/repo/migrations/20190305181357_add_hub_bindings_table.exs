@@ -1,10 +1,10 @@
 defmodule Ret.Repo.Migrations.AddHubBindingsTable do
-  use Ret.Migration
+  use Ecto.Migration
 
   def change do
     Ret.HubBinding.Type.create_type()
 
-    create table(:hub_bindings, prefix: "ret0", primary_key: false) do
+    create table(:hub_bindings, primary_key: false) do
       add(:hub_binding_id, :bigint, default: fragment("ret0.next_id()"), primary_key: true)
       add(:hub_id, :bigint, null: false)
       add(:type, :hub_binding_type, null: false)
