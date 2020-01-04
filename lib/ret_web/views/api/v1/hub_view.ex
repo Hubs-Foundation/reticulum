@@ -12,19 +12,19 @@ defmodule RetWeb.Api.V1.HubView do
     }
   end
 
-  def render("show.json", %{hub: %Hub{scene: %Scene{}} = hub, embeddable: embeddable}) do
-    hub |> render_with_scene(embeddable)
+  def render("show.json", %{hub: %Hub{scene: %Scene{}} = hub, embeddable: embeddable} = params) do
+    hub |> render_with_scene(embeddable, params[:account])
   end
 
-  def render("show.json", %{hub: %Hub{scene_listing: %SceneListing{}} = hub, embeddable: embeddable}) do
-    hub |> render_with_scene(embeddable)
+  def render("show.json", %{hub: %Hub{scene_listing: %SceneListing{}} = hub, embeddable: embeddable} = params) do
+    hub |> render_with_scene(embeddable, params[:account])
   end
 
   def render("show.json", %{hub: hub}) do
     hub |> render_with_scene_asset(:gltf_bundle, hub.default_environment_gltf_bundle_url)
   end
 
-  def render_with_scene(hub, embeddable) do
+  defp render_with_scene(hub, embeddable, account) do
     %{
       hubs: [
         %{
@@ -35,7 +35,7 @@ defmodule RetWeb.Api.V1.HubView do
           entry_mode: hub.entry_mode,
           host: hub.host,
           port: janus_port(),
-          scene: RetWeb.Api.V1.SceneView.render_scene(hub.scene || hub.scene_listing, nil),
+          scene: RetWeb.Api.V1.SceneView.render_scene(hub.scene || hub.scene_listing, account),
           embed_token:
             if embeddable do
               hub.embed_token
