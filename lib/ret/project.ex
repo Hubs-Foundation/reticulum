@@ -48,7 +48,14 @@ defmodule Ret.Project do
         :thumbnail_owned_file,
         scene: ^Scene.scene_preloads(),
         parent_scene: ^Scene.scene_preloads(),
-        parent_scene_listing: [:model_owned_file, :screenshot_owned_file, :scene_owned_file, :project, :account, scene: ^Scene.scene_preloads()],
+        parent_scene_listing: [
+          :model_owned_file,
+          :screenshot_owned_file,
+          :scene_owned_file,
+          :project,
+          :account,
+          scene: ^Scene.scene_preloads()
+        ],
         assets: [:asset_owned_file, :thumbnail_owned_file]
       ]
     )
@@ -64,8 +71,16 @@ defmodule Ret.Project do
           :thumbnail_owned_file,
           scene: ^Scene.scene_preloads(),
           parent_scene: ^Scene.scene_preloads(),
-          parent_scene_listing: [:model_owned_file, :screenshot_owned_file, :scene_owned_file, :project, :account, scene: ^Scene.scene_preloads()],
-        ]
+          parent_scene_listing: [
+            :model_owned_file,
+            :screenshot_owned_file,
+            :scene_owned_file,
+            :project,
+            :account,
+            scene: ^Scene.scene_preloads()
+          ]
+        ],
+        order_by: [desc: p.updated_at]
       )
     )
   end
