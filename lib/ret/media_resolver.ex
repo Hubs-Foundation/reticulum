@@ -5,7 +5,7 @@ end
 
 defmodule Ret.MediaResolverQuery do
   @enforce_keys [:url]
-  defstruct [:url, supports_webm: true, low_resolution: false, force: false]
+  defstruct [:url, supports_webm: true, low_resolution: false, version: 1]
 end
 
 defmodule Ret.MediaResolver do
@@ -198,7 +198,7 @@ defmodule Ret.MediaResolver do
     resolve_sketchfab_model(model_id, query)
   end
 
-  defp resolve_non_video(%MediaResolverQuery{url: %URI{host: host} = uri, force: force}, _root_host) do
+  defp resolve_non_video(%MediaResolverQuery{url: %URI{host: host} = uri, version: version}, _root_host) do
     photomnemonic_endpoint = module_config(:photomnemonic_endpoint)
 
     # Crawl og tags for hubs rooms + scenes
@@ -213,7 +213,7 @@ defmodule Ret.MediaResolver do
 
         if content_type |> String.starts_with?("text/html") do
           if !is_local_url && photomnemonic_endpoint do
-            case uri |> screenshot_commit_for_uri(content_type, force) do
+            case uri |> screenshot_commit_for_uri(content_type, version) do
               :error -> uri |> og_tag_commit_for_uri()
               commit -> commit
             end
@@ -226,14 +226,14 @@ defmodule Ret.MediaResolver do
     end
   end
 
-  defp screenshot_commit_for_uri(uri, content_type, force) do
+  defp screenshot_commit_for_uri(uri, content_type, version) do
     photomnemonic_endpoint = module_config(:photomnemonic_endpoint)
 
     query = URI.encode_query(url: uri |> URI.to_string())
 
     cached_file_result =
       CachedFile.fetch(
-        "screenshot-#{query}",
+        "screenshot-#{query}-#{version}",
         fn path ->
           Statix.increment("ret.media_resolver.screenshot.requests")
 
@@ -243,8 +243,7 @@ defmodule Ret.MediaResolver do
             {:ok, _path} -> {:ok, %{content_type: "image/png"}}
             error -> {:error, error}
           end
-        end,
-        force
+        end
       )
 
     case cached_file_result do
@@ -285,10 +284,10 @@ defmodule Ret.MediaResolver do
     end
   end
 
-  defp resolve_sketchfab_model(model_id, %MediaResolverQuery{url: %URI{} = uri, force: force}) do
+  defp resolve_sketchfab_model(model_id, %MediaResolverQuery{url: %URI{} = uri, version: version}) do
     [uri, meta] =
       with api_key when is_binary(api_key) <- module_config(:sketchfab_api_key) do
-        resolve_sketchfab_model(model_id, api_key, force)
+        resolve_sketchfab_model(model_id, api_key, version)
       else
         _err -> [uri, nil]
       end
@@ -296,10 +295,10 @@ defmodule Ret.MediaResolver do
     {:commit, uri |> resolved(meta)}
   end
 
-  defp resolve_sketchfab_model(model_id, api_key, force \\ false) do
+  defp resolve_sketchfab_model(model_id, api_key, version \\ 1) do
     cached_file_result =
       CachedFile.fetch(
-        "sketchfab-#{model_id}",
+        "sketchfab-#{model_id}-#{version}",
         fn path ->
           Statix.increment("ret.media_resolver.sketchfab.requests")
 
@@ -326,8 +325,7 @@ defmodule Ret.MediaResolver do
 
               {:ok, %{content_type: "model/gltf+zip"}}
           end
-        end,
-        force
+        end
       )
 
     case cached_file_result do
