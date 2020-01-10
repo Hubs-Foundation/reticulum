@@ -53,7 +53,7 @@ defmodule Ret.CachedFile do
 
                     Storage.uri_for(file_uuid, content_type, file_key)
 
-                  { :error, reason } ->
+                  {:error, reason} ->
                     {:error, "error running loader: #{reason}"}
                 end
 

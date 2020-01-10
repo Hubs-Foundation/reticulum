@@ -5,7 +5,7 @@ end
 
 defmodule Ret.MediaResolverQuery do
   @enforce_keys [:url]
-  defstruct [:url, supports_webm: true, low_resolution: false]
+  defstruct [:url, supports_webm: true, low_resolution: false, version: 1]
 end
 
 defmodule Ret.MediaResolver do
@@ -37,19 +37,19 @@ defmodule Ret.MediaResolver do
   end
 
   # Necessary short circuit around google.com root_host to skip YT-DL check for Poly
-  def resolve(%MediaResolverQuery{url: %URI{host: "poly.google.com"} = uri}, root_host) do
-    resolve_non_video(uri, root_host)
+  def resolve(%MediaResolverQuery{url: %URI{host: "poly.google.com"}} = query, root_host) do
+    resolve_non_video(query, root_host)
   end
 
-  def resolve(%MediaResolverQuery{url: %URI{} = uri}, root_host) when root_host in @non_video_root_hosts do
-    resolve_non_video(uri, root_host)
+  def resolve(%MediaResolverQuery{} = query, root_host) when root_host in @non_video_root_hosts do
+    resolve_non_video(query, root_host)
   end
 
-  def resolve(%MediaResolverQuery{url: %URI{} = uri} = query, root_host) do
-    resolve_with_ytdl(uri, root_host, query |> ytdl_query(root_host))
+  def resolve(%MediaResolverQuery{} = query, root_host) do
+    resolve_with_ytdl(query, root_host, query |> ytdl_query(root_host))
   end
 
-  def resolve_with_ytdl(%URI{} = uri, root_host, ytdl_format) do
+  def resolve_with_ytdl(%MediaResolverQuery{url: %URI{} = uri} = query, root_host, ytdl_format) do
     with ytdl_host when is_binary(ytdl_host) <- module_config(:ytdl_host) do
       query =
         URI.encode_query(%{
@@ -74,15 +74,15 @@ defmodule Ret.MediaResolver do
           {:commit, headers |> media_url_from_ytdl_headers |> URI.parse() |> resolved(meta)}
 
         _ ->
-          resolve_non_video(uri, root_host)
+          resolve_non_video(query, root_host)
       end
     else
       _err ->
-        resolve_non_video(uri, root_host)
+        resolve_non_video(query, root_host)
     end
   end
 
-  defp resolve_non_video(%URI{} = uri, "deviantart.com") do
+  defp resolve_non_video(%MediaResolverQuery{url: %URI{} = uri}, "deviantart.com") do
     Statix.increment("ret.media_resolver.deviant.requests")
 
     [uri, meta] =
@@ -118,19 +118,19 @@ defmodule Ret.MediaResolver do
     {:commit, uri |> resolved(meta)}
   end
 
-  defp resolve_non_video(%URI{path: "/gifs/" <> _rest} = uri, "giphy.com") do
+  defp resolve_non_video(%MediaResolverQuery{url: %URI{path: "/gifs/" <> _rest} = uri}, "giphy.com") do
     resolve_giphy_media_uri(uri, "mp4")
   end
 
-  defp resolve_non_video(%URI{path: "/stickers/" <> _rest} = uri, "giphy.com") do
+  defp resolve_non_video(%MediaResolverQuery{url: %URI{path: "/stickers/" <> _rest} = uri}, "giphy.com") do
     resolve_giphy_media_uri(uri, "url")
   end
 
-  defp resolve_non_video(%URI{path: "/videos/" <> _rest} = uri, "tenor.com") do
+  defp resolve_non_video(%MediaResolverQuery{url: %URI{path: "/videos/" <> _rest} = uri}, "tenor.com") do
     {:commit, uri |> resolved(%{expected_content_type: "video/mp4"})}
   end
 
-  defp resolve_non_video(%URI{path: "/gallery/" <> gallery_id} = uri, "imgur.com") do
+  defp resolve_non_video(%MediaResolverQuery{url: %URI{path: "/gallery/" <> gallery_id} = uri}, "imgur.com") do
     [resolved_url, meta] =
       "https://imgur-apiv3.p.mashape.com/3/gallery/#{gallery_id}"
       |> image_data_for_imgur_collection_api_url
@@ -138,7 +138,7 @@ defmodule Ret.MediaResolver do
     {:commit, (resolved_url || uri) |> resolved(meta)}
   end
 
-  defp resolve_non_video(%URI{path: "/a/" <> album_id} = uri, "imgur.com") do
+  defp resolve_non_video(%MediaResolverQuery{url: %URI{path: "/a/" <> album_id} = uri}, "imgur.com") do
     [resolved_url, meta] =
       "https://imgur-apiv3.p.mashape.com/3/album/#{album_id}"
       |> image_data_for_imgur_collection_api_url
@@ -147,7 +147,7 @@ defmodule Ret.MediaResolver do
   end
 
   defp resolve_non_video(
-         %URI{host: "poly.google.com", path: "/view/" <> asset_id} = uri,
+         %MediaResolverQuery{url: %URI{host: "poly.google.com", path: "/view/" <> asset_id} = uri},
          "google.com"
        ) do
     [uri, meta] =
@@ -184,21 +184,21 @@ defmodule Ret.MediaResolver do
   end
 
   defp resolve_non_video(
-         %URI{path: "/models/" <> model_id} = uri,
+         %MediaResolverQuery{url: %URI{path: "/models/" <> model_id}} = query,
          "sketchfab.com"
        ) do
-    resolve_sketchfab_model(model_id, uri)
+    resolve_sketchfab_model(model_id, query)
   end
 
   defp resolve_non_video(
-         %URI{path: "/3d-models/" <> model_id} = uri,
+         %MediaResolverQuery{url: %URI{path: "/3d-models/" <> model_id}} = query,
          "sketchfab.com"
        ) do
     model_id = model_id |> String.split("-") |> Enum.at(-1)
-    resolve_sketchfab_model(model_id, uri)
+    resolve_sketchfab_model(model_id, query)
   end
 
-  defp resolve_non_video(%URI{host: host} = uri, _root_host) do
+  defp resolve_non_video(%MediaResolverQuery{url: %URI{host: host} = uri, version: version}, _root_host) do
     photomnemonic_endpoint = module_config(:photomnemonic_endpoint)
 
     # Crawl og tags for hubs rooms + scenes
@@ -213,7 +213,7 @@ defmodule Ret.MediaResolver do
 
         if content_type |> String.starts_with?("text/html") do
           if !is_local_url && photomnemonic_endpoint do
-            case uri |> screenshot_commit_for_uri(content_type) do
+            case uri |> screenshot_commit_for_uri(content_type, version) do
               :error -> uri |> og_tag_commit_for_uri()
               commit -> commit
             end
@@ -226,22 +226,25 @@ defmodule Ret.MediaResolver do
     end
   end
 
-  defp screenshot_commit_for_uri(uri, content_type) do
+  defp screenshot_commit_for_uri(uri, content_type, version) do
     photomnemonic_endpoint = module_config(:photomnemonic_endpoint)
 
     query = URI.encode_query(url: uri |> URI.to_string())
 
     cached_file_result =
-      CachedFile.fetch("screenshot-#{query}", fn path ->
-        Statix.increment("ret.media_resolver.screenshot.requests")
+      CachedFile.fetch(
+        "screenshot-#{query}-#{version}",
+        fn path ->
+          Statix.increment("ret.media_resolver.screenshot.requests")
 
-        url = "#{photomnemonic_endpoint}/screenshot?#{query}"
+          url = "#{photomnemonic_endpoint}/screenshot?#{query}"
 
-        case Download.from(url, path: path) do
-          {:ok, _path} -> {:ok, %{content_type: "image/png"}}
-          error -> {:error, error}
+          case Download.from(url, path: path) do
+            {:ok, _path} -> {:ok, %{content_type: "image/png"}}
+            error -> {:error, error}
+          end
         end
-      end)
+      )
 
     case cached_file_result do
       {:ok, file_uri} ->
@@ -281,10 +284,10 @@ defmodule Ret.MediaResolver do
     end
   end
 
-  defp resolve_sketchfab_model(model_id, %URI{} = uri) do
+  defp resolve_sketchfab_model(model_id, %MediaResolverQuery{url: %URI{} = uri, version: version}) do
     [uri, meta] =
       with api_key when is_binary(api_key) <- module_config(:sketchfab_api_key) do
-        resolve_sketchfab_model(model_id, api_key)
+        resolve_sketchfab_model(model_id, api_key, version)
       else
         _err -> [uri, nil]
       end
@@ -292,35 +295,38 @@ defmodule Ret.MediaResolver do
     {:commit, uri |> resolved(meta)}
   end
 
-  defp resolve_sketchfab_model(model_id, api_key) do
+  defp resolve_sketchfab_model(model_id, api_key, version \\ 1) do
     cached_file_result =
-      CachedFile.fetch("sketchfab-#{model_id}", fn path ->
-        Statix.increment("ret.media_resolver.sketchfab.requests")
+      CachedFile.fetch(
+        "sketchfab-#{model_id}-#{version}",
+        fn path ->
+          Statix.increment("ret.media_resolver.sketchfab.requests")
 
-        res =
-          "https://api.sketchfab.com/v3/models/#{model_id}/download"
-          |> retry_get_until_success([{"Authorization", "Token #{api_key}"}])
+          res =
+            "https://api.sketchfab.com/v3/models/#{model_id}/download"
+            |> retry_get_until_success([{"Authorization", "Token #{api_key}"}])
 
-        case res do
-          :error ->
-            Statix.increment("ret.media_resolver.sketchfab.errors")
+          case res do
+            :error ->
+              Statix.increment("ret.media_resolver.sketchfab.errors")
 
-            :error
+              :error
 
-          res ->
-            Statix.increment("ret.media_resolver.sketchfab.ok")
+            res ->
+              Statix.increment("ret.media_resolver.sketchfab.ok")
 
-            zip_url =
-              res
-              |> Map.get(:body)
-              |> Poison.decode!()
-              |> Kernel.get_in(["gltf", "url"])
+              zip_url =
+                res
+                |> Map.get(:body)
+                |> Poison.decode!()
+                |> Kernel.get_in(["gltf", "url"])
 
-            Download.from(zip_url, path: path)
+              Download.from(zip_url, path: path)
 
-            {:ok, %{content_type: "model/gltf+zip"}}
+              {:ok, %{content_type: "model/gltf+zip"}}
+          end
         end
-      end)
+      )
 
     case cached_file_result do
       {:ok, uri} -> [uri, %{expected_content_type: "model/gltf+zip"}]
