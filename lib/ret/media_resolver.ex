@@ -51,7 +51,7 @@ defmodule Ret.MediaResolver do
 
   def resolve_with_ytdl(%MediaResolverQuery{url: %URI{} = uri} = query, root_host, ytdl_format) do
     with ytdl_host when is_binary(ytdl_host) <- module_config(:ytdl_host) do
-      query =
+      ytdl_query =
         URI.encode_query(%{
           format: ytdl_format,
           url: URI.to_string(uri),
@@ -59,7 +59,7 @@ defmodule Ret.MediaResolver do
         })
 
       ytdl_resp =
-        "#{ytdl_host}/api/play?#{query}"
+        "#{ytdl_host}/api/play?#{ytdl_query}"
         |> retry_get_until_valid_ytdl_response
 
       case ytdl_resp do
