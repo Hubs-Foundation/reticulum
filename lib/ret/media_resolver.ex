@@ -24,6 +24,10 @@ defmodule Ret.MediaResolver do
     "tenor.com"
   ]
 
+  @hls_preferred_root_hosts [
+    "vimeo.com"
+  ]
+
   @deviant_id_regex ~r/\"DeviantArt:\/\/deviation\/([^"]+)/
 
   def resolve(%MediaResolverQuery{url: url} = query) when is_binary(url) do
@@ -457,6 +461,19 @@ defmodule Ret.MediaResolver do
     crunchy_query <> "/" <> ytdl_query(query, nil)
   end
 
+  defp ytdl_query(query, root_host) when root_host in @hls_preferred_root_hosts do
+    resolution = query |> ytdl_resolution
+    ext = query |> ytdl_ext
+
+    [
+      "best#{ext}[protocol*=m3u8][height<=?#{resolution}][format_id!=0]",
+      "best#{ext}[protocol*=http][height<=?#{resolution}][format_id!=0]",
+      "best#{ext}[protocol*=m3u8][format_id!=0]",
+      "best#{ext}[protocol*=http][format_id!=0]"
+    ]
+    |> Enum.join("/")
+  end
+
   defp ytdl_query(query, _root_host) do
     resolution = query |> ytdl_resolution
     ext = query |> ytdl_ext
@@ -470,6 +487,6 @@ defmodule Ret.MediaResolver do
     |> Enum.join("/")
   end
 
-  def ytdl_ext(%MediaResolverQuery{supports_webm: false}), do: "[ext=mp4]"
+  def ytdl_ext(%MediaResolverQuery{supports_webm: false}), do: "[ext=mp4][ext!=mpd]"
   def ytdl_ext(_query), do: ""
 end
