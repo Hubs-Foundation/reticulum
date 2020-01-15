@@ -1,11 +1,11 @@
 defmodule Ret.ResolvedMedia do
   @enforce_keys [:uri]
-  defstruct [:uri, :meta]
+  defstruct [:uri, :audio_uri, :meta]
 end
 
 defmodule Ret.MediaResolverQuery do
   @enforce_keys [:url]
-  defstruct [:url, supports_webm: true, low_resolution: false, version: 1]
+  defstruct [:url, supports_webm: true, quality: :high, version: 1]
 end
 
 defmodule Ret.MediaResolver do
@@ -46,32 +46,27 @@ defmodule Ret.MediaResolver do
   end
 
   def resolve(%MediaResolverQuery{} = query, root_host) do
-    resolve_with_ytdl(query, root_host, query |> ytdl_query(root_host))
+    resolve_with_ytdl(query, root_host, query |> ytdl_format(root_host))
   end
 
-  def resolve_with_ytdl(%MediaResolverQuery{url: %URI{} = uri} = query, root_host, ytdl_format) do
+  def resolve_with_ytdl(%MediaResolverQuery{} = query, root_host, ytdl_format) do
     with ytdl_host when is_binary(ytdl_host) <- module_config(:ytdl_host) do
-      ytdl_query =
-        URI.encode_query(%{
-          format: ytdl_format,
-          url: URI.to_string(uri),
-          playlist_items: 1
-        })
-
-      ytdl_resp =
-        "#{ytdl_host}/api/play?#{ytdl_query}"
-        |> retry_get_until_valid_ytdl_response
-
-      case ytdl_resp do
+      case fetch_ytdl_response(query, ytdl_format) do
         %HTTPoison.Response{status_code: 302, headers: headers} ->
           # todo: it would be really nice to return video/* content type here!
           # but it seems that the way we're using youtube-dl will return a 302 with the
           # direct URL for various non-video files, e.g. PDFs seem to trigger this, so until
           # we figure out how to change that behavior or distinguish between them, we can't
           # be confident that it's video/* in this branch
-          meta = %{}
+          media_url = headers |> media_url_from_ytdl_headers
 
-          {:commit, headers |> media_url_from_ytdl_headers |> URI.parse() |> resolved(meta)}
+          if query_ytdl_audio?(query) do
+            # For 360 video quality types, we fetch the audio track separately since
+            # YouTube serves up a separate webm for audio.
+            resolve_with_ytdl_audio(query, media_url)
+          else
+            {:commit, media_url |> URI.parse() |> resolved(%{})}
+          end
 
         _ ->
           resolve_non_video(query, root_host)
@@ -80,6 +75,35 @@ defmodule Ret.MediaResolver do
       _err ->
         resolve_non_video(query, root_host)
     end
+  end
+
+  def resolve_with_ytdl_audio(%MediaResolverQuery{} = query, media_url) do
+    case fetch_ytdl_response(query, ytdl_audio_format(query)) do
+      %HTTPoison.Response{status_code: 302, headers: headers} ->
+        audio_url = headers |> media_url_from_ytdl_headers
+
+        if media_url != audio_url do
+          {:commit, media_url |> URI.parse() |> resolved(audio_url |> URI.parse(), %{})}
+        else
+          {:commit, media_url |> URI.parse() |> resolved(%{})}
+        end
+
+      _ ->
+        {:commit, media_url |> URI.parse() |> resolved(%{})}
+    end
+  end
+
+  defp fetch_ytdl_response(%MediaResolverQuery{url: %URI{} = uri}, ytdl_format) do
+    ytdl_host = module_config(:ytdl_host)
+
+    ytdl_query =
+      URI.encode_query(%{
+        format: ytdl_format,
+        url: URI.to_string(uri),
+        playlist_items: 1
+      })
+
+    "#{ytdl_host}/api/play?#{ytdl_query}" |> retry_get_until_valid_ytdl_response
   end
 
   defp resolve_non_video(%MediaResolverQuery{url: %URI{} = uri}, "deviantart.com") do
@@ -426,46 +450,61 @@ defmodule Ret.MediaResolver do
     end
   end
 
-  def resolved(:error) do
-    nil
-  end
+  def resolved(:error), do: nil
+  def resolved(%URI{} = uri), do: %Ret.ResolvedMedia{uri: uri}
+  def resolved(%URI{} = uri, meta), do: %Ret.ResolvedMedia{uri: uri, meta: meta}
 
-  def resolved(%URI{} = uri) do
-    %Ret.ResolvedMedia{uri: uri}
-  end
-
-  def resolved(%URI{} = uri, meta) do
-    %Ret.ResolvedMedia{uri: uri, meta: meta}
-  end
+  def resolved(%URI{} = uri, %URI{} = audio_uri, meta),
+    do: %Ret.ResolvedMedia{uri: uri, audio_uri: audio_uri, meta: meta}
 
   defp module_config(key) do
     Application.get_env(:ret, __MODULE__)[key]
   end
 
-  defp ytdl_resolution(%MediaResolverQuery{low_resolution: true}), do: "480"
-  defp ytdl_resolution(_query), do: "720"
+  defp ytdl_resolution(%MediaResolverQuery{quality: :low}), do: "[height<=480]"
+  defp ytdl_resolution(%MediaResolverQuery{quality: :low_360}), do: "[height<=1440]"
+  defp ytdl_resolution(%MediaResolverQuery{quality: :high_360}), do: "[height<=2160]"
+  defp ytdl_resolution(_query), do: "[height<=720]"
 
-  defp ytdl_query(query, "crunchyroll.com") do
+  defp ytdl_qualifier(%MediaResolverQuery{quality: quality}) when quality in [:low, :high], do: "best"
+  # for 360, we always grab dedicated audio track
+  defp ytdl_qualifier(_query), do: "bestvideo"
+
+  defp query_ytdl_audio?(%MediaResolverQuery{quality: quality}) when quality in [:low, :high], do: false
+  defp query_ytdl_audio?(_query), do: true
+
+  defp ytdl_format(query, "crunchyroll.com") do
     resolution = query |> ytdl_resolution
     ext = query |> ytdl_ext
 
     # Prefer a version with baked in (english) subtitles. Client locale should eventually determine this
-    crunchy_query =
-      ["best#{ext}[format_id*=hardsub-enUS][height<=?#{resolution}]", "best#{ext}[format_id*=hardsub-enUS]"]
+    crunchy_format =
+      ["best#{ext}[format_id*=hardsub-enUS]#{resolution}", "best#{ext}[format_id*=hardsub-enUS]"]
       |> Enum.join("/")
 
-    crunchy_query <> "/" <> ytdl_query(query, nil)
+    crunchy_format <> "/" <> ytdl_format(query, nil)
   end
 
-  defp ytdl_query(query, _root_host) do
+  defp ytdl_format(query, _root_host) do
+    qualifier = query |> ytdl_qualifier
     resolution = query |> ytdl_resolution
     ext = query |> ytdl_ext
+    ytdl_format(qualifier, resolution, ext)
+  end
 
+  defp ytdl_audio_format(query) do
+    qualifier = "bestaudio"
+    resolution = query |> ytdl_resolution
+    ext = query |> ytdl_ext
+    ytdl_format(qualifier, resolution, ext)
+  end
+
+  defp ytdl_format(qualifier, resolution, ext) do
     [
-      "best#{ext}[protocol*=http][height<=?#{resolution}][format_id!=0]",
-      "best#{ext}[protocol*=m3u8][height<=?#{resolution}][format_id!=0]",
-      "best#{ext}[protocol*=http][format_id!=0]",
-      "best#{ext}[protocol*=m3u8][format_id!=0]"
+      "#{qualifier}#{ext}[protocol*=http]#{resolution}[format_id!=0]",
+      "#{qualifier}#{ext}[protocol*=m3u8]#{resolution}[format_id!=0]",
+      "#{qualifier}#{ext}[protocol*=http][format_id!=0]",
+      "#{qualifier}#{ext}[protocol*=m3u8][format_id!=0]"
     ]
     |> Enum.join("/")
   end
