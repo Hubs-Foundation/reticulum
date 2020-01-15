@@ -80,6 +80,8 @@ defmodule Ret.Hub do
     has_many(:hub_bindings, Ret.HubBinding, foreign_key: :hub_id)
     has_many(:hub_role_memberships, Ret.HubRoleMembership, foreign_key: :hub_id)
 
+    field(:privacy, Hub.Privacy)
+
     timestamps()
   end
 

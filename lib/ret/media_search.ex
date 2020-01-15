@@ -69,6 +69,10 @@ defmodule Ret.MediaSearch do
     favorites_search(cursor, type, account_id, q)
   end
 
+  def search(%Ret.MediaSearchQuery{source: "public_rooms", cursor: cursor, q: q}) do
+    public_rooms_search(cursor, q)
+  end
+
   def search(%Ret.MediaSearchQuery{source: "sketchfab", cursor: cursor, filter: nil, collection: nil, q: q})
       when q == nil or q == "" do
     search(%Ret.MediaSearchQuery{source: "sketchfab", cursor: cursor, filter: "featured", q: q})
@@ -468,6 +472,20 @@ defmodule Ret.MediaSearch do
     {:commit, results}
   end
 
+  defp public_rooms_search(cursor, _query) do
+    page_number = (cursor || "1") |> Integer.parse() |> elem(0)
+
+    results =
+      Hub
+      |> where([h], h.privacy == ^"public" and h.entry_mode == ^"allow")
+      |> preload(scene: [:screenshot_owned_file], scene_listing: [:scene, :screenshot_owned_file])
+      |> order_by(^:last_active_at)
+      |> Repo.paginate(%{page: page_number, page_size: @page_size})
+      |> result_for_page(page_number, :hubs, &hub_to_entry/1)
+
+    {:commit, results}
+  end
+
   defp favorites_search(cursor, _type, account_id, _query, order \\ [desc: :last_activated_at]) do
     page_number = (cursor || "1") |> Integer.parse() |> elem(0)
 
@@ -640,6 +658,10 @@ defmodule Ret.MediaSearch do
   end
 
   defp favorite_to_entry(%AccountFavorite{hub: hub} = favorite) when hub != nil do
+    Map.merge(hub_to_entry(hub), %{last_activated_at: favorite.last_activated_at})
+  end
+
+  defp hub_to_entry(%Hub{} = hub) when hub != nil do
     scene_or_scene_listing = hub.scene || hub.scene_listing
 
     images =
@@ -654,7 +676,6 @@ defmodule Ret.MediaSearch do
       url: hub |> Hub.url_for(),
       type: :hub,
       name: hub.name,
-      last_activated_at: favorite.last_activated_at,
       images: images
     }
   end
