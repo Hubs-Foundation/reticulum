@@ -93,18 +93,29 @@ defmodule Ret.MediaResolver do
     end
   end
 
-  defp fetch_ytdl_response(%MediaResolverQuery{url: %URI{} = uri}, ytdl_format) do
+  defp fetch_ytdl_response(%MediaResolverQuery{url: %URI{} = uri, quality: quality}, ytdl_format) do
     ytdl_host = module_config(:ytdl_host)
 
-    ytdl_query =
-      URI.encode_query(%{
+    ytdl_query_args =
+      %{
         format: ytdl_format,
         url: URI.to_string(uri),
         playlist_items: 1
-      })
+      }
+      |> ytdl_add_user_agent_for_quality(quality)
+
+    ytdl_query = URI.encode_query(ytdl_query_args)
 
     "#{ytdl_host}/api/play?#{ytdl_query}" |> retry_get_until_valid_ytdl_response
   end
+
+  defp ytdl_add_user_agent_for_quality(args, quality) when quality in [:low_360, :high_360] do
+    # See https://github.com/ytdl-org/youtube-dl/issues/15267#issuecomment-370122336
+    args
+    |> Map.put(:user_agent, "")
+  end
+
+  defp ytdl_add_user_agent_for_quality(args, _quality), do: args
 
   defp resolve_non_video(%MediaResolverQuery{url: %URI{} = uri}, "deviantart.com") do
     Statix.increment("ret.media_resolver.deviant.requests")

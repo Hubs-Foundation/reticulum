@@ -102,7 +102,8 @@ defmodule RetWeb.Api.V1.MediaController do
     end
   end
 
-  defp render_resolved_media(conn, %Ret.ResolvedMedia{uri: uri, audio_uri: audio_uri, meta: meta} = res) do
+  defp render_resolved_media(conn, %Ret.ResolvedMedia{uri: uri, audio_uri: audio_uri, meta: meta} = res)
+       when audio_uri != nil do
     conn |> render("show.json", origin: uri |> URI.to_string(), origin_audio: audio_uri |> URI.to_string(), meta: meta)
   end
 
