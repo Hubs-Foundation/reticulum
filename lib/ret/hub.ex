@@ -135,6 +135,10 @@ defmodule Ret.Hub do
     |> put_change(:member_permissions, member_permissions)
   end
 
+  def add_privacy_to_changeset(changeset, attrs) do
+    changeset |> put_change(:privacy, attrs["privacy"])
+  end
+
   def changeset_for_new_seen_occupant_count(%Hub{} = hub, occupant_count) do
     new_max_occupant_count = max(hub.max_occupant_count, occupant_count)
 
@@ -342,7 +346,7 @@ defmodule Ret.Hub do
   end
 
   defp add_default_member_permissions_to_changeset(changeset) do
-    if Ret.AppConfig.get_config_value("features|permissive_rooms") do
+    if Ret.AppConfig.get_config_bool("features|permissive_rooms") do
       changeset |> put_change(:member_permissions, @default_member_permissions |> member_permissions_to_int)
     else
       changeset |> put_change(:member_permissions, @default_restrictive_member_permissions |> member_permissions_to_int)
@@ -439,6 +443,11 @@ defimpl Canada.Can, for: Ret.Account do
 
   # Always deny access to non-enterable hubs
   def can?(%Ret.Account{}, :join_hub, %Ret.Hub{entry_mode: :deny}), do: false
+
+  def can?(%Ret.Account{} = account, :update_hub_privacy, %Ret.Hub{} = hub) do
+    owners_can_change_privacy = Ret.AppConfig.get_config_bool("features|public_rooms")
+    account.is_admin or (owners_can_change_privacy and can?(account, :update_hub, hub))
+  end
 
   # Bound hubs - Join perm
   def can?(%Ret.Account{} = account, :join_hub, %Ret.Hub{hub_bindings: hub_bindings})

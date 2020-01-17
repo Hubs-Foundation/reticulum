@@ -26,7 +26,14 @@ defmodule RetWeb.HubChannel do
 
   @hub_preloads [
     scene: Scene.scene_preloads(),
-    scene_listing: [:model_owned_file, :screenshot_owned_file, :scene_owned_file, :project, :account, scene: Scene.scene_preloads()],
+    scene_listing: [
+      :model_owned_file,
+      :screenshot_owned_file,
+      :scene_owned_file,
+      :project,
+      :account,
+      scene: Scene.scene_preloads()
+    ],
     web_push_subscriptions: [],
     hub_bindings: [],
     created_by_account: [],
@@ -372,20 +379,28 @@ defmodule RetWeb.HubChannel do
     if account |> can?(update_hub(hub)) do
       name_changed = hub.name != payload["name"]
       member_permissions_changed = hub.member_permissions != payload |> Hub.member_permissions_from_attrs()
+      can_change_privacy = account |> can?(update_hub_privacy(hub))
+      privacy_changed = can_change_privacy and hub.privacy != payload["privacy"]
 
       stale_fields = []
       stale_fields = if name_changed, do: ["name" | stale_fields], else: stale_fields
       stale_fields = if member_permissions_changed, do: ["member_permissions" | stale_fields], else: stale_fields
+      stale_fields = if privacy_changed, do: ["privacy" | stale_fields], else: stale_fields
 
       hub
       |> Hub.add_name_to_changeset(payload)
       |> Hub.add_member_permissions_to_changeset(payload)
+      |> add_privacy_to_changeset_if_allowed(can_change_privacy, payload)
       |> Repo.update!()
       |> Repo.preload(@hub_preloads)
       |> broadcast_hub_refresh!(socket, stale_fields)
     end
 
     {:noreply, socket}
+  end
+
+  defp add_privacy_to_changeset_if_allowed(changeset, allowed, payload) do
+    if allowed, do: changeset |> Hub.add_privacy_to_changeset(payload), else: changeset
   end
 
   def handle_in("close_hub", _payload, socket) do
