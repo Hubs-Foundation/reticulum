@@ -658,7 +658,7 @@ defmodule Ret.MediaSearch do
   end
 
   defp favorite_to_entry(%AccountFavorite{hub: hub} = favorite) when hub != nil do
-    Map.merge(hub_to_entry(hub), %{last_activated_at: favorite.last_activated_at})
+    Map.merge(hub_to_entry(hub), %{last_activated_at: favorite.last_activated_at, favorited: true})
   end
 
   defp hub_to_entry(%Hub{} = hub) when hub != nil do
@@ -675,6 +675,7 @@ defmodule Ret.MediaSearch do
       id: hub.hub_sid,
       url: hub |> Hub.url_for(),
       type: :hub,
+      participant_count: RetWeb.Presence.list("hub:#{hub.hub_sid}") |> Enum.count(),
       name: hub.name,
       images: images
     }
