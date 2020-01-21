@@ -2,6 +2,9 @@ defmodule RetWeb.Api.V1.MediaController do
   use RetWeb, :controller
   use Retry
 
+  def create(conn, %{"media" => %{"url" => url, "quality" => quality}, "version" => version}),
+    do: resolve_and_render(conn, url, version, String.to_atom(quality))
+
   def create(conn, %{"media" => %{"url" => url}, "version" => version}), do: resolve_and_render(conn, url, version)
   def create(conn, %{"media" => %{"url" => url}}), do: resolve_and_render(conn, url, 1)
 
@@ -69,7 +72,9 @@ defmodule RetWeb.Api.V1.MediaController do
     end
   end
 
-  defp resolve_and_render(conn, url, version) do
+  defp resolve_and_render(conn, url, version, quality \\ nil) do
+    quality = quality || default_quality(conn)
+
     ua =
       conn
       |> Plug.Conn.get_req_header("user-agent")
@@ -77,12 +82,11 @@ defmodule RetWeb.Api.V1.MediaController do
       |> UAParser.parse()
 
     supports_webm = ua.family != "Safari" && ua.family != "Mobile Safari"
-    low_resolution = ua.os.family == "Android" || ua.os.family == "iOS"
 
     query = %Ret.MediaResolverQuery{
       url: url,
       supports_webm: supports_webm,
-      low_resolution: low_resolution,
+      quality: quality,
       version: version
     }
 
@@ -98,7 +102,26 @@ defmodule RetWeb.Api.V1.MediaController do
     end
   end
 
+  defp render_resolved_media(conn, %Ret.ResolvedMedia{uri: uri, audio_uri: audio_uri, meta: meta} = res)
+       when audio_uri != nil do
+    conn |> render("show.json", origin: uri |> URI.to_string(), origin_audio: audio_uri |> URI.to_string(), meta: meta)
+  end
+
   defp render_resolved_media(conn, %Ret.ResolvedMedia{uri: uri, meta: meta}) do
     conn |> render("show.json", origin: uri |> URI.to_string(), meta: meta)
+  end
+
+  defp default_quality(conn) do
+    ua =
+      conn
+      |> Plug.Conn.get_req_header("user-agent")
+      |> List.first()
+      |> UAParser.parse()
+
+    if ua.os.family == "Android" || ua.os.family == "iOS" do
+      :low
+    else
+      :high
+    end
   end
 end
