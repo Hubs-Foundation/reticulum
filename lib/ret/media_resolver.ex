@@ -244,25 +244,20 @@ defmodule Ret.MediaResolver do
         nil
 
       %HTTPoison.Response{headers: headers} ->
-        case headers |> get_http_header("hub-entity-type") do
-          entity when entity != nil ->
-            uri |> opengraph_result_for_uri("hubs-#{entity}")
+        content_type = headers |> content_type_from_headers
+        has_entity_type = headers |> get_http_header("hub-entity-type") != nil
 
-          _ ->
-            content_type = headers |> content_type_from_headers
-
-            if content_type |> String.starts_with?("text/html") do
-              if !is_local_url && photomnemonic_endpoint do
-                case uri |> screenshot_commit_for_uri(content_type, version) do
-                  :error -> uri |> opengraph_result_for_uri()
-                  commit -> commit
-                end
-              else
-                uri |> opengraph_result_for_uri()
-              end
-            else
-              {:commit, uri |> resolved(%{expected_content_type: content_type})}
+        if content_type |> String.starts_with?("text/html") do
+          if !has_entity_type && !is_local_url && photomnemonic_endpoint do
+            case uri |> screenshot_commit_for_uri(content_type, version) do
+              :error -> uri |> opengraph_result_for_uri()
+              commit -> commit
             end
+          else
+            uri |> opengraph_result_for_uri()
+          end
+        else
+          {:commit, uri |> resolved(%{expected_content_type: content_type})}
         end
     end
   end
@@ -298,7 +293,7 @@ defmodule Ret.MediaResolver do
     end
   end
 
-  defp opengraph_result_for_uri(uri, expected_content_subtype \\ nil) do
+  defp opengraph_result_for_uri(uri) do
     case uri |> URI.to_string() |> retry_get_until_success([{"Range", "bytes=0-32768"}]) do
       :error ->
         :error
@@ -323,13 +318,6 @@ defmodule Ret.MediaResolver do
           expected_content_type: content_type_from_headers(resp.headers),
           thumbnail: thumbnail
         }
-
-        meta =
-          if expected_content_subtype do
-            Map.put(meta, :expected_content_subtype, expected_content_subtype)
-          else
-            meta
-          end
 
         {:commit, uri |> resolved(meta)}
     end
