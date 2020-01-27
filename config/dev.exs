@@ -8,7 +8,7 @@ assets_host = "hubs-assets.local"
 link_host = "hubs-link.local"
 
 # To run reticulum across a LAN for local testing, uncomment and change the line below to the LAN IP
-# host = "192.168.1.27"
+# host = cors_proxy_host = "192.168.1.27"
 
 dev_janus_host = "dev-janus.reticulum.io"
 
