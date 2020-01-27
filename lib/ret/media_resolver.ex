@@ -245,15 +245,16 @@ defmodule Ret.MediaResolver do
 
       %HTTPoison.Response{headers: headers} ->
         content_type = headers |> content_type_from_headers
+        has_entity_type = headers |> get_http_header("hub-entity-type") != nil
 
         if content_type |> String.starts_with?("text/html") do
-          if !is_local_url && photomnemonic_endpoint do
+          if !has_entity_type && !is_local_url && photomnemonic_endpoint do
             case uri |> screenshot_commit_for_uri(content_type, version) do
-              :error -> uri |> og_tag_commit_for_uri()
+              :error -> uri |> opengraph_result_for_uri()
               commit -> commit
             end
           else
-            uri |> og_tag_commit_for_uri()
+            uri |> opengraph_result_for_uri()
           end
         else
           {:commit, uri |> resolved(%{expected_content_type: content_type})}
@@ -292,7 +293,7 @@ defmodule Ret.MediaResolver do
     end
   end
 
-  defp og_tag_commit_for_uri(uri) do
+  defp opengraph_result_for_uri(uri) do
     case uri |> URI.to_string() |> retry_get_until_success([{"Range", "bytes=0-32768"}]) do
       :error ->
         :error
@@ -313,7 +314,10 @@ defmodule Ret.MediaResolver do
             nil
           end
 
-        meta = %{expected_content_type: content_type_from_headers(resp.headers), thumbnail: thumbnail}
+        meta = %{
+          expected_content_type: content_type_from_headers(resp.headers),
+          thumbnail: thumbnail
+        }
 
         {:commit, uri |> resolved(meta)}
     end
