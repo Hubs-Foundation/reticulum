@@ -117,12 +117,24 @@ defmodule RetWeb.PageController do
     |> render_avatar_content(conn)
   end
 
-  def render_for_path("/link", _params, conn), do: conn |> render_page("link.html", :hubs, "link-meta.html")
-  def render_for_path("/link/", _params, conn), do: conn |> render_page("link.html", :hubs, "link-meta.html")
+  def render_for_path("/link", _params, conn),
+    do:
+      conn
+      |> put_hub_headers("hub")
+      |> render_page("link.html", :hubs, "link-meta.html")
+
+  def render_for_path("/link/", _params, conn),
+    do:
+      conn
+      |> put_hub_headers("hub")
+      |> render_page("link.html", :hubs, "link-meta.html")
 
   def render_for_path("/link/" <> hub_identifier_and_slug, _params, conn) do
     hub_identifier = hub_identifier_and_slug |> String.split("/") |> List.first()
-    conn |> redirect_to_hub_identifier(hub_identifier)
+
+    conn
+    |> put_hub_headers("link")
+    |> redirect_to_hub_identifier(hub_identifier)
   end
 
   def render_for_path("/discord", _params, conn), do: conn |> render_page("discord.html")
