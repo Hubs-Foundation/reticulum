@@ -246,7 +246,7 @@ defmodule Ret.MediaResolver do
       %HTTPoison.Response{headers: headers} ->
         case headers |> get_http_header("hub-entity-type") do
           entity when entity != nil ->
-            uri |> opengraph_result_for_uri("text/vnd.hubs-#{entity}")
+            uri |> opengraph_result_for_uri("hubs-#{entity}")
 
           _ ->
             content_type = headers |> content_type_from_headers
@@ -298,7 +298,7 @@ defmodule Ret.MediaResolver do
     end
   end
 
-  defp opengraph_result_for_uri(uri, expected_content_type \\ nil) do
+  defp opengraph_result_for_uri(uri, expected_content_subtype \\ nil) do
     case uri |> URI.to_string() |> retry_get_until_success([{"Range", "bytes=0-32768"}]) do
       :error ->
         :error
@@ -320,14 +320,16 @@ defmodule Ret.MediaResolver do
           end
 
         meta = %{
-          expected_content_type:
-            if expected_content_type do
-              expected_content_type
-            else
-              content_type_from_headers(resp.headers)
-            end,
+          expected_content_type: content_type_from_headers(resp.headers),
           thumbnail: thumbnail
         }
+
+        meta =
+          if expected_content_subtype do
+            Map.put(meta, :expected_content_subtype, expected_content_subtype)
+          else
+            meta
+          end
 
         {:commit, uri |> resolved(meta)}
     end
