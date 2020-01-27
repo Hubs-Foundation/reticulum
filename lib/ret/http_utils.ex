@@ -60,8 +60,12 @@ defmodule Ret.HttpUtils do
     end
   end
 
+  def get_http_header(headers, header) do
+    headers |> Enum.find(fn h -> h |> elem(0) |> String.downcase() === header end) |> elem(1)
+  end
+
   def content_type_from_headers(headers) do
-    headers |> Enum.find(fn h -> h |> elem(0) |> String.downcase() === "content-type" end) |> elem(1)
+    headers |> get_http_header("content-type")
   end
 
   def fetch_content_type(url) do
