@@ -307,8 +307,7 @@ defmodule Ret.MediaSearch do
           offset: cursor || 0
         )
 
-      res =
-        "https://api.twitch.tv/kraken/search/streams?#{query}" |> retry_get_until_success([{"Client-ID", client_id}])
+      res = "https://api.twitch.tv/helix/streams?#{query}" |> retry_get_until_success([{"Client-ID", client_id}])
 
       case res do
         :error ->
