@@ -390,7 +390,7 @@ defmodule RetWeb.HubChannel do
       hub
       |> Hub.add_name_to_changeset(payload)
       |> Hub.add_member_permissions_to_changeset(payload)
-      |> add_privacy_to_changeset_if_allowed(can_change_privacy, payload)
+      |> try_add_privacy_to_changeset(account, hub, payload)
       |> Repo.update!()
       |> Repo.preload(@hub_preloads)
       |> broadcast_hub_refresh!(socket, stale_fields)
@@ -399,8 +399,9 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
-  defp add_privacy_to_changeset_if_allowed(changeset, allowed, payload) do
-    if allowed, do: changeset |> Hub.add_privacy_to_changeset(payload), else: changeset
+  defp try_add_privacy_to_changeset(changeset, account, hub, payload) do
+    can_change_privacy = account |> can?(update_hub_privacy(hub))
+    if can_change_privacy, do: changeset |> Hub.add_privacy_to_changeset(payload), else: changeset
   end
 
   def handle_in("close_hub", _payload, socket) do

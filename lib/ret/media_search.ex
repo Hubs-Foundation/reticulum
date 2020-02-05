@@ -69,7 +69,7 @@ defmodule Ret.MediaSearch do
     favorites_search(cursor, type, account_id, q)
   end
 
-  def search(%Ret.MediaSearchQuery{source: "public_rooms", cursor: cursor, q: q}) do
+  def search(%Ret.MediaSearchQuery{source: "rooms", filter: "public", cursor: cursor, q: q}) do
     public_rooms_search(cursor, q)
   end
 
@@ -675,7 +675,7 @@ defmodule Ret.MediaSearch do
       id: hub.hub_sid,
       url: hub |> Hub.url_for(),
       type: :room,
-      participant_count: RetWeb.Presence.list("hub:#{hub.hub_sid}") |> Enum.count(),
+      participant_count: hub |> Hub.participant_count_for(),
       name: hub.name,
       images: images
     }
