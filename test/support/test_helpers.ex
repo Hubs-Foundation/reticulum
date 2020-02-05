@@ -114,6 +114,16 @@ defmodule Ret.TestHelpers do
     {:ok, hub: hub}
   end
 
+  def create_public_hub(%{scene: scene} = attrs) do
+    {:ok, hub} =
+      %Hub{}
+      |> Hub.changeset(scene, %{name: "Test Public Hub"})
+      |> Hub.add_privacy_to_changeset(%{"privacy" => "public"})
+      |> Repo.insert()
+
+    {:ok, hub: hub}
+  end
+
   def create_project_owned_file(%{account: account}) do
     project_file = Path.expand("../fixtures/spoke-project.json", __DIR__)
     {:ok, project_owned_file: generate_fixture_owned_file(account, project_file, "application/json")}
