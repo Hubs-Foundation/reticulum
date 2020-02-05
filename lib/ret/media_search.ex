@@ -481,7 +481,7 @@ defmodule Ret.MediaSearch do
       |> preload(scene: [:screenshot_owned_file], scene_listing: [:scene, :screenshot_owned_file])
       |> order_by(^:last_active_at)
       |> Repo.paginate(%{page: page_number, page_size: @page_size})
-      |> result_for_page(page_number, :hubs, &hub_to_entry/1)
+      |> result_for_page(page_number, :public_rooms, &hub_to_entry/1)
 
     {:commit, results}
   end
@@ -674,7 +674,7 @@ defmodule Ret.MediaSearch do
     %{
       id: hub.hub_sid,
       url: hub |> Hub.url_for(),
-      type: :hub,
+      type: :room,
       participant_count: RetWeb.Presence.list("hub:#{hub.hub_sid}") |> Enum.count(),
       name: hub.name,
       images: images
