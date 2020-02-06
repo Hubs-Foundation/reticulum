@@ -239,7 +239,7 @@ defmodule Ret.Hub do
     scene_listing.screenshot_owned_file |> Ret.OwnedFile.uri_for() |> URI.to_string()
   end
 
-  def participant_count_for(%Hub{hub_sid: hub_sid}) do
+  def member_count_for(%Hub{hub_sid: hub_sid}) do
     RetWeb.Presence.list("hub:#{hub_sid}") |> Enum.count()
   end
 
