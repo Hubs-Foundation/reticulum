@@ -118,7 +118,7 @@ defmodule Ret.TestHelpers do
     {:ok, hub} =
       %Hub{}
       |> Hub.changeset(scene, %{name: "Test Public Hub"})
-      |> Hub.add_privacy_to_changeset(%{"privacy" => "public"})
+      |> Hub.add_promotion_to_changeset(%{"allow_promotion" => true})
       |> Repo.insert()
 
     {:ok, hub: hub}

@@ -379,18 +379,18 @@ defmodule RetWeb.HubChannel do
     if account |> can?(update_hub(hub)) do
       name_changed = hub.name != payload["name"]
       member_permissions_changed = hub.member_permissions != payload |> Hub.member_permissions_from_attrs()
-      can_change_privacy = account |> can?(update_hub_privacy(hub))
-      privacy_changed = can_change_privacy and hub.privacy != payload["privacy"]
+      can_change_promotion = account |> can?(update_hub_promotion(hub))
+      promotion_changed = can_change_promotion and hub.allow_promotion != payload["allow_promotion"]
 
       stale_fields = []
       stale_fields = if name_changed, do: ["name" | stale_fields], else: stale_fields
       stale_fields = if member_permissions_changed, do: ["member_permissions" | stale_fields], else: stale_fields
-      stale_fields = if privacy_changed, do: ["privacy" | stale_fields], else: stale_fields
+      stale_fields = if promotion_changed, do: ["allow_promotion" | stale_fields], else: stale_fields
 
       hub
       |> Hub.add_name_to_changeset(payload)
       |> Hub.add_member_permissions_to_changeset(payload)
-      |> try_add_privacy_to_changeset(account, hub, payload)
+      |> maybe_add_promotion_to_changeset(account, hub, payload)
       |> Repo.update!()
       |> Repo.preload(@hub_preloads)
       |> broadcast_hub_refresh!(socket, stale_fields)
@@ -399,9 +399,9 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
-  defp try_add_privacy_to_changeset(changeset, account, hub, payload) do
-    can_change_privacy = account |> can?(update_hub_privacy(hub))
-    if can_change_privacy, do: changeset |> Hub.add_privacy_to_changeset(payload), else: changeset
+  defp maybe_add_promotion_to_changeset(changeset, account, hub, payload) do
+    can_change_promotion = account |> can?(update_hub_promotion(hub))
+    if can_change_promotion, do: changeset |> Hub.add_promotion_to_changeset(payload), else: changeset
   end
 
   def handle_in("close_hub", _payload, socket) do

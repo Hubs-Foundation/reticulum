@@ -477,7 +477,7 @@ defmodule Ret.MediaSearch do
 
     results =
       Hub
-      |> where([h], h.privacy == ^"public" and h.entry_mode == ^"allow")
+      |> where([h], h.allow_promotion and h.entry_mode == ^"allow")
       |> preload(scene: [:screenshot_owned_file], scene_listing: [:scene, :screenshot_owned_file])
       |> order_by(^:last_active_at)
       |> Repo.paginate(%{page: page_number, page_size: @page_size})
