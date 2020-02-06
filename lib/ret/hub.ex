@@ -136,7 +136,7 @@ defmodule Ret.Hub do
   end
 
   def add_promotion_to_changeset(changeset, attrs) do
-    changeset |> put_change(:allow_promotion, attrs["allow_promotion"])
+    changeset |> put_change(:allow_promotion, !!attrs["allow_promotion"])
   end
 
   def changeset_for_new_seen_occupant_count(%Hub{} = hub, occupant_count) do

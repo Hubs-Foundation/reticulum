@@ -310,7 +310,7 @@ defmodule RetWeb.PageController do
   end
 
   defp render_index(conn, _method) do
-    conn |> render_homepage_content(AppConfig.get_config_value("features|default_room_id"))
+    conn |> render_homepage_content(get_app_config_value("features|default_room_id"))
   end
 
   defp put_hub_headers(conn, entity_type) do
