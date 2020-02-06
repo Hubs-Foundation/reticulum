@@ -21,28 +21,35 @@ defmodule Ret.Account do
 
   def has_accounts?(), do: from(a in Account, limit: 1) |> Repo.exists?()
   def has_admin_accounts?(), do: from(a in Account, limit: 1) |> where(is_admin: true) |> Repo.exists?()
+  def exists_for_email?(email), do: account_for_email(email, false) != nil
 
-  def account_for_email(email) do
-    email |> identifier_hash_for_email |> account_for_identifier_hash
+  def account_for_email(email, create_if_not_exists \\ true) do
+    email |> identifier_hash_for_email |> account_for_identifier_hash(create_if_not_exists)
   end
 
-  def account_for_identifier_hash(identifier_hash) do
+  def account_for_identifier_hash(identifier_hash, create_if_not_exists \\ true) do
     login =
       Login
       |> where([t], t.identifier_hash == ^identifier_hash)
       |> Repo.one()
 
-    if login do
-      Account |> Repo.get(login.account_id) |> Repo.preload(:login)
-    else
-      # Set the account to be an administrator if admin_email matches
-      is_admin = with admin_email when is_binary(admin_email) <- module_config(:admin_email) do
-        identifier_hash === admin_email |> identifier_hash_for_email
-      else
-        _ -> false
-      end
+    cond do
+      login != nil ->
+        Account |> Repo.get(login.account_id) |> Repo.preload(:login)
 
-      Repo.insert!(%Account{login: %Login{identifier_hash: identifier_hash}, is_admin: is_admin})
+      create_if_not_exists === true ->
+        # Set the account to be an administrator if admin_email matches
+        is_admin =
+          with admin_email when is_binary(admin_email) <- module_config(:admin_email) do
+            identifier_hash === admin_email |> identifier_hash_for_email
+          else
+            _ -> false
+          end
+
+        Repo.insert!(%Account{login: %Login{identifier_hash: identifier_hash}, is_admin: is_admin})
+
+      true ->
+        nil
     end
   end
 

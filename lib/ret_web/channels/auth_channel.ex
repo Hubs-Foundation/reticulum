@@ -3,7 +3,7 @@ defmodule RetWeb.AuthChannel do
 
   use RetWeb, :channel
 
-  alias Ret.{Statix, LoginToken, Account, Crypto}
+  alias Ret.{Statix, LoginToken, Account, Crypto, AppConfig}
 
   intercept(["auth_credentials"])
 
@@ -22,17 +22,31 @@ defmodule RetWeb.AuthChannel do
     if !Map.get(socket.assigns, :used) do
       socket = socket |> assign(:used, true)
 
-      # Create token + send email
-      %LoginToken{token: token, payload_key: payload_key} = LoginToken.new_login_token_for_email(email)
+      # Fail silently if account creation is disabled, and this account does not exist.
+      # To do otherwise would enable account sniffing.
+      sign_up_disabled = !!AppConfig.get_cached_config_value("features|disable_sign_up")
 
-      encrypted_payload = %{"email" => email} |> Poison.encode!() |> Crypto.encrypt(payload_key) |> :base64.encode()
+      if !sign_up_disabled || Account.exists_for_email?(email) do
+        # Create token + send email
+        %LoginToken{token: token, payload_key: payload_key} = LoginToken.new_login_token_for_email(email)
 
-      signin_args = %{auth_topic: socket.topic, auth_token: token, auth_origin: origin, auth_payload: encrypted_payload}
-      Statix.increment("ret.emails.auth.attempted", 1)
+        encrypted_payload = %{"email" => email} |> Poison.encode!() |> Crypto.encrypt(payload_key) |> :base64.encode()
 
-      RetWeb.Email.auth_email(email, signin_args) |> Ret.Mailer.deliver_now()
+        signin_args = %{
+          auth_topic: socket.topic,
+          auth_token: token,
+          auth_origin: origin,
+          auth_payload: encrypted_payload
+        }
 
-      Statix.increment("ret.emails.auth.sent", 1)
+        Statix.increment("ret.emails.auth.attempted", 1)
+
+        if RetWeb.Email.enabled?() do
+          RetWeb.Email.auth_email(email, signin_args) |> Ret.Mailer.deliver_now()
+        end
+
+        Statix.increment("ret.emails.auth.sent", 1)
+      end
 
       {:noreply, socket}
     else

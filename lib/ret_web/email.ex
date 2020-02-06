@@ -17,6 +17,10 @@ defmodule RetWeb.Email do
     )
   end
 
+  def enabled? do
+    !!Application.get_env(:ret, __MODULE__)[:adapter]
+  end
+
   defp from_address do
     Application.get_env(:ret, __MODULE__)[:from]
   end
