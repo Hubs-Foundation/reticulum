@@ -74,6 +74,7 @@ defmodule Ret.Asset do
       String.starts_with?(content_type, "video/") -> :video
       String.starts_with?(content_type, "image/") -> :image
       String.starts_with?(content_type, "model/gltf") -> :model
+      String.starts_with?(content_type, "audio/") -> :audio
     end
   end
 
