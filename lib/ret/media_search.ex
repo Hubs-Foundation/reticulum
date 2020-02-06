@@ -507,12 +507,12 @@ defmodule Ret.MediaSearch do
   defp asset_to_entry(asset) do
     %{
       id: asset.asset_sid,
-      url: asset.asset_owned_file |> OwnedFile.uri_for() |> URI.to_string(),
+      url: OwnedFile.url_or_nil_for(asset.asset_owned_file),
       type: asset.type,
       name: asset.name,
       attributions: %{},
       images: %{
-        preview: %{url: asset.thumbnail_owned_file |> OwnedFile.uri_for() |> URI.to_string()}
+        preview: %{url: OwnedFile.url_or_nil_for(asset.thumbnail_owned_file)}
       }
     }
   end
