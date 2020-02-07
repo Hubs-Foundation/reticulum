@@ -18,6 +18,9 @@ defmodule Ret.OwnedFile do
     timestamps()
   end
 
+  def url_or_nil_for(%Ret.OwnedFile{} = f), do: f |> OwnedFile.uri_for() |> URI.to_string()
+  def url_or_nil_for(_), do: nil
+
   def uri_for(%OwnedFile{owned_file_uuid: file_uuid, content_type: content_type}) do
     Ret.Storage.uri_for(file_uuid, content_type)
   end
