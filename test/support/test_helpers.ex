@@ -29,7 +29,7 @@ defmodule Ret.TestHelpers do
   def create_random_account(), do: create_account(Ret.Sids.generate_sid())
 
   def create_account(prefix) when is_binary(prefix) do
-    Account.account_for_email("#{prefix}@mozilla.com", true)
+    Account.find_or_create_account_for_email("#{prefix}@mozilla.com")
   end
 
   def create_account(_) do
