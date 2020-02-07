@@ -512,16 +512,14 @@ defimpl Canada.Can, for: Ret.Account do
     hub |> Hub.has_member_permission?(action) or hub |> Ret.Hub.is_owner?(account_id)
   end
 
-<<<<<<< HEAD
   # Create hubs
   def can?(%Ret.Account{is_admin: true}, :create_hub, _), do: true
 
   def can?(_account, :create_hub, _),
     do: !AppConfig.get_cached_config_value("features|disable_room_creation")
-=======
+
   def can?(%Ret.Account{is_admin: true}, :create_account, _), do: true
   def can?(_account, :create_account, _), do: !AppConfig.get_cached_config_value("features|disable_sign_up")
->>>>>>> f416f94a4ff92605104c0ef27495df40b163e8c5
 
   # Deny permissions for any other case that falls through
   def can?(_, _, _), do: false
