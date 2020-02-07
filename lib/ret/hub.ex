@@ -430,7 +430,7 @@ defmodule Ret.Hub do
 end
 
 defimpl Canada.Can, for: Ret.Account do
-  alias Ret.{Hub}
+  alias Ret.{AppConfig, Hub}
   @owner_actions [:update_hub, :close_hub, :embed_hub, :kick_users, :mute_users]
   @object_actions [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects]
   @creator_actions [:update_roles]
@@ -495,6 +495,9 @@ defimpl Canada.Can, for: Ret.Account do
     hub |> Hub.has_member_permission?(action) or hub |> Ret.Hub.is_owner?(account_id)
   end
 
+  def can?(%Ret.Account{is_admin: true}, :create_account, _), do: true
+  def can?(_account, :create_account, _), do: !AppConfig.get_cached_config_value("features|disable_sign_up")
+
   # Deny permissions for any other case that falls through
   def can?(_, _, _), do: false
 end
@@ -529,7 +532,7 @@ end
 
 # Permissions for un-authenticated clients
 defimpl Canada.Can, for: Atom do
-  alias Ret.{Hub}
+  alias Ret.{AppConfig, Hub}
   @object_actions [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects]
 
   # Always deny access to non-enterable hubs
@@ -542,6 +545,8 @@ defimpl Canada.Can, for: Atom do
   def can?(_account, action, hub) when action in @object_actions do
     hub |> Hub.has_member_permission?(action)
   end
+
+  def can?(_, :create_account, _), do: !AppConfig.get_cached_config_value("features|disable_sign_up")
 
   def can?(_, _, _), do: false
 end
