@@ -5,7 +5,7 @@ defmodule Ret.GuardianTest do
   alias Ret.{Account, Guardian, Repo}
 
   test "retrieve account from token" do
-    account = Account.account_for_email("test@mozilla.com", true)
+    account = Account.find_or_create_account_for_email("test@mozilla.com")
     token = account |> Account.credentials_for_account()
 
     {:ok, account2, _claims} = Guardian.resource_from_token(token)
