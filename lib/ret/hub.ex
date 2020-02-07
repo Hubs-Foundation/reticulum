@@ -451,7 +451,7 @@ defimpl Canada.Can, for: Ret.Account do
 
   def can?(%Ret.Account{} = account, :update_hub_promotion, %Ret.Hub{} = hub) do
     owners_can_change_promotion = Ret.AppConfig.get_config_bool("features|public_rooms")
-    account.is_admin or (owners_can_change_promotion and can?(account, :update_hub, hub))
+    !!account.is_admin or (owners_can_change_promotion and can?(account, :update_hub, hub))
   end
 
   # Bound hubs - Join perm
