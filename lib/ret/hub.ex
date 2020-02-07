@@ -551,7 +551,7 @@ defimpl Canada.Can, for: Ret.OAuthProvider do
     is_member and hub |> Hub.has_member_permission?(action)
   end
 
-  def can?(_account, :create_hub, _),
+  def can?(_, :create_hub, _),
     do: !AppConfig.get_cached_config_value("features|disable_room_creation")
 
   def can?(_, _, _), do: false
