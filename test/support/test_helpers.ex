@@ -114,7 +114,7 @@ defmodule Ret.TestHelpers do
     {:ok, hub: hub}
   end
 
-  def create_public_hub(%{scene: scene} = attrs) do
+  def create_public_hub(%{scene: scene}) do
     {:ok, hub} =
       %Hub{}
       |> Hub.changeset(scene, %{name: "Test Public Hub"})
