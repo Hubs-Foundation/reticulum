@@ -2,6 +2,19 @@ defmodule RetWeb.Api.V1.MediaSearchController do
   use RetWeb, :controller
   use Retry
 
+  def index(conn, %{"source" => "rooms"} = params) do
+    {:commit, results} =
+      %Ret.MediaSearchQuery{
+        source: "rooms",
+        cursor: params["cursor"] || "1",
+        filter: params["filter"],
+        q: params["q"]
+      }
+      |> Ret.MediaSearch.search()
+
+    conn |> render("index.json", results: results)
+  end
+
   def index(conn, %{"source" => "sketchfab", "user" => user}) do
     {:commit, results} = %Ret.MediaSearchQuery{source: "sketchfab", user: user} |> Ret.MediaSearch.search()
     conn |> render("index.json", results: results)

@@ -79,6 +79,11 @@ defmodule Ret.AppConfig do
     end
   end
 
+  def get_config_bool(key) do
+    val = get_config_value(key)
+    val !== nil and val
+  end
+
   def get_config_owned_file_uri(key) do
     app_config = AppConfig |> Repo.get_by(key: key) |> Repo.preload(:owned_file)
 
