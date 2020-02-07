@@ -2,7 +2,7 @@ defmodule Ret.Account do
   use Ecto.Schema
   import Ecto.Query
 
-  alias Ret.{Repo, Account, Login, Guardian}
+  alias Ret.{Repo, Account, Login, Guardian, AppConfig}
 
   @schema_prefix "ret0"
   @primary_key {:account_id, :id, autogenerate: true}
@@ -68,14 +68,19 @@ defmodule Ret.Account do
     email |> String.downcase() |> Ret.Crypto.hash()
   end
 
+  def get_global_perms_for_account(account), do: %{} |> add_global_perms_for_account(account)
+
   def add_global_perms_for_account(perms, %Ret.Account{is_admin: true} = account) do
     perms
     |> Map.put(:postgrest_role, :ret_admin)
     |> Map.put(:tweet, !!oauth_provider_for_source(account, :twitter))
+    |> Map.put(:hub_create, true)
   end
 
   def add_global_perms_for_account(perms, account) do
-    perms |> Map.put(:tweet, !!oauth_provider_for_source(account, :twitter))
+    perms
+    |> Map.put(:tweet, !!oauth_provider_for_source(account, :twitter))
+    |> Map.put(:hub_create, !AppConfig.get_cached_config_value("features|disable_room_creation"))
   end
 
   def matching_oauth_providers(nil, _), do: []

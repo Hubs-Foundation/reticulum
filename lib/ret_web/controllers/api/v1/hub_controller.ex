@@ -1,7 +1,7 @@
 defmodule RetWeb.Api.V1.HubController do
   use RetWeb, :controller
 
-  alias Ret.{Hub, Scene, SceneListing, Repo}
+  alias Ret.{Account, Hub, Scene, SceneListing, Repo}
 
   # Limit to 1 TPS
   plug(RetWeb.Plugs.RateLimit)
@@ -26,14 +26,22 @@ defmodule RetWeb.Api.V1.HubController do
   end
 
   defp exec_create(hub_changeset, conn) do
-    {result, hub} =
-      hub_changeset
-      |> Hub.add_account_to_changeset(Guardian.Plug.current_resource(conn))
-      |> Repo.insert()
+    account = Guardian.Plug.current_resource(conn)
 
-    case result do
-      :ok -> render(conn, "create.json", hub: hub)
-      :error -> conn |> send_resp(422, "invalid hub")
+    case Account.get_global_perms_for_account(account) do
+      %{hub_create: true} ->
+        {result, hub} =
+          hub_changeset
+          |> Hub.add_account_to_changeset(account)
+          |> Repo.insert()
+
+        case result do
+          :ok -> render(conn, "create.json", hub: hub)
+          :error -> conn |> send_resp(422, "invalid hub")
+        end
+
+      _ ->
+        conn |> send_resp(401, "unauthorized")
     end
   end
 

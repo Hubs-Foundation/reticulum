@@ -399,11 +399,6 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
-  defp maybe_add_promotion_to_changeset(changeset, account, hub, payload) do
-    can_change_promotion = account |> can?(update_hub_promotion(hub))
-    if can_change_promotion, do: changeset |> Hub.add_promotion_to_changeset(payload), else: changeset
-  end
-
   def handle_in("close_hub", _payload, socket) do
     socket |> handle_entry_mode_change(:deny)
   end
@@ -1025,5 +1020,10 @@ defmodule RetWeb.HubChannel do
 
   defp payload_without_from(payload) do
     payload |> Map.delete(:from_session_id)
+  end
+
+  defp maybe_add_promotion_to_changeset(changeset, account, hub, payload) do
+    can_change_promotion = account |> can?(update_hub_promotion(hub))
+    if can_change_promotion, do: changeset |> Hub.add_promotion_to_changeset(payload), else: changeset
   end
 end
