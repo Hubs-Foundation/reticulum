@@ -17,10 +17,10 @@ defmodule RetWeb.MediaSearchControllerTest do
 
     scene_1 = create_scene(account_1)
     scene_2 = create_scene(account_2)
-    {:ok, hub: hub_1} = create_hub(%{scene: scene_1})
-    {:ok, hub: hub_2} = create_hub(%{scene: scene_2})
+    {:ok, hub: private_hub} = create_hub(%{scene: scene_1})
+    {:ok, hub: public_hub} = create_public_hub(%{scene: scene_2})
 
-    AccountFavorite.ensure_favorited(hub_1, account_1)
+    AccountFavorite.ensure_favorited(private_hub, account_1)
 
     %{
       account_1: account_1,
@@ -30,8 +30,8 @@ defmodule RetWeb.MediaSearchControllerTest do
       avatar_2: create_avatar(account_2),
       scene_1: scene_1,
       scene_2: scene_2,
-      hub_1: hub_1,
-      hub_2: hub_2
+      private_hub: private_hub,
+      public_hub: public_hub
     }
   end
 
@@ -56,6 +56,14 @@ defmodule RetWeb.MediaSearchControllerTest do
     |> get(api_v1_media_search_path(conn, :index), %{
       source: "favorites",
       user: account_id |> Integer.to_string()
+    })
+  end
+
+  defp search_public_rooms(conn) do
+    conn
+    |> get(api_v1_media_search_path(conn, :index), %{
+      source: "rooms",
+      filter: "public"
     })
   end
 
@@ -162,7 +170,7 @@ defmodule RetWeb.MediaSearchControllerTest do
   test "Search for a user's own favorites should return results if they have favorites", %{
     conn: conn,
     account_1: account,
-    hub_1: hub_1
+    private_hub: private_hub
   } do
     resp =
       conn
@@ -174,8 +182,8 @@ defmodule RetWeb.MediaSearchControllerTest do
     [entry] = resp["entries"]
 
     # and the hub should be the favorited hub
-    assert entry["id"] == hub_1.hub_sid
-    assert entry["type"] == "hub"
+    assert entry["id"] == private_hub.hub_sid
+    assert entry["type"] == "room"
   end
 
   test "Search for a user's own favorites should return an empty list if they have no favorites", %{
@@ -207,5 +215,22 @@ defmodule RetWeb.MediaSearchControllerTest do
       user: account_2.account_id |> Integer.to_string()
     })
     |> response(401)
+  end
+
+  test "Search for public rooms should only return public rooms", %{
+    conn: conn,
+    public_hub: public_hub
+  } do
+    resp =
+      conn
+      |> search_public_rooms()
+      |> json_response(200)
+
+    # there should only be one entry
+    [entry] = resp["entries"]
+
+    # and the hub should be the favorited hub
+    assert entry["id"] == public_hub.hub_sid
+    assert entry["type"] == "room"
   end
 end

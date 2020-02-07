@@ -80,6 +80,8 @@ defmodule Ret.Hub do
     has_many(:hub_bindings, Ret.HubBinding, foreign_key: :hub_id)
     has_many(:hub_role_memberships, Ret.HubRoleMembership, foreign_key: :hub_id)
 
+    field(:allow_promotion, :boolean)
+
     timestamps()
   end
 
@@ -131,6 +133,10 @@ defmodule Ret.Hub do
 
     changeset
     |> put_change(:member_permissions, member_permissions)
+  end
+
+  def add_promotion_to_changeset(changeset, attrs) do
+    changeset |> put_change(:allow_promotion, !!attrs["allow_promotion"])
   end
 
   def changeset_for_new_seen_occupant_count(%Hub{} = hub, occupant_count) do
@@ -231,6 +237,10 @@ defmodule Ret.Hub do
 
   def image_url_for(%Hub{scene_listing: scene_listing}) when scene_listing != nil do
     scene_listing.screenshot_owned_file |> Ret.OwnedFile.uri_for() |> URI.to_string()
+  end
+
+  def member_count_for(%Hub{hub_sid: hub_sid}) do
+    RetWeb.Presence.list("hub:#{hub_sid}") |> Enum.count()
   end
 
   defp changeset_for_new_entry_code(%Hub{} = hub) do
@@ -340,7 +350,7 @@ defmodule Ret.Hub do
   end
 
   defp add_default_member_permissions_to_changeset(changeset) do
-    if Ret.AppConfig.get_config_value("features|permissive_rooms") do
+    if Ret.AppConfig.get_config_bool("features|permissive_rooms") do
       changeset |> put_change(:member_permissions, @default_member_permissions |> member_permissions_to_int)
     else
       changeset |> put_change(:member_permissions, @default_restrictive_member_permissions |> member_permissions_to_int)
@@ -410,6 +420,7 @@ defmodule Ret.Hub do
     %{
       join_hub: account |> can?(join_hub(hub)),
       update_hub: account |> can?(update_hub(hub)),
+      update_hub_promotion: account |> can?(update_hub_promotion(hub)),
       update_roles: account |> can?(update_roles(hub)),
       close_hub: account |> can?(close_hub(hub)),
       embed_hub: account |> can?(embed_hub(hub)),
@@ -437,6 +448,11 @@ defimpl Canada.Can, for: Ret.Account do
 
   # Always deny access to non-enterable hubs
   def can?(%Ret.Account{}, :join_hub, %Ret.Hub{entry_mode: :deny}), do: false
+
+  def can?(%Ret.Account{} = account, :update_hub_promotion, %Ret.Hub{} = hub) do
+    owners_can_change_promotion = Ret.AppConfig.get_config_bool("features|public_rooms")
+    !!account.is_admin or (owners_can_change_promotion and can?(account, :update_hub, hub))
+  end
 
   # Bound hubs - Join perm
   def can?(%Ret.Account{} = account, :join_hub, %Ret.Hub{hub_bindings: hub_bindings})
