@@ -29,7 +29,7 @@ defmodule Ret.TestHelpers do
   def create_random_account(), do: create_account(Ret.Sids.generate_sid())
 
   def create_account(prefix) when is_binary(prefix) do
-    Account.account_for_email("#{prefix}@mozilla.com")
+    Account.find_or_create_account_for_email("#{prefix}@mozilla.com")
   end
 
   def create_account(_) do
@@ -189,7 +189,7 @@ defmodule Ret.TestHelpers do
   def put_auth_header_for_account(conn, email) do
     {:ok, token, _claims} =
       email
-      |> Ret.Account.account_for_email()
+      |> Ret.Account.find_or_create_account_for_email()
       |> Ret.Guardian.encode_and_sign()
 
     conn |> Plug.Conn.put_req_header("authorization", "bearer: " <> token)

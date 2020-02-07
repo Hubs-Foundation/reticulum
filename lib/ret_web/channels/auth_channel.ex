@@ -2,8 +2,9 @@ defmodule RetWeb.AuthChannel do
   @moduledoc "Ret Web Channel for Authentication"
 
   use RetWeb, :channel
+  import Canada, only: [can?: 2]
 
-  alias Ret.{Statix, LoginToken, Account, Crypto, AppConfig}
+  alias Ret.{Statix, LoginToken, Account, Crypto}
 
   intercept(["auth_credentials"])
 
@@ -22,11 +23,7 @@ defmodule RetWeb.AuthChannel do
     if !Map.get(socket.assigns, :used) do
       socket = socket |> assign(:used, true)
 
-      # Fail silently if account creation is disabled, and this account does not exist.
-      # To do otherwise would enable account sniffing.
-      sign_up_disabled = !!AppConfig.get_cached_config_value("features|disable_sign_up")
-
-      if !sign_up_disabled || Account.exists_for_email?(email) do
+      if can?(nil, create_account(nil)) || Account.exists_for_email?(email) do
         # Create token + send email
         %LoginToken{token: token, payload_key: payload_key} = LoginToken.new_login_token_for_email(email)
 
@@ -93,7 +90,8 @@ defmodule RetWeb.AuthChannel do
   defp broadcast_credentials_and_payload(nil, _payload, _socket), do: nil
 
   defp broadcast_credentials_and_payload(identifier_hash, payload, socket) do
-    credentials = identifier_hash |> Account.credentials_for_identifier_hash()
+    account = identifier_hash |> Account.account_for_identifier_hash(can?(nil, create_account(nil)))
+    credentials = account |> Account.credentials_for_account()
     broadcast!(socket, "auth_credentials", %{credentials: credentials, payload: payload})
   end
 end

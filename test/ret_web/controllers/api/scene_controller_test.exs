@@ -58,7 +58,7 @@ defmodule RetWeb.SceneControllerTest do
   test "scene update disallowed for different user", %{conn: conn, owned_file: owned_file, scene: scene} do
     {:ok, token, _claims} =
       "test2@mozilla.com"
-      |> Ret.Account.account_for_email()
+      |> Ret.Account.find_or_create_account_for_email()
       |> Ret.Guardian.encode_and_sign()
 
     conn = conn |> Plug.Conn.put_req_header("authorization", "bearer: " <> token)

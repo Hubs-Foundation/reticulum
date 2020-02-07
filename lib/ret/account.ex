@@ -23,13 +23,15 @@ defmodule Ret.Account do
 
   def has_accounts?(), do: from(a in Account, limit: 1) |> Repo.exists?()
   def has_admin_accounts?(), do: from(a in Account, limit: 1) |> where(is_admin: true) |> Repo.exists?()
-  def exists_for_email?(email), do: account_for_email(email, false) != nil
+  def exists_for_email?(email), do: account_for_email(email) != nil
 
-  def account_for_email(email, create_if_not_exists \\ true) do
+  def account_for_email(email, create_if_not_exists \\ false) do
     email |> identifier_hash_for_email |> account_for_identifier_hash(create_if_not_exists)
   end
 
-  def account_for_identifier_hash(identifier_hash, create_if_not_exists \\ true) do
+  def find_or_create_account_for_email(email), do: account_for_email(email, true)
+
+  def account_for_identifier_hash(identifier_hash, create_if_not_exists \\ false) do
     login =
       Login
       |> where([t], t.identifier_hash == ^identifier_hash)
@@ -55,11 +57,7 @@ defmodule Ret.Account do
     end
   end
 
-  def credentials_for_identifier_hash(identifier_hash) do
-    identifier_hash
-    |> account_for_identifier_hash
-    |> credentials_for_account
-  end
+  def credentials_for_account(nil), do: nil
 
   def credentials_for_account(account) do
     {:ok, token, _claims} = account |> Guardian.encode_and_sign()
