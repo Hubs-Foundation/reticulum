@@ -179,7 +179,7 @@ defmodule Ret.TestHelpers do
   def put_auth_header_for_account(conn, email) do
     {:ok, token, _claims} =
       email
-      |> Ret.Account.account_for_email(true)
+      |> Ret.Account.find_or_create_account_for_email()
       |> Ret.Guardian.encode_and_sign()
 
     conn |> Plug.Conn.put_req_header("authorization", "bearer: " <> token)

@@ -13,13 +13,13 @@ defmodule Ret.GuardianTest do
     assert account.account_id == account2.account_id
   end
 
-  test "avoid creation if specified" do
-    Account.account_for_email("test@mozilla.com", false)
+  test "avoid creation when looking up" do
+    Account.account_for_email("test@mozilla.com")
     refute Account.exists_for_email?("test@mozilla.com")
   end
 
   test "does not retrieve account from revoked token" do
-    account = Account.account_for_email("test@mozilla.com", true)
+    account = Account.find_or_create_account_for_email("test@mozilla.com")
     token = account |> Account.credentials_for_account()
 
     date = Timex.now() |> Timex.shift(seconds: 1) |> DateTime.truncate(:second)

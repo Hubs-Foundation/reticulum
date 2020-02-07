@@ -27,6 +27,8 @@ defmodule Ret.Account do
     email |> identifier_hash_for_email |> account_for_identifier_hash(create_if_not_exists)
   end
 
+  def find_or_create_account_for_email(email), do: account_for_email(email, true)
+
   def account_for_identifier_hash(identifier_hash, create_if_not_exists \\ false) do
     login =
       Login
