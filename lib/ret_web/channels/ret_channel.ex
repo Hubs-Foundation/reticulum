@@ -27,7 +27,7 @@ defmodule RetWeb.RetChannel do
   def handle_in("refresh_perms_token", _params, socket) do
     account = Guardian.Phoenix.Socket.current_resource(socket)
 
-    perms = %{} |> Account.add_global_perms_for_account(account)
+    perms = Account.get_global_perms_for_account(account)
 
     perms =
       if account do
