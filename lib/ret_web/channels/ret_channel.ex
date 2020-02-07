@@ -16,7 +16,7 @@ defmodule RetWeb.RetChannel do
         |> handle_join(hub_id)
 
       {:error, reason} ->
-        {:reply, {:error, %{message: "Sign in failed", reason: reason}}, socket}
+        {:error, %{message: "Sign in failed", reason: reason}}
     end
   end
 

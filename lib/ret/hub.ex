@@ -565,8 +565,9 @@ defimpl Canada.Can, for: Atom do
   # Always deny access to non-enterable hubs
   def can?(_, :join_hub, %Ret.Hub{entry_mode: :deny}), do: false
 
-  # Anyone can join an unbound hub
-  def can?(_, :join_hub, %Ret.Hub{hub_bindings: []}), do: true
+  # Anyone can join an unbound hub as long as accounts aren't required
+  def can?(_, :join_hub, %Ret.Hub{hub_bindings: []}),
+    do: !AppConfig.get_cached_config_value("features|require_account_for_join")
 
   # Object permissions for anonymous users are based on member permission settings
   def can?(_account, action, hub) when action in @object_actions do

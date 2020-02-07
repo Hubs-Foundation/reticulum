@@ -6,6 +6,7 @@ defmodule RetWeb.HubChannel do
   import Canada, only: [can?: 2]
 
   alias Ret.{
+    AppConfig,
     Hub,
     Account,
     AccountFavorite,
@@ -299,6 +300,12 @@ defmodule RetWeb.HubChannel do
   def handle_in("sign_out", _payload, socket) do
     socket = Guardian.Phoenix.Socket.put_current_resource(socket, nil)
     broadcast_presence_update(socket)
+
+    # Disconnect if signing out and account is required
+    if AppConfig.get_cached_config_value("features|require_account_for_join") do
+      Process.send_after(self(), :close_channel, 5000)
+    end
+
     {:reply, {:ok, %{}}, socket}
   end
 
@@ -665,6 +672,11 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
+  def handle_info(:close_channel, socket) do
+    GenServer.cast(self(), :close)
+    {:noreply, socket}
+  end
+
   def handle_info(_message, socket) do
     {:noreply, socket}
   end
@@ -868,6 +880,21 @@ defmodule RetWeb.HubChannel do
          }
        ),
        do: require_oauth(hub)
+
+  # Join denied based upon account requirement
+  defp join_with_hub(
+         %Hub{},
+         nil = _account,
+         _socket,
+         _context,
+         %{
+           hub_requires_oauth: false,
+           has_valid_bot_access_key: false,
+           has_perms_token: false,
+           account_can_join: false
+         }
+       ),
+       do: deny_join()
 
   defp join_with_hub(%Hub{} = hub, account, socket, context, params) do
     hub = hub |> Hub.ensure_valid_entry_code!() |> Hub.ensure_host()
