@@ -6,7 +6,7 @@ defmodule Ret.GuardianTest do
 
   test "retrieve account from token" do
     account = Account.account_for_email("test@mozilla.com", true)
-    token = Account.credentials_for_identifier_hash(account.login.identifier_hash)
+    token = account |> Account.credentials_for_account()
 
     {:ok, account2, _claims} = Guardian.resource_from_token(token)
 
@@ -16,14 +16,11 @@ defmodule Ret.GuardianTest do
   test "avoid creation if specified" do
     Account.account_for_email("test@mozilla.com", false)
     refute Account.exists_for_email?("test@mozilla.com")
-
-    Account.credentials_for_identifier_hash(Account.identifier_hash_for_email("test@mozilla.com"))
-    refute Account.exists_for_email?("test@mozilla.com")
   end
 
   test "does not retrieve account from revoked token" do
     account = Account.account_for_email("test@mozilla.com", true)
-    token = Account.credentials_for_identifier_hash(account.login.identifier_hash)
+    token = account |> Account.credentials_for_account()
 
     date = Timex.now() |> Timex.shift(seconds: 1) |> DateTime.truncate(:second)
 

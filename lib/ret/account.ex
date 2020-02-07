@@ -21,7 +21,7 @@ defmodule Ret.Account do
 
   def has_accounts?(), do: from(a in Account, limit: 1) |> Repo.exists?()
   def has_admin_accounts?(), do: from(a in Account, limit: 1) |> where(is_admin: true) |> Repo.exists?()
-  def exists_for_email?(email), do: account_for_email(email, false) != nil
+  def exists_for_email?(email), do: account_for_email(email) != nil
 
   def account_for_email(email, create_if_not_exists \\ false) do
     email |> identifier_hash_for_email |> account_for_identifier_hash(create_if_not_exists)
@@ -51,12 +51,6 @@ defmodule Ret.Account do
       true ->
         nil
     end
-  end
-
-  def credentials_for_identifier_hash(identifier_hash, create_if_not_exists \\ false) do
-    identifier_hash
-    |> account_for_identifier_hash(create_if_not_exists)
-    |> credentials_for_account
   end
 
   def credentials_for_account(nil), do: nil

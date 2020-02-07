@@ -90,7 +90,8 @@ defmodule RetWeb.AuthChannel do
   defp broadcast_credentials_and_payload(nil, _payload, _socket), do: nil
 
   defp broadcast_credentials_and_payload(identifier_hash, payload, socket) do
-    credentials = identifier_hash |> Account.credentials_for_identifier_hash(can?(nil, create_account(nil)))
+    account = identifier_hash |> Account.account_for_identifier_hash(can?(nil, create_account(nil)))
+    credentials = account |> Account.credentials_for_account()
     broadcast!(socket, "auth_credentials", %{credentials: credentials, payload: payload})
   end
 end
