@@ -167,6 +167,9 @@ defmodule RetWeb.PageController do
   def render_for_path("/discord", _params, conn), do: conn |> render_page("discord.html")
   def render_for_path("/discord/", _params, conn), do: conn |> render_page("discord.html")
 
+  def render_for_path("/cloud", _params, conn), do: conn |> render_page("cloud.html")
+  def render_for_path("/cloud/", _params, conn), do: conn |> render_page("cloud.html")
+
   def render_for_path("/spoke", _params, conn), do: conn |> render_page("index.html", :spoke, "spoke-index-meta.html")
 
   def render_for_path("/spoke/" <> _path, _params, conn),
