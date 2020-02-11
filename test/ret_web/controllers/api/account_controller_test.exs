@@ -10,6 +10,17 @@ defmodule RetWeb.AccountControllerTest do
     {:ok, account: admin_account, conn: conn |> Plug.Conn.put_req_header("authorization", "bearer: " <> token)}
   end
 
+  test "non-admins cannot create accounts", %{conn: conn} do
+    account = create_random_account()
+    {:ok, token, _params} = account |> Ret.Guardian.encode_and_sign()
+    conn = conn |> Plug.Conn.put_req_header("authorization", "bearer: " <> token)
+    req = conn |> api_v1_account_path(:create, %{"data" => %{email: "testapi@mozilla.com"}})
+    conn = conn |> post(req)
+
+    assert conn.status === 401
+    assert conn.state === :unset
+  end
+
   test "admins can create accounts", %{conn: conn} do
     req = conn |> api_v1_account_path(:create, %{"data" => %{email: "testapi@mozilla.com"}})
     res = conn |> post(req) |> response(200) |> Poison.decode!()
