@@ -2,6 +2,7 @@ defmodule RetWeb.Api.V1.AccountController do
   use RetWeb, :controller
 
   alias Ret.{Account}
+  alias RetWeb.Api.V1.{AccountView}
 
   # TODO move to a file
   @record_schema %{
@@ -24,9 +25,9 @@ defmodule RetWeb.Api.V1.AccountController do
     if Account.exists_for_email?(email) do
       {:error, [{:RECORD_EXISTS, "Account with email already exists.", source}]}
     else
-      # TODO return account info
-      Account.find_or_create_account_for_email(email)
-      {:ok, {200, "OK"}}
+      account = Account.find_or_create_account_for_email(email)
+
+      {:ok, {200, %{"data" => Phoenix.View.render(AccountView, "create.json", account: account, email: email)}}}
     end
   end
 
@@ -41,8 +42,8 @@ defmodule RetWeb.Api.V1.AccountController do
     case ExJsonSchema.Validator.validate(@record_schema, record, error_formatter: Ret.JsonSchemaApiErrorFormatter) do
       :ok ->
         case handler.(record, "data") do
-          {:ok, {status, body}} ->
-            conn |> send_resp(status, body)
+          {:ok, {status, result}} ->
+            conn |> send_resp(status, result |> Poison.encode!())
 
           {:error, errors} ->
             conn |> send_error_resp(errors)
