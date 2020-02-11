@@ -33,6 +33,7 @@
   "elixir_make": {:hex, :elixir_make, "0.4.2", "332c649d08c18bc1ecc73b1befc68c647136de4f340b548844efc796405743bf", [:mix], [], "hexpm"},
   "elixometer": {:git, "https://github.com/pinterest/elixometer.git", "0ef0f2036014e8edc292ec2d3077142af975df73", []},
   "eternal": {:hex, :eternal, "1.2.1", "d5b6b2499ba876c57be2581b5b999ee9bdf861c647401066d3eeed111d096bc4", [:mix], [], "hexpm"},
+  "ex_json_schema": {:hex, :ex_json_schema, "0.7.3", "3289bf2edf57eb1ae0d5af35bc6d6c37d7e6d935f72e0120c7f0704510956049", [:mix], [], "hexpm"},
   "exometer": {:git, "https://github.com/Feuerlabs/exometer.git", "7a7bd8d2b52de4d90f65aa3f6044b0e988319b9e", []},
   "exometer_collectd": {:git, "https://github.com/Feuerlabs/exometer_collectd.git", "38c583dda6149478e285e2cab3088a833ea0e571", []},
   "exometer_core": {:git, "https://github.com/Feuerlabs/exometer_core.git", "39c05718533185d6a3b4b7185cb94b90bbd81a3d", []},

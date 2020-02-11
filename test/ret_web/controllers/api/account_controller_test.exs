@@ -11,12 +11,28 @@ defmodule RetWeb.AccountControllerTest do
   end
 
   test "admins can create accounts", %{conn: conn} do
-    # req = conn |> api_v1_account_path(:create, %{"account" => %{name: name}})
-    # conn |> post(req)
+    req = conn |> api_v1_account_path(:create, %{"data" => %{email: "testapi@mozilla.com"}})
+    res = conn |> post(req) |> response(200)
+    # assert Account.account_for_email("testapi@mozilla.com")
+  end
+
+  test "should return 400 if email is invalid", %{conn: conn} do
+    req = conn |> api_v1_account_path(:create, %{"data" => %{email: "invalidemail"}})
+    res = conn |> post(req) |> response(400)
   end
 
   test "should return 400 if missing data in params", %{conn: conn, account: account} do
     req = conn |> api_v1_account_path(:create, %{})
+    conn |> post(req) |> response(400)
+  end
+
+  test "should return 400 if data is malformed", %{conn: conn, account: account} do
+    req = conn |> api_v1_account_path(:create, %{"data" => 123})
+    conn |> post(req) |> response(400)
+  end
+
+  test "should return 400 if email is missing on root record", %{conn: conn, account: account} do
+    req = conn |> api_v1_account_path(:create, %{"data" => %{}})
     conn |> post(req) |> response(400)
   end
 end

@@ -3,25 +3,68 @@ defmodule RetWeb.Api.V1.AccountController do
 
   alias Ret.{Account, Repo}
 
-  def create(conn, params) do
-    account = Guardian.Plug.current_resource(conn)
+  # TODO move to a file
+  @record_schema %{
+                   "type" => "object",
+                   "properties" => %{
+                     "email" => %{
+                       "type" => "string",
+                       "format" => "email"
+                     }
+                   },
+                   "required" => ["email"]
+                 }
+                 |> ExJsonSchema.Schema.resolve()
 
-    if account.is_admin do
-      exec_create(conn, params)
-    else
-      conn |> send_resp(401, "unauthorized")
-    end
+  def create(conn, params) do
+    exec_create(conn, params, &process_account_create_record/3)
   end
 
-  defp exec_create(conn, %{"data" => data}) do
-    conn |> send_resp(200, "OK")
+  defp process_account_create_record(conn, %{"email" => email}, source) do
+    {:ok, {200, "OK"}}
     # case result do
     #  :ok -> render(conn, "create.json", hub: hub)
     #  :error -> conn |> send_resp(422, "invalid hub")
     # end
   end
 
-  defp exec_create(conn, _invalid_params) do
-    conn |> send_resp(400, "Missing 'data' property in POST")
+  # Utility functions
+  defp exec_create(conn, %{"data" => data}, handler), do: process_create_records(conn, data, handler)
+
+  defp exec_create(conn, _invalid_params, _handler) do
+    conn |> send_error_resp([{:MALFORMED_REQUEST, "Missing 'data' property in request.", nil}])
+  end
+
+  defp process_create_records(conn, record, handler) when is_map(record) do
+    case ExJsonSchema.Validator.validate(@record_schema, record, error_formatter: Ret.JsonSchemaApiErrorFormatter) do
+      :ok ->
+        case handler.(conn, record, "data") do
+          {:ok, {status, body}} ->
+            conn |> send_resp(status, body)
+
+          {:error, errors} ->
+            conn |> send_error_resp(errors)
+        end
+
+      {:error, errors} ->
+        conn
+        |> send_error_resp(
+          Enum.map(errors, fn {code, detail, source} -> {code, detail, source |> String.replace(~r/^#/, "data")} end)
+        )
+    end
+  end
+
+  defp process_create_records(conn, _record, handler) do
+    conn
+    |> send_error_resp([{:MALFORMED_RECORD, "Malformed record in 'data' property.", "data"}])
+  end
+
+  defp send_error_resp(conn, errors) do
+    conn
+    |> send_resp(
+      400,
+      %{errors: Enum.map(errors, fn {code, detail, source} -> %{code: code, detail: detail, source: source} end)}
+      |> Poison.encode!()
+    )
   end
 end
