@@ -28,12 +28,30 @@ defmodule Ret.TestHelpers do
 
   def create_random_account(), do: create_account(Ret.Sids.generate_sid())
 
-  def create_account(prefix) when is_binary(prefix) do
-    Account.find_or_create_account_for_email("#{prefix}@mozilla.com")
+  def create_account(prefix, is_admin \\ false)
+
+  def create_account(prefix, is_admin) when is_binary(prefix) do
+    account = Account.find_or_create_account_for_email("#{prefix}@mozilla.com")
+
+    if is_admin do
+      # Currently admin bits not set via any reticulum APIs, so avoid adding them to code for now.
+      Ecto.Adapters.SQL.query!(
+        Ret.Repo,
+        "update ret0.accounts set is_admin = 't' where account_id = #{account.account_id}"
+      )
+
+      Account.find_or_create_account_for_email("#{prefix}@mozilla.com")
+    else
+      account
+    end
   end
 
-  def create_account(_) do
+  def create_account(_, _is_admin) do
     {:ok, account: create_account("test"), account2: create_account("test2")}
+  end
+
+  def create_admin_account(_) do
+    {:ok, admin_account: create_account("test", true)}
   end
 
   def create_owned_file(%{account: account}) do
