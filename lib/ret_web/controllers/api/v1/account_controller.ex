@@ -27,7 +27,7 @@ defmodule RetWeb.Api.V1.AccountController do
     else
       account = Account.find_or_create_account_for_email(email)
 
-      {:ok, {200, %{"data" => Phoenix.View.render(AccountView, "create.json", account: account, email: email)}}}
+      {:ok, {200, Phoenix.View.render(AccountView, "create.json", account: account, email: email)}}
     end
   end
 
@@ -43,7 +43,7 @@ defmodule RetWeb.Api.V1.AccountController do
       :ok ->
         case handler.(record, "data") do
           {:ok, {status, result}} ->
-            conn |> send_resp(status, result |> Poison.encode!())
+            conn |> send_resp(status, %{"data" => result} |> Poison.encode!())
 
           {:error, errors} ->
             conn |> send_error_resp(errors)
@@ -55,6 +55,37 @@ defmodule RetWeb.Api.V1.AccountController do
           Enum.map(errors, fn {code, detail, source} -> {code, detail, source |> String.replace(~r/^#/, "data")} end)
         )
     end
+  end
+
+  defp process_create_records(conn, records, handler) when is_list(records) do
+    results =
+      records
+      |> Enum.with_index()
+      |> Enum.map(fn {record, index} ->
+        case ExJsonSchema.Validator.validate(@record_schema, record, error_formatter: Ret.JsonSchemaApiErrorFormatter) do
+          :ok ->
+            case handler.(record, "data[#{index}]") do
+              {:ok, {status, result}} ->
+                %{status: status, body: %{"data" => result}}
+
+              {:error, errors} ->
+                %{status: 400, body: to_error_multi_request_response(errors)}
+            end
+
+          {:error, errors} ->
+            %{
+              status: 400,
+              body:
+                to_error_multi_request_response(
+                  Enum.map(errors, fn {code, detail, source} ->
+                    {code, detail, source |> String.replace(~r/^#/, "data[#{index}]")}
+                  end)
+                )
+            }
+        end
+      end)
+
+    conn |> send_resp(207, results |> Poison.encode!())
   end
 
   defp process_create_records(conn, _record, _handler) do
@@ -72,5 +103,9 @@ defmodule RetWeb.Api.V1.AccountController do
       %{errors: Enum.map(errors, fn {code, detail, source} -> %{code: code, detail: detail, source: source} end)}
       |> Poison.encode!()
     )
+  end
+
+  defp to_error_multi_request_response(errors) do
+    %{errors: Enum.map(errors, fn {code, detail, source} -> %{code: code, detail: detail, source: source} end)}
   end
 end

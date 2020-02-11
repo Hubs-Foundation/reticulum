@@ -15,8 +15,37 @@ defmodule RetWeb.AccountControllerTest do
     res = conn |> post(req) |> response(200) |> Poison.decode!()
 
     account = Account.account_for_email("testapi@mozilla.com")
+
     assert account
     assert res["data"]["id"] === "#{account.account_id}"
+    assert res["data"]["email"] === "testapi@mozilla.com"
+  end
+
+  test "admins can create multiple acounts, and have validation errors", %{conn: conn} do
+    req =
+      conn
+      |> api_v1_account_path(:create, %{
+        "data" => [%{email: "testapi1@mozilla.com"}, %{email: "testapi2@mozilla.com"}, %{email: "invalidemail"}]
+      })
+
+    res = conn |> post(req) |> response(207) |> Poison.decode!()
+
+    account1 = Account.account_for_email("testapi1@mozilla.com")
+    account2 = Account.account_for_email("testapi2@mozilla.com")
+    result1 = res |> Enum.at(0)
+    result2 = res |> Enum.at(1)
+    result3 = res |> Enum.at(2)
+
+    assert account1
+    assert account2
+    assert result1["status"] === 200
+    assert result1["body"]["data"]["id"] === "#{account1.account_id}"
+    assert result1["body"]["data"]["email"] === "testapi1@mozilla.com"
+    assert result2["status"] === 200
+    assert result2["body"]["data"]["id"] === "#{account2.account_id}"
+    assert result2["body"]["data"]["email"] === "testapi2@mozilla.com"
+    assert result3["status"] === 400
+    assert result3["body"]["errors"] |> Enum.at(0) |> Map.get("code") === "MALFORMED_RECORD"
   end
 
   test "should return 400 if email is invalid", %{conn: conn} do
