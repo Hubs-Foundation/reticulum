@@ -69,7 +69,9 @@ defmodule RetWeb.HubChannel do
 
     hub_requires_oauth = hub.hub_bindings |> Enum.empty?() |> Kernel.not()
 
-    has_valid_bot_access_key = params["bot_access_key"] == Application.get_env(:ret, :bot_access_key)
+    bot_access_key = Application.get_env(:ret, :bot_access_key)
+
+    has_valid_bot_access_key = !!(bot_access_key && params["bot_access_key"] == bot_access_key)
 
     account_has_provider_for_hub = account |> Ret.Account.matching_oauth_providers(hub) |> Enum.empty?() |> Kernel.not()
 
