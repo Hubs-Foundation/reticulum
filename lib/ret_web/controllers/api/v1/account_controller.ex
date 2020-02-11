@@ -1,7 +1,7 @@
 defmodule RetWeb.Api.V1.AccountController do
   use RetWeb, :controller
 
-  alias Ret.{Account, Repo}
+  alias Ret.{Account}
 
   # TODO move to a file
   @record_schema %{
@@ -17,15 +17,17 @@ defmodule RetWeb.Api.V1.AccountController do
                  |> ExJsonSchema.Schema.resolve()
 
   def create(conn, params) do
-    exec_create(conn, params, &process_account_create_record/3)
+    exec_create(conn, params, &process_account_create_record/2)
   end
 
-  defp process_account_create_record(conn, %{"email" => email}, source) do
-    {:ok, {200, "OK"}}
-    # case result do
-    #  :ok -> render(conn, "create.json", hub: hub)
-    #  :error -> conn |> send_resp(422, "invalid hub")
-    # end
+  defp process_account_create_record(%{"email" => email}, source) do
+    if Account.exists_for_email?(email) do
+      {:error, [{:RECORD_EXISTS, "Account with email already exists.", source}]}
+    else
+      # TODO return account info
+      Account.find_or_create_account_for_email(email)
+      {:ok, {200, "OK"}}
+    end
   end
 
   # Utility functions
@@ -38,7 +40,7 @@ defmodule RetWeb.Api.V1.AccountController do
   defp process_create_records(conn, record, handler) when is_map(record) do
     case ExJsonSchema.Validator.validate(@record_schema, record, error_formatter: Ret.JsonSchemaApiErrorFormatter) do
       :ok ->
-        case handler.(conn, record, "data") do
+        case handler.(record, "data") do
           {:ok, {status, body}} ->
             conn |> send_resp(status, body)
 
@@ -54,15 +56,18 @@ defmodule RetWeb.Api.V1.AccountController do
     end
   end
 
-  defp process_create_records(conn, _record, handler) do
+  defp process_create_records(conn, _record, _handler) do
     conn
     |> send_error_resp([{:MALFORMED_RECORD, "Malformed record in 'data' property.", "data"}])
   end
 
-  defp send_error_resp(conn, errors) do
+  defp send_error_resp(conn, [{:RECORD_EXISTS, _detail, _source}] = errors), do: conn |> send_error_resp(409, errors)
+  defp send_error_resp(conn, errors), do: send_error_resp(conn, 400, errors)
+
+  defp send_error_resp(conn, status, errors) do
     conn
     |> send_resp(
-      400,
+      status,
       %{errors: Enum.map(errors, fn {code, detail, source} -> %{code: code, detail: detail, source: source} end)}
       |> Poison.encode!()
     )

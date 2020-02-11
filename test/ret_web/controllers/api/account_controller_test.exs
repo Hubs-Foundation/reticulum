@@ -35,4 +35,9 @@ defmodule RetWeb.AccountControllerTest do
     req = conn |> api_v1_account_path(:create, %{"data" => %{}})
     conn |> post(req) |> response(400)
   end
+
+  test "should return 409 if account exists", %{conn: conn} do
+    req = conn |> api_v1_account_path(:create, %{"data" => %{email: "test@mozilla.com"}})
+    res = conn |> post(req) |> response(409)
+  end
 end
