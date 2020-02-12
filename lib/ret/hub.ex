@@ -59,6 +59,7 @@ defmodule Ret.Hub do
 
   schema "hubs" do
     field(:name, :string)
+    field(:description, :string)
     field(:hub_sid, :string)
     field(:host, :string)
     field(:entry_code, :integer)
@@ -107,7 +108,7 @@ defmodule Ret.Hub do
   def changeset(%Hub{} = hub, nil, attrs) do
     hub
     |> cast(attrs, [:default_environment_gltf_bundle_url])
-    |> add_name_to_changeset(attrs)
+    |> add_meta_to_changeset(attrs)
     |> add_hub_sid_to_changeset
     |> add_generated_tokens_to_changeset
     |> add_entry_code_to_changeset
@@ -116,9 +117,9 @@ defmodule Ret.Hub do
     |> unique_constraint(:entry_code)
   end
 
-  def add_name_to_changeset(changeset, attrs) do
+  def add_meta_to_changeset(changeset, attrs) do
     changeset
-    |> cast(attrs, [:name])
+    |> cast(attrs, [:name, :description])
     |> validate_required([:name])
     |> validate_length(:name, max: 64)
     |> HubSlug.maybe_generate_slug()
