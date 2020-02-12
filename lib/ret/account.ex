@@ -114,8 +114,8 @@ defmodule Ret.Account do
     Repo.preload(account, @account_preloads, force: true)
   end
 
-  def revoke_identity!(%Account{identity: %Identity{} = identity} = account) do
-    identity |> Repo.delete!()
+  def revoke_identity!(%Account{account_id: account_id} = account) do
+    from(i in Identity, where: i.account_id == ^account_id) |> Repo.delete_all()
     Repo.preload(account, @account_preloads, force: true)
   end
 
