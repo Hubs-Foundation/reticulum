@@ -7,13 +7,13 @@ defmodule RetWeb.ApiHelpers do
   #   { :error, [ { code, details, source } ] }
   # TODO dialyzer this
   def exec_api_create(conn, %{"records" => records}, schema, handler),
-    do: process_create_records(conn, records, schema, handler)
+    do: create_records(conn, records, schema, handler)
 
   def exec_api_create(conn, _invalid_params, _schema, _handler) do
     conn |> send_error_resp([{:MALFORMED_REQUEST, "Missing 'records' property in request.", nil}])
   end
 
-  defp process_create_records(conn, record, schema, handler) when is_map(record) do
+  defp create_records(conn, record, schema, handler) when is_map(record) do
     case ExJsonSchema.Validator.validate(schema, record, error_formatter: Ret.JsonSchemaApiErrorFormatter) do
       :ok ->
         case handler.(record, "records") do
@@ -32,7 +32,7 @@ defmodule RetWeb.ApiHelpers do
     end
   end
 
-  defp process_create_records(conn, records, schema, handler) when is_list(records) do
+  defp create_records(conn, records, schema, handler) when is_list(records) do
     results =
       records
       |> Enum.with_index()
@@ -63,7 +63,7 @@ defmodule RetWeb.ApiHelpers do
     conn |> send_resp(207, results |> Poison.encode!())
   end
 
-  defp process_create_records(conn, _record, _schema, _handler) do
+  defp create_records(conn, _record, _schema, _handler) do
     conn
     |> send_error_resp([{:MALFORMED_RECORD, "Malformed record in 'records' property.", "records"}])
   end
