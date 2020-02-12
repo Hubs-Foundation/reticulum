@@ -6,19 +6,19 @@ defmodule RetWeb.ApiHelpers do
   #   { :ok, { http_status, result } }
   #   { :error, [ { code, details, source } ] }
   # TODO dialyzer this
-  def exec_api_create(conn, %{"records" => records}, schema, handler),
+  def exec_api_create(conn, %{"data" => records}, schema, handler),
     do: create_records(conn, records, schema, handler)
 
   def exec_api_create(conn, _invalid_params, _schema, _handler) do
-    conn |> send_error_resp([{:MALFORMED_REQUEST, "Missing 'records' property in request.", nil}])
+    conn |> send_error_resp([{:MALFORMED_REQUEST, "Missing 'data' property in request.", nil}])
   end
 
   defp create_records(conn, record, schema, handler) when is_map(record) do
     case ExJsonSchema.Validator.validate(schema, record, error_formatter: Ret.JsonSchemaApiErrorFormatter) do
       :ok ->
-        case handler.(record, "records") do
+        case handler.(record, "data") do
           {:ok, {status, result}} ->
-            conn |> send_resp(status, %{"records" => result} |> Poison.encode!())
+            conn |> send_resp(status, %{"data" => result} |> Poison.encode!())
 
           {:error, errors} ->
             conn |> send_error_resp(errors)
@@ -27,7 +27,7 @@ defmodule RetWeb.ApiHelpers do
       {:error, errors} ->
         conn
         |> send_error_resp(
-          Enum.map(errors, fn {code, detail, source} -> {code, detail, source |> String.replace(~r/^#/, "records")} end)
+          Enum.map(errors, fn {code, detail, source} -> {code, detail, source |> String.replace(~r/^#/, "data")} end)
         )
     end
   end
@@ -39,9 +39,9 @@ defmodule RetWeb.ApiHelpers do
       |> Enum.map(fn {record, index} ->
         case ExJsonSchema.Validator.validate(schema, record, error_formatter: Ret.JsonSchemaApiErrorFormatter) do
           :ok ->
-            case handler.(record, "records[#{index}]") do
+            case handler.(record, "data[#{index}]") do
               {:ok, {status, result}} ->
-                %{status: status, body: %{"records" => result}}
+                %{status: status, body: %{"data" => result}}
 
               {:error, errors} ->
                 %{status: 400, body: to_error_multi_request_response(errors)}
@@ -53,7 +53,7 @@ defmodule RetWeb.ApiHelpers do
               body:
                 to_error_multi_request_response(
                   Enum.map(errors, fn {code, detail, source} ->
-                    {code, detail, source |> String.replace(~r/^#/, "records[#{index}]")}
+                    {code, detail, source |> String.replace(~r/^#/, "data[#{index}]")}
                   end)
                 )
             }
@@ -65,7 +65,7 @@ defmodule RetWeb.ApiHelpers do
 
   defp create_records(conn, _record, _schema, _handler) do
     conn
-    |> send_error_resp([{:MALFORMED_RECORD, "Malformed record in 'records' property.", "records"}])
+    |> send_error_resp([{:MALFORMED_RECORD, "Malformed record in 'data' property.", "data"}])
   end
 
   defp send_error_resp(conn, [{:RECORD_EXISTS, _detail, _source}] = errors), do: conn |> send_error_resp(409, errors)

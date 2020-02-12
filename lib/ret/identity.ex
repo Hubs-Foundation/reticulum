@@ -18,6 +18,7 @@ defmodule Ret.Identity do
     %Identity{}
     |> cast(params, [:name])
     |> validate_required([:name])
+    |> validate_length(:name, min: 2, max: 64)
     |> put_assoc(:account, account)
   end
 end

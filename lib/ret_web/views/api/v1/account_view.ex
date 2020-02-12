@@ -1,10 +1,27 @@
 defmodule RetWeb.Api.V1.AccountView do
   use RetWeb, :view
 
+  alias Ret.{Account, Identity}
+
+  def render("create.json", %{account: %Account{identity: %Identity{name: name}} = account, email: email}) do
+    %{
+      id: "#{account.account_id}",
+      identity: %{name: name},
+      email: email
+    }
+  end
+
   def render("create.json", %{account: account, email: email}) do
     %{
       id: "#{account.account_id}",
       email: email
+    }
+  end
+
+  def render("show.json", %{account: %Account{identity: %Identity{name: name}} = account}) do
+    %{
+      id: "#{account.account_id}",
+      identity: %{name: name}
     }
   end
 
