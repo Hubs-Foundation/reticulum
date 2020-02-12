@@ -4,6 +4,7 @@ defmodule RetWeb.Api.V1.AccountSearchController do
   alias Ret.{Account}
   alias RetWeb.Api.V1.{AccountView}
 
+  # Account lookup, is a POST because lookup contains sensitive information
   def create(conn, %{"email" => email}) do
     with %Account{} = account <- Account.account_for_email(email) do
       record = Phoenix.View.render(AccountView, "show.json", account: account)
