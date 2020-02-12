@@ -2,17 +2,19 @@ defmodule Ret.Account do
   use Ecto.Schema
   import Ecto.Query
 
-  alias Ret.{Repo, Account, Login, Guardian}
+  alias Ret.{Repo, Account, Identity, Login, Guardian}
 
   import Canada, only: [can?: 2]
 
   @schema_prefix "ret0"
   @primary_key {:account_id, :id, autogenerate: true}
+  @account_preloads [:login, :identity]
 
   schema "accounts" do
     field(:min_token_issued_at, :utc_datetime)
     field(:is_admin, :boolean)
-    has_one(:login, Ret.Login, foreign_key: :account_id)
+    has_one(:login, Login, foreign_key: :account_id)
+    has_one(:identity, Identity, foreign_key: :account_id)
     has_many(:owned_files, Ret.OwnedFile, foreign_key: :account_id)
     has_many(:created_hubs, Ret.Hub, foreign_key: :created_by_account_id)
     has_many(:oauth_providers, Ret.OAuthProvider, foreign_key: :account_id)
@@ -26,12 +28,12 @@ defmodule Ret.Account do
   def exists_for_email?(email), do: account_for_email(email) != nil
 
   def account_for_email(email, create_if_not_exists \\ false) do
-    email |> identifier_hash_for_email |> account_for_identifier_hash(create_if_not_exists)
+    email |> identifier_hash_for_email |> account_for_login_identifier_hash(create_if_not_exists)
   end
 
   def find_or_create_account_for_email(email), do: account_for_email(email, true)
 
-  def account_for_identifier_hash(identifier_hash, create_if_not_exists \\ false) do
+  def account_for_login_identifier_hash(identifier_hash, create_if_not_exists \\ false) do
     login =
       Login
       |> where([t], t.identifier_hash == ^identifier_hash)
@@ -39,7 +41,7 @@ defmodule Ret.Account do
 
     cond do
       login != nil ->
-        Account |> Repo.get(login.account_id) |> Repo.preload(:login)
+        Account |> Repo.get(login.account_id) |> Repo.preload(@account_preloads)
 
       create_if_not_exists === true ->
         # Set the account to be an administrator if admin_email matches
@@ -102,6 +104,22 @@ defmodule Ret.Account do
   end
 
   def oauth_provider_for_source(nil, _source), do: nil
+
+  def set_identity!(%Account{} = account, name) do
+    account
+    |> revoke_identity!
+    |> Identity.changeset_for_new(%{name: name})
+    |> Repo.insert!()
+
+    Repo.preload(account, @account_preloads, force: true)
+  end
+
+  def revoke_identity!(%Account{identity: %Identity{} = identity} = account) do
+    identity |> Repo.delete!()
+    Repo.preload(account, @account_preloads, force: true)
+  end
+
+  def revoke_identity!(account), do: account
 
   defp module_config(key) do
     Application.get_env(:ret, __MODULE__)[key]

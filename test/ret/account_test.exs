@@ -24,4 +24,20 @@ defmodule Ret.AccountTest do
     assert account.account_id == account2.account_id
     assert account.login.login_id == account2.login.login_id
   end
+
+  test "can assign and re-assign identity" do
+    account = Account.find_or_create_account_for_email("test@mozilla.com")
+    account = account |> Account.set_identity!("Test User")
+
+    assert account.identity
+    assert account.identity.name === "Test User"
+
+    account = account |> Account.set_identity!("Test User 2")
+
+    assert account.identity
+    assert account.identity.name === "Test User 2"
+
+    account = account |> Account.revoke_identity!()
+    refute account.identity
+  end
 end

@@ -10,6 +10,7 @@ defmodule RetWeb.HubChannel do
     Hub,
     Account,
     AccountFavorite,
+    Identity,
     Repo,
     RoomObject,
     OwnedFile,
@@ -735,14 +736,14 @@ defmodule RetWeb.HubChannel do
     account = Guardian.Phoenix.Socket.current_resource(socket)
 
     socket.assigns
-    |> maybe_override_display_name(account)
+    |> maybe_override_identifiers(account)
     |> Map.put(:roles, hub |> Hub.roles_for_account(account))
     |> Map.put(:permissions, hub |> Hub.perms_for_account(account))
     |> Map.take([:presence, :profile, :context, :roles, :permissions, :streaming, :recording])
   end
 
   # Hubs Bot can set their own display name.
-  defp maybe_override_display_name(
+  defp maybe_override_identifiers(
          %{
            hub_requires_oauth: true,
            has_valid_bot_access_key: true
@@ -752,7 +753,7 @@ defmodule RetWeb.HubChannel do
        do: assigns
 
   # Do a direct display name lookup for OAuth users without a verified email (and thus, no Hubs account).
-  defp maybe_override_display_name(
+  defp maybe_override_identifiers(
          %{
            hub_requires_oauth: true,
            hub_sid: hub_sid,
@@ -776,7 +777,7 @@ defmodule RetWeb.HubChannel do
   end
 
   # If there isn't an oauth account id on the socket, we expect the user to have an account
-  defp maybe_override_display_name(
+  defp maybe_override_identifiers(
          %{
            hub_requires_oauth: true,
            hub_sid: hub_sid,
@@ -798,8 +799,16 @@ defmodule RetWeb.HubChannel do
     assigns |> override_display_name_via_binding(oauth_provider, hub_binding)
   end
 
-  # We don't override display names for unbound hubs
-  defp maybe_override_display_name(
+  # For unbound hubs, set the identity name for the account.
+  defp maybe_override_identifiers(
+         %{
+           hub_requires_oauth: false
+         } = assigns,
+         %Account{identity: %Identity{name: name}}
+       ),
+       do: put_in(assigns.profile["identityName"], name)
+
+  defp maybe_override_identifiers(
          %{
            hub_requires_oauth: false
          } = assigns,
@@ -815,6 +824,8 @@ defmodule RetWeb.HubChannel do
       assigns.profile
       |> Map.merge(%{
         "displayName" => display_name,
+        "identityName" => community_identifier,
+        # Deprecated
         "communityIdentifier" => community_identifier
       })
 
