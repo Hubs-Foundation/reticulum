@@ -29,20 +29,19 @@ defmodule RetWeb.AccountControllerTest do
 
     assert account
     assert res["data"]["id"] === "#{account.account_id}"
-    assert res["data"]["email"] === "testapi@mozilla.com"
+    assert res["data"]["login"]["email"] === "testapi@mozilla.com"
   end
 
   test "admins can create accounts with identities", %{conn: conn} do
-    req = conn |> api_v1_account_path(:create, %{data: %{email: "testapi@mozilla.com", identity_name: "Test User"}})
+    req = conn |> api_v1_account_path(:create, %{data: %{email: "testapi@mozilla.com", name: "Test User"}})
     res = conn |> post(req) |> response(200) |> Poison.decode!()
 
     account = Account.account_for_email("testapi@mozilla.com")
-    IO.inspect(res)
 
     assert account
     assert res["data"]["id"] === "#{account.account_id}"
-    assert res["data"]["email"] === "testapi@mozilla.com"
-    assert res["data"]["identity_name"] === "Test User"
+    assert res["data"]["login"]["email"] === "testapi@mozilla.com"
+    assert res["data"]["identity"]["name"] === "Test User"
   end
 
   test "admins can create multiple acounts, and have validation errors", %{conn: conn} do
@@ -64,10 +63,10 @@ defmodule RetWeb.AccountControllerTest do
     assert account2
     assert result1["status"] === 200
     assert result1["body"]["data"]["id"] === "#{account1.account_id}"
-    assert result1["body"]["data"]["email"] === "testapi1@mozilla.com"
+    assert result1["body"]["data"]["login"]["email"] === "testapi1@mozilla.com"
     assert result2["status"] === 200
     assert result2["body"]["data"]["id"] === "#{account2.account_id}"
-    assert result2["body"]["data"]["email"] === "testapi2@mozilla.com"
+    assert result2["body"]["data"]["login"]["email"] === "testapi2@mozilla.com"
     assert result3["status"] === 400
     assert result3["body"]["errors"] |> Enum.at(0) |> Map.get("code") === "MALFORMED_RECORD"
   end

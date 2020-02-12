@@ -6,15 +6,15 @@ defmodule RetWeb.Api.V1.AccountView do
   def render("create.json", %{account: %Account{identity: %Identity{name: name}} = account, email: email}) do
     %{
       id: "#{account.account_id}",
-      identity: %{name: name},
-      email: email
+      login: %{ email: email },
+      identity: %{name: name}
     }
   end
 
   def render("create.json", %{account: account, email: email}) do
     %{
       id: "#{account.account_id}",
-      email: email
+      login: %{ email: email }
     }
   end
 
