@@ -1,0 +1,15 @@
+defmodule RetWeb.Api.V1.AccountSearchController do
+  use RetWeb, :controller
+
+  alias Ret.{Account}
+  alias RetWeb.Api.V1.{AccountView}
+
+  def create(conn, %{"email" => email}) do
+    with %Account{} = account <- Account.account_for_email(email) do
+      record = Phoenix.View.render(AccountView, "show.json", account: account)
+      conn |> send_resp(200, %{records: [record]} |> Poison.encode!())
+    else
+      _ -> conn |> put_status(:not_found) |> halt()
+    end
+  end
+end
