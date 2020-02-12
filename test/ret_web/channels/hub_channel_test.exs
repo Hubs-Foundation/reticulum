@@ -1,4 +1,4 @@
-defmodule RetWeb.AuthChannelTest do
+defmodule RetWeb.HubChannelTest do
   use RetWeb.ChannelCase
   import Ret.TestHelpers
 
