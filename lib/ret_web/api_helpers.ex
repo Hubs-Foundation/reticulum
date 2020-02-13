@@ -5,7 +5,6 @@ defmodule RetWeb.ApiHelpers do
   # The handler will get passed the (validated) record and source and should return either:
   #   { :ok, { http_status, result } }
   #   { :error, [ { code, details, source } ] }
-  # TODO dialyzer this
   def exec_api_create(conn, %{"data" => records}, schema, handler),
     do: create_records(conn, records, schema, handler)
 

@@ -5,7 +5,6 @@ defmodule RetWeb.Api.V1.AccountController do
   alias Ret.{Account}
   alias RetWeb.Api.V1.{AccountView}
 
-  # TODO move to a file
   @record_schema %{
                    "type" => "object",
                    "properties" => %{

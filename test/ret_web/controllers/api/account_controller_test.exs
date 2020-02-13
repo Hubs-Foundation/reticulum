@@ -112,7 +112,6 @@ defmodule RetWeb.AccountControllerTest do
     conn = conn |> post(req)
 
     assert conn.status === 404
-    assert conn.state === :unset
   end
 
   test "should return account if account exists", %{conn: conn} do
@@ -120,7 +119,8 @@ defmodule RetWeb.AccountControllerTest do
     res = conn |> post(req) |> response(200) |> Poison.decode!()
 
     account = Account.account_for_email("test@mozilla.com")
+    record = res["data"] |> Enum.at(0)
 
-    assert res["data"]["id"] === "#{account.account_id}"
+    assert record["id"] === "#{account.account_id}"
   end
 end
