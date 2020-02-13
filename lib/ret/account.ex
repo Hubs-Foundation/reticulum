@@ -119,8 +119,6 @@ defmodule Ret.Account do
     Repo.preload(account, @account_preloads, force: true)
   end
 
-  def revoke_identity!(account), do: account
-
   defp module_config(key) do
     Application.get_env(:ret, __MODULE__)[key]
   end
