@@ -677,6 +677,7 @@ defmodule Ret.MediaSearch do
       type: :room,
       member_count: hub |> Hub.member_count_for(),
       name: hub.name,
+      description: hub.description,
       images: images
     }
   end
