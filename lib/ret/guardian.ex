@@ -21,7 +21,7 @@ defmodule Ret.Guardian do
     Account
     |> where([a], a.account_id == ^account_id and a.min_token_issued_at <= ^issued_at_utc_datetime)
     |> Repo.one()
-    |> Repo.preload(:oauth_providers)
+    |> Repo.preload([:oauth_providers, :identity])
     |> result_for_account
   end
 

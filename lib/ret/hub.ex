@@ -442,7 +442,8 @@ defmodule Ret.Hub do
 end
 
 defimpl Canada.Can, for: Ret.Account do
-  alias Ret.{Hub}
+  alias Ret.{Hub, AppConfig}
+
   @owner_actions [:update_hub, :close_hub, :embed_hub, :kick_users, :mute_users]
   @object_actions [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects]
   @creator_actions [:update_roles]
@@ -512,13 +513,23 @@ defimpl Canada.Can, for: Ret.Account do
     hub |> Hub.has_member_permission?(action) or hub |> Ret.Hub.is_owner?(account_id)
   end
 
+  # Create hubs
+  def can?(%Ret.Account{is_admin: true}, :create_hub, _), do: true
+
+  def can?(_account, :create_hub, _),
+    do: !AppConfig.get_cached_config_value("features|disable_room_creation")
+
+  # Create accounts
+  def can?(%Ret.Account{is_admin: true}, :create_account, _), do: true
+  def can?(_account, :create_account, _), do: !AppConfig.get_cached_config_value("features|disable_sign_up")
+
   # Deny permissions for any other case that falls through
   def can?(_, _, _), do: false
 end
 
 # Perms for oauth users that do not have a hubs account
 defimpl Canada.Can, for: Ret.OAuthProvider do
-  alias Ret.{Hub}
+  alias Ret.{AppConfig, Hub}
   @object_actions [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects]
   @special_actions [:update_hub, :update_roles, :close_hub, :embed_hub, :kick_users, :mute_users]
 
@@ -541,24 +552,35 @@ defimpl Canada.Can, for: Ret.OAuthProvider do
     is_member and hub |> Hub.has_member_permission?(action)
   end
 
+  def can?(_, :create_hub, _),
+    do: !AppConfig.get_cached_config_value("features|disable_room_creation")
+
   def can?(_, _, _), do: false
 end
 
 # Permissions for un-authenticated clients
 defimpl Canada.Can, for: Atom do
-  alias Ret.{Hub}
+  alias Ret.{AppConfig, Hub}
   @object_actions [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects]
 
   # Always deny access to non-enterable hubs
   def can?(_, :join_hub, %Ret.Hub{entry_mode: :deny}), do: false
 
-  # Anyone can join an unbound hub
-  def can?(_, :join_hub, %Ret.Hub{hub_bindings: []}), do: true
+  # Anyone can join an unbound hub as long as accounts aren't required
+  def can?(_, :join_hub, %Ret.Hub{hub_bindings: []}),
+    do: !AppConfig.get_cached_config_value("features|require_account_for_join")
 
   # Object permissions for anonymous users are based on member permission settings
   def can?(_account, action, hub) when action in @object_actions do
     hub |> Hub.has_member_permission?(action)
   end
+
+  # Create hubs
+  def can?(_, :create_hub, _),
+    do: !AppConfig.get_cached_config_value("features|disable_room_creation")
+
+  # Create accounts
+  def can?(_, :create_account, _), do: !AppConfig.get_cached_config_value("features|disable_sign_up")
 
   def can?(_, _, _), do: false
 end

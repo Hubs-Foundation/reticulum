@@ -6,9 +6,11 @@ defmodule RetWeb.HubChannel do
   import Canada, only: [can?: 2]
 
   alias Ret.{
+    AppConfig,
     Hub,
     Account,
     AccountFavorite,
+    Identity,
     Repo,
     RoomObject,
     OwnedFile,
@@ -68,7 +70,9 @@ defmodule RetWeb.HubChannel do
 
     hub_requires_oauth = hub.hub_bindings |> Enum.empty?() |> Kernel.not()
 
-    has_valid_bot_access_key = params["bot_access_key"] == Application.get_env(:ret, :bot_access_key)
+    bot_access_key = Application.get_env(:ret, :bot_access_key)
+
+    has_valid_bot_access_key = !!(bot_access_key && params["bot_access_key"] == bot_access_key)
 
     account_has_provider_for_hub = account |> Ret.Account.matching_oauth_providers(hub) |> Enum.empty?() |> Kernel.not()
 
@@ -299,6 +303,12 @@ defmodule RetWeb.HubChannel do
   def handle_in("sign_out", _payload, socket) do
     socket = Guardian.Phoenix.Socket.put_current_resource(socket, nil)
     broadcast_presence_update(socket)
+
+    # Disconnect if signing out and account is required
+    if AppConfig.get_cached_config_value("features|require_account_for_join") do
+      Process.send_after(self(), :close_channel, 5000)
+    end
+
     {:reply, {:ok, %{}}, socket}
   end
 
@@ -399,11 +409,6 @@ defmodule RetWeb.HubChannel do
     end
 
     {:noreply, socket}
-  end
-
-  defp maybe_add_promotion_to_changeset(changeset, account, hub, payload) do
-    can_change_promotion = account |> can?(update_hub_promotion(hub))
-    if can_change_promotion, do: changeset |> Hub.add_promotion_to_changeset(payload), else: changeset
   end
 
   def handle_in("close_hub", _payload, socket) do
@@ -672,6 +677,11 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
+  def handle_info(:close_channel, socket) do
+    GenServer.cast(self(), :close)
+    {:noreply, socket}
+  end
+
   def handle_info(_message, socket) do
     {:noreply, socket}
   end
@@ -728,14 +738,14 @@ defmodule RetWeb.HubChannel do
     account = Guardian.Phoenix.Socket.current_resource(socket)
 
     socket.assigns
-    |> maybe_override_display_name(account)
+    |> maybe_override_identifiers(account)
     |> Map.put(:roles, hub |> Hub.roles_for_account(account))
     |> Map.put(:permissions, hub |> Hub.perms_for_account(account))
     |> Map.take([:presence, :profile, :context, :roles, :permissions, :streaming, :recording])
   end
 
   # Hubs Bot can set their own display name.
-  defp maybe_override_display_name(
+  defp maybe_override_identifiers(
          %{
            hub_requires_oauth: true,
            has_valid_bot_access_key: true
@@ -745,7 +755,7 @@ defmodule RetWeb.HubChannel do
        do: assigns
 
   # Do a direct display name lookup for OAuth users without a verified email (and thus, no Hubs account).
-  defp maybe_override_display_name(
+  defp maybe_override_identifiers(
          %{
            hub_requires_oauth: true,
            hub_sid: hub_sid,
@@ -769,7 +779,7 @@ defmodule RetWeb.HubChannel do
   end
 
   # If there isn't an oauth account id on the socket, we expect the user to have an account
-  defp maybe_override_display_name(
+  defp maybe_override_identifiers(
          %{
            hub_requires_oauth: true,
            hub_sid: hub_sid,
@@ -791,8 +801,16 @@ defmodule RetWeb.HubChannel do
     assigns |> override_display_name_via_binding(oauth_provider, hub_binding)
   end
 
-  # We don't override display names for unbound hubs
-  defp maybe_override_display_name(
+  # For unbound hubs, set the identity name for the account.
+  defp maybe_override_identifiers(
+         %{
+           hub_requires_oauth: false
+         } = assigns,
+         %Account{identity: %Identity{name: name}}
+       ),
+       do: put_in(assigns.profile["identityName"], name)
+
+  defp maybe_override_identifiers(
          %{
            hub_requires_oauth: false
          } = assigns,
@@ -808,6 +826,8 @@ defmodule RetWeb.HubChannel do
       assigns.profile
       |> Map.merge(%{
         "displayName" => display_name,
+        "identityName" => community_identifier,
+        # Deprecated
         "communityIdentifier" => community_identifier
       })
 
@@ -875,6 +895,21 @@ defmodule RetWeb.HubChannel do
          }
        ),
        do: require_oauth(hub)
+
+  # Join denied based upon account requirement
+  defp join_with_hub(
+         %Hub{},
+         nil = _account,
+         _socket,
+         _context,
+         %{
+           hub_requires_oauth: false,
+           has_valid_bot_access_key: false,
+           has_perms_token: false,
+           account_can_join: false
+         }
+       ),
+       do: deny_join()
 
   defp join_with_hub(%Hub{} = hub, account, socket, context, params) do
     hub = hub |> Hub.ensure_valid_entry_code!() |> Hub.ensure_host()
@@ -1027,5 +1062,10 @@ defmodule RetWeb.HubChannel do
 
   defp payload_without_from(payload) do
     payload |> Map.delete(:from_session_id)
+  end
+
+  defp maybe_add_promotion_to_changeset(changeset, account, hub, payload) do
+    can_change_promotion = account |> can?(update_hub_promotion(hub))
+    if can_change_promotion, do: changeset |> Hub.add_promotion_to_changeset(payload), else: changeset
   end
 end
