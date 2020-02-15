@@ -505,7 +505,7 @@ defmodule RetWeb.PageController do
 
     case res do
       {:ok, chunks} = res when chunks != nil -> res
-      _ -> {:error, conn |> send_resp(503, "")}
+      _ -> {:error, conn |> send_resp(503, "Missing file #{page}. Please try again.")}
     end
   end
 
