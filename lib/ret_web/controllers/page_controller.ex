@@ -52,14 +52,18 @@ defmodule RetWeb.PageController do
         app_config_script: {:safe, app_config_script}
       )
 
-    chunks =
-      chunks_for_page("scene.html", :hubs)
-      |> List.insert_at(1, scene_meta_tags)
+    case try_chunks_for_page(conn, "scene.html", :hubs) do
+      {:ok, chunks} ->
+        chunks_with_meta = chunks |> List.insert_at(1, scene_meta_tags)
 
-    conn
-    |> append_csp("script-src", app_config_csp)
-    |> put_hub_headers("scene")
-    |> render_chunks(chunks, "text/html; charset=utf-8")
+        conn
+        |> append_csp("script-src", app_config_csp)
+        |> put_hub_headers("scene")
+        |> render_chunks(chunks_with_meta, "text/html; charset=utf-8")
+
+      {:error, conn} ->
+        conn
+    end
   end
 
   defp render_scene_content(nil, conn) do
@@ -77,14 +81,18 @@ defmodule RetWeb.PageController do
         app_config_script: {:safe, app_config_script}
       )
 
-    chunks =
-      chunks_for_page("avatar.html", :hubs)
-      |> List.insert_at(1, avatar_meta_tags)
+    case try_chunks_for_page(conn, "avatar.html", :hubs) do
+      {:ok, chunks} ->
+        chunks_with_meta = chunks |> List.insert_at(1, avatar_meta_tags)
 
-    conn
-    |> append_csp("script-src", app_config_csp)
-    |> put_hub_headers("avatar")
-    |> render_chunks(chunks, "text/html; charset=utf-8")
+        conn
+        |> append_csp("script-src", app_config_csp)
+        |> put_hub_headers("avatar")
+        |> render_chunks(chunks_with_meta, "text/html; charset=utf-8")
+
+      {:error, conn} ->
+        conn
+    end
   end
 
   defp render_avatar_content(nil, conn) do
@@ -103,14 +111,18 @@ defmodule RetWeb.PageController do
         app_config_script: {:safe, app_config_script}
       )
 
-    chunks =
-      chunks_for_page("index.html", :hubs)
-      |> List.insert_at(1, index_meta_tags)
+    case try_chunks_for_page(conn, "index.html", :hubs) do
+      {:ok, chunks} ->
+        chunks_with_meta = chunks |> List.insert_at(1, index_meta_tags)
 
-    conn
-    |> append_csp("script-src", app_config_csp)
-    |> put_hub_headers("hub")
-    |> render_chunks(chunks, "text/html; charset=utf-8")
+        conn
+        |> append_csp("script-src", app_config_csp)
+        |> put_hub_headers("hub")
+        |> render_chunks(chunks_with_meta, "text/html; charset=utf-8")
+
+      {:error, conn} ->
+        conn
+    end
   end
 
   defp render_homepage_content(conn, default_room_id) do
@@ -387,15 +399,19 @@ defmodule RetWeb.PageController do
         app_config_script: {:safe, app_config_script}
       )
 
-    chunks =
-      chunks_for_page("hub.html", :hubs)
-      |> List.insert_at(1, hub_meta_tags)
+    case try_chunks_for_page(conn, "hub.html", :hubs) do
+      {:ok, chunks} ->
+        chunks_with_meta = chunks |> List.insert_at(1, hub_meta_tags)
 
-    conn
-    |> append_csp("script-src", app_config_csp)
-    |> append_csp("script-src", available_integrations_csp)
-    |> put_hub_headers("room")
-    |> render_chunks(chunks, "text/html; charset=utf-8")
+        conn
+        |> append_csp("script-src", app_config_csp)
+        |> append_csp("script-src", available_integrations_csp)
+        |> put_hub_headers("room")
+        |> render_chunks(chunks_with_meta, "text/html; charset=utf-8")
+
+      {:error, conn} ->
+        conn
+    end
   end
 
   def generate_app_config() do
@@ -440,12 +456,14 @@ defmodule RetWeb.PageController do
         []
       end
 
-    chunks =
-      asset
-      |> chunks_for_page(source)
-      |> List.insert_at(1, meta_content)
+    case try_chunks_for_page(conn, asset, source) do
+      {:ok, chunks} ->
+        chunks_with_meta = chunks |> List.insert_at(1, meta_content)
+        conn |> render_chunks(chunks_with_meta, asset |> content_type_for_page)
 
-    conn |> render_chunks(chunks, asset |> content_type_for_page)
+      {:error, conn} ->
+        conn
+    end
   end
 
   defp render_page(conn, page, source \\ :hubs, meta_template \\ nil)
@@ -464,18 +482,20 @@ defmodule RetWeb.PageController do
         []
       end
 
-    chunks =
-      page
-      |> chunks_for_page(source)
-      |> List.insert_at(1, app_config_script)
-      |> List.insert_at(1, meta_tags)
+    case try_chunks_for_page(conn, page, source) do
+      {:ok, chunks} ->
+        chunks_with_meta = chunks |> List.insert_at(1, app_config_script) |> List.insert_at(1, meta_tags)
 
-    conn
-    |> append_csp("script-src", app_config_csp)
-    |> render_chunks(chunks, page |> content_type_for_page)
+        conn
+        |> append_csp("script-src", app_config_csp)
+        |> render_chunks(chunks_with_meta, page |> content_type_for_page)
+
+      {:error, conn} ->
+        conn
+    end
   end
 
-  defp chunks_for_page(page, source) do
+  defp try_chunks_for_page(conn, page, source) do
     res =
       if module_config(:skip_cache) do
         PageOriginWarmer.chunks_for_page(source, page)
@@ -483,10 +503,9 @@ defmodule RetWeb.PageController do
         Cachex.get(:page_chunks, {source, page})
       end
 
-    with {:ok, chunks} <- res do
-      chunks
-    else
-      _ -> nil
+    case res do
+      {:ok, chunks} = res when chunks != nil -> res
+      _ -> {:error, conn |> send_resp(503, "")}
     end
   end
 
