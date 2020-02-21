@@ -83,6 +83,8 @@ defmodule Ret.Hub do
 
     field(:allow_promotion, :boolean)
 
+    field(:member_cap, :integer)
+
     timestamps()
   end
 
@@ -108,7 +110,7 @@ defmodule Ret.Hub do
   def changeset(%Hub{} = hub, nil, attrs) do
     hub
     |> cast(attrs, [:default_environment_gltf_bundle_url])
-    |> add_meta_to_changeset(attrs)
+    |> add_attrs_to_changeset(attrs)
     |> add_hub_sid_to_changeset
     |> add_generated_tokens_to_changeset
     |> add_entry_code_to_changeset
@@ -117,11 +119,13 @@ defmodule Ret.Hub do
     |> unique_constraint(:entry_code)
   end
 
-  def add_meta_to_changeset(changeset, attrs) do
+  def add_attrs_to_changeset(changeset, attrs) do
     changeset
-    |> cast(attrs, [:name, :description])
+    |> cast(attrs, [:name, :description, :member_cap])
     |> validate_required([:name])
     |> validate_length(:name, max: 64)
+    |> validate_length(:description, max: 64_000)
+    |> validate_number(:member_cap, greater_than_or_equal_to: 0, less_than_or_equal_to: 64)
     |> HubSlug.maybe_generate_slug()
   end
 

@@ -11,7 +11,7 @@ defmodule RetWeb.Email do
     |> from({app_full_name, from_address()})
     |> subject("Your #{app_name} Sign-In Link")
     |> text_body(
-      "To sign-in to #{app_name}, please visit the link below. If you did not make this request, please ignore this e-mail.\n\n#{
+      "To sign-in to #{app_name}, please visit the link below. If you did not make this request, please ignore this e-mail.\n\n #{
         RetWeb.Endpoint.url()
       }/?#{URI.encode_query(signin_args)}"
     )

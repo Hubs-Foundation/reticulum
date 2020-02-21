@@ -390,6 +390,7 @@ defmodule RetWeb.HubChannel do
       name_changed = hub.name != payload["name"]
       description_changed = hub.description != payload["description"]
       member_permissions_changed = hub.member_permissions != payload |> Hub.member_permissions_from_attrs()
+      member_cap_changed = hub.member_cap != payload["member_cap"]
       can_change_promotion = account |> can?(update_hub_promotion(hub))
       promotion_changed = can_change_promotion and hub.allow_promotion != payload["allow_promotion"]
 
@@ -397,10 +398,11 @@ defmodule RetWeb.HubChannel do
       stale_fields = if name_changed, do: ["name" | stale_fields], else: stale_fields
       stale_fields = if description_changed, do: ["description" | stale_fields], else: stale_fields
       stale_fields = if member_permissions_changed, do: ["member_permissions" | stale_fields], else: stale_fields
+      stale_fields = if member_cap_changed, do: ["member_cap" | stale_fields], else: stale_fields
       stale_fields = if promotion_changed, do: ["allow_promotion" | stale_fields], else: stale_fields
 
       hub
-      |> Hub.add_meta_to_changeset(payload)
+      |> Hub.add_attrs_to_changeset(payload)
       |> Hub.add_member_permissions_to_changeset(payload)
       |> maybe_add_promotion_to_changeset(account, hub, payload)
       |> Repo.update!()
@@ -1031,7 +1033,12 @@ defmodule RetWeb.HubChannel do
     |> SessionStat.stat_query_for_socket()
     |> Repo.update_all(set: stat_attributes)
 
-    socket |> assign(:presence, :room) |> broadcast_presence_update
+
+    context = socket.assigns.context || %{}
+    socket
+    |> assign(:presence, :room)
+    |> assign(:context, context |> Map.delete("entering"))
+    |> broadcast_presence_update
   end
 
   defp handle_max_occupant_update(socket, occupant_count) do

@@ -44,7 +44,8 @@ defmodule RetWeb.Api.V1.HubView do
             else
               nil
             end,
-          member_permissions: hub |> Hub.member_permissions_for_hub()
+          member_permissions: hub |> Hub.member_permissions_for_hub(),
+          member_cap: hub.member_cap
         }
       ]
     }
@@ -70,7 +71,8 @@ defmodule RetWeb.Api.V1.HubView do
               assets: [%{asset_type: asset_type, src: asset_url}]
             }
           ],
-          member_permissions: hub |> Hub.member_permissions_for_hub()
+          member_permissions: hub |> Hub.member_permissions_for_hub(),
+          member_cap: hub.member_cap
         }
       ]
     }
