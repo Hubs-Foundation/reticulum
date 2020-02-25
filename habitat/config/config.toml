@@ -5,9 +5,9 @@ pool = "{{ cfg.ret.pool }}"
 header_value = "{{ cfg.phx.admin_access_key }}"
 
 [ret."Elixir.Ret.DiscordClient"]
-client_id = "{{ cfg.discord_client.client_id }}"
-client_secret = "{{ cfg.discord_client.client_secret }}"
-bot_token = "{{ cfg.discord_client.bot_token }}"
+client_id = {{ toToml cfg.discord_client.client_id }}
+client_secret = {{ toToml cfg.discord_client.client_secret }}
+bot_token = {{ toToml cfg.discord_client.bot_token }}
 
 {{ #if cfg.twitter_client.consumer_secret }}
 [ret."Elixir.Ret.TwitterClient"]
@@ -148,31 +148,31 @@ bot_access_key = "{{ cfg.ret.bot_access_key }}"
 [ret."Elixir.Ret.MediaResolver"]
 ytdl_host = "{{ cfg.resolver.ytdl_host }}"
 {{ #if cfg.resolver.giphy_api_key }}
-giphy_api_key = "{{ cfg.resolver.giphy_api_key }}"
+giphy_api_key = {{ toToml cfg.resolver.giphy_api_key }}
 {{/if}}
 {{ #if cfg.resolver.deviantart_client_id }}
-deviantart_client_id = "{{ cfg.resolver.deviantart_client_id }}"
-deviantart_client_secret = "{{ cfg.resolver.deviantart_client_secret }}"
+deviantart_client_id = {{ toToml cfg.resolver.deviantart_client_id }}
+deviantart_client_secret = {{ toToml cfg.resolver.deviantart_client_secret }}
 {{/if}}
 {{ #if cfg.resolver.imgur_mashape_api_key }}
-imgur_mashape_api_key = "{{ cfg.resolver.imgur_mashape_api_key }}"
-google_poly_api_key = "{{ cfg.resolver.google_poly_api_key }}"
+imgur_mashape_api_key = {{ toToml cfg.resolver.imgur_mashape_api_key }}
+google_poly_api_key = {{ toToml cfg.resolver.google_poly_api_key }}
 {{/if}}
-imgur_client_id = "{{ cfg.resolver.imgur_client_id }}"
+imgur_client_id = {{ toToml cfg.resolver.imgur_client_id }}
 {{ #if cfg.resolver.youtube_api_key }}
-youtube_api_key = "{{ cfg.resolver.youtube_api_key }}"
+youtube_api_key = {{ toToml cfg.resolver.youtube_api_key }}
 {{/if}}
 {{ #if cfg.resolver.sketchfab_api_key }}
-sketchfab_api_key = "{{ cfg.resolver.sketchfab_api_key }}"
+sketchfab_api_key = {{ toToml cfg.resolver.sketchfab_api_key }}
 {{/if}}
 {{ #if cfg.resolver.tenor_api_key }}
-tenor_api_key = "{{ cfg.resolver.tenor_api_key }}"
+tenor_api_key = {{ toToml cfg.resolver.tenor_api_key }}
 {{/if}}
 {{ #if cfg.resolver.bing_search_api_key }}
-bing_search_api_key = "{{ cfg.resolver.bing_search_api_key }}"
+bing_search_api_key = {{ toToml cfg.resolver.bing_search_api_key }}
 {{/if}}
 {{ #if cfg.resolver.twitch_client_id }}
-twitch_client_id = "{{ cfg.resolver.twitch_client_id }}"
+twitch_client_id = {{ toToml cfg.resolver.twitch_client_id }}
 {{/if}}
 {{ #if cfg.resolver.photomnemonic_endpoint }}
 photomnemonic_endpoint = "{{ cfg.resolver.photomnemonic_endpoint }}"
@@ -197,26 +197,19 @@ host = "{{ cfg.uploads.host }}"
 quota_gb = {{ cfg.uploads.quota_gb }}
 
 [ret."Elixir.RetWeb.Email"]
-from = "{{ cfg.email.from }}"
+from = {{ toToml cfg.email.from }}
 
-[ret."Elixir.Ret.Mailer"]
-server = "{{ cfg.email.server }}"
-port = {{ cfg.email.port }}
-username = "{{ cfg.email.username }}"
-password = "{{ cfg.email.password }}"
+[ret.Elixir.Ret.Mailer]
+server = {{ toToml cfg.email.server }}
+port = {{ toToml cfg.email.port }}
+username = {{ toToml cfg.email.username }}
+password = {{ toToml cfg.email.password }}
 
 [ret."Elixir.Ret.Support"]
 slack_webhook_url = "{{ cfg.support.slack_webhook_url }}"
 
 [ret."Elixir.RetWeb.Plugs.AddCSP"]
-script_src = "{{ cfg.security.csp_script_src }}"
-font_src = "{{ cfg.security.csp_font_src }}"
-style_src = "{{ cfg.security.csp_style_src }}"
-connect_src = "{{ cfg.security.csp_connect_src }}"
-img_src = "{{ cfg.security.csp_img_src }}"
-media_src = "{{ cfg.security.csp_media_src }}"
-manifest_src = "{{ cfg.security.csp_manifest_src }}"
-form_action = "{{ cfg.security.csp_form_action }}"
+{{ toToml cfg.extra_csp }}
 
 [ret."Ret.Repo.Migrations.AdminSchemaInit"]
 postgrest_password = "{{ cfg.db.postgrest_password }}"
@@ -234,18 +227,12 @@ node_gauges_enabled = {{ cfg.stats.node_gauges_enabled }}
 check_repo = {{ cfg.health.check_repo }}
 {{/if}}
 
-{{#if cfg.assets.assets_path}}
 [ret."Elixir.RetWeb.PageController"]
+{{#if cfg.assets.assets_path}}
 assets_path = "{{ cfg.assets.assets_path }}"
-extra_index_headers = "{{ cfg.pages.extra_index_headers }}"
-extra_room_headers = "{{ cfg.pages.extra_room_headers }}"
-extra_avatar_headers = "{{ cfg.pages.extra_avatar_headers }}"
-extra_scene_headers = "{{ cfg.pages.extra_scene_headers }}"
-extra_index_script = "{{ cfg.pages.extra_index_script }}"
-extra_room_script = "{{ cfg.pages.extra_room_script }}"
-extra_avatar_script = "{{ cfg.pages.extra_avatar_script }}"
-extra_scene_script = "{{ cfg.pages.extra_scene_script }}"
 {{/if}}
+{{ toToml cfg.extra_headers }}
+{{ toToml cfg.extra_scripts }}
 
 {{#if cfg.assets.docs_path}}
 [ret."Elixir.RetWeb.PageController"]
