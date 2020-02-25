@@ -209,7 +209,14 @@ password = "{{ cfg.email.password }}"
 slack_webhook_url = "{{ cfg.support.slack_webhook_url }}"
 
 [ret."Elixir.RetWeb.Plugs.AddCSP"]
-content_security_policy = "{{ cfg.security.csp }}"
+script_src = "{{ cfg.security.csp_script_src }}"
+font_src = "{{ cfg.security.csp_font_src }}"
+style_src = "{{ cfg.security.csp_style_src }}"
+connect_src = "{{ cfg.security.csp_connect_src }}"
+img_src = "{{ cfg.security.csp_img_src }}"
+media_src = "{{ cfg.security.csp_media_src }}"
+manifest_src = "{{ cfg.security.csp_manifest_src }}"
+form_action = "{{ cfg.security.csp_form_action }}"
 
 [ret."Ret.Repo.Migrations.AdminSchemaInit"]
 postgrest_password = "{{ cfg.db.postgrest_password }}"

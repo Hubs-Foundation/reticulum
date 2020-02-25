@@ -22,7 +22,7 @@ config :ret, Ret.Repo,
   pool_size: 10,
   pool: Ecto.Adapters.SQL.Sandbox
 
-config :ret, RetWeb.Plugs.AddCSP, content_security_policy: nil
+config :ret, RetWeb.Plugs.AddCSP
 
 config :ret, Ret.Guardian,
   issuer: "ret",
