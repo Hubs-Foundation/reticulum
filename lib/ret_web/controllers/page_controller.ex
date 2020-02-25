@@ -603,19 +603,21 @@ defmodule RetWeb.PageController do
 
   defp put_extra_response_headers(conn, key) do
     (module_config(:"extra_#{key}_headers") || "")
-    |> String.split(",")
+    |> String.split("|")
     |> Enum.map(&String.trim/1)
     |> Enum.map(&extra_header_to_tuple/1)
     |> Enum.reduce(conn, fn {name, value}, conn -> conn |> put_resp_header(name, value) end)
   end
 
-  defp extra_header_to_tuple(header) do
-    [name, value | _rest] = header |> String.split(":") |> Enum.map(&String.trim/1)
+  def extra_header_to_tuple(header) do
+    [name | rest] = header |> String.split(~r/:\s*/) |> Enum.map(&String.trim/1)
 
     name =
       name
       |> String.downcase()
       |> String.replace(~r/[^a-z0-9_-]/, "")
+
+    value = rest |> Enum.join(":")
 
     {name, value}
   end
