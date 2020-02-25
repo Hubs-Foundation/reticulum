@@ -42,14 +42,15 @@ defmodule RetWeb.PageController do
   end
 
   defp render_scene_content(%t{} = scene, conn) when t in [Scene, SceneListing] do
-    {app_config, app_config_script, app_config_csp} = generate_app_config()
+    {app_config, app_config_script} = generate_app_config()
 
     scene_meta_tags =
       Phoenix.View.render_to_string(RetWeb.PageView, "scene-meta.html",
         scene: scene,
         ret_meta: Ret.Meta.get_meta(include_repo: false),
         translations: app_config["translations"]["en"],
-        app_config_script: {:safe, app_config_script}
+        app_config_script: {:safe, app_config_script |> with_script_tags},
+        extra_script: {:safe, get_extra_script(:scene) |> with_script_tags}
       )
 
     case try_chunks_for_page(conn, "scene.html", :hubs) do
@@ -57,8 +58,10 @@ defmodule RetWeb.PageController do
         chunks_with_meta = chunks |> List.insert_at(1, scene_meta_tags)
 
         conn
-        |> append_csp("script-src", app_config_csp)
+        |> append_script_csp(app_config_script)
+        |> append_extra_script_csp(:scene)
         |> put_hub_headers("scene")
+        |> put_extra_response_headers(:scene)
         |> render_chunks(chunks_with_meta, "text/html; charset=utf-8")
 
       {:error, conn} ->
@@ -71,14 +74,15 @@ defmodule RetWeb.PageController do
   end
 
   defp render_avatar_content(%t{} = avatar, conn) when t in [Avatar, AvatarListing] do
-    {app_config, app_config_script, app_config_csp} = generate_app_config()
+    {app_config, app_config_script} = generate_app_config()
 
     avatar_meta_tags =
       Phoenix.View.render_to_string(RetWeb.PageView, "avatar-meta.html",
         avatar: avatar,
         ret_meta: Ret.Meta.get_meta(include_repo: false),
         translations: app_config["translations"]["en"],
-        app_config_script: {:safe, app_config_script}
+        app_config_script: {:safe, app_config_script |> with_script_tags},
+        extra_script: {:safe, get_extra_script(:avatar) |> with_script_tags}
       )
 
     case try_chunks_for_page(conn, "avatar.html", :hubs) do
@@ -86,8 +90,10 @@ defmodule RetWeb.PageController do
         chunks_with_meta = chunks |> List.insert_at(1, avatar_meta_tags)
 
         conn
-        |> append_csp("script-src", app_config_csp)
+        |> append_script_csp(app_config_script)
+        |> append_extra_script_csp(:avatar)
         |> put_hub_headers("avatar")
+        |> put_extra_response_headers(:avatar)
         |> render_chunks(chunks_with_meta, "text/html; charset=utf-8")
 
       {:error, conn} ->
@@ -100,7 +106,7 @@ defmodule RetWeb.PageController do
   end
 
   defp render_homepage_content(conn, nil = _public_room_id) do
-    {app_config, app_config_script, app_config_csp} = generate_app_config()
+    {app_config, app_config_script} = generate_app_config()
 
     index_meta_tags =
       Phoenix.View.render_to_string(
@@ -108,7 +114,8 @@ defmodule RetWeb.PageController do
         "index-meta.html",
         root_url: RetWeb.Endpoint.url(),
         translations: app_config["translations"]["en"],
-        app_config_script: {:safe, app_config_script}
+        app_config_script: {:safe, app_config_script |> with_script_tags},
+        extra_script: {:safe, get_extra_script(:index) |> with_script_tags}
       )
 
     case try_chunks_for_page(conn, "index.html", :hubs) do
@@ -116,8 +123,10 @@ defmodule RetWeb.PageController do
         chunks_with_meta = chunks |> List.insert_at(1, index_meta_tags)
 
         conn
-        |> append_csp("script-src", app_config_csp)
+        |> append_script_csp(app_config_script)
+        |> append_extra_script_csp(:index)
         |> put_hub_headers("hub")
+        |> put_extra_response_headers(:index)
         |> render_chunks(chunks_with_meta, "text/html; charset=utf-8")
 
       {:error, conn} ->
@@ -384,9 +393,9 @@ defmodule RetWeb.PageController do
   def render_hub_content(conn, hub, _slug) do
     hub = hub |> Repo.preload(scene: [:screenshot_owned_file], scene_listing: [:screenshot_owned_file])
 
-    {app_config, app_config_script, app_config_csp} = generate_app_config()
+    {app_config, app_config_script} = generate_app_config()
 
-    {_, available_integrations_script, available_integrations_csp} =
+    {_, available_integrations_script} =
       Ret.Meta.available_integrations_meta() |> generate_config("AVAILABLE_INTEGRATIONS")
 
     hub_meta_tags =
@@ -394,9 +403,10 @@ defmodule RetWeb.PageController do
         hub: hub,
         scene: hub.scene,
         ret_meta: Ret.Meta.get_meta(include_repo: false),
-        available_integrations_script: {:safe, available_integrations_script},
+        available_integrations_script: {:safe, available_integrations_script |> with_script_tags},
         translations: app_config["translations"]["en"],
-        app_config_script: {:safe, app_config_script}
+        app_config_script: {:safe, app_config_script |> with_script_tags},
+        extra_script: {:safe, get_extra_script(:room) |> with_script_tags}
       )
 
     case try_chunks_for_page(conn, "hub.html", :hubs) do
@@ -404,9 +414,11 @@ defmodule RetWeb.PageController do
         chunks_with_meta = chunks |> List.insert_at(1, hub_meta_tags)
 
         conn
-        |> append_csp("script-src", app_config_csp)
-        |> append_csp("script-src", available_integrations_csp)
+        |> append_script_csp(app_config_script)
+        |> append_script_csp(available_integrations_script)
+        |> append_extra_script_csp(:room)
         |> put_hub_headers("room")
+        |> put_extra_response_headers(:room)
         |> render_chunks(chunks_with_meta, "text/html; charset=utf-8")
 
       {:error, conn} ->
@@ -421,11 +433,10 @@ defmodule RetWeb.PageController do
   defp generate_config(config, name) do
     config_json = config |> Poison.encode!()
     config_script = "window.#{name} = JSON.parse('#{config_json |> String.replace("'", "\\'")}')"
-
-    config_csp = "'sha256-#{:crypto.hash(:sha256, config_script) |> :base64.encode()}'"
-
-    {config, "<script>#{config_script}</script>", config_csp}
+    {config, config_script}
   end
+
+  defp csp_for_script(script), do: "'sha256-#{:crypto.hash(:sha256, script) |> :base64.encode()}'"
 
   # Redirect to the specified hub identifier, which can be a sid or an entry code
   defp redirect_to_hub_identifier(conn, hub_identifier) do
@@ -473,7 +484,7 @@ defmodule RetWeb.PageController do
   end
 
   defp render_page(conn, page, source, meta_template) do
-    {app_config, app_config_script, app_config_csp} = generate_app_config()
+    {app_config, app_config_script} = generate_app_config()
 
     meta_tags =
       if meta_template do
@@ -484,10 +495,11 @@ defmodule RetWeb.PageController do
 
     case try_chunks_for_page(conn, page, source) do
       {:ok, chunks} ->
-        chunks_with_meta = chunks |> List.insert_at(1, app_config_script) |> List.insert_at(1, meta_tags)
+        chunks_with_meta =
+          chunks |> List.insert_at(1, app_config_script |> with_script_tags) |> List.insert_at(1, meta_tags)
 
         conn
-        |> append_csp("script-src", app_config_csp)
+        |> append_script_csp(app_config_script)
         |> render_chunks(chunks_with_meta, page |> content_type_for_page)
 
       {:error, conn} ->
@@ -589,7 +601,41 @@ defmodule RetWeb.PageController do
     Plug.Static.call(conn, static_options)
   end
 
-  defp module_config(key) do
-    Application.get_env(:ret, __MODULE__)[key]
+  defp put_extra_response_headers(conn, key) do
+    (module_config(:"extra_#{key}_headers") || "")
+    |> String.split(",")
+    |> Enum.map(&String.trim/1)
+    |> Enum.map(&extra_header_to_tuple/1)
+    |> Enum.reduce(conn, fn {name, value}, conn -> conn |> put_resp_header(name, value) end)
   end
+
+  defp extra_header_to_tuple(header) do
+    [name, value | _rest] = header |> String.split(":") |> Enum.map(&String.trim/1)
+
+    name =
+      name
+      |> String.downcase()
+      |> String.replace(~r/[^a-z0-9_-]/, "")
+
+    {name, value}
+  end
+
+  defp append_extra_script_csp(conn, key) do
+    case module_config(:"extra_#{key}_script") do
+      nil -> conn
+      script -> conn |> append_script_csp(script)
+    end
+  end
+
+  defp get_extra_script(key), do: module_config(:"extra_#{key}_script")
+
+  defp append_script_csp(conn, nil), do: conn
+  defp append_script_csp(conn, ""), do: conn
+  defp append_script_csp(conn, script), do: conn |> append_csp("script-src", csp_for_script(script))
+
+  defp with_script_tags(nil), do: ""
+  defp with_script_tags(""), do: ""
+  defp with_script_tags(script), do: "<script>#{script}</script>"
+
+  defp module_config(key), do: Application.get_env(:ret, __MODULE__)[key]
 end

@@ -237,6 +237,14 @@ check_repo = {{ cfg.health.check_repo }}
 {{#if cfg.assets.assets_path}}
 [ret."Elixir.RetWeb.PageController"]
 assets_path = "{{ cfg.assets.assets_path }}"
+extra_index_headers = "{{ cfg.pages.extra_index_headers }}"
+extra_room_headers = "{{ cfg.pages.extra_room_headers }}"
+extra_avatar_headers = "{{ cfg.pages.extra_avatar_headers }}"
+extra_scene_headers = "{{ cfg.pages.extra_scene_headers }}"
+extra_index_script = "{{ cfg.pages.extra_index_script }}"
+extra_room_script = "{{ cfg.pages.extra_room_script }}"
+extra_avatar_script = "{{ cfg.pages.extra_avatar_script }}"
+extra_scene_script = "{{ cfg.pages.extra_scene_script }}"
 {{/if}}
 
 {{#if cfg.assets.docs_path}}
