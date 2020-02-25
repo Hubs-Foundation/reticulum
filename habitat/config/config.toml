@@ -11,10 +11,7 @@ bot_token = {{ toToml cfg.discord_client.bot_token }}
 
 {{ #if cfg.twitter_client.consumer_secret }}
 [ret."Elixir.Ret.TwitterClient"]
-consumer_key = "{{ cfg.twitter_client.consumer_key }}"
-consumer_secret = "{{ cfg.twitter_client.consumer_secret }}"
-access_token = "{{ cfg.twitter_client.access_token }}"
-access_token_secret = "{{ cfg.twitter_client.access_token_secret }}"
+{{ toToml cfg.twitter_client }}
 {{/if}}
 
 [ret."Elixir.RetWeb.Endpoint".https]
