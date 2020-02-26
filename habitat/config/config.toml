@@ -208,7 +208,9 @@ password = {{ toToml cfg.email.password }}
 slack_webhook_url = "{{ cfg.support.slack_webhook_url }}"
 
 [ret."Elixir.RetWeb.Plugs.AddCSP"]
+{{#if cfg.extra_csp}}
 {{ toToml cfg.extra_csp }}
+{{/if}}
 
 [ret."Ret.Repo.Migrations.AdminSchemaInit"]
 postgrest_password = "{{ cfg.db.postgrest_password }}"
@@ -230,8 +232,12 @@ check_repo = {{ cfg.health.check_repo }}
 {{#if cfg.assets.assets_path}}
 assets_path = "{{ cfg.assets.assets_path }}"
 {{/if}}
+{{#if cfg.extra_headers}}
 {{ toToml cfg.extra_headers }}
+{{/if}}
+{{#if cfg.extra_scripts}}
 {{ toToml cfg.extra_scripts }}
+{{/if}}
 
 {{#if cfg.assets.docs_path}}
 [ret."Elixir.RetWeb.PageController"]

@@ -111,7 +111,6 @@ config :ret, Ret.Scheduler,
   ]
 
 config :ret, RetWeb.Plugs.HeaderAuthorization, header_name: "x-ret-admin-access-key"
-config :ret, RetWeb.Plugs.AddCSP
 
 config :ret, Ret.Mailer,
   adapter: Bamboo.SMTPAdapter,

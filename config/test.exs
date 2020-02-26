@@ -22,8 +22,6 @@ config :ret, Ret.Repo,
   pool_size: 10,
   pool: Ecto.Adapters.SQL.Sandbox
 
-config :ret, RetWeb.Plugs.AddCSP
-
 config :ret, Ret.Guardian,
   issuer: "ret",
   secret_key: "47iqPEdWcfE7xRnyaxKDLt9OGEtkQG3SycHBEMOuT2qARmoESnhc76IgCUjaQIwX"
