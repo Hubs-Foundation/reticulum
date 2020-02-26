@@ -33,5 +33,5 @@
 
 <title><%= @translations["app-name"] %> - <%= @translations["app-tagline"] %></title>
 <%= @app_config_script %>
-<%= @extra_script %>
 <%= @extra_html %>
+<%= @extra_script %>
