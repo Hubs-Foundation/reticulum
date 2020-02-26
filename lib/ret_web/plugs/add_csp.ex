@@ -79,7 +79,7 @@ defmodule RetWeb.Plugs.AddCSP do
     } https://www.youtube.com https://docs.google.com 'self'; base-uri 'none'; form-action #{custom_rules[:form_action]} 'self';"
   end
 
-  def get_custom_rules do
+  defp get_custom_rules do
     @customizable_rule_types
     |> Enum.map(fn rule ->
       {rule, Application.get_env(:ret, __MODULE__)[rule] || ""}

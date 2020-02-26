@@ -613,7 +613,7 @@ defmodule RetWeb.PageController do
     |> Enum.reduce(conn, fn {name, value}, conn -> conn |> put_resp_header(name, value) end)
   end
 
-  def extra_header_to_tuple(header) do
+  defp extra_header_to_tuple(header) do
     [name | rest] = header |> String.split(~r/:\s*/) |> Enum.map(&String.trim/1)
 
     name =
