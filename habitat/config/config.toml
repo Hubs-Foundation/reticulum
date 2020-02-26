@@ -235,6 +235,9 @@ assets_path = "{{ cfg.assets.assets_path }}"
 {{#if cfg.extra_headers}}
 {{ toToml cfg.extra_headers }}
 {{/if}}
+{{#if cfg.extra_html}}
+{{ toToml cfg.extra_html }}
+{{/if}}
 {{#if cfg.extra_scripts}}
 {{ toToml cfg.extra_scripts }}
 {{/if}}

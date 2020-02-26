@@ -50,7 +50,8 @@ defmodule RetWeb.PageController do
         ret_meta: Ret.Meta.get_meta(include_repo: false),
         translations: app_config["translations"]["en"],
         app_config_script: {:safe, app_config_script |> with_script_tags},
-        extra_script: {:safe, get_extra_script(:scene) |> with_script_tags}
+        extra_script: {:safe, get_extra_script(:scene) |> with_script_tags},
+        extra_html: {:safe, get_extra_html(:scene) }
       )
 
     case try_chunks_for_page(conn, "scene.html", :hubs) do
@@ -82,7 +83,8 @@ defmodule RetWeb.PageController do
         ret_meta: Ret.Meta.get_meta(include_repo: false),
         translations: app_config["translations"]["en"],
         app_config_script: {:safe, app_config_script |> with_script_tags},
-        extra_script: {:safe, get_extra_script(:avatar) |> with_script_tags}
+        extra_script: {:safe, get_extra_script(:avatar) |> with_script_tags},
+        extra_html: {:safe, get_extra_html(:avatar) }
       )
 
     case try_chunks_for_page(conn, "avatar.html", :hubs) do
@@ -115,7 +117,8 @@ defmodule RetWeb.PageController do
         root_url: RetWeb.Endpoint.url(),
         translations: app_config["translations"]["en"],
         app_config_script: {:safe, app_config_script |> with_script_tags},
-        extra_script: {:safe, get_extra_script(:index) |> with_script_tags}
+        extra_script: {:safe, get_extra_script(:index) |> with_script_tags},
+        extra_html: {:safe, get_extra_html(:index) }
       )
 
     case try_chunks_for_page(conn, "index.html", :hubs) do
@@ -406,7 +409,8 @@ defmodule RetWeb.PageController do
         available_integrations_script: {:safe, available_integrations_script |> with_script_tags},
         translations: app_config["translations"]["en"],
         app_config_script: {:safe, app_config_script |> with_script_tags},
-        extra_script: {:safe, get_extra_script(:room) |> with_script_tags}
+        extra_script: {:safe, get_extra_script(:room) |> with_script_tags},
+        extra_html: {:safe, get_extra_html(:room) }
       )
 
     case try_chunks_for_page(conn, "hub.html", :hubs) do
@@ -630,6 +634,7 @@ defmodule RetWeb.PageController do
   end
 
   defp get_extra_script(key), do: module_config(:"extra_#{key}_script")
+  defp get_extra_html(key), do: module_config(:"extra_#{key}_html")
 
   defp append_script_csp(conn, nil), do: conn
   defp append_script_csp(conn, ""), do: conn

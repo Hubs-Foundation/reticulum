@@ -20,3 +20,4 @@
 
 <%= @app_config_script %>
 <%= @extra_script %>
+<%= @extra_html %>
