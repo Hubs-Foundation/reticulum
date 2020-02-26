@@ -51,7 +51,7 @@ defmodule RetWeb.PageController do
         translations: app_config["translations"]["en"],
         app_config_script: {:safe, app_config_script |> with_script_tags},
         extra_script: {:safe, get_extra_script(:scene) |> with_script_tags},
-        extra_html: {:safe, get_extra_html(:scene)}
+        extra_html: {:safe, get_extra_html(:scene) || ""}
       )
 
     case try_chunks_for_page(conn, "scene.html", :hubs) do
@@ -84,7 +84,7 @@ defmodule RetWeb.PageController do
         translations: app_config["translations"]["en"],
         app_config_script: {:safe, app_config_script |> with_script_tags},
         extra_script: {:safe, get_extra_script(:avatar) |> with_script_tags},
-        extra_html: {:safe, get_extra_html(:avatar)}
+        extra_html: {:safe, get_extra_html(:avatar) || ""}
       )
 
     case try_chunks_for_page(conn, "avatar.html", :hubs) do
@@ -118,7 +118,7 @@ defmodule RetWeb.PageController do
         translations: app_config["translations"]["en"],
         app_config_script: {:safe, app_config_script |> with_script_tags},
         extra_script: {:safe, get_extra_script(:index) |> with_script_tags},
-        extra_html: {:safe, get_extra_html(:index)}
+        extra_html: {:safe, get_extra_html(:index) || ""}
       )
 
     case try_chunks_for_page(conn, "index.html", :hubs) do
@@ -410,7 +410,7 @@ defmodule RetWeb.PageController do
         translations: app_config["translations"]["en"],
         app_config_script: {:safe, app_config_script |> with_script_tags},
         extra_script: {:safe, get_extra_script(:room) |> with_script_tags},
-        extra_html: {:safe, get_extra_html(:room)}
+        extra_html: {:safe, get_extra_html(:room) || ""}
       )
 
     case try_chunks_for_page(conn, "hub.html", :hubs) do
