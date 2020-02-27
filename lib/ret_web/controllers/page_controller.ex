@@ -62,7 +62,7 @@ defmodule RetWeb.PageController do
         |> append_script_csp(app_config_script)
         |> append_extra_script_csp(:scene)
         |> put_hub_headers("scene")
-        |> put_extra_response_headers(:scene)
+        |> put_extra_response_headers_for_page(:scene)
         |> render_chunks(chunks_with_meta, "text/html; charset=utf-8")
 
       {:error, conn} ->
@@ -95,7 +95,7 @@ defmodule RetWeb.PageController do
         |> append_script_csp(app_config_script)
         |> append_extra_script_csp(:avatar)
         |> put_hub_headers("avatar")
-        |> put_extra_response_headers(:avatar)
+        |> put_extra_response_headers_for_page(:avatar)
         |> render_chunks(chunks_with_meta, "text/html; charset=utf-8")
 
       {:error, conn} ->
@@ -129,7 +129,7 @@ defmodule RetWeb.PageController do
         |> append_script_csp(app_config_script)
         |> append_extra_script_csp(:index)
         |> put_hub_headers("hub")
-        |> put_extra_response_headers(:index)
+        |> put_extra_response_headers_for_page(:index)
         |> render_chunks(chunks_with_meta, "text/html; charset=utf-8")
 
       {:error, conn} ->
@@ -422,7 +422,7 @@ defmodule RetWeb.PageController do
         |> append_script_csp(available_integrations_script)
         |> append_extra_script_csp(:room)
         |> put_hub_headers("room")
-        |> put_extra_response_headers(:room)
+        |> put_extra_response_headers_for_page(:room)
         |> render_chunks(chunks_with_meta, "text/html; charset=utf-8")
 
       {:error, conn} ->
@@ -605,8 +605,15 @@ defmodule RetWeb.PageController do
     Plug.Static.call(conn, static_options)
   end
 
-  defp put_extra_response_headers(conn, key) do
-    (module_config(:"extra_#{key}_headers") || "")
+  defp put_extra_response_headers_for_page(conn, key) do
+    conn |> put_extra_response_headers(module_config(:"extra_#{key}_headers") || "")
+  end
+
+  defp put_extra_response_headers(conn, nil), do: conn
+  defp put_extra_response_headers(conn, ""), do: conn
+
+  defp put_extra_response_headers(conn, value) do
+    value
     |> String.split("|")
     |> Enum.map(&String.trim/1)
     |> Enum.map(&extra_header_to_tuple/1)
@@ -614,14 +621,14 @@ defmodule RetWeb.PageController do
   end
 
   defp extra_header_to_tuple(header) do
-    [name, value] = header |> String.split(~r/:\s*/, parts: 2) |> Enum.map(&String.trim/1)
+    [name | value] = header |> String.split(~r/:\s*/, parts: 2) |> Enum.map(&String.trim/1)
 
     name =
       name
       |> String.downcase()
       |> String.replace(~r/[^a-z0-9_-]/, "")
 
-    {name, value}
+    {name, value |> Enum.join("")}
   end
 
   defp append_extra_script_csp(conn, key) do
