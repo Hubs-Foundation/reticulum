@@ -198,7 +198,7 @@ quota_gb = {{ cfg.uploads.quota_gb }}
 [ret."Elixir.RetWeb.Email"]
 from = {{ toToml cfg.email.from }}
 
-[ret.Elixir.Ret.Mailer]
+[ret."Elixir.Ret.Mailer"]
 server = {{ toToml cfg.email.server }}
 port = {{ toToml cfg.email.port }}
 username = {{ toToml cfg.email.username }}
