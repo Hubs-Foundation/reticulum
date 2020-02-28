@@ -59,6 +59,7 @@ defmodule Ret.Hub do
 
   schema "hubs" do
     field(:name, :string)
+    field(:description, :string)
     field(:hub_sid, :string)
     field(:host, :string)
     field(:entry_code, :integer)
@@ -79,6 +80,8 @@ defmodule Ret.Hub do
     belongs_to(:created_by_account, Ret.Account, references: :account_id)
     has_many(:hub_bindings, Ret.HubBinding, foreign_key: :hub_id)
     has_many(:hub_role_memberships, Ret.HubRoleMembership, foreign_key: :hub_id)
+
+    field(:allow_promotion, :boolean)
 
     timestamps()
   end
@@ -105,7 +108,7 @@ defmodule Ret.Hub do
   def changeset(%Hub{} = hub, nil, attrs) do
     hub
     |> cast(attrs, [:default_environment_gltf_bundle_url])
-    |> add_name_to_changeset(attrs)
+    |> add_meta_to_changeset(attrs)
     |> add_hub_sid_to_changeset
     |> add_generated_tokens_to_changeset
     |> add_entry_code_to_changeset
@@ -114,9 +117,9 @@ defmodule Ret.Hub do
     |> unique_constraint(:entry_code)
   end
 
-  def add_name_to_changeset(changeset, attrs) do
+  def add_meta_to_changeset(changeset, attrs) do
     changeset
-    |> cast(attrs, [:name])
+    |> cast(attrs, [:name, :description])
     |> validate_required([:name])
     |> validate_length(:name, max: 64)
     |> HubSlug.maybe_generate_slug()
@@ -131,6 +134,10 @@ defmodule Ret.Hub do
 
     changeset
     |> put_change(:member_permissions, member_permissions)
+  end
+
+  def add_promotion_to_changeset(changeset, attrs) do
+    changeset |> put_change(:allow_promotion, !!attrs["allow_promotion"])
   end
 
   def changeset_for_new_seen_occupant_count(%Hub{} = hub, occupant_count) do
@@ -231,6 +238,10 @@ defmodule Ret.Hub do
 
   def image_url_for(%Hub{scene_listing: scene_listing}) when scene_listing != nil do
     scene_listing.screenshot_owned_file |> Ret.OwnedFile.uri_for() |> URI.to_string()
+  end
+
+  def member_count_for(%Hub{hub_sid: hub_sid}) do
+    RetWeb.Presence.list("hub:#{hub_sid}") |> Enum.count()
   end
 
   defp changeset_for_new_entry_code(%Hub{} = hub) do
@@ -340,7 +351,7 @@ defmodule Ret.Hub do
   end
 
   defp add_default_member_permissions_to_changeset(changeset) do
-    if Ret.AppConfig.get_config_value("features|permissive_rooms") do
+    if Ret.AppConfig.get_config_bool("features|permissive_rooms") do
       changeset |> put_change(:member_permissions, @default_member_permissions |> member_permissions_to_int)
     else
       changeset |> put_change(:member_permissions, @default_restrictive_member_permissions |> member_permissions_to_int)
@@ -410,6 +421,7 @@ defmodule Ret.Hub do
     %{
       join_hub: account |> can?(join_hub(hub)),
       update_hub: account |> can?(update_hub(hub)),
+      update_hub_promotion: account |> can?(update_hub_promotion(hub)),
       update_roles: account |> can?(update_roles(hub)),
       close_hub: account |> can?(close_hub(hub)),
       embed_hub: account |> can?(embed_hub(hub)),
@@ -430,13 +442,19 @@ defmodule Ret.Hub do
 end
 
 defimpl Canada.Can, for: Ret.Account do
-  alias Ret.{Hub}
+  alias Ret.{Hub, AppConfig}
+
   @owner_actions [:update_hub, :close_hub, :embed_hub, :kick_users, :mute_users]
   @object_actions [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects]
   @creator_actions [:update_roles]
 
   # Always deny access to non-enterable hubs
   def can?(%Ret.Account{}, :join_hub, %Ret.Hub{entry_mode: :deny}), do: false
+
+  def can?(%Ret.Account{} = account, :update_hub_promotion, %Ret.Hub{} = hub) do
+    owners_can_change_promotion = Ret.AppConfig.get_config_bool("features|public_rooms")
+    !!account.is_admin or (owners_can_change_promotion and can?(account, :update_hub, hub))
+  end
 
   # Bound hubs - Join perm
   def can?(%Ret.Account{} = account, :join_hub, %Ret.Hub{hub_bindings: hub_bindings})
@@ -495,13 +513,23 @@ defimpl Canada.Can, for: Ret.Account do
     hub |> Hub.has_member_permission?(action) or hub |> Ret.Hub.is_owner?(account_id)
   end
 
+  # Create hubs
+  def can?(%Ret.Account{is_admin: true}, :create_hub, _), do: true
+
+  def can?(_account, :create_hub, _),
+    do: !AppConfig.get_cached_config_value("features|disable_room_creation")
+
+  # Create accounts
+  def can?(%Ret.Account{is_admin: true}, :create_account, _), do: true
+  def can?(_account, :create_account, _), do: !AppConfig.get_cached_config_value("features|disable_sign_up")
+
   # Deny permissions for any other case that falls through
   def can?(_, _, _), do: false
 end
 
 # Perms for oauth users that do not have a hubs account
 defimpl Canada.Can, for: Ret.OAuthProvider do
-  alias Ret.{Hub}
+  alias Ret.{AppConfig, Hub}
   @object_actions [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects]
   @special_actions [:update_hub, :update_roles, :close_hub, :embed_hub, :kick_users, :mute_users]
 
@@ -524,24 +552,35 @@ defimpl Canada.Can, for: Ret.OAuthProvider do
     is_member and hub |> Hub.has_member_permission?(action)
   end
 
+  def can?(_, :create_hub, _),
+    do: !AppConfig.get_cached_config_value("features|disable_room_creation")
+
   def can?(_, _, _), do: false
 end
 
 # Permissions for un-authenticated clients
 defimpl Canada.Can, for: Atom do
-  alias Ret.{Hub}
+  alias Ret.{AppConfig, Hub}
   @object_actions [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects]
 
   # Always deny access to non-enterable hubs
   def can?(_, :join_hub, %Ret.Hub{entry_mode: :deny}), do: false
 
-  # Anyone can join an unbound hub
-  def can?(_, :join_hub, %Ret.Hub{hub_bindings: []}), do: true
+  # Anyone can join an unbound hub as long as accounts aren't required
+  def can?(_, :join_hub, %Ret.Hub{hub_bindings: []}),
+    do: !AppConfig.get_cached_config_value("features|require_account_for_join")
 
   # Object permissions for anonymous users are based on member permission settings
   def can?(_account, action, hub) when action in @object_actions do
     hub |> Hub.has_member_permission?(action)
   end
+
+  # Create hubs
+  def can?(_, :create_hub, _),
+    do: !AppConfig.get_cached_config_value("features|disable_room_creation")
+
+  # Create accounts
+  def can?(_, :create_account, _), do: !AppConfig.get_cached_config_value("features|disable_sign_up")
 
   def can?(_, _, _), do: false
 end

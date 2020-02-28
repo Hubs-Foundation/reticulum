@@ -30,7 +30,9 @@ defmodule RetWeb.Api.V1.HubView do
         %{
           hub_id: hub.hub_sid,
           name: hub.name,
+          description: hub.description,
           slug: hub.slug,
+          allow_promotion: hub.allow_promotion,
           entry_code: hub.entry_code,
           entry_mode: hub.entry_mode,
           host: hub.host,
@@ -54,7 +56,9 @@ defmodule RetWeb.Api.V1.HubView do
         %{
           hub_id: hub.hub_sid,
           name: hub.name,
+          description: hub.description,
           slug: hub.slug,
+          allow_promotion: hub.allow_promotion,
           entry_code: hub.entry_code,
           entry_mode: hub.entry_mode,
           host: hub.host,

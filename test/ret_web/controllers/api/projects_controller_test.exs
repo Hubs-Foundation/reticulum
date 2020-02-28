@@ -185,7 +185,6 @@ defmodule RetWeb.ProjectsControllerTest do
     assert response_project["name"] == "Test Project"
     assert response_project["scene"]["name"] == "Test Publish"
 
-
     # Republishing should not create a new scene
     params = params |> put_in([:scene, :name], "Test Republish")
 
@@ -215,7 +214,7 @@ defmodule RetWeb.ProjectsControllerTest do
     project_owned_file: project_owned_file,
     thumbnail_owned_file: thumbnail_owned_file
   } do
-    other_account = Account.account_for_email("test2@mozilla.com")
+    other_account = Account.find_or_create_account_for_email("test2@mozilla.com")
 
     {:ok, project} =
       %Project{}

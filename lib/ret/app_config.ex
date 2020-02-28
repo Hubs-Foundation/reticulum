@@ -2,7 +2,7 @@ defmodule Ret.AppConfig do
   use Ecto.Schema
   import Ecto.Changeset
 
-  alias Ret.{AppConfig, Repo, OwnedFile}
+  alias Ret.{AppConfig, Repo, OwnedFile, Storage}
 
   @schema_prefix "ret0"
   @primary_key {:app_config_id, :id, autogenerate: true}
@@ -79,6 +79,11 @@ defmodule Ret.AppConfig do
     end
   end
 
+  def get_config_bool(key) do
+    val = get_config_value(key)
+    val !== nil and val
+  end
+
   def get_config_owned_file_uri(key) do
     app_config = AppConfig |> Repo.get_by(key: key) |> Repo.preload(:owned_file)
 
@@ -89,16 +94,58 @@ defmodule Ret.AppConfig do
     end
   end
 
-  def get_cached_config_value(key) do
+  def get_cached_config_value(key), do: get_cached_config_value(key, Mix.env())
+  def get_cached_config_owned_file_uri(key), do: get_cached_config_owned_file_uri(key, Mix.env())
+
+  # No caching in test
+  def get_cached_config_value(key, :test), do: get_config_value(key)
+
+  def get_cached_config_value(key, _env) do
     case Cachex.fetch(:app_config_value, key) do
       {status, result} when status in [:commit, :ok] -> result
     end
   end
 
-  def get_cached_config_owned_file_uri(key) do
+  # No caching in test
+  def get_cached_config_owned_file_uri(key, :test), do: get_config_owned_file_uri(key)
+
+  def get_cached_config_owned_file_uri(key, _env) do
     case Cachex.fetch(:app_config_owned_file_uri, key) do
       {status, result} when status in [:commit, :ok] -> result
     end
+  end
+
+  def set_config_value(key, value, account \\ nil) do
+    app_config = AppConfig |> Repo.get_by(key: key) || %AppConfig{}
+    write_config_value(app_config, key, value, account)
+  end
+
+  defp write_config_value(
+         _app_config,
+         _key,
+         %{
+           "file_id" => _file_id,
+           "meta" => %{"access_token" => _access_token, "promotion_token" => _promotion_token}
+         },
+         nil
+       ),
+       do: raise(ArgumentError, "Writing file config value requires account")
+
+  defp write_config_value(
+         app_config,
+         key,
+         %{
+           "file_id" => file_id,
+           "meta" => %{"access_token" => access_token, "promotion_token" => promotion_token}
+         },
+         account
+       ) do
+    {:ok, owned_file} = Storage.promote(file_id, access_token, promotion_token, account)
+    app_config |> AppConfig.changeset(key, owned_file) |> Repo.insert_or_update!()
+  end
+
+  defp write_config_value(app_config, key, value, _account) do
+    app_config |> AppConfig.changeset(%{key: key, value: value}) |> Repo.insert_or_update!()
   end
 
   defp expand_key(key, app_config) do

@@ -5,16 +5,13 @@ pool = "{{ cfg.ret.pool }}"
 header_value = "{{ cfg.phx.admin_access_key }}"
 
 [ret."Elixir.Ret.DiscordClient"]
-client_id = "{{ cfg.discord_client.client_id }}"
-client_secret = "{{ cfg.discord_client.client_secret }}"
-bot_token = "{{ cfg.discord_client.bot_token }}"
+client_id = {{ toToml cfg.discord_client.client_id }}
+client_secret = {{ toToml cfg.discord_client.client_secret }}
+bot_token = {{ toToml cfg.discord_client.bot_token }}
 
 {{ #if cfg.twitter_client.consumer_secret }}
 [ret."Elixir.Ret.TwitterClient"]
-consumer_key = "{{ cfg.twitter_client.consumer_key }}"
-consumer_secret = "{{ cfg.twitter_client.consumer_secret }}"
-access_token = "{{ cfg.twitter_client.access_token }}"
-access_token_secret = "{{ cfg.twitter_client.access_token_secret }}"
+{{ toToml cfg.twitter_client }}
 {{/if}}
 
 [ret."Elixir.RetWeb.Endpoint".https]
@@ -148,31 +145,33 @@ bot_access_key = "{{ cfg.ret.bot_access_key }}"
 [ret."Elixir.Ret.MediaResolver"]
 ytdl_host = "{{ cfg.resolver.ytdl_host }}"
 {{ #if cfg.resolver.giphy_api_key }}
-giphy_api_key = "{{ cfg.resolver.giphy_api_key }}"
+giphy_api_key = {{ toToml cfg.resolver.giphy_api_key }}
 {{/if}}
 {{ #if cfg.resolver.deviantart_client_id }}
-deviantart_client_id = "{{ cfg.resolver.deviantart_client_id }}"
-deviantart_client_secret = "{{ cfg.resolver.deviantart_client_secret }}"
+deviantart_client_id = {{ toToml cfg.resolver.deviantart_client_id }}
+deviantart_client_secret = {{ toToml cfg.resolver.deviantart_client_secret }}
 {{/if}}
 {{ #if cfg.resolver.imgur_mashape_api_key }}
-imgur_mashape_api_key = "{{ cfg.resolver.imgur_mashape_api_key }}"
-google_poly_api_key = "{{ cfg.resolver.google_poly_api_key }}"
+imgur_mashape_api_key = {{ toToml cfg.resolver.imgur_mashape_api_key }}
+imgur_client_id = {{ toToml cfg.resolver.imgur_client_id }}
 {{/if}}
-imgur_client_id = "{{ cfg.resolver.imgur_client_id }}"
+{{ #if cfg.resolver.google_poly_api_key }}
+google_poly_api_key = {{ toToml cfg.resolver.google_poly_api_key }}
+{{/if}}
 {{ #if cfg.resolver.youtube_api_key }}
-youtube_api_key = "{{ cfg.resolver.youtube_api_key }}"
+youtube_api_key = {{ toToml cfg.resolver.youtube_api_key }}
 {{/if}}
 {{ #if cfg.resolver.sketchfab_api_key }}
-sketchfab_api_key = "{{ cfg.resolver.sketchfab_api_key }}"
+sketchfab_api_key = {{ toToml cfg.resolver.sketchfab_api_key }}
 {{/if}}
 {{ #if cfg.resolver.tenor_api_key }}
-tenor_api_key = "{{ cfg.resolver.tenor_api_key }}"
+tenor_api_key = {{ toToml cfg.resolver.tenor_api_key }}
 {{/if}}
 {{ #if cfg.resolver.bing_search_api_key }}
-bing_search_api_key = "{{ cfg.resolver.bing_search_api_key }}"
+bing_search_api_key = {{ toToml cfg.resolver.bing_search_api_key }}
 {{/if}}
 {{ #if cfg.resolver.twitch_client_id }}
-twitch_client_id = "{{ cfg.resolver.twitch_client_id }}"
+twitch_client_id = {{ toToml cfg.resolver.twitch_client_id }}
 {{/if}}
 {{ #if cfg.resolver.photomnemonic_endpoint }}
 photomnemonic_endpoint = "{{ cfg.resolver.photomnemonic_endpoint }}"
@@ -197,19 +196,21 @@ host = "{{ cfg.uploads.host }}"
 quota_gb = {{ cfg.uploads.quota_gb }}
 
 [ret."Elixir.RetWeb.Email"]
-from = "{{ cfg.email.from }}"
+from = {{ toToml cfg.email.from }}
 
 [ret."Elixir.Ret.Mailer"]
-server = "{{ cfg.email.server }}"
-port = {{ cfg.email.port }}
-username = "{{ cfg.email.username }}"
-password = "{{ cfg.email.password }}"
+server = {{ toToml cfg.email.server }}
+port = {{ toToml cfg.email.port }}
+username = {{ toToml cfg.email.username }}
+password = {{ toToml cfg.email.password }}
 
 [ret."Elixir.Ret.Support"]
 slack_webhook_url = "{{ cfg.support.slack_webhook_url }}"
 
 [ret."Elixir.RetWeb.Plugs.AddCSP"]
-content_security_policy = "{{ cfg.security.csp }}"
+{{#if cfg.extra_csp}}
+{{ toToml cfg.extra_csp }}
+{{/if}}
 
 [ret."Ret.Repo.Migrations.AdminSchemaInit"]
 postgrest_password = "{{ cfg.db.postgrest_password }}"
@@ -227,9 +228,18 @@ node_gauges_enabled = {{ cfg.stats.node_gauges_enabled }}
 check_repo = {{ cfg.health.check_repo }}
 {{/if}}
 
-{{#if cfg.assets.assets_path}}
 [ret."Elixir.RetWeb.PageController"]
+{{#if cfg.assets.assets_path}}
 assets_path = "{{ cfg.assets.assets_path }}"
+{{/if}}
+{{#if cfg.extra_headers}}
+{{ toToml cfg.extra_headers }}
+{{/if}}
+{{#if cfg.extra_html}}
+{{ toToml cfg.extra_html }}
+{{/if}}
+{{#if cfg.extra_scripts}}
+{{ toToml cfg.extra_scripts }}
 {{/if}}
 
 {{#if cfg.assets.docs_path}}

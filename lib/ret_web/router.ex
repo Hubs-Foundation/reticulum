@@ -80,7 +80,6 @@ defmodule RetWeb.Router do
 
     scope "/v1", as: :api_v1 do
       get("/meta", Api.V1.MetaController, :show)
-      resources("/media", Api.V1.MediaController, only: [:create])
       get("/avatars/:id/base.gltf", Api.V1.AvatarController, :show_base_gltf)
       get("/avatars/:id/avatar.gltf", Api.V1.AvatarController, :show_avatar_gltf)
       get("/oauth/:type", Api.V1.OAuthController, :show)
@@ -123,6 +122,18 @@ defmodule RetWeb.Router do
     scope "/v1", as: :api_v1 do
       pipe_through([:admin_required])
       resources("/app_configs", Api.V1.AppConfigController, only: [:index, :create])
+      resources("/accounts", Api.V1.AccountController, only: [:create])
+      resources("/accounts/search", Api.V1.AccountSearchController, only: [:create])
+    end
+  end
+
+  # Directly accessible APIs.
+  # Permit direct file uploads without intermediate ALB/Cloudfront/CDN proxying.
+  scope "/api", RetWeb do
+    pipe_through([:secure_headers, :parsed_body, :api] ++ if(Mix.env() == :prod, do: [:ssl_only], else: []))
+
+    scope "/v1", as: :api_v1 do
+      resources("/media", Api.V1.MediaController, only: [:create])
     end
   end
 
