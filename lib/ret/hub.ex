@@ -241,8 +241,14 @@ defmodule Ret.Hub do
   end
 
   def member_count_for(%Hub{hub_sid: hub_sid}) do
-    RetWeb.Presence.list("hub:#{hub_sid}") |> Enum.count()
+    RetWeb.Presence.list("hub:#{hub_sid}")
+    |> Map.values()
+    |> Enum.map(&presence_entry_to_member_count/1)
+    |> Enum.sum()
   end
+
+  defp presence_entry_to_member_count(%{metas: [%{context: %{"discord" => true}}]}), do: 0
+  defp presence_entry_to_member_count(_presence_entry), do: 1
 
   defp changeset_for_new_entry_code(%Hub{} = hub) do
     hub
