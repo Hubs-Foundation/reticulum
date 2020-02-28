@@ -240,7 +240,9 @@ defmodule Ret.Hub do
     scene_listing.screenshot_owned_file |> Ret.OwnedFile.uri_for() |> URI.to_string()
   end
 
-  def member_count_for(%Hub{hub_sid: hub_sid}) do
+  def member_count_for(%Hub{hub_sid: hub_sid}), do: member_count_for(hub_sid)
+
+  def member_count_for(hub_sid) do
     RetWeb.Presence.list("hub:#{hub_sid}")
     |> Map.values()
     |> Enum.map(&presence_entry_to_member_count/1)

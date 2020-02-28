@@ -21,7 +21,6 @@ defmodule RetWeb.Presence do
 
   def present_member_count do
     RetWeb.Presence.present_hub_sids()
-    |> Enum.map(&Ret.Repo.get_by(Ret.Hub, hub_sid: &1))
     |> Enum.map(&Ret.Hub.member_count_for/1)
     |> Enum.sum()
   end
