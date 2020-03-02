@@ -99,6 +99,9 @@ idle_interval = {{ cfg.db.idle_interval }}
 {{#if cfg.db.queue_interval }}
 queue_interval = {{ cfg.db.queue_interval }}
 {{/if}}
+{{#if cfg.db.queue_target }}
+queue_target = {{ cfg.db.queue_target }}
+{{/if}}
 {{#if cfg.db.timeout }}
 timeout = {{ cfg.db.timeout }}
 {{/if}}
