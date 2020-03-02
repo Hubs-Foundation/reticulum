@@ -265,3 +265,6 @@ dsn = "{{ cfg.sentry.dsn }}"
 
 [run]
 hostname_dns_suffix = "{{ cfg.run.hostname_dns_suffix }}"
+
+[hackney]
+max_connections = {{ cfg.hackney.max_connections }}
