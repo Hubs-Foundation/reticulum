@@ -1,28 +1,38 @@
 defmodule RetWeb.Plugs.AddCSP do
+  @customizable_rule_types [
+    :script_src,
+    :font_src,
+    :connect_src,
+    :style_src,
+    :img_src,
+    :media_src,
+    :frame_src,
+    :child_src,
+    :worker_src,
+    :manifest_src,
+    :form_action
+  ]
+
   def init(default), do: default
 
   def call(conn, _options) do
-    config_csp = Application.get_env(:ret, RetWeb.Plugs.AddCSP)[:content_security_policy]
-
     csp =
-      if config_csp && config_csp != "" do
-        config_csp
-      else
-        case Cachex.get(:assets, :csp) do
-          {:ok, nil} ->
-            csp = generate_csp()
-            Cachex.put(:assets, :csp, csp, ttl: :timer.seconds(15))
-            csp
+      case Cachex.get(:assets, :csp) do
+        {:ok, nil} ->
+          csp = generate_csp()
+          Cachex.put(:assets, :csp, csp, ttl: :timer.seconds(15))
+          csp
 
-          {:ok, csp} ->
-            csp
-        end
+        {:ok, csp} ->
+          csp
       end
 
     conn |> Plug.Conn.put_resp_header("content-security-policy", csp)
   end
 
-  defp generate_csp() do
+  def generate_csp() do
+    custom_rules = get_custom_rules()
+
     assets_url =
       if RetWeb.Endpoint.config(:assets_url)[:host] != "" do
         "https://#{RetWeb.Endpoint.config(:assets_url)[:host]}"
@@ -43,28 +53,38 @@ defmodule RetWeb.Plugs.AddCSP do
       config_url(:thumbnail_url) ||
         cors_proxy_url |> String.replace("cors-proxy", "nearspark")
 
-    wss_connect =
+    ret_direct_connect =
       if is_subdomain do
-        "wss://*.#{ret_domain}:#{ret_port} wss://*.#{ret_domain}:#{janus_port}"
+        "https://*.#{ret_domain}:#{ret_port} wss://*.#{ret_domain}:#{ret_port} wss://*.#{ret_domain}:#{janus_port}"
       else
-        "wss://#{ret_host}:#{janus_port} wss://#{ret_host}:#{ret_port}"
+        "https://#{ret_host}:#{ret_port} wss://#{ret_host}:#{janus_port} wss://#{ret_host}:#{ret_port}"
       end
 
-    "default-src 'none'; manifest-src 'self'; script-src #{storage_url} #{assets_url} 'self' 'sha256-ViVvpb0oYlPAp7R8ZLxlNI6rsf7E7oz8l1SgCIXgMvM=' 'sha256-hsbRcgUBASABDq7qVGVTpbnWq/ns7B+ToTctZFJXYi8=' 'sha256-MIpWPgYj31kCgSUFc0UwHGQrV87W6N5ozotqfxxQG0w=' 'sha256-buF6N8Z4p2PuaaeRUjm7mxBpPNf4XlCT9Fep83YabbM=' 'sha256-/S6PM16MxkmUT7zJN2lkEKFgvXR7yL4Z8PCrRrFu4Q8=' https://www.google-analytics.com #{
+    "default-src 'none'; manifest-src #{custom_rules[:manifest_src]} 'self'; script-src #{custom_rules[:script_src]} #{storage_url} #{assets_url} 'self' 'unsafe-eval' 'sha256-ViVvpb0oYlPAp7R8ZLxlNI6rsf7E7oz8l1SgCIXgMvM=' 'sha256-hsbRcgUBASABDq7qVGVTpbnWq/ns7B+ToTctZFJXYi8=' 'sha256-MIpWPgYj31kCgSUFc0UwHGQrV87W6N5ozotqfxxQG0w=' 'sha256-buF6N8Z4p2PuaaeRUjm7mxBpPNf4XlCT9Fep83YabbM=' 'sha256-/S6PM16MxkmUT7zJN2lkEKFgvXR7yL4Z8PCrRrFu4Q8=' https://www.google-analytics.com #{
       storage_url
-    } #{assets_url} https://aframe.io https://www.youtube.com https://s.ytimg.com 'unsafe-eval'; prefetch-src 'self' #{
+    } #{assets_url} https://aframe.io https://www.youtube.com https://s.ytimg.com; child-src #{custom_rules[:child_src]} 'self' blob:; worker-src #{
+      custom_rules[:worker_src]
+    } #{storage_url} #{assets_url} 'self' blob:; font-src #{custom_rules[:font_src]} 'self' https://fonts.googleapis.com https://cdn.jsdelivr.net https://fonts.gstatic.com https://cdn.aframe.io #{
       storage_url
-    } #{assets_url}; child-src 'self' blob:; worker-src #{storage_url} #{assets_url} 'self' blob:; font-src 'self' https://fonts.googleapis.com https://cdn.jsdelivr.net https://fonts.gstatic.com https://cdn.aframe.io #{
-      storage_url
-    } #{assets_url} #{cors_proxy_url}; style-src 'self' https://fonts.googleapis.com https://cdn.jsdelivr.net #{
+    } #{assets_url} #{cors_proxy_url}; style-src #{custom_rules[:style_src]} 'self' https://fonts.googleapis.com https://cdn.jsdelivr.net #{
       cors_proxy_url
-    } #{storage_url} #{assets_url} 'unsafe-inline'; connect-src 'self' #{cors_proxy_url} #{storage_url} #{assets_url} #{
-      link_url
-    } https://dpdb.webvr.rocks #{thumbnail_url} #{wss_connect} https://cdn.aframe.io https://www.youtube.com https://api.github.com data: blob:; img-src 'self' https://www.google-analytics.com #{
+    } #{storage_url} #{assets_url} 'unsafe-inline'; connect-src #{custom_rules[:connect_src]} 'self' #{cors_proxy_url} #{
       storage_url
-    } #{assets_url} #{cors_proxy_url} #{thumbnail_url} https://cdn.aframe.io https://www.youtube.com https://user-images.githubusercontent.com https://cdn.jsdelivr.net data: blob:; media-src 'self' #{
-      cors_proxy_url
-    } #{storage_url} #{assets_url} #{thumbnail_url} https://www.youtube.com *.googlevideo.com data: blob:; frame-src https://www.youtube.com https://docs.google.com 'self'; base-uri 'none'; form-action 'self';"
+    } #{assets_url} #{link_url} https://dpdb.webvr.rocks #{thumbnail_url} #{ret_direct_connect} https://cdn.aframe.io https://www.youtube.com https://api.github.com data: blob:; img-src #{
+      custom_rules[:img_src]
+    } 'self' https://www.google-analytics.com #{storage_url} #{assets_url} #{cors_proxy_url} #{thumbnail_url} https://cdn.aframe.io https://www.youtube.com https://user-images.githubusercontent.com https://cdn.jsdelivr.net data: blob:; media-src #{
+      custom_rules[:media_src]
+    } 'self' #{cors_proxy_url} #{storage_url} #{assets_url} #{thumbnail_url} https://www.youtube.com *.googlevideo.com data: blob:; frame-src #{
+      custom_rules[:frame_src]
+    } https://www.youtube.com https://docs.google.com 'self'; base-uri 'none'; form-action #{custom_rules[:form_action]} 'self';"
+  end
+
+  defp get_custom_rules do
+    @customizable_rule_types
+    |> Enum.map(fn rule ->
+      {rule, Application.get_env(:ret, __MODULE__)[rule] || ""}
+    end)
+    |> Map.new()
   end
 
   defp config_url(key) do

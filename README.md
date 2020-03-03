@@ -40,3 +40,4 @@ Run `scripts/run.sh` if you have the hubs secret repo cloned. Otherwise `iex -S 
 1. Follow the steps above to setup Hubs
 2. Clone and start spoke by running `./scripts/run_local_reticulum.sh` in the root of the spoke project
 3. Navigate to https://hubs.local:4000/spoke
+ 

@@ -49,3 +49,6 @@ janus_port = 443
 
 [uploads]
 quota_gb = 0
+
+[hackney]
+max_connections = 50
