@@ -249,7 +249,15 @@ defmodule Ret.Hub do
   end
 
   def member_count_for(%Hub{hub_sid: hub_sid}) do
-    RetWeb.Presence.list("hub:#{hub_sid}") |> Enum.count()
+    RetWeb.Presence.list("hub:#{hub_sid}")
+    |> Enum.filter(fn {_, %{metas: m}} -> m |> Enum.any?(fn %{presence: p} -> p == :room end) end)
+    |> Enum.count()
+  end
+
+  def lobby_count_for(%Hub{hub_sid: hub_sid}) do
+    RetWeb.Presence.list("hub:#{hub_sid}")
+    |> Enum.filter(fn {_, %{metas: m}} -> m |> Enum.any?(fn %{presence: p} -> p == :lobby end) end)
+    |> Enum.count()
   end
 
   def room_size_for(%Hub{} = hub) do

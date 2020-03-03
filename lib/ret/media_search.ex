@@ -675,8 +675,9 @@ defmodule Ret.MediaSearch do
       id: hub.hub_sid,
       url: hub |> Hub.url_for(),
       type: :room,
-      member_count: hub |> Hub.member_count_for(),
       room_size: hub |> Hub.room_size_for(),
+      member_count: hub |> Hub.member_count_for(),
+      lobby_count: hub |> Hub.lobby_count_for(),
       name: hub.name,
       description: hub.description,
       images: images
