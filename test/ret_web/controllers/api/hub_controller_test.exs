@@ -33,8 +33,24 @@ defmodule RetWeb.HubControllerTest do
     assert created_hub.created_by_account.account_id == created_account.account_id
   end
 
+
+  test "anyone can assign user_data to a hub", %{conn: conn} do
+    %{"hub_id" => hub_id} =
+      conn
+      |> create_hub_with_attrs(%{ name: "Test Hub", user_data: %{ test: "Hello World" } })
+      |> json_response(200)
+
+    created_hub = Hub |> Repo.get_by(hub_sid: hub_id)
+
+    assert created_hub.user_data["test"] == "Hello World"
+  end
+
   defp create_hub(conn, name) do
-    req = conn |> api_v1_hub_path(:create, %{"hub" => %{name: name}})
+    create_hub_with_attrs(conn, %{ name: name })
+  end
+
+  defp create_hub_with_attrs(conn, attrs) do
+    req = conn |> api_v1_hub_path(:create, %{"hub" => attrs})
     conn |> post(req)
   end
 end

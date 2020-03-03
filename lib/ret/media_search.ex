@@ -678,6 +678,7 @@ defmodule Ret.MediaSearch do
       member_count: hub |> Hub.member_count_for(),
       name: hub.name,
       description: hub.description,
+      user_data: hub.user_data,
       images: images
     }
   end
