@@ -83,7 +83,7 @@ defmodule Ret.Hub do
 
     field(:allow_promotion, :boolean)
 
-    field(:member_cap, :integer)
+    field(:room_size, :integer)
 
     timestamps()
   end
@@ -121,11 +121,11 @@ defmodule Ret.Hub do
 
   def add_attrs_to_changeset(changeset, attrs) do
     changeset
-    |> cast(attrs, [:name, :description, :member_cap])
+    |> cast(attrs, [:name, :description, :room_size])
     |> validate_required([:name])
     |> validate_length(:name, max: 64)
     |> validate_length(:description, max: 64_000)
-    |> validate_number(:member_cap, greater_than_or_equal_to: 0, less_than_or_equal_to: 64)
+    |> validate_number(:room_size, greater_than_or_equal_to: 0, less_than_or_equal_to: 64)
     |> HubSlug.maybe_generate_slug()
   end
 
@@ -248,8 +248,8 @@ defmodule Ret.Hub do
     RetWeb.Presence.list("hub:#{hub_sid}") |> Enum.count()
   end
 
-  def member_cap_for(%Hub{} = hub) do
-    hub.member_cap || 24
+  def room_size_for(%Hub{} = hub) do
+    hub.room_size || 24
   end
 
   defp changeset_for_new_entry_code(%Hub{} = hub) do

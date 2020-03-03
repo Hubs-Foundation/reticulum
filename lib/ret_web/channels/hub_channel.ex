@@ -390,7 +390,7 @@ defmodule RetWeb.HubChannel do
       name_changed = hub.name != payload["name"]
       description_changed = hub.description != payload["description"]
       member_permissions_changed = hub.member_permissions != payload |> Hub.member_permissions_from_attrs()
-      member_cap_changed = hub.member_cap != payload["member_cap"]
+      room_size_changed = hub.room_size != payload["room_size"]
       can_change_promotion = account |> can?(update_hub_promotion(hub))
       promotion_changed = can_change_promotion and hub.allow_promotion != payload["allow_promotion"]
 
@@ -398,7 +398,7 @@ defmodule RetWeb.HubChannel do
       stale_fields = if name_changed, do: ["name" | stale_fields], else: stale_fields
       stale_fields = if description_changed, do: ["description" | stale_fields], else: stale_fields
       stale_fields = if member_permissions_changed, do: ["member_permissions" | stale_fields], else: stale_fields
-      stale_fields = if member_cap_changed, do: ["member_cap" | stale_fields], else: stale_fields
+      stale_fields = if room_size_changed, do: ["room_size" | stale_fields], else: stale_fields
       stale_fields = if promotion_changed, do: ["allow_promotion" | stale_fields], else: stale_fields
 
       hub
@@ -1033,8 +1033,8 @@ defmodule RetWeb.HubChannel do
     |> SessionStat.stat_query_for_socket()
     |> Repo.update_all(set: stat_attributes)
 
-
     context = socket.assigns.context || %{}
+
     socket
     |> assign(:presence, :room)
     |> assign(:context, context |> Map.delete("entering"))

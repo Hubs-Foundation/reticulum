@@ -45,7 +45,7 @@ defmodule RetWeb.Api.V1.HubView do
               nil
             end,
           member_permissions: hub |> Hub.member_permissions_for_hub(),
-          member_cap: hub |> Hub.member_cap_for()
+          room_size: hub |> Hub.room_size_for()
         }
       ]
     }
@@ -72,7 +72,7 @@ defmodule RetWeb.Api.V1.HubView do
             }
           ],
           member_permissions: hub |> Hub.member_permissions_for_hub(),
-          member_cap: hub |> Hub.member_cap_for()
+          room_size: hub |> Hub.room_size_for()
         }
       ]
     }
