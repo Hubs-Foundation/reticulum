@@ -23,7 +23,8 @@ defmodule Ret.Hub do
     WebPushSubscription,
     RoomAssigner,
     BitFieldUtils,
-    HubRoleMembership
+    HubRoleMembership,
+    AppConfig
   }
 
   alias Ret.Hub.{HubSlug}
@@ -125,7 +126,10 @@ defmodule Ret.Hub do
     |> validate_required([:name])
     |> validate_length(:name, max: 64)
     |> validate_length(:description, max: 64_000)
-    |> validate_number(:room_size, greater_than_or_equal_to: 0, less_than_or_equal_to: 64)
+    |> validate_number(:room_size,
+      greater_than_or_equal_to: 0,
+      less_than_or_equal_to: AppConfig.get_cached_config_value("features|max_room_size")
+    )
     |> HubSlug.maybe_generate_slug()
   end
 
@@ -249,7 +253,7 @@ defmodule Ret.Hub do
   end
 
   def room_size_for(%Hub{} = hub) do
-    hub.room_size || 24
+    hub.room_size || AppConfig.get_cached_config_value("features|default_room_size")
   end
 
   defp changeset_for_new_entry_code(%Hub{} = hub) do
