@@ -248,6 +248,10 @@ defmodule Ret.Hub do
     RetWeb.Presence.list("hub:#{hub_sid}") |> Enum.count()
   end
 
+  def member_cap_for(%Hub{} = hub) do
+    hub.member_cap || 24
+  end
+
   defp changeset_for_new_entry_code(%Hub{} = hub) do
     hub
     |> Ecto.Changeset.change()

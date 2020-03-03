@@ -3,7 +3,7 @@ defmodule Ret.Repo.Migrations.AddCapToRooms do
 
   def change do
     alter table("hubs") do
-      add(:member_cap, :integer, null: false, default: 0)
+      add(:member_cap, :integer, null: true, default: nil)
     end
   end
 end
