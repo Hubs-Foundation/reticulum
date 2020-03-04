@@ -102,6 +102,11 @@ config :ret, Ret.Scheduler,
 
     # Flush stats to db every 5 minutes
     {{:cron, "*/5 * * * *"}, {Ret.StatsJob, :save_node_stats, []}},
+
+    # Keep database warm when connected users
+    {{:cron, "*/3 * * * *"}, {Ret.DbWarmerJob, :warm_db_if_has_ccu, []}},
+
+    # Various maintenence routines
     {{:cron, "0 10 * * *"}, {Ret.Storage, :vacuum, []}},
     {{:cron, "3 10 * * *"}, {Ret.Storage, :demote_inactive_owned_files, []}},
     {{:cron, "4 10 * * *"}, {Ret.LoginToken, :expire_stale, []}},
