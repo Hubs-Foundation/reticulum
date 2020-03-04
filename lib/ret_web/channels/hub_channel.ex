@@ -24,7 +24,7 @@ defmodule RetWeb.HubChannel do
   alias RetWeb.{Presence}
   alias RetWeb.Api.V1.{HubView}
 
-  intercept(["hub_refresh", "mute", "add_owner", "remove_owner", "naf", "message", "block", "unblock"])
+  intercept(["hub_refresh", "mute", "add_owner", "remove_owner", "naf", "nafr", "message", "block", "unblock"])
 
   @hub_preloads [
     scene: Scene.scene_preloads(),
@@ -115,6 +115,63 @@ defmodule RetWeb.HubChannel do
     hub |> join_with_hub(account, socket, context, params)
   end
 
+  # Optimization: "raw" NAF event, with the underlying NAF payload as a string.
+  # By going through this event, the server can avoid parsing the NAF messages.
+  def handle_in("nafr" = event, %{"naf" => naf_payload} = payload, socket) do
+    # We expect the client to have stripped the "isFirstSync" keys from the message
+    # for this optimization.
+    if !String.contains?(naf_payload, "isFirstSync") do
+      broadcast_from!(socket, event, payload |> payload_with_from(socket))
+      {:noreply, socket}
+    else
+      # Full syncs must be properly authorized
+      handle_in("naf", naf_payload |> Jason.decode!(), socket)
+    end
+  end
+
+  # Captures all inbound NAF messages that result in spawned objects.
+  def handle_in(
+        "naf" = event,
+        %{"data" => %{"isFirstSync" => true, "persistent" => false, "template" => template}} = payload,
+        socket
+      ) do
+    data = payload["data"]
+
+    if template |> spawn_permitted?(socket) do
+      data =
+        data
+        |> Map.put("creator", socket.assigns.session_id)
+        |> Map.put("owner", socket.assigns.session_id)
+
+      payload = payload |> Map.put("data", data)
+
+      broadcast_from!(socket, event, payload |> payload_with_from(socket))
+
+      {:noreply, socket}
+    else
+      {:noreply, socket}
+    end
+  end
+
+  # Captures all inbound NAF Update Multi messages
+  def handle_in("naf" = event, %{"dataType" => "um", "data" => %{"d" => updates}} = payload, socket) do
+    if updates |> Enum.any?(& &1["isFirstSync"]) do
+      # Do not broadcast "um" messages that contain isFirstSyncs. NAF should never send these, so we'd only see them
+      # from a malicious client.
+      {:noreply, socket}
+    else
+      broadcast_from!(socket, event, payload |> payload_with_from(socket))
+
+      {:noreply, socket}
+    end
+  end
+
+  # Fallthrough for all other NAF dataTypes
+  def handle_in("naf" = event, payload, socket) do
+    broadcast_from!(socket, event, payload |> payload_with_from(socket))
+    {:noreply, socket}
+  end
+
   def handle_in("events:entering", _payload, socket) do
     context = socket.assigns.context || %{}
     socket = socket |> assign(:context, context |> Map.put("entering", true)) |> broadcast_presence_update
@@ -172,49 +229,6 @@ defmodule RetWeb.HubChannel do
   def handle_in("events:end_recording", _payload, socket), do: socket |> set_presence_flag(:recording, false)
   def handle_in("events:begin_streaming", _payload, socket), do: socket |> set_presence_flag(:streaming, true)
   def handle_in("events:end_streaming", _payload, socket), do: socket |> set_presence_flag(:streaming, false)
-
-  # Captures all inbound NAF messages that result in spawned objects.
-  def handle_in(
-        "naf" = event,
-        %{"data" => %{"isFirstSync" => true, "persistent" => false, "template" => template}} = payload,
-        socket
-      ) do
-    data = payload["data"]
-
-    if template |> spawn_permitted?(socket) do
-      data =
-        data
-        |> Map.put("creator", socket.assigns.session_id)
-        |> Map.put("owner", socket.assigns.session_id)
-
-      payload = payload |> Map.put("data", data)
-
-      broadcast_from!(socket, event, payload |> payload_with_from(socket))
-
-      {:noreply, socket}
-    else
-      {:noreply, socket}
-    end
-  end
-
-  # Captures all inbound NAF Update Multi messages
-  def handle_in("naf" = event, %{"dataType" => "um", "data" => %{"d" => updates}} = payload, socket) do
-    if updates |> Enum.any?(& &1["isFirstSync"]) do
-      # Do not broadcast "um" messages that contain isFirstSyncs. NAF should never send these, so we'd only see them
-      # from a malicious client.
-      {:noreply, socket}
-    else
-      broadcast_from!(socket, event, payload |> payload_with_from(socket))
-
-      {:noreply, socket}
-    end
-  end
-
-  # Fallthrough for all other NAF dataTypes
-  def handle_in("naf" = event, payload, socket) do
-    broadcast_from!(socket, event, payload |> payload_with_from(socket))
-    {:noreply, socket}
-  end
 
   def handle_in("message" = event, %{"type" => type} = payload, socket) do
     account = Guardian.Phoenix.Socket.current_resource(socket)
@@ -515,6 +529,17 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
+  def handle_out(event, payload, socket) when event in ["naf", "nafr"] do
+    socket
+    |> maybe_push_naf(
+      event,
+      payload,
+      socket.assigns.block_naf,
+      socket.assigns.blocked_session_ids,
+      socket.assigns.blocked_by_session_ids
+    )
+  end
+
   def handle_out("mute" = event, %{"session_id" => session_id} = payload, socket) do
     if socket.assigns.session_id == session_id do
       push(socket, event, payload)
@@ -577,17 +602,6 @@ defmodule RetWeb.HubChannel do
     end
 
     {:noreply, socket}
-  end
-
-  def handle_out("naf" = event, payload, socket) do
-    socket
-    |> maybe_push_naf(
-      event,
-      payload,
-      socket.assigns.block_naf,
-      socket.assigns.blocked_session_ids,
-      socket.assigns.blocked_by_session_ids
-    )
   end
 
   def handle_out("message" = event, %{from_session_id: from_session_id} = payload, socket) do
