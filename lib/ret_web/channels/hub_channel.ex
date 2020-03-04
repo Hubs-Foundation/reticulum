@@ -492,7 +492,7 @@ defmodule RetWeb.HubChannel do
     socket =
       socket
       |> assign(:blocked_session_ids, socket.assigns.blocked_session_ids |> Map.put(session_id, true))
-      |> assign(:has_blocks, true)
+      |> assign_has_blocks
 
     broadcast_from!(socket, event, payload |> payload_with_from(socket))
     {:noreply, socket}
@@ -502,7 +502,7 @@ defmodule RetWeb.HubChannel do
     socket =
       socket
       |> assign(:blocked_session_ids, socket.assigns.blocked_session_ids |> Map.delete(session_id))
-      |> assign(:has_blocks, true)
+      |> assign_has_blocks
 
     broadcast_from!(socket, event, payload |> payload_with_from(socket))
     {:noreply, socket}
@@ -593,7 +593,7 @@ defmodule RetWeb.HubChannel do
       if socket.assigns.session_id === session_id do
         socket
         |> assign(:blocked_by_session_ids, socket.assigns.blocked_by_session_ids |> Map.put(from_session_id, true))
-        |> assign(:has_blocks, true)
+        |> assign_has_blocks
       else
         socket
       end
@@ -606,7 +606,7 @@ defmodule RetWeb.HubChannel do
       if socket.assigns.session_id === session_id do
         socket
         |> assign(:blocked_by_session_ids, socket.assigns.blocked_by_session_ids |> Map.delete(from_session_id))
-        |> assign(:has_blocks, true)
+        |> assign_has_blocks
       else
         socket
       end
@@ -1119,6 +1119,13 @@ defmodule RetWeb.HubChannel do
   defp maybe_add_promotion_to_changeset(changeset, account, hub, payload) do
     can_change_promotion = account |> can?(update_hub_promotion(hub))
     if can_change_promotion, do: changeset |> Hub.add_promotion_to_changeset(payload), else: changeset
+  end
+
+  defp assign_has_blocks(socket) do
+    has_blocks =
+      socket.assigns.blocked_session_ids |> Enum.any?() || socket.assigns.blocked_by_session_ids |> Enum.any?()
+
+    socket |> assign(:has_blocks, has_blocks)
   end
 
   # Normally, naf and nafr messages are sent as is. However, if this connection is blocking users,
