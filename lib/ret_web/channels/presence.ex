@@ -19,6 +19,12 @@ defmodule RetWeb.Presence do
     |> length
   end
 
+  def present_member_count do
+    RetWeb.Presence.present_hub_sids()
+    |> Enum.map(&Ret.Hub.member_count_for/1)
+    |> Enum.sum()
+  end
+
   defp present_sessions do
     list("ret")
   end

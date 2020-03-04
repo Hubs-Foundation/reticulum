@@ -249,16 +249,28 @@ defmodule Ret.Hub do
     scene_listing.screenshot_owned_file |> Ret.OwnedFile.uri_for() |> URI.to_string()
   end
 
-  def member_count_for(%Hub{hub_sid: hub_sid}) do
+  def member_count_for(%Hub{hub_sid: hub_sid}), do: member_count_for(hub_sid)
+
+  def member_count_for(hub_sid) do
     RetWeb.Presence.list("hub:#{hub_sid}")
-    |> Enum.filter(fn {_, %{metas: m}} -> m |> Enum.any?(fn %{presence: p} -> p == :room end) end)
+    |> Enum.filter(fn {_, %{metas: m}} ->
+      m |> Enum.any?(fn %{presence: p, context: c} -> p == :room and !(c != nil and Map.get(c, "discord", false)) end)
+    end)
     |> Enum.count()
   end
 
-  def lobby_count_for(%Hub{hub_sid: hub_sid}) do
+  def lobby_count_for(%Hub{hub_sid: hub_sid}), do: lobby_count_for(hub_sid)
+
+  def lobby_count_for(hub_sid) do
     RetWeb.Presence.list("hub:#{hub_sid}")
-    |> Enum.filter(fn {_, %{metas: m}} -> m |> Enum.any?(fn %{presence: p} -> p == :lobby end) end)
+    |> Enum.filter(fn {_, %{metas: m}} ->
+      m |> Enum.any?(fn %{presence: p, context: c} -> p == :lobby and !(c != nil and Map.get(c, "discord", false)) end)
+    end)
     |> Enum.count()
+  end
+
+  def room_size_for(%Hub{} = hub) do
+    hub.room_size || AppConfig.get_cached_config_value("features|default_room_size")
   end
 
   def room_size_for(%Hub{} = hub) do
