@@ -24,7 +24,7 @@ defmodule RetWeb.HubChannel do
   alias RetWeb.{Presence}
   alias RetWeb.Api.V1.{HubView}
 
-  intercept(["hub_refresh", "mute", "add_owner", "remove_owner", "message", "block", "unblock"])
+  intercept(["hub_refresh", "mute", "add_owner", "remove_owner", "naf", "nafr", "message", "block", "unblock"])
 
   @hub_preloads [
     scene: Scene.scene_preloads(),
@@ -529,16 +529,16 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
-  #def handle_out(event, payload, socket) when event in ["naf", "nafr"] do
-  #  socket
-  #  |> maybe_push_naf(
-  #    event,
-  #    payload,
-  #    socket.assigns.block_naf,
-  #    socket.assigns.blocked_session_ids,
-  #    socket.assigns.blocked_by_session_ids
-  #  )
-  #end
+  def handle_out(event, payload, socket) when event in ["naf", "nafr"] do
+    socket
+    |> maybe_push_naf(
+      event,
+      payload,
+      socket.assigns.block_naf,
+      socket.assigns.blocked_session_ids,
+      socket.assigns.blocked_by_session_ids
+    )
+  end
 
   def handle_out("mute" = event, %{"session_id" => session_id} = payload, socket) do
     if socket.assigns.session_id == session_id do
