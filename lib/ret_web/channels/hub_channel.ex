@@ -969,7 +969,7 @@ defmodule RetWeb.HubChannel do
       end
 
     # Each channel connection needs to be aware if there are, or ever have been,
-    # embeddings of this hub (see should_intercept_naf?)
+    # embeddings of this hub (see internal_naf_event_for/2)
     socket = socket |> assign(:has_embeds, hub.embedded)
 
     push_subscription_endpoint = params["push_subscription_endpoint"]
