@@ -66,7 +66,6 @@ defmodule RetWeb.HubChannel do
     |> assign(:blocked_session_ids, %{})
     |> assign(:blocked_by_session_ids, %{})
     |> assign(:has_blocks, false)
-    |> assign(:has_embeds, false)
     |> perform_join(
       hub,
       context,
@@ -957,18 +956,11 @@ defmodule RetWeb.HubChannel do
   defp join_with_hub(%Hub{} = hub, account, socket, context, params) do
     hub = hub |> Hub.ensure_valid_entry_code!() |> Hub.ensure_host()
 
-    hub =
-      if context["embed"] && !hub.embedded do
-        hub
-        |> Hub.changeset_for_seen_embedded_hub()
-        |> Repo.update!()
-      else
-        hub
-      end
-
-    # Each channel connection needs to be aware if there are, or ever have been,
-    # embeddings of this hub (see should_intercept_naf?)
-    socket = socket |> assign(:has_embeds, hub.embedded)
+    if context["embed"] && !hub.embedded do
+      hub
+      |> Hub.changeset_for_seen_embedded_hub()
+      |> Repo.update!()
+    end
 
     push_subscription_endpoint = params["push_subscription_endpoint"]
 
@@ -1120,13 +1112,13 @@ defmodule RetWeb.HubChannel do
   end
 
   # Normally, naf and nafr messages are sent as is. However, if this connection is blocking users,
-  # has been blocked, or the hub itself has been seen in an iframe, we need to potentially filter
+  # has been blocked, or this socket wants to block incoming messages, we need to potentially filter
   # NAF messages. As such, we internally route messages via an intercepted handle_out for filtering.
   # This is done via the intercepted maybe-nafr and maybe-naf events.
   #
   # We avoid doing this in general because it's extremely expensive, since it re-encodes all outgoing messages.
-  defp internal_naf_event_for("nafr", %Phoenix.Socket{assigns: %{has_blocks: false, has_embeds: false}}), do: "nafr"
-  defp internal_naf_event_for("naf", %Phoenix.Socket{assigns: %{has_blocks: false, has_embeds: false}}), do: "naf"
+  defp internal_naf_event_for("nafr", %Phoenix.Socket{assigns: %{has_blocks: false, block_naf: false}}), do: "nafr"
+  defp internal_naf_event_for("naf", %Phoenix.Socket{assigns: %{has_blocks: false, block_naf: false}}), do: "naf"
   defp internal_naf_event_for("nafr", _socket), do: "maybe-nafr"
   defp internal_naf_event_for("naf", _socket), do: "maybe-naf"
 end
