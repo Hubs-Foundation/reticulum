@@ -190,6 +190,8 @@ hubs_page_origin = "{{ cfg.pages.hubs_page_origin }}"
 spoke_page_origin = "{{ cfg.pages.spoke_page_origin }}"
 # Intentionally re-using hubs_page_origin here, since they are currently deployed to the same S3 bucket.
 admin_page_origin = "{{ cfg.pages.hubs_page_origin }}"
+
+[ret."Elixir.Ret.HttpUtils"]
 insecure_ssl = {{ cfg.pages.insecure_ssl }}
 
 [ret."Elixir.Ret.Storage"]
