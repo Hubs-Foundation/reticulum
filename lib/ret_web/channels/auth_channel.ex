@@ -81,6 +81,11 @@ defmodule RetWeb.AuthChannel do
     {:noreply, socket}
   end
 
+  def handle_info(:channel_expired, socket) do
+    GenServer.cast(self(), :close)
+    {:noreply, socket}
+  end
+
   def handle_out("auth_credentials" = event, payload, socket) do
     Process.send_after(self(), :close_channel, 1000 * 5)
     push(socket, event, payload)
