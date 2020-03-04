@@ -24,7 +24,7 @@ defmodule RetWeb.HubChannel do
   alias RetWeb.{Presence}
   alias RetWeb.Api.V1.{HubView}
 
-  intercept(["hub_refresh", "mute", "add_owner", "remove_owner", "message", "block", "unblock"])
+  intercept(["hub_refresh", "mute", "add_owner", "remove_owner", "naf", "nafr", "message", "block", "unblock"])
 
   @hub_preloads [
     scene: Scene.scene_preloads(),
@@ -52,6 +52,7 @@ defmodule RetWeb.HubChannel do
     |> assign(:profile, profile)
     |> assign(:context, context)
     |> assign(:block_naf, false)
+    |> assign(:has_blocks, false)
     |> assign(:blocked_session_ids, %{})
     |> assign(:blocked_by_session_ids, %{})
     |> perform_join(
@@ -476,13 +477,21 @@ defmodule RetWeb.HubChannel do
   end
 
   def handle_in("block" = event, %{"session_id" => session_id} = payload, socket) do
-    socket = socket |> assign(:blocked_session_ids, socket.assigns.blocked_session_ids |> Map.put(session_id, true))
+    socket =
+      socket
+      |> assign(:has_blocks, true)
+      |> assign(:blocked_session_ids, socket.assigns.blocked_session_ids |> Map.put(session_id, true))
+
     broadcast_from!(socket, event, payload |> payload_with_from(socket))
     {:noreply, socket}
   end
 
   def handle_in("unblock" = event, %{"session_id" => session_id} = payload, socket) do
-    socket = socket |> assign(:blocked_session_ids, socket.assigns.blocked_session_ids |> Map.delete(session_id))
+    socket =
+      socket
+      |> assign(:has_blocks, true)
+      |> assign(:blocked_session_ids, socket.assigns.blocked_session_ids |> Map.delete(session_id))
+
     broadcast_from!(socket, event, payload |> payload_with_from(socket))
     {:noreply, socket}
   end
@@ -529,16 +538,23 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
-  #def handle_out(event, payload, socket) when event in ["naf", "nafr"] do
-  #  socket
-  #  |> maybe_push_naf(
-  #    event,
-  #    payload,
-  #    socket.assigns.block_naf,
-  #    socket.assigns.blocked_session_ids,
-  #    socket.assigns.blocked_by_session_ids
-  #  )
-  #end
+  def handle_out(event, payload, socket) when event in ["nafr", "naf"] do
+    assigns = socket.assigns
+
+    if !assigns.block_naf && !assigns.has_blocks do
+      push(socket, event, payload)
+      {:noreply, socket}
+    else
+      socket
+      |> maybe_push_naf(
+        event,
+        payload,
+        socket.assigns.block_naf,
+        socket.assigns.blocked_session_ids,
+        socket.assigns.blocked_by_session_ids
+      )
+    end
+  end
 
   def handle_out("mute" = event, %{"session_id" => session_id} = payload, socket) do
     if socket.assigns.session_id == session_id do
@@ -564,6 +580,7 @@ defmodule RetWeb.HubChannel do
     socket =
       if socket.assigns.session_id === session_id do
         socket
+        |> assign(:has_blocks, true)
         |> assign(:blocked_by_session_ids, socket.assigns.blocked_by_session_ids |> Map.put(from_session_id, true))
       else
         socket
@@ -575,7 +592,9 @@ defmodule RetWeb.HubChannel do
   def handle_out("unblock", %{"session_id" => session_id, :from_session_id => from_session_id}, socket) do
     socket =
       if socket.assigns.session_id === session_id do
-        socket |> assign(:blocked_by_session_ids, socket.assigns.blocked_by_session_ids |> Map.delete(from_session_id))
+        socket
+        |> assign(:has_blocks, true)
+        |> assign(:blocked_by_session_ids, socket.assigns.blocked_by_session_ids |> Map.delete(from_session_id))
       else
         socket
       end
@@ -612,12 +631,6 @@ defmodule RetWeb.HubChannel do
       push(socket, event, payload |> payload_without_from)
     end
 
-    {:noreply, socket}
-  end
-
-  defp maybe_push_naf(socket, event, payload, false = _block_naf, blocked_session_ids, blocked_by_session_ids)
-       when blocked_session_ids === %{} and blocked_by_session_ids === %{} do
-    push(socket, event, payload)
     {:noreply, socket}
   end
 
