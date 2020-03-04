@@ -680,6 +680,7 @@ defmodule Ret.MediaSearch do
       lobby_count: hub |> Hub.lobby_count_for(),
       name: hub.name,
       description: hub.description,
+      user_data: hub.user_data,
       images: images
     }
   end

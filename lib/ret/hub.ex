@@ -75,6 +75,7 @@ defmodule Ret.Hub do
     field(:max_occupant_count, :integer, default: 0)
     field(:spawned_object_types, :integer, default: 0)
     field(:entry_mode, Ret.Hub.EntryMode)
+    field(:user_data, :map)
     belongs_to(:scene, Ret.Scene, references: :scene_id)
     belongs_to(:scene_listing, Ret.SceneListing, references: :scene_listing_id)
     has_many(:web_push_subscriptions, Ret.WebPushSubscription, foreign_key: :hub_id)
@@ -122,7 +123,7 @@ defmodule Ret.Hub do
 
   def add_attrs_to_changeset(changeset, attrs) do
     changeset
-    |> cast(attrs, [:name, :description, :room_size])
+    |> cast(attrs, [:name, :description, :user_data, :room_size])
     |> validate_required([:name])
     |> validate_length(:name, max: 64)
     |> validate_length(:description, max: 64_000)
