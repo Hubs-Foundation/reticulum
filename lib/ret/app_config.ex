@@ -10,7 +10,7 @@ defmodule Ret.AppConfig do
   # TODO these should be parsed out of schema.toml
   @config_defaults %{
     "features" => %{
-      "max_room_size" => 100,
+      "max_room_size" => 50,
       "default_room_size" => 24
     }
   }

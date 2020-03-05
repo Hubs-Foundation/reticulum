@@ -15,7 +15,7 @@ defmodule Ret.AppConfigTest do
         "cheese" => %{"bacon" => "buz"}
       },
       "features" => %{
-        "max_room_size" => 100,
+        "max_room_size" => 50,
         "default_room_size" => 24
       }
     }
