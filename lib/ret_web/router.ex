@@ -123,6 +123,7 @@ defmodule RetWeb.Router do
       pipe_through([:admin_required])
       resources("/app_configs", Api.V1.AppConfigController, only: [:index, :create])
       resources("/accounts", Api.V1.AccountController, only: [:create])
+      patch("/accounts", Api.V1.AccountController, :update)
       resources("/accounts/search", Api.V1.AccountSearchController, only: [:create])
     end
   end

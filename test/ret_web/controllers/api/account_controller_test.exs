@@ -44,6 +44,30 @@ defmodule RetWeb.AccountControllerTest do
     assert res["data"]["identity"]["name"] === "Test User"
   end
 
+  test "admins can patch account identities", %{conn: conn} do
+    create_account("testapi")
+    create_account("testapi2")
+
+    conn
+    |> put_req_header("content-type", "application/json")
+    |> patch(
+      "/api/v1/accounts",
+      Poison.encode!(%{
+        data: [
+          %{email: "testapi@mozilla.com", name: "Test User New"},
+          %{email: "testapi2@mozilla.com", name: "Test User 2 New"}
+        ]
+      })
+    )
+    |> response(207)
+
+    account = Account.account_for_email("testapi@mozilla.com")
+    assert account.identity.name === "Test User New"
+
+    account = Account.account_for_email("testapi2@mozilla.com")
+    assert account.identity.name === "Test User 2 New"
+  end
+
   test "admins can create multiple acounts, and have validation errors", %{conn: conn} do
     req =
       conn
