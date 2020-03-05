@@ -13,6 +13,10 @@ defmodule Ret.AppConfigTest do
         "eggs" => "baz",
         "bacon" => "baz",
         "cheese" => %{"bacon" => "buz"}
+      },
+      "features" => %{
+        "max_room_size" => 100,
+        "default_room_size" => 24
       }
     }
 

@@ -23,7 +23,8 @@ defmodule Ret.Hub do
     WebPushSubscription,
     RoomAssigner,
     BitFieldUtils,
-    HubRoleMembership
+    HubRoleMembership,
+    AppConfig
   }
 
   alias Ret.Hub.{HubSlug}
@@ -84,6 +85,8 @@ defmodule Ret.Hub do
 
     field(:allow_promotion, :boolean)
 
+    field(:room_size, :integer)
+
     timestamps()
   end
 
@@ -109,7 +112,7 @@ defmodule Ret.Hub do
   def changeset(%Hub{} = hub, nil, attrs) do
     hub
     |> cast(attrs, [:default_environment_gltf_bundle_url])
-    |> add_meta_to_changeset(attrs)
+    |> add_attrs_to_changeset(attrs)
     |> add_hub_sid_to_changeset
     |> add_generated_tokens_to_changeset
     |> add_entry_code_to_changeset
@@ -118,11 +121,16 @@ defmodule Ret.Hub do
     |> unique_constraint(:entry_code)
   end
 
-  def add_meta_to_changeset(changeset, attrs) do
+  def add_attrs_to_changeset(changeset, attrs) do
     changeset
-    |> cast(attrs, [:name, :description, :user_data])
+    |> cast(attrs, [:name, :description, :user_data, :room_size])
     |> validate_required([:name])
     |> validate_length(:name, max: 64)
+    |> validate_length(:description, max: 64_000)
+    |> validate_number(:room_size,
+      greater_than_or_equal_to: 0,
+      less_than_or_equal_to: AppConfig.get_cached_config_value("features|max_room_size")
+    )
     |> HubSlug.maybe_generate_slug()
   end
 
@@ -245,13 +253,25 @@ defmodule Ret.Hub do
 
   def member_count_for(hub_sid) do
     RetWeb.Presence.list("hub:#{hub_sid}")
-    |> Map.values()
-    |> Enum.map(&presence_entry_to_member_count/1)
-    |> Enum.sum()
+    |> Enum.filter(fn {_, %{metas: m}} ->
+      m |> Enum.any?(fn %{presence: p, context: c} -> p == :room and !(c != nil and Map.get(c, "discord", false)) end)
+    end)
+    |> Enum.count()
   end
 
-  defp presence_entry_to_member_count(%{metas: [%{context: %{"discord" => true}}]}), do: 0
-  defp presence_entry_to_member_count(_presence_entry), do: 1
+  def lobby_count_for(%Hub{hub_sid: hub_sid}), do: lobby_count_for(hub_sid)
+
+  def lobby_count_for(hub_sid) do
+    RetWeb.Presence.list("hub:#{hub_sid}")
+    |> Enum.filter(fn {_, %{metas: m}} ->
+      m |> Enum.any?(fn %{presence: p, context: c} -> p == :lobby and !(c != nil and Map.get(c, "discord", false)) end)
+    end)
+    |> Enum.count()
+  end
+
+  def room_size_for(%Hub{} = hub) do
+    hub.room_size || AppConfig.get_cached_config_value("features|default_room_size")
+  end
 
   defp changeset_for_new_entry_code(%Hub{} = hub) do
     hub
