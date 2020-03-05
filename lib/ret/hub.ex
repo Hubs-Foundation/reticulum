@@ -273,10 +273,6 @@ defmodule Ret.Hub do
     hub.room_size || AppConfig.get_cached_config_value("features|default_room_size")
   end
 
-  def room_size_for(%Hub{} = hub) do
-    hub.room_size || AppConfig.get_cached_config_value("features|default_room_size")
-  end
-
   defp changeset_for_new_entry_code(%Hub{} = hub) do
     hub
     |> Ecto.Changeset.change()
