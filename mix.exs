@@ -43,7 +43,7 @@ defmodule Ret.Mixfile do
       {:phoenix_html, "~> 2.13"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:gettext, "~> 0.17"},
-      {:cowboy, "~> 2.7"},
+      {:cowboy, "~> 2.6.3"},
       {:plug_cowboy, "~> 2.0"},
       {:distillery, "~> 2.0"},
       {:peerage, "~> 1.0"},
