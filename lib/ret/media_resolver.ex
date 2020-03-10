@@ -57,7 +57,7 @@ defmodule Ret.MediaResolver do
             {:commit,
              resolved(query.url, %{
                expected_content_type: "text/html",
-               offline_stream: true,
+               media_status: :offline_stream,
                thumbnail: RetWeb.Endpoint.static_url() <> "/stream-offline.png"
              })}
           else
