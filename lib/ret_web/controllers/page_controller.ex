@@ -208,6 +208,9 @@ defmodule RetWeb.PageController do
   def render_for_path("/hub.service.js", _params, conn),
     do: conn |> render_asset("hub.service.js", :hubs, "hub.service-meta.js")
 
+  def render_for_path("/stream-offline.png", _params, conn),
+    do: conn |> render_static_asset()
+
   def render_for_path("/hubs/schema.toml", _params, conn), do: conn |> render_asset("schema.toml")
 
   def render_for_path("/manifest.webmanifest", _params, conn) do
@@ -593,6 +596,11 @@ defmodule RetWeb.PageController do
     else
       conn |> send_resp(401, "Bad request.")
     end
+  end
+
+  defp render_static_asset(conn) do
+    static_options = Plug.Static.init(at: "/", from: :ret, gzip: true, brotli: true)
+    Plug.Static.call(conn, static_options)
   end
 
   defp render_asset(conn) do

@@ -20,8 +20,7 @@ priv/server.key
 priv/server.pem
 
 # generated static files
-priv/static/js/
-priv/static/css/
+priv/static/
 
 # Files matching config/*.secret.exs pattern contain sensitive
 # data and you should not commit them into version control.
