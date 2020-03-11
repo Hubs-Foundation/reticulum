@@ -670,6 +670,12 @@ defmodule Ret.MediaSearch do
       else
         %{preview: %{url: "#{RetWeb.Endpoint.url()}/app-thumbnail.png"}}
       end
+    
+    scene_id = if scene_or_scene_listing do
+      scene_or_scene_listing.scene_sid
+    else
+      nil
+    end
 
     %{
       id: hub.hub_sid,
@@ -680,7 +686,7 @@ defmodule Ret.MediaSearch do
       lobby_count: hub |> Hub.lobby_count_for(),
       name: hub.name,
       description: hub.description,
-      scene_id: hub.scene.scene_sid,
+      scene_id: scene_id,
       user_data: hub.user_data,
       images: images
     }
