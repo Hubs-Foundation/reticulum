@@ -684,6 +684,7 @@ defmodule RetWeb.HubChannel do
       template |> String.ends_with?("-camera") -> account |> can?(spawn_camera(hub))
       template |> String.ends_with?("-drawing") -> account |> can?(spawn_drawing(hub))
       template |> String.ends_with?("-pen") -> account |> can?(spawn_drawing(hub))
+      template |> String.ends_with?("-emoji") -> account |> can?(spawn_emoji(hub))
       # We want to forbid messages if they fall through the above list of template suffixes
       true -> false
     end

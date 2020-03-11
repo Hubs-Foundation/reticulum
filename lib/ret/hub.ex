@@ -39,7 +39,8 @@ defmodule Ret.Hub do
     (1 <<< 0) => :spawn_and_move_media,
     (1 <<< 1) => :spawn_camera,
     (1 <<< 2) => :spawn_drawing,
-    (1 <<< 3) => :pin_objects
+    (1 <<< 3) => :pin_objects,
+    (1 <<< 4) => :spawn_emoji
   }
 
   @member_permissions_keys @member_permissions |> Map.values()
@@ -48,14 +49,16 @@ defmodule Ret.Hub do
     spawn_and_move_media: true,
     spawn_camera: true,
     spawn_drawing: true,
-    pin_objects: true
+    pin_objects: true,
+    spawn_emoji: true
   }
 
   @default_restrictive_member_permissions %{
     spawn_and_move_media: false,
     spawn_camera: false,
     spawn_drawing: false,
-    pin_objects: false
+    pin_objects: false,
+    spawn_emoji: false
   }
 
   schema "hubs" do
@@ -459,7 +462,8 @@ defmodule Ret.Hub do
       spawn_camera: account |> can?(spawn_camera(hub)),
       spawn_drawing: account |> can?(spawn_drawing(hub)),
       spawn_and_move_media: account |> can?(spawn_and_move_media(hub)),
-      pin_objects: account |> can?(pin_objects(hub))
+      pin_objects: account |> can?(pin_objects(hub)),
+      spawn_emoji: account |> can?(spawn_emoji(hub))
     }
   end
 
@@ -474,7 +478,7 @@ defimpl Canada.Can, for: Ret.Account do
   alias Ret.{Hub, AppConfig}
 
   @owner_actions [:update_hub, :close_hub, :embed_hub, :kick_users, :mute_users]
-  @object_actions [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects]
+  @object_actions [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects, :spawn_emoji]
   @creator_actions [:update_roles]
 
   # Always deny access to non-enterable hubs
@@ -559,7 +563,8 @@ end
 # Perms for oauth users that do not have a hubs account
 defimpl Canada.Can, for: Ret.OAuthProvider do
   alias Ret.{AppConfig, Hub}
-  @object_actions [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects]
+
+  @object_actions [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects, :spawn_emoji]
   @special_actions [:update_hub, :update_roles, :close_hub, :embed_hub, :kick_users, :mute_users]
 
   # Always deny access to non-enterable hubs
@@ -590,7 +595,8 @@ end
 # Permissions for un-authenticated clients
 defimpl Canada.Can, for: Atom do
   alias Ret.{AppConfig, Hub}
-  @object_actions [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects]
+
+  @object_actions [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects, :spawn_emoji]
 
   # Always deny access to non-enterable hubs
   def can?(_, :join_hub, %Ret.Hub{entry_mode: :deny}), do: false
