@@ -74,6 +74,8 @@ defmodule Ret.Hub do
     hub_role_memberships: []
   ]
 
+  def hub_preloads, do: @hub_preloads
+
   schema "hubs" do
     field(:name, :string)
     field(:description, :string)

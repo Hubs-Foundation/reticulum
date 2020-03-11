@@ -47,7 +47,7 @@ defmodule RetWeb.Api.V1.HubController do
 
   def update(conn, %{"id" => hub_sid, "hub" => %{"scene_id" => scene_id}} = params) do
     account = Guardian.Plug.current_resource(conn)
-    scene = 
+
     case Scene.scene_or_scene_listing_by_sid(scene_id) do
       nil -> conn |> send_resp(422, "scene not found")
       scene ->
