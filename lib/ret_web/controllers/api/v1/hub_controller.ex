@@ -81,7 +81,7 @@ defmodule RetWeb.Api.V1.HubController do
       changeset |> Hub.add_member_permissions_to_changeset(hub_params)
     end
 
-    if not is_nil("allow_promotion") do
+    if not is_nil(hub_params["allow_promotion"]) do
       changeset |> Hub.maybe_add_promotion_to_changeset(account, hub, hub_params)
     end
 
