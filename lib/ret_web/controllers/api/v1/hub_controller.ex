@@ -45,31 +45,51 @@ defmodule RetWeb.Api.V1.HubController do
     end
   end
 
-  def update(conn, %{"id" => hub_sid, "hub" => %{"scene_id" => scene_id}} = params) do
+  def update(conn, %{"id" => hub_sid, "hub" => hub_params}) do
     account = Guardian.Plug.current_resource(conn)
 
-    case Scene.scene_or_scene_listing_by_sid(scene_id) do
-      nil -> conn |> send_resp(422, "scene not found")
-      scene ->
-        case Hub |> Repo.get_by(hub_sid: hub_sid) do
-          %Hub{} = hub -> 
-            if account |> can?(update_hub(hub)) do
-              hub
-              |> Hub.add_attrs_to_changeset(params["hub"])
-              |> Hub.changeset_for_new_scene(params["hub"])
-              |> Hub.add_member_permissions_to_changeset(scene)
-              |> Hub.maybe_add_promotion_to_changeset(account, hub, params["hub"])
-              |> Repo.update!()
-              |> Repo.preload(Hub.hub_preloads())
-
-              conn |> render("show.json", %{ hub: hub, embeddable: account |> can?(embed_hub(hub))})
-            else
-              conn |> send_resp(401, "You cannot update this hub")
-            end
-          _ -> conn |> send_resp(404, "not found")
+    case Hub |> Repo.get_by(hub_sid: hub_sid) |> Repo.preload([:created_by_account, :hub_bindings, :hub_role_memberships]) do
+      %Hub{} = hub -> 
+        if account |> can?(update_hub(hub)) do
+          update_with_hub(conn, account, hub, hub_params)
+        else
+          conn |> send_resp(401, "You cannot update this hub")
         end
+      _ -> conn |> send_resp(404, "not found")
     end
   end
+
+  defp update_with_hub(conn, account, hub, hub_params) do
+    if is_nil(hub_params["scene_id"]) do
+      update_with_hub_and_scene(conn, account, hub, nil, hub_params)
+    else
+      case Scene.scene_or_scene_listing_by_sid(hub_params["scene_id"]) do
+        nil -> conn |> send_resp(422, "scene not found")
+        scene -> update_with_hub_and_scene(conn, account, hub, scene, hub_params)
+      end
+    end
+  end
+
+  defp update_with_hub_and_scene(conn, account, hub, scene, hub_params) do
+    changeset = hub |> Hub.add_attrs_to_changeset(hub_params)
+    
+    if not is_nil(scene) do
+      changeset |> Hub.changeset_for_new_scene(scene)
+    end
+
+    if not is_nil(hub_params["member_permissions"]) do
+      changeset |> Hub.add_member_permissions_to_changeset(hub_params)
+    end
+
+    if not is_nil("allow_promotion") do
+      changeset |> Hub.maybe_add_promotion_to_changeset(account, hub, hub_params)
+    end
+
+    hub = changeset |> Repo.update!() |> Repo.preload(Hub.hub_preloads())
+
+    conn |> render("show.json", %{ hub: hub, embeddable: account |> can?(embed_hub(hub))})
+  end
+
 
   def delete(conn, %{"id" => hub_sid}) do
     Hub
