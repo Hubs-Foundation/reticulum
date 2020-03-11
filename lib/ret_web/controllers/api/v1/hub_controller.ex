@@ -45,6 +45,32 @@ defmodule RetWeb.Api.V1.HubController do
     end
   end
 
+  def update(conn, %{"id" => hub_sid, "hub" => %{"scene_id" => scene_id}} = params) do
+    account = Guardian.Plug.current_resource(conn)
+    scene = 
+    case Scene.scene_or_scene_listing_by_sid(scene_id) do
+      nil -> conn |> send_resp(422, "scene not found")
+      scene ->
+        case Hub |> Repo.get_by(hub_sid: hub_sid) do
+          %Hub{} = hub -> 
+            if account |> can?(update_hub(hub)) do
+              hub
+              |> Hub.add_attrs_to_changeset(params["hub"])
+              |> Hub.changeset_for_new_scene(params["hub"])
+              |> Hub.add_member_permissions_to_changeset(hub, scene)
+              |> Hub.maybe_add_promotion_to_changeset(account, hub, params["hub"])
+              |> Repo.update!()
+              |> Repo.preload(Hub.hub_preloads())
+
+              conn |> render("show.json", %{ hub: hub, embeddable: account |> can?(embed_hub(hub))})
+            else
+              conn |> send_resp(401, "You cannot update this hub")
+            end
+          _ -> conn |> send_resp(404, "not found")
+        end
+    end
+  end
+
   def delete(conn, %{"id" => hub_sid}) do
     Hub
     |> Repo.get_by(hub_sid: hub_sid)

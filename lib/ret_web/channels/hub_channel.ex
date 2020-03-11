@@ -37,27 +37,11 @@ defmodule RetWeb.HubChannel do
     "maybe-nafr"
   ])
 
-  @hub_preloads [
-    scene: Scene.scene_preloads(),
-    scene_listing: [
-      :model_owned_file,
-      :screenshot_owned_file,
-      :scene_owned_file,
-      :project,
-      :account,
-      scene: Scene.scene_preloads()
-    ],
-    web_push_subscriptions: [],
-    hub_bindings: [],
-    created_by_account: [],
-    hub_role_memberships: []
-  ]
-
   def join("hub:" <> hub_sid, %{"profile" => profile, "context" => context} = params, socket) do
     hub =
       Hub
       |> Repo.get_by(hub_sid: hub_sid)
-      |> Repo.preload(@hub_preloads)
+      |> Repo.preload(Hub.hub_preloads())
 
     socket
     |> assign(:profile, profile)
@@ -306,7 +290,7 @@ defmodule RetWeb.HubChannel do
       {:ok, %Account{} = account, _claims} ->
         socket = Guardian.Phoenix.Socket.put_current_resource(socket, account)
 
-        hub = socket |> hub_for_socket |> Repo.preload(@hub_preloads)
+        hub = socket |> hub_for_socket |> Repo.preload(Hub.hub_preloads())
 
         hub =
           if creator_assignment_token do
@@ -431,9 +415,9 @@ defmodule RetWeb.HubChannel do
       hub
       |> Hub.add_attrs_to_changeset(payload)
       |> Hub.add_member_permissions_to_changeset(payload)
-      |> maybe_add_promotion_to_changeset(account, hub, payload)
+      |> Hub.maybe_add_promotion_to_changeset(account, hub, payload)
       |> Repo.update!()
-      |> Repo.preload(@hub_preloads)
+      |> Repo.preload(Hub.hub_preloads())
       |> broadcast_hub_refresh!(socket, stale_fields)
     end
 
@@ -460,7 +444,7 @@ defmodule RetWeb.HubChannel do
           hub |> Hub.changeset_for_new_environment_url(url)
       end
       |> Repo.update!()
-      |> Repo.preload(@hub_preloads, force: true)
+      |> Repo.preload(Hub.hub_preloads(), force: true)
       |> broadcast_hub_refresh!(socket, ["scene"])
     end
 
@@ -697,7 +681,7 @@ defmodule RetWeb.HubChannel do
       hub
       |> Hub.changeset_for_entry_mode(entry_mode)
       |> Repo.update!()
-      |> Repo.preload(@hub_preloads)
+      |> Repo.preload(Hub.hub_preloads())
       |> broadcast_hub_refresh!(socket, ["entry_mode"])
     end
 
@@ -1121,11 +1105,6 @@ defmodule RetWeb.HubChannel do
 
   defp payload_without_from(payload) do
     payload |> Map.delete(:from_session_id)
-  end
-
-  defp maybe_add_promotion_to_changeset(changeset, account, hub, payload) do
-    can_change_promotion = account |> can?(update_hub_promotion(hub))
-    if can_change_promotion, do: changeset |> Hub.add_promotion_to_changeset(payload), else: changeset
   end
 
   defp assign_has_blocks(socket) do
