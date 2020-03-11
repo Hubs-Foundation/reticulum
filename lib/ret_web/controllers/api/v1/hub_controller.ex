@@ -57,7 +57,7 @@ defmodule RetWeb.Api.V1.HubController do
               hub
               |> Hub.add_attrs_to_changeset(params["hub"])
               |> Hub.changeset_for_new_scene(params["hub"])
-              |> Hub.add_member_permissions_to_changeset(hub, scene)
+              |> Hub.add_member_permissions_to_changeset(scene)
               |> Hub.maybe_add_promotion_to_changeset(account, hub, params["hub"])
               |> Repo.update!()
               |> Repo.preload(Hub.hub_preloads())
