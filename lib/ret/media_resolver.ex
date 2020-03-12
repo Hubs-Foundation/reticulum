@@ -52,6 +52,18 @@ defmodule Ret.MediaResolver do
   def resolve_with_ytdl(%MediaResolverQuery{} = query, root_host, ytdl_format) do
     with ytdl_host when is_binary(ytdl_host) <- module_config(:ytdl_host) do
       case fetch_ytdl_response(query, ytdl_format) do
+        %HTTPoison.Response{status_code: 500, headers: headers, body: body} ->
+          if String.contains?(body, "is offline") do
+            {:commit,
+             resolved(query.url, %{
+               expected_content_type: "text/html",
+               media_status: :offline_stream,
+               thumbnail: RetWeb.Endpoint.static_url() <> "/stream-offline.png"
+             })}
+          else
+            resolve_non_video(query, root_host)
+          end
+
         %HTTPoison.Response{status_code: 302, headers: headers} ->
           # todo: it would be really nice to return video/* content type here!
           # but it seems that the way we're using youtube-dl will return a 302 with the
