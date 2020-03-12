@@ -122,6 +122,31 @@ defmodule RetWeb.HubControllerTest do
   end
 
   @tag :authenticated
+  test "The room owner can allow the promotion of a hub", %{conn: conn} do
+    %{"hub_id" => hub_id} =
+      conn
+      |> create_hub("Test Hub")
+      |> json_response(200)
+
+    hub = Hub |> Repo.get_by(hub_sid: hub_id) |> Repo.preload(:scene)
+
+    assert hub.allow_promotion === false
+
+    AppConfig.set_config_value("features|public_rooms", true)
+
+    %{"hubs" => hubs} =
+      conn
+      |> update_hub(hub_id, %{ allow_promotion: true })
+      |> json_response(200)
+
+    hub_response = Enum.at(hubs, 0)
+    
+    assert hub_response["allow_promotion"] === true
+
+    AppConfig.set_config_value("features|public_rooms", false)
+  end
+
+  @tag :authenticated
   test "An error is returned of the scene cannot be found", %{conn: conn} do
     %{"hub_id" => hub_id} =
       conn
