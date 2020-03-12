@@ -159,6 +159,13 @@ defmodule Ret.Hub do
     attrs["member_permissions"] |> Map.new(fn {k, v} -> {String.to_atom(k), v} end) |> member_permissions_to_int
   end
 
+  def add_member_permissions_update_to_changeset(changeset, hub, attrs) do
+    member_permissions = bor(hub.member_permissions, attrs |> member_permissions_from_attrs)
+
+    changeset
+    |> put_change(:member_permissions, member_permissions)
+  end
+
   def add_member_permissions_to_changeset(changeset, attrs) do
     member_permissions = attrs |> member_permissions_from_attrs
 
@@ -195,13 +202,23 @@ defmodule Ret.Hub do
   def changeset_for_new_scene(%Hub{} = hub, %Scene{} = scene) do
     hub
     |> change()
-    |> put_change(:scene_id, scene.scene_id)
-    |> put_change(:scene_listing_id, nil)
+    |> add_new_scene_to_changeset(scene)
   end
 
   def changeset_for_new_scene(%Hub{} = hub, %SceneListing{} = scene_listing) do
     hub
     |> change()
+    |> add_new_scene_to_changeset(scene_listing)
+  end
+
+  def add_new_scene_to_changeset(changeset, %Scene{} = scene) do
+    changeset
+    |> put_change(:scene_id, scene.scene_id)
+    |> put_change(:scene_listing_id, nil)
+  end
+
+  def add_new_scene_to_changeset(changeset, %SceneListing{} = scene_listing) do
+    changeset
     |> put_change(:scene_listing_id, scene_listing.scene_listing_id)
     |> put_change(:scene_id, nil)
   end
