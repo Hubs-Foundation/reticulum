@@ -1,7 +1,10 @@
 defmodule RetWeb.HubControllerTest do
   use RetWeb.ConnCase
+  import Ret.TestHelpers
 
-  alias Ret.{Hub, Repo, AppConfig}
+  alias Ret.{Hub, Scene, Repo, AppConfig}
+
+  setup [:create_account, :create_owned_file, :create_scene]
 
   test "anyone can create a hub", %{conn: conn} do
     %{"status" => "ok"} =
@@ -70,6 +73,52 @@ defmodule RetWeb.HubControllerTest do
       |> json_response(200)
     
     assert Enum.at(hubs, 0)["name"] === "New Name"
+  end
+
+  @tag :authenticated
+  test "The room owner can change the scene of a hub", %{conn: conn} do
+    %{"hub_id" => hub_id} =
+      conn
+      |> create_hub("Test Hub")
+      |> json_response(200)
+
+    hub = Hub |> Repo.get_by(hub_sid: hub_id) |> Repo.preload(:scene)
+
+    assert is_nil(hub.scene_id)
+
+    scene = Scene |> Repo.one()
+
+    assert !is_nil(scene)
+
+    %{"hubs" => hubs} =
+      conn
+      |> update_hub(hub_id, %{ scene_id: scene.scene_sid })
+      |> json_response(200)
+
+    hub_response = Enum.at(hubs, 0)
+    
+    assert hub_response["scene"]["scene_id"] === scene.scene_sid
+  end
+
+  @tag :authenticated
+  test "The room owner can change the member_permissions of a hub", %{conn: conn} do
+    %{"hub_id" => hub_id} =
+      conn
+      |> create_hub("Test Hub")
+      |> json_response(200)
+
+    hub = Hub |> Repo.get_by(hub_sid: hub_id) |> Repo.preload(:scene)
+
+    assert Hub.has_member_permission?(hub, :spawn_and_move_media) === false
+
+    %{"hubs" => hubs} =
+      conn
+      |> update_hub(hub_id, %{ member_permissions: %{ spawn_and_move_media: true } })
+      |> json_response(200)
+
+    hub_response = Enum.at(hubs, 0)
+    
+    assert hub_response["member_permissions"]["spawn_and_move_media"] === true
   end
 
   @tag :authenticated

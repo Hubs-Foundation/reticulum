@@ -72,17 +72,23 @@ defmodule RetWeb.Api.V1.HubController do
 
   defp update_with_hub_and_scene(conn, account, hub, scene, hub_params) do
     changeset = hub |> Hub.add_attrs_to_changeset(hub_params)
-    
-    if not is_nil(scene) do
-      changeset |> Hub.changeset_for_new_scene(scene)
+
+    changeset = if not is_nil(scene) do
+      changeset |> Hub.add_new_scene_to_changeset(scene)
+    else
+      changeset
     end
 
-    if not is_nil(hub_params["member_permissions"]) do
+    changeset = if not is_nil(hub_params["member_permissions"]) do
       changeset |> Hub.add_member_permissions_to_changeset(hub_params)
+    else
+      changeset
     end
 
-    if not is_nil(hub_params["allow_promotion"]) do
+    changeset = if not is_nil(hub_params["allow_promotion"]) do
       changeset |> Hub.maybe_add_promotion_to_changeset(account, hub, hub_params)
+    else
+      changeset
     end
 
     hub = changeset |> Repo.update!() |> Repo.preload(Hub.hub_preloads())

@@ -195,13 +195,23 @@ defmodule Ret.Hub do
   def changeset_for_new_scene(%Hub{} = hub, %Scene{} = scene) do
     hub
     |> change()
-    |> put_change(:scene_id, scene.scene_id)
-    |> put_change(:scene_listing_id, nil)
+    |> add_new_scene_to_changeset(scene)
   end
 
   def changeset_for_new_scene(%Hub{} = hub, %SceneListing{} = scene_listing) do
     hub
     |> change()
+    |> add_new_scene_to_changeset(scene_listing)
+  end
+
+  def add_new_scene_to_changeset(changeset, %Scene{} = scene) do
+    changeset
+    |> put_change(:scene_id, scene.scene_id)
+    |> put_change(:scene_listing_id, nil)
+  end
+
+  def add_new_scene_to_changeset(changeset, %SceneListing{} = scene_listing) do
+    changeset
     |> put_change(:scene_listing_id, scene_listing.scene_listing_id)
     |> put_change(:scene_id, nil)
   end
