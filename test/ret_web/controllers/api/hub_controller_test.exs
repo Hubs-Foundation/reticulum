@@ -45,45 +45,6 @@ defmodule RetWeb.HubControllerTest do
     assert created_hub.user_data["test"] == "Hello World"
   end
 
-  test "non-room owners can't update a hub", %{conn: conn} do
-    %{"hub_id" => hub_id} =
-      conn
-      |> create_hub("Test Hub")
-      |> json_response(200)
-
-    
-    conn
-    |> update_hub(hub_id, %{ name: "New Name" })
-    |> response(401)
-  end
-
-  @tag :authenticated
-  test "The room owner can update a hub", %{conn: conn} do
-    %{"hub_id" => hub_id} =
-      conn
-      |> create_hub("Test Hub")
-      |> json_response(200)
-
-    %{"hubs" => hubs} =
-      conn
-      |> update_hub(hub_id, %{ name: "New Name" })
-      |> json_response(200)
-    
-    assert Enum.at(hubs, 0)["name"] === "New Name"
-  end
-
-  @tag :authenticated
-  test "An error is returned of the scene cannot be found", %{conn: conn} do
-    %{"hub_id" => hub_id} =
-      conn
-      |> create_hub("Test Hub")
-      |> json_response(200)
-
-    conn
-    |> update_hub(hub_id, %{ name: "New Name", scene_id: "badscene" })
-    |> response(422)
-  end
-
   defp create_hub(conn, name) do
     create_hub_with_attrs(conn, %{ name: name })
   end
@@ -91,10 +52,5 @@ defmodule RetWeb.HubControllerTest do
   defp create_hub_with_attrs(conn, attrs) do
     req = conn |> api_v1_hub_path(:create, %{"hub" => attrs})
     conn |> post(req)
-  end
-
-  defp update_hub(conn, hub_id, attrs) do
-    req = conn |> api_v1_hub_path(:update, hub_id, %{"hub" => attrs})
-    conn |> patch(req)
   end
 end
