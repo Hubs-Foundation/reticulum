@@ -104,12 +104,23 @@ defmodule RetWeb.HubControllerTest do
   test "The room owner can change the member_permissions of a hub", %{conn: conn} do
     %{"hub_id" => hub_id} =
       conn
-      |> create_hub("Test Hub")
+      |> create_hub_with_attrs(%{ name: "Test Hub", member_permissions: %{ spawn_camera: true }})
       |> json_response(200)
 
     hub = Hub |> Repo.get_by(hub_sid: hub_id) |> Repo.preload(:scene)
 
+    assert Hub.has_member_permission?(hub, :spawn_camera) === false
     assert Hub.has_member_permission?(hub, :spawn_and_move_media) === false
+
+    %{"hubs" => hubs} =
+      conn
+      |> update_hub(hub_id, %{ member_permissions: %{ spawn_camera: true } })
+      |> json_response(200)
+
+    hub_response = Enum.at(hubs, 0)
+
+    assert hub_response["member_permissions"]["spawn_camera"] === true
+    assert hub_response["member_permissions"]["spawn_and_move_media"] === false
 
     %{"hubs" => hubs} =
       conn
@@ -118,6 +129,7 @@ defmodule RetWeb.HubControllerTest do
 
     hub_response = Enum.at(hubs, 0)
     
+    assert hub_response["member_permissions"]["spawn_camera"] === true
     assert hub_response["member_permissions"]["spawn_and_move_media"] === true
   end
 

@@ -159,6 +159,13 @@ defmodule Ret.Hub do
     attrs["member_permissions"] |> Map.new(fn {k, v} -> {String.to_atom(k), v} end) |> member_permissions_to_int
   end
 
+  def add_member_permissions_update_to_changeset(changeset, hub, attrs) do
+    member_permissions = bor(hub.member_permissions, attrs |> member_permissions_from_attrs)
+
+    changeset
+    |> put_change(:member_permissions, member_permissions)
+  end
+
   def add_member_permissions_to_changeset(changeset, attrs) do
     member_permissions = attrs |> member_permissions_from_attrs
 
