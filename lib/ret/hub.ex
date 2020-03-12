@@ -61,6 +61,24 @@ defmodule Ret.Hub do
     spawn_emoji: false
   }
 
+  @hub_preloads [
+    scene: Scene.scene_preloads(),
+    scene_listing: [
+      :model_owned_file,
+      :screenshot_owned_file,
+      :scene_owned_file,
+      :project,
+      :account,
+      scene: Scene.scene_preloads()
+    ],
+    web_push_subscriptions: [],
+    hub_bindings: [],
+    created_by_account: [],
+    hub_role_memberships: []
+  ]
+
+  def hub_preloads, do: @hub_preloads
+
   schema "hubs" do
     field(:name, :string)
     field(:description, :string)
@@ -146,6 +164,11 @@ defmodule Ret.Hub do
 
     changeset
     |> put_change(:member_permissions, member_permissions)
+  end
+
+  def maybe_add_promotion_to_changeset(changeset, account, hub, attrs) do
+    can_change_promotion = account |> can?(update_hub_promotion(hub))
+    if can_change_promotion, do: changeset |> add_promotion_to_changeset(attrs), else: changeset
   end
 
   def add_promotion_to_changeset(changeset, attrs) do
