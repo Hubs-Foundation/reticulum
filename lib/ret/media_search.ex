@@ -672,7 +672,7 @@ defmodule Ret.MediaSearch do
       end
     
     scene_id = if scene_or_scene_listing do
-      scene_or_scene_listing.scene_sid
+      Scene.to_sid(scene_or_scene_listing)
     else
       nil
     end
