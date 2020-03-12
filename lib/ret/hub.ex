@@ -61,23 +61,23 @@ defmodule Ret.Hub do
     spawn_emoji: false
   }
 
-  @hub_preloads [
-    scene: Scene.scene_preloads(),
-    scene_listing: [
-      :model_owned_file,
-      :screenshot_owned_file,
-      :scene_owned_file,
-      :project,
-      :account,
-      scene: Scene.scene_preloads()
-    ],
-    web_push_subscriptions: [],
-    hub_bindings: [],
-    created_by_account: [],
-    hub_role_memberships: []
-  ]
-
-  def hub_preloads, do: @hub_preloads
+  def hub_preloads() do
+    [
+      scene: Scene.scene_preloads(),
+      scene_listing: [
+        :model_owned_file,
+        :screenshot_owned_file,
+        :scene_owned_file,
+        :project,
+        :account,
+        scene: Scene.scene_preloads()
+      ],
+      web_push_subscriptions: [],
+      hub_bindings: [],
+      created_by_account: [],
+      hub_role_memberships: []
+    ]
+  end
 
   schema "hubs" do
     field(:name, :string)
