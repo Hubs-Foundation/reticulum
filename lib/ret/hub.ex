@@ -164,8 +164,6 @@ defmodule Ret.Hub do
       |> Map.new(fn {k, v} -> {String.to_atom(k), v} end)
       |> member_permissions_to_int
 
-    IO.inspect(member_permissions)
-
     changeset
     |> put_change(:member_permissions, member_permissions)
   end
