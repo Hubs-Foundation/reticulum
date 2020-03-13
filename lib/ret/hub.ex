@@ -160,7 +160,11 @@ defmodule Ret.Hub do
   end
 
   def add_member_permissions_update_to_changeset(changeset, hub, attrs) do
-    member_permissions = bor(hub.member_permissions, attrs |> member_permissions_from_attrs)
+    member_permissions = Map.merge(member_permissions_for_hub(hub), attrs["member_permissions"])
+      |> Map.new(fn {k, v} -> {String.to_atom(k), v} end)
+      |> member_permissions_to_int
+
+    IO.inspect(member_permissions)
 
     changeset
     |> put_change(:member_permissions, member_permissions)
@@ -485,7 +489,7 @@ defmodule Ret.Hub do
   end
 
   def member_permissions_for_hub(%Hub{} = hub) do
-    hub.member_permissions |> BitFieldUtils.permissions_to_map(@member_permissions)
+    hub.member_permissions |> BitFieldUtils.permissions_to_map(@member_permissions) |> Map.new(fn {k, v} -> {Atom.to_string(k), v} end)
   end
 
   # The account argument here can be a Ret.Account, a Ret.OAuthProvider or nil.
