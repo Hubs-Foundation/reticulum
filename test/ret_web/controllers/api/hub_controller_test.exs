@@ -104,33 +104,36 @@ defmodule RetWeb.HubControllerTest do
   test "The room owner can change the member_permissions of a hub", %{conn: conn} do
     %{"hub_id" => hub_id} =
       conn
-      |> create_hub_with_attrs(%{ name: "Test Hub", member_permissions: %{ spawn_camera: true }})
+      |> create_hub_with_attrs(%{ name: "Test Hub" })
       |> json_response(200)
 
     hub = Hub |> Repo.get_by(hub_sid: hub_id) |> Repo.preload(:scene)
 
     assert Hub.has_member_permission?(hub, :spawn_camera) === false
     assert Hub.has_member_permission?(hub, :spawn_and_move_media) === false
+    assert Hub.has_member_permission?(hub, :pin_objects) === false
 
     %{"hubs" => hubs} =
       conn
-      |> update_hub(hub_id, %{ member_permissions: %{ spawn_camera: true } })
+      |> update_hub(hub_id, %{ member_permissions: %{ spawn_camera: true, pin_objects: true } })
       |> json_response(200)
 
     hub_response = Enum.at(hubs, 0)
 
     assert hub_response["member_permissions"]["spawn_camera"] === true
     assert hub_response["member_permissions"]["spawn_and_move_media"] === false
+    assert hub_response["member_permissions"]["pin_objects"] === true
 
     %{"hubs" => hubs} =
       conn
-      |> update_hub(hub_id, %{ member_permissions: %{ spawn_and_move_media: true } })
+      |> update_hub(hub_id, %{ member_permissions: %{ spawn_and_move_media: true, pin_objects: false } })
       |> json_response(200)
 
     hub_response = Enum.at(hubs, 0)
     
     assert hub_response["member_permissions"]["spawn_camera"] === true
     assert hub_response["member_permissions"]["spawn_and_move_media"] === true
+    assert hub_response["member_permissions"]["pin_objects"] === false
   end
 
   @tag :authenticated
@@ -154,6 +157,15 @@ defmodule RetWeb.HubControllerTest do
     hub_response = Enum.at(hubs, 0)
     
     assert hub_response["allow_promotion"] === true
+
+    %{"hubs" => hubs} =
+      conn
+      |> update_hub(hub_id, %{ allow_promotion: false })
+      |> json_response(200)
+
+    hub_response = Enum.at(hubs, 0)
+    
+    assert hub_response["allow_promotion"] === false
 
     AppConfig.set_config_value("features|public_rooms", false)
   end
@@ -180,7 +192,9 @@ defmodule RetWeb.HubControllerTest do
   end
 
   defp update_hub(conn, hub_id, attrs) do
-    req = conn |> api_v1_hub_path(:update, hub_id, %{"hub" => attrs})
-    conn |> patch(req)
+    body = Poison.encode!(%{"hub" => attrs})
+    conn
+    |> put_req_header("content-type", "application/json")
+    |> patch(api_v1_hub_path(conn, :update, hub_id), body)
   end
 end
