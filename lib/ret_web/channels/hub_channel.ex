@@ -882,6 +882,18 @@ defmodule RetWeb.HubChannel do
          _socket,
          _context,
          %{
+           hub_requires_oauth: false,
+           account_can_join: false
+         }
+       ),
+       do: deny_join()
+
+  defp join_with_hub(
+         %Hub{},
+         %Account{},
+         _socket,
+         _context,
+         %{
            hub_requires_oauth: true,
            account_has_provider_for_hub: true,
            account_can_join: false

@@ -23,7 +23,9 @@ defmodule RetWeb.AuthChannel do
     if !Map.get(socket.assigns, :used) do
       socket = socket |> assign(:used, true)
 
-      if can?(nil, create_account(nil)) || Account.exists_for_email?(email) do
+      account_disabled = Account.exists_for_email?(email) && Account.account_for_email(email).disabled
+
+      if !account_disabled && (can?(nil, create_account(nil)) || Account.exists_for_email?(email)) do
         # Create token + send email
         %LoginToken{token: token, payload_key: payload_key} = LoginToken.new_login_token_for_email(email)
 
