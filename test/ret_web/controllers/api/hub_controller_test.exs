@@ -23,6 +23,16 @@ defmodule RetWeb.HubControllerTest do
     AppConfig.set_config_value("features|disable_room_creation", false)
   end
 
+  test "disabled accounts cannot create a hub", %{conn: conn} do
+    disabled_account = create_account("disabled_account")
+    disabled_account |> Ecto.Changeset.change(state: :disabled) |> Ret.Repo.update!()
+
+    conn
+    |> put_auth_header_for_account("disabled_account@mozilla.com")
+    |> create_hub("Test Hub")
+    |> response(401)
+  end
+
   @tag :authenticated
   test "hub is assigned a creator when authenticated", %{conn: conn} do
     %{"hub_id" => hub_id} =
@@ -36,11 +46,10 @@ defmodule RetWeb.HubControllerTest do
     assert created_hub.created_by_account.account_id == created_account.account_id
   end
 
-
   test "anyone can assign user_data to a hub", %{conn: conn} do
     %{"hub_id" => hub_id} =
       conn
-      |> create_hub_with_attrs(%{ name: "Test Hub", user_data: %{ test: "Hello World" } })
+      |> create_hub_with_attrs(%{name: "Test Hub", user_data: %{test: "Hello World"}})
       |> json_response(200)
 
     created_hub = Hub |> Repo.get_by(hub_sid: hub_id)
@@ -54,9 +63,8 @@ defmodule RetWeb.HubControllerTest do
       |> create_hub("Test Hub")
       |> json_response(200)
 
-    
     conn
-    |> update_hub(hub_id, %{ name: "New Name" })
+    |> update_hub(hub_id, %{name: "New Name"})
     |> response(401)
   end
 
@@ -69,9 +77,9 @@ defmodule RetWeb.HubControllerTest do
 
     %{"hubs" => hubs} =
       conn
-      |> update_hub(hub_id, %{ name: "New Name" })
+      |> update_hub(hub_id, %{name: "New Name"})
       |> json_response(200)
-    
+
     assert Enum.at(hubs, 0)["name"] === "New Name"
   end
 
@@ -92,11 +100,11 @@ defmodule RetWeb.HubControllerTest do
 
     %{"hubs" => hubs} =
       conn
-      |> update_hub(hub_id, %{ scene_id: scene.scene_sid })
+      |> update_hub(hub_id, %{scene_id: scene.scene_sid})
       |> json_response(200)
 
     hub_response = Enum.at(hubs, 0)
-    
+
     assert hub_response["scene"]["scene_id"] === scene.scene_sid
   end
 
@@ -104,7 +112,7 @@ defmodule RetWeb.HubControllerTest do
   test "The room owner can change the member_permissions of a hub", %{conn: conn} do
     %{"hub_id" => hub_id} =
       conn
-      |> create_hub_with_attrs(%{ name: "Test Hub" })
+      |> create_hub_with_attrs(%{name: "Test Hub"})
       |> json_response(200)
 
     hub = Hub |> Repo.get_by(hub_sid: hub_id) |> Repo.preload(:scene)
@@ -115,7 +123,7 @@ defmodule RetWeb.HubControllerTest do
 
     %{"hubs" => hubs} =
       conn
-      |> update_hub(hub_id, %{ member_permissions: %{ spawn_camera: true, pin_objects: true } })
+      |> update_hub(hub_id, %{member_permissions: %{spawn_camera: true, pin_objects: true}})
       |> json_response(200)
 
     hub_response = Enum.at(hubs, 0)
@@ -126,11 +134,11 @@ defmodule RetWeb.HubControllerTest do
 
     %{"hubs" => hubs} =
       conn
-      |> update_hub(hub_id, %{ member_permissions: %{ spawn_and_move_media: true, pin_objects: false } })
+      |> update_hub(hub_id, %{member_permissions: %{spawn_and_move_media: true, pin_objects: false}})
       |> json_response(200)
 
     hub_response = Enum.at(hubs, 0)
-    
+
     assert hub_response["member_permissions"]["spawn_camera"] === true
     assert hub_response["member_permissions"]["spawn_and_move_media"] === true
     assert hub_response["member_permissions"]["pin_objects"] === false
@@ -151,20 +159,20 @@ defmodule RetWeb.HubControllerTest do
 
     %{"hubs" => hubs} =
       conn
-      |> update_hub(hub_id, %{ allow_promotion: true })
+      |> update_hub(hub_id, %{allow_promotion: true})
       |> json_response(200)
 
     hub_response = Enum.at(hubs, 0)
-    
+
     assert hub_response["allow_promotion"] === true
 
     %{"hubs" => hubs} =
       conn
-      |> update_hub(hub_id, %{ allow_promotion: false })
+      |> update_hub(hub_id, %{allow_promotion: false})
       |> json_response(200)
 
     hub_response = Enum.at(hubs, 0)
-    
+
     assert hub_response["allow_promotion"] === false
 
     AppConfig.set_config_value("features|public_rooms", false)
@@ -178,12 +186,12 @@ defmodule RetWeb.HubControllerTest do
       |> json_response(200)
 
     conn
-    |> update_hub(hub_id, %{ name: "New Name", scene_id: "badscene" })
+    |> update_hub(hub_id, %{name: "New Name", scene_id: "badscene"})
     |> response(422)
   end
 
   defp create_hub(conn, name) do
-    create_hub_with_attrs(conn, %{ name: name })
+    create_hub_with_attrs(conn, %{name: name})
   end
 
   defp create_hub_with_attrs(conn, attrs) do
@@ -193,6 +201,7 @@ defmodule RetWeb.HubControllerTest do
 
   defp update_hub(conn, hub_id, attrs) do
     body = Poison.encode!(%{"hub" => attrs})
+
     conn
     |> put_req_header("content-type", "application/json")
     |> patch(api_v1_hub_path(conn, :update, hub_id), body)

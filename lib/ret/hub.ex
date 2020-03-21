@@ -531,7 +531,7 @@ defimpl Canada.Can, for: Ret.Account do
   @creator_actions [:update_roles]
 
   # Always deny all actions to disabled accounts
-  def can?(%Ret.Account{disabled: true}, _, _), do: false
+  def can?(%Ret.Account{state: :disabled}, _, _), do: false
 
   # Always deny access to non-enterable hubs
   def can?(%Ret.Account{}, :join_hub, %Ret.Hub{entry_mode: :deny}), do: false
