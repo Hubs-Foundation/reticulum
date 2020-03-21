@@ -23,6 +23,14 @@ defmodule RetWeb.HubChannelTest do
     AppConfig.set_config_value("features|require_account_for_join", false)
   end
 
+  test "joining hub does not work if account is disabled", %{socket: socket, hub: hub} do
+    disabled_account = create_account("disabled_account")
+    disabled_account |> Ecto.Changeset.change(state: :disabled) |> Ret.Repo.update!()
+
+    {:error, %{reason: "join_denied"}} =
+      subscribe_and_join(socket, "hub:#{hub.hub_sid}", join_params_for_account(disabled_account))
+  end
+
   test "joining hub registers in presence", %{socket: socket, hub: hub} do
     {:ok, %{session_id: session_id}, socket} = subscribe_and_join(socket, "hub:#{hub.hub_sid}", join_params())
     :timer.sleep(100)

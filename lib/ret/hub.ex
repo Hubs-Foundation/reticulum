@@ -163,7 +163,8 @@ defmodule Ret.Hub do
   end
 
   def add_member_permissions_update_to_changeset(changeset, hub, attrs) do
-    member_permissions = Map.merge(member_permissions_for_hub(hub), attrs["member_permissions"])
+    member_permissions =
+      Map.merge(member_permissions_for_hub(hub), attrs["member_permissions"])
       |> Map.new(fn {k, v} -> {String.to_atom(k), v} end)
       |> member_permissions_to_int
 
@@ -490,7 +491,9 @@ defmodule Ret.Hub do
   end
 
   def member_permissions_for_hub(%Hub{} = hub) do
-    hub.member_permissions |> BitFieldUtils.permissions_to_map(@member_permissions) |> Map.new(fn {k, v} -> {Atom.to_string(k), v} end)
+    hub.member_permissions
+    |> BitFieldUtils.permissions_to_map(@member_permissions)
+    |> Map.new(fn {k, v} -> {Atom.to_string(k), v} end)
   end
 
   # The account argument here can be a Ret.Account, a Ret.OAuthProvider or nil.
@@ -509,7 +512,7 @@ defmodule Ret.Hub do
       spawn_and_move_media: account |> can?(spawn_and_move_media(hub)),
       pin_objects: account |> can?(pin_objects(hub)),
       spawn_emoji: account |> can?(spawn_emoji(hub)),
-      fly: account |> can?(fly(hub)),
+      fly: account |> can?(fly(hub))
     }
   end
 
@@ -526,6 +529,9 @@ defimpl Canada.Can, for: Ret.Account do
   @owner_actions [:update_hub, :close_hub, :embed_hub, :kick_users, :mute_users]
   @object_actions [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects, :spawn_emoji, :fly]
   @creator_actions [:update_roles]
+
+  # Always deny all actions to disabled accounts
+  def can?(%Ret.Account{state: :disabled}, _, _), do: false
 
   # Always deny access to non-enterable hubs
   def can?(%Ret.Account{}, :join_hub, %Ret.Hub{entry_mode: :deny}), do: false

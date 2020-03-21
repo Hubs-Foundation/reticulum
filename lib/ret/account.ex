@@ -13,6 +13,7 @@ defmodule Ret.Account do
   schema "accounts" do
     field(:min_token_issued_at, :utc_datetime)
     field(:is_admin, :boolean)
+    field(:state, Account.State)
     has_one(:login, Login, foreign_key: :account_id)
     has_one(:identity, Identity, foreign_key: :account_id)
     has_many(:owned_files, Ret.OwnedFile, foreign_key: :account_id)
