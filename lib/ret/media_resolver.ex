@@ -347,6 +347,13 @@ defmodule Ret.MediaResolver do
   end
 
   defp resolve_sketchfab_model(model_id, api_key, version \\ 1) do
+    model_id =
+      if model_id |> String.contains?("-") do
+        model_id |> String.split("-") |> List.last()
+      else
+        model_id
+      end
+
     cached_file_result =
       CachedFile.fetch(
         "sketchfab-#{model_id}-#{version}",
