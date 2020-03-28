@@ -1,6 +1,6 @@
 defmodule Ret.ResolvedMedia do
   @enforce_keys [:uri]
-  defstruct [:uri, :audio_uri, :meta]
+  defstruct [:uri, :audio_uri, :meta, :ttl]
 end
 
 defmodule Ret.MediaResolverQuery do
@@ -17,6 +17,9 @@ defmodule Ret.MediaResolver do
   alias Ret.{CachedFile, MediaResolverQuery, Statix}
 
   @ytdl_valid_status_codes [200, 302, 500]
+
+  @youtube_ms_per_request_rate_limit 4000
+  @youtube_rate_limit_timeout 60000
 
   @non_video_root_hosts [
     "sketchfab.com",
@@ -43,6 +46,23 @@ defmodule Ret.MediaResolver do
 
   def resolve(%MediaResolverQuery{} = query, root_host) when root_host in @non_video_root_hosts do
     resolve_non_video(query, root_host)
+  end
+
+  # For youtube.com, we need to rate limit requests. Only do one at a time on this host.
+  def resolve(%MediaResolverQuery{} = query, "youtube.com") do
+    Mutex.under(MediaResolverMutex, :youtube, @youtube_rate_limit_timeout, fn -> 
+      now = System.system_time(:millisecond)
+      res = resolve_with_ytdl(query, root_host, query |> ytdl_format(root_host))
+      request_time = System.system_time(:millisecond) - now
+      remaining_time = @youtube_ms_per_request_rate_limit - request_time
+
+      if remaining_time > 0
+        # Rate limit youtube resolves
+        :timer.sleep(remaining_time)
+      end
+
+      res
+    end)
   end
 
   def resolve(%MediaResolverQuery{} = query, root_host) do
@@ -468,6 +488,7 @@ defmodule Ret.MediaResolver do
   def resolved(:error), do: nil
   def resolved(%URI{} = uri), do: %Ret.ResolvedMedia{uri: uri}
   def resolved(%URI{} = uri, meta), do: %Ret.ResolvedMedia{uri: uri, meta: meta}
+  def resolved(%URI{} = uri, meta, ttl), do: %Ret.ResolvedMedia{uri: uri, meta: meta, ttl: ttl}
 
   def resolved(%URI{} = uri, %URI{} = audio_uri, meta),
     do: %Ret.ResolvedMedia{uri: uri, audio_uri: audio_uri, meta: meta}

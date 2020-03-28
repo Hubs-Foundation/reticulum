@@ -16,6 +16,9 @@ defmodule Ret.Application do
       supervisor(RetWeb.Endpoint, []),
       supervisor(RetWeb.Presence, []),
 
+      # Media Resolver Mutex
+      %{ id: MediaResolverMutex, start: { Mutex, :start_link, [[name: MediaResolverMutex, meta: nil]] } },
+
       # Quantum scheduler
       worker(Ret.Scheduler, []),
       # Room assigner monitor

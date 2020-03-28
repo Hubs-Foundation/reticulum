@@ -76,7 +76,8 @@ defmodule Ret.Mixfile do
       {:reverse_proxy_plug,
        git: "https://github.com/mozillareality/reverse_proxy_plug.git", branch: "reticulum/master"},
       {:oauther, "~> 1.1"},
-      {:jason, "~> 1.1"}
+      {:jason, "~> 1.1"},
+      {:mutex, "~> 1.1.3"},
     ]
   end
 

@@ -59,6 +59,7 @@
   "metrics": {:hex, :metrics, "1.0.1", "25f094dea2cda98213cecc3aeff09e940299d950904393b2a29d191c346a8486", [:rebar3], [], "hexpm"},
   "mime": {:hex, :mime, "1.3.1", "30ce04ab3175b6ad0bdce0035cba77bba68b813d523d1aac73d9781b4d193cf8", [:mix], [], "hexpm"},
   "mimerl": {:hex, :mimerl, "1.2.0", "67e2d3f571088d5cfd3e550c383094b47159f3eee8ffa08e64106cdf5e981be3", [:rebar3], [], "hexpm"},
+  "mutex": {:hex, :mutex, "1.1.3", "d7e19f96fe19d6d97583bf12ca1ec182bbf14619b7568592cc461135de1c3b81", [:mix], [], "hexpm"},
   "neotom": {:hex, :neotoma, "1.7.3", "d8bd5404b73273989946e4f4f6d529e5c2088f5fa1ca790b4dbe81f4be408e61", [:rebar], [], "hexpm"},
   "neotoma": {:hex, :neotoma, "1.7.3", "d8bd5404b73273989946e4f4f6d529e5c2088f5fa1ca790b4dbe81f4be408e61", [:rebar], [], "hexpm"},
   "netlink": {:git, "git://github.com/Feuerlabs/netlink.git", "aab67b0a16d88e32a2790a3c0a06c37f98ae121e", [ref: "aab67b0"]},
