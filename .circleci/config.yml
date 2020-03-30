@@ -16,8 +16,5 @@ jobs:
     working_directory: ~/repo
     steps:
       - checkout
-
-      # specify any bash command here prefixed with `run: `
       - run: mix deps.get
-      - run: mix ecto.create
-      - run: mix test
+      - run: mix format --check-formatted 'lib/**/*.{ex,exs}'
