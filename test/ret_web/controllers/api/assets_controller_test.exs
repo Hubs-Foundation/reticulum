@@ -44,10 +44,14 @@ defmodule RetWeb.AssetsControllerTest do
   end
 
   @tag :authenticated
-  test "assets delete shows a 404 when the user does not own the asset", %{conn: conn, thumbnail_owned_file: thumbnail_owned_file} do
+  test "assets delete shows a 404 when the user does not own the asset", %{
+    conn: conn,
+    thumbnail_owned_file: thumbnail_owned_file
+  } do
     other_account = Account.account_for_email("test2@mozilla.com")
 
-    {:ok, asset} = %Asset{}
+    {:ok, asset} =
+      %Asset{}
       |> Asset.changeset(other_account, thumbnail_owned_file, thumbnail_owned_file, %{
         name: "Test Asset"
       })

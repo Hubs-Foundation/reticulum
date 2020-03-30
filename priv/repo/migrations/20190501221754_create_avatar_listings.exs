@@ -29,12 +29,14 @@ defmodule Ret.Repo.Migrations.CreateAvatarListings do
       add(:normal_map_owned_file_id, references(:owned_files, column: :owned_file_id))
       add(:orm_map_owned_file_id, references(:owned_files, column: :owned_file_id))
     end
+
     create(index(:avatar_listings, [:avatar_listing_sid], unique: true))
 
     alter table(:avatars) do
       add(:parent_avatar_listing_id, references(:avatar_listings, column: :avatar_listing_id))
       add(:reviewed_at, :utc_datetime, null: true)
     end
+
     create(index(:avatars, [:reviewed_at], where: "reviewed_at is null or reviewed_at < updated_at"))
   end
 end

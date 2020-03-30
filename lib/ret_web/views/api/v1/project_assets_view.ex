@@ -25,5 +25,4 @@ defmodule RetWeb.Api.V1.ProjectAssetsView do
       assets: [render_asset(asset)]
     }
   end
-
 end

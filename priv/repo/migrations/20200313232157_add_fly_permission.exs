@@ -17,7 +17,7 @@ defmodule Ret.Repo.Migrations.AddFlyPermission do
       )
     end
 
-    execute("UPDATE ret0.hubs SET member_permissions = member_permissions | 32;");
+    execute("UPDATE ret0.hubs SET member_permissions = member_permissions | 32;")
   end
 
   def down do
