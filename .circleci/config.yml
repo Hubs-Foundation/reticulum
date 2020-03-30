@@ -23,4 +23,4 @@ jobs:
       - run: mix local.rebar --force
       - run: mix deps.get
       - run: mix test
-      - run: mix format --check-formatted 'lib/**/*.{ex,exs}'
+      - run: mix format --check-formatted 'lib/**/*.{ex,exs}' 'priv/repo/**/*.{ex,exs}' 'test/**/*.{ex,exs}'
