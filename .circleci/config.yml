@@ -22,6 +22,5 @@ jobs:
       - run: mix local.hex --force
       - run: mix local.rebar --force
       - run: mix deps.get
-      - run: mix ecto.create
       - run: mix test
       - run: mix format --check-formatted 'lib/**/*.{ex,exs}'
