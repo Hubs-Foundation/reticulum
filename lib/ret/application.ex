@@ -7,7 +7,18 @@ defmodule Ret.Application do
   def start(_type, _args) do
     import Supervisor.Spec
 
-    {:ok, _} = EctoBootMigration.migrate(:ret)
+    # Start application, start repos, take lock, run migrations, stop repos
+    Application.load(:ret)
+    EctoBootMigration.start_dependencies()
+    repos = Application.get_env(:ret, :ecto_repos, [])
+    repos_pids = EctoBootMigration.start_repos(repos)
+
+    Ret.Locking.exec_if_session_lockable("ret_migration", fn ->
+      Ecto.Adapters.SQL.query!(Ret.Repo, "CREATE SCHEMA IF NOT EXISTS ret0")
+      EctoBootMigration.run_migrations(repos)
+    end)
+
+    EctoBootMigration.stop_repos(repos_pids)
 
     :ok = Ret.Statix.connect()
 
