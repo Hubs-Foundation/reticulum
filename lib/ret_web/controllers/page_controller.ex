@@ -584,9 +584,18 @@ defmodule RetWeb.PageController do
         )
 
       body = ReverseProxyPlug.read_body(conn)
+      is_head = conn |> Conn.get_req_header("x-original-method") == ["HEAD"]
 
       %Conn{}
       |> Map.merge(conn)
+      |> Map.put(
+        :method,
+        if is_head do
+          "HEAD"
+        else
+          conn.method
+        end
+      )
       # Need to strip path_info since proxy plug reads it
       |> Map.put(:path_info, [])
       # Some domains disallow access from improper Origins

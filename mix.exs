@@ -33,6 +33,7 @@ defmodule Ret.Mixfile do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:ecto_boot_migration, "~> 0.2.0"},
       {:phoenix, "~> 1.4.0"},
       {:phoenix_pubsub, "~> 1.1"},
       {:phoenix_ecto, "~> 4.0"},
