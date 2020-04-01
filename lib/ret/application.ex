@@ -7,7 +7,7 @@ defmodule Ret.Application do
   def start(_type, _args) do
     import Supervisor.Spec
 
-    if Mix.env() !== "test" do
+    if Mix.env() !== :test do
       # Start application, start repos, take lock, run migrations, stop repos
       Application.load(:ret)
       EctoBootMigration.start_dependencies()
