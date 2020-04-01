@@ -11,17 +11,17 @@ defmodule Ret.Application do
     Application.load(:ret)
     EctoBootMigration.start_dependencies()
 
-    if Mix.env() !== :test do
-      repos_pids = EctoBootMigration.start_repos([Ret.Repo])
+    repos_pids = EctoBootMigration.start_repos([Ret.Repo])
 
-      Ret.Locking.exec_if_session_lockable("ret_migration", fn ->
+    Ret.Locking.exec_if_session_lockable("ret_migration", fn ->
+      if Mix.env() !== :test do
         Ecto.Adapters.SQL.query!(Ret.Repo, "CREATE SCHEMA IF NOT EXISTS ret0")
         priv_path = Path.join(["#{:code.priv_dir(:ret)}", "repo", "migrations"])
         Ecto.Migrator.run(Ret.Repo, priv_path, :up, all: true, prefix: "ret0")
-      end)
+      end
+    end)
 
-      EctoBootMigration.stop_repos(repos_pids)
-    end
+    EctoBootMigration.stop_repos(repos_pids)
 
     :ok = Ret.Statix.connect()
 
