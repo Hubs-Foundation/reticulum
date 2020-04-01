@@ -14,7 +14,8 @@ defmodule Ret.Application do
     repos_pids = EctoBootMigration.start_repos([Ret.Repo])
 
     Ret.Locking.exec_if_session_lockable("ret_migration", fn ->
-      if Mix.env() !== :test do
+      # Can't check mix_env here, so check db name
+      if Application.get_env(:ret, Ret.Repo)[:database] !== "ret_test" do
         Ecto.Adapters.SQL.query!(Ret.Repo, "CREATE SCHEMA IF NOT EXISTS ret0")
         priv_path = Path.join(["#{:code.priv_dir(:ret)}", "repo", "migrations"])
         Ecto.Migrator.run(Ret.Repo, priv_path, :up, all: true, prefix: "ret0")
