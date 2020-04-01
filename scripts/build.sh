@@ -39,7 +39,7 @@ while ! [ -f /hab/svc/postgresql/PID ] ; do sleep 1; done
 
 MIX_ENV=test
 
-mix do local.hex --force, local.rebar --force, deps.get, ecto.create, ecto.migrate
+mix do local.hex --force, local.rebar --force, deps.get, ecto.create
 mix do local.hex --force ecto.migrate --prefix ret0
 
 mix test > tmp/reticulum-test-$(date +%Y%m%d%H%M%S).log && build
