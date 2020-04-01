@@ -37,7 +37,7 @@ hab pkg install -b $deps
 hab svc load mozillareality/postgresql &
 while ! [ -f /hab/svc/postgresql/PID ] ; do sleep 1; done
 
-MIX_ENV=test mix do local.hex --force, local.rebar --force, deps.get, ecto.drop, ecto.create && mix test > tmp/reticulum-test-$(date +%Y%m%d%H%M%S).log && build
+MIX_ENV=test mix do local.hex --force, local.rebar --force, deps.get && mix test > tmp/reticulum-test-$(date +%Y%m%d%H%M%S).log && build
 
 TEST_EXIT_CODE=$?
 
