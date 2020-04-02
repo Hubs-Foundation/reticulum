@@ -70,12 +70,12 @@ defmodule Ret.MediaResolver do
           _ -> resolved_media
         end
 
-      request_time = System.system_time(:millisecond) - now
-      remaining_time = @youtube_ms_per_request_rate_limit - request_time
+      request_duration_ms = System.system_time(:millisecond) - now
+      remaining_duration_ms = @youtube_ms_per_request_rate_limit - request_duration_ms
 
-      if remaining_time > 0 do
+      if remaining_duration_ms > 0 do
         # Rate limit youtube resolves
-        :timer.sleep(remaining_time)
+        :timer.sleep(remaining_duration_ms)
       end
 
       {:commit, resolved_media}
