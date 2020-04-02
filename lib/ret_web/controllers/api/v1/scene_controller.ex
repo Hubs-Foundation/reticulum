@@ -64,6 +64,28 @@ defmodule RetWeb.Api.V1.SceneController do
     create_or_update(conn, params)
   end
 
+  def delete(conn, %{"id" => scene_sid}) do
+    account = Guardian.Plug.current_resource(conn)
+
+    case get_scene(scene_sid) do
+      %Scene{} = scene -> delete(conn, scene, account)
+      %SceneListing{} -> conn |> send_resp(422, "You cannot delete a scene listing.")
+      _ -> conn |> send_resp(404, "not found")
+    end
+  end
+
+  def delete(conn, _scene), do: conn |> send_resp(401, "You do not own this scene")
+
+  def delete(conn, %Scene{account_id: scene_account_id} = scene, %Account{account_id: account_id})
+      when not is_nil(scene_account_id) and scene_account_id == account_id do
+    scene
+    |> Scene.delete_scene_and_delist_listings()
+    |> case do
+      {:ok, _} -> send_resp(conn, 200, "OK")
+      {:error, error} -> render_error_json(conn, error)
+    end
+  end
+
   defp get_scene(scene_sid) do
     case scene_sid |> Scene.scene_or_scene_listing_by_sid() do
       nil -> nil

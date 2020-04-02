@@ -9,6 +9,7 @@ end
 defmodule Ret.Scene do
   use Ecto.Schema
   import Ecto.Changeset
+  import Ecto.Query
 
   alias Ret.{Repo, Scene, SceneListing, Project, Storage}
   alias Ret.Scene.{SceneSlug}
@@ -163,6 +164,21 @@ defmodule Ret.Scene do
       |> Repo.insert_or_update()
 
     new_scene
+  end
+
+  def delete_scene_and_delist_listings(%Scene{} = scene) do
+    Ecto.Multi.new()
+    |> Ecto.Multi.update_all(
+      :update_all,
+      from(l in SceneListing,
+        join: s in Scene,
+        on: l.scene_id == s.scene_id,
+        where: l.scene_id == ^scene.scene_id
+      ),
+      set: [state: :delisted, scene_id: nil]
+    )
+    |> Ecto.Multi.delete(:delete, scene)
+    |> Repo.transaction()
   end
 
   def changeset(
