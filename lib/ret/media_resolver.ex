@@ -57,14 +57,13 @@ defmodule Ret.MediaResolver do
 
       {:commit, %Ret.ResolvedMedia{uri: %URI{query: youtube_query}} = resolved_media} = res
       parsed_youtube_query = URI.decode_query(youtube_query || "")
-      now_s = System.system_time(:second)
 
       # YouTube returns a 'expire' which has timestamp of expiration.
       resolved_media =
         with expires when is_binary(expires) <- Map.get(parsed_youtube_query, "expire"),
              {expires_s, _} <- Integer.parse(expires),
              # Don't use custom TTL if expires in < 2 minutes
-             ttl_s when ttl_s > 120 <- expires_s - now_s do
+             ttl_s when ttl_s > 120 <- expires_s - System.system_time(:second) do
           # Expire a minute early
           resolved_media |> Map.put(:ttl, ttl_s * 1000 - 60000)
         else
