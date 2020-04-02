@@ -22,9 +22,8 @@ Run the following commands at the root of the reticulum directory:
 2. `mix ecto.create`
     * If step 2 fails, you may need to change the password for the `postgres` role to match the password configured `dev.exs`.
     * From within the `psql` shell, enter `ALTER USER postgres WITH PASSWORD 'postgres';`
-3. `mix ecto.migrate`
-4. from the `assets` directory, `npm install`
-5. From the project directory `mkdir -p storage/dev`
+3. from the `assets` directory, `npm install`
+4. From the project directory `mkdir -p storage/dev`
 
 ### Start Reticulum
 Run `scripts/run.sh` if you have the hubs secret repo cloned. Otherwise `iex -S mix phx.server`
