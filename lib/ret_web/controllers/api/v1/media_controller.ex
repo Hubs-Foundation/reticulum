@@ -96,7 +96,7 @@ defmodule RetWeb.Api.V1.MediaController do
 
       {_status, %Ret.ResolvedMedia{ttl: ttl} = resolved_media} ->
         if ttl do
-          Cachex.expire(:media_urls, query, :timer.milliseconds(ttl))
+          Cachex.expire(:media_urls, query, :timer.seconds(ttl / 1000))
         end
 
         render_resolved_media(conn, resolved_media)

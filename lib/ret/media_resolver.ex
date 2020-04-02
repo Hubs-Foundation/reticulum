@@ -49,19 +49,37 @@ defmodule Ret.MediaResolver do
   end
 
   # For youtube.com, we need to rate limit requests. Only do one at a time on this host.
-  def resolve(%MediaResolverQuery{} = query, "youtube.com") do
-    Mutex.under(MediaResolverMutex, :youtube, @youtube_rate_limit_timeout, fn -> 
+  # Also compute ttl here based upon expire, to localize youtube.com specific logic.
+  def resolve(%MediaResolverQuery{} = query, "youtube.com" = root_host) do
+    Mutex.under(MediaResolverMutex, :youtube, @youtube_rate_limit_timeout, fn ->
       now = System.system_time(:millisecond)
       res = resolve_with_ytdl(query, root_host, query |> ytdl_format(root_host))
+
+      {:commit, %Ret.ResolvedMedia{uri: %URI{query: youtube_query}} = resolved_media} = res
+      parsed_youtube_query = URI.decode_query(youtube_query || "")
+      now_s = System.system_time(:second)
+
+      # YouTube returns a 'expire' which has timestamp of expiration.
+      resolved_media =
+        with expires when is_binary(expires) <- Map.get(parsed_youtube_query, "expire"),
+             {expires_s, _} <- Integer.parse(expires),
+             # Don't use custom TTL if expires in < 2 minutes
+             ttl_s when ttl_s > 120 <- expires_s - now_s do
+          # Expire a minute early
+          resolved_media |> Map.put(:ttl, ttl_s * 1000 - 60000)
+        else
+          _ -> resolved_media
+        end
+
       request_time = System.system_time(:millisecond) - now
       remaining_time = @youtube_ms_per_request_rate_limit - request_time
 
-      if remaining_time > 0
+      if remaining_time > 0 do
         # Rate limit youtube resolves
         :timer.sleep(remaining_time)
       end
 
-      res
+      {:commit, resolved_media}
     end)
   end
 
@@ -488,7 +506,6 @@ defmodule Ret.MediaResolver do
   def resolved(:error), do: nil
   def resolved(%URI{} = uri), do: %Ret.ResolvedMedia{uri: uri}
   def resolved(%URI{} = uri, meta), do: %Ret.ResolvedMedia{uri: uri, meta: meta}
-  def resolved(%URI{} = uri, meta, ttl), do: %Ret.ResolvedMedia{uri: uri, meta: meta, ttl: ttl}
 
   def resolved(%URI{} = uri, %URI{} = audio_uri, meta),
     do: %Ret.ResolvedMedia{uri: uri, audio_uri: audio_uri, meta: meta}
