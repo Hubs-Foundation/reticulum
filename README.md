@@ -35,6 +35,12 @@ Run `scripts/run.sh` if you have the hubs secret repo cloned. Otherwise `iex -S 
 4. Go to the reticulum terminal session and find a url that looks like https://hubs.local:4000/?auth_origin=hubs&auth_payload=XXXXX&auth_token=XXXX
 5. Navigate to that url in your browser to finish signing in.
 
+Adter you've started Reticulum for the first time you'll likely want to create an admin user. Assuming you want to make the first account the admin, this can be done in the iex console using the following code:
+
+```
+Ret.Account |> Ret.Repo.all() |> Enum.at(0) |> Ecto.Changeset.change(is_admin: true) |> Ret.Repo.update!()
+```
+
 ## Run Spoke Against a Local Reticulum Instance
 1. Follow the steps above to setup Hubs
 2. Clone and start spoke by running `./scripts/run_local_reticulum.sh` in the root of the spoke project
