@@ -10,6 +10,5 @@ defmodule Ret.Repo.Migrations.AddParentingToScenes do
     alter table("projects") do
       add(:scene_id, references(:scenes, column: :scene_id))
     end
-
   end
 end

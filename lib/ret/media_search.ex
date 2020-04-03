@@ -479,7 +479,7 @@ defmodule Ret.MediaSearch do
       Hub
       |> where([h], h.allow_promotion and h.entry_mode == ^"allow")
       |> preload(scene: [:screenshot_owned_file], scene_listing: [:scene, :screenshot_owned_file])
-      |> order_by([desc: :inserted_at])
+      |> order_by(desc: :inserted_at)
       |> Repo.paginate(%{page: page_number, page_size: @page_size})
       |> result_for_page(page_number, :public_rooms, &hub_to_entry/1)
 
@@ -670,12 +670,13 @@ defmodule Ret.MediaSearch do
       else
         %{preview: %{url: "#{RetWeb.Endpoint.url()}/app-thumbnail.png"}}
       end
-    
-    scene_id = if scene_or_scene_listing do
-      Scene.to_sid(scene_or_scene_listing)
-    else
-      nil
-    end
+
+    scene_id =
+      if scene_or_scene_listing do
+        Scene.to_sid(scene_or_scene_listing)
+      else
+        nil
+      end
 
     %{
       id: hub.hub_sid,

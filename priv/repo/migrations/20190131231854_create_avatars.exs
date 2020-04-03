@@ -30,7 +30,11 @@ defmodule Ret.Repo.Migrations.CreateAvatars do
       timestamps()
     end
 
-    create constraint(:avatars, :gltf_or_parent, check: "parent_avatar_id is not null or (gltf_owned_file_id is not null and bin_owned_file_id is not null)")
+    create(
+      constraint(:avatars, :gltf_or_parent,
+        check: "parent_avatar_id is not null or (gltf_owned_file_id is not null and bin_owned_file_id is not null)"
+      )
+    )
 
     create(index(:avatars, [:avatar_sid], unique: true))
     create(index(:avatars, [:account_id]))

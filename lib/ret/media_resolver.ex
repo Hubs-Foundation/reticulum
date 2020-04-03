@@ -52,7 +52,7 @@ defmodule Ret.MediaResolver do
   def resolve_with_ytdl(%MediaResolverQuery{} = query, root_host, ytdl_format) do
     with ytdl_host when is_binary(ytdl_host) <- module_config(:ytdl_host) do
       case fetch_ytdl_response(query, ytdl_format) do
-        %HTTPoison.Response{status_code: 500, headers: headers, body: body} ->
+        %HTTPoison.Response{status_code: 500, body: body} ->
           if String.contains?(body, "is offline") do
             {:commit,
              resolved(query.url, %{

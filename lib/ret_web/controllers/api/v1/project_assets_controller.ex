@@ -40,8 +40,10 @@ defmodule RetWeb.Api.V1.ProjectAssetsController do
 
   defp create(conn, params, account, project) do
     with {:ok, asset_owned_file} <- Storage.promote(params["file_id"], params["access_token"], nil, account),
-         {:ok, thumbnail_owned_file} <- Storage.promote(params["thumbnail_file_id"], params["thumbnail_access_token"], nil, account),
-         {:ok, result } <- Asset.create_asset_and_project_asset(account, project, asset_owned_file, thumbnail_owned_file, params) do
+         {:ok, thumbnail_owned_file} <-
+           Storage.promote(params["thumbnail_file_id"], params["thumbnail_access_token"], nil, account),
+         {:ok, result} <-
+           Asset.create_asset_and_project_asset(account, project, asset_owned_file, thumbnail_owned_file, params) do
       asset = Repo.preload(result.asset, [:asset_owned_file, :thumbnail_owned_file])
       conn |> render("show.json", asset: asset)
     else
@@ -50,12 +52,13 @@ defmodule RetWeb.Api.V1.ProjectAssetsController do
     end
   end
 
-  def delete(conn, %{"project_id" => project_sid, "id" => asset_sid }) do
+  def delete(conn, %{"project_id" => project_sid, "id" => asset_sid}) do
     account = Guardian.Plug.current_resource(conn)
 
     with %Project{} = project <- Project.project_by_sid_for_account(project_sid, account),
          %Asset{} = asset <- Asset.asset_by_sid_for_account(asset_sid, account),
-         %ProjectAsset{} = project_asset <- Repo.get_by(ProjectAsset, [project_id: project.project_id, asset_id: asset.asset_id]),
+         %ProjectAsset{} = project_asset <-
+           Repo.get_by(ProjectAsset, project_id: project.project_id, asset_id: asset.asset_id),
          {:ok, _} <- Repo.delete(project_asset) do
       conn |> send_resp(200, "OK")
     else

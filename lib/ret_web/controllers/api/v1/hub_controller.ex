@@ -48,14 +48,18 @@ defmodule RetWeb.Api.V1.HubController do
   def update(conn, %{"id" => hub_sid, "hub" => hub_params}) do
     account = Guardian.Plug.current_resource(conn)
 
-    case Hub |> Repo.get_by(hub_sid: hub_sid) |> Repo.preload([:created_by_account, :hub_bindings, :hub_role_memberships]) do
-      %Hub{} = hub -> 
+    case Hub
+         |> Repo.get_by(hub_sid: hub_sid)
+         |> Repo.preload([:created_by_account, :hub_bindings, :hub_role_memberships]) do
+      %Hub{} = hub ->
         if account |> can?(update_hub(hub)) do
           update_with_hub(conn, account, hub, hub_params)
         else
           conn |> send_resp(401, "You cannot update this hub")
         end
-      _ -> conn |> send_resp(404, "not found")
+
+      _ ->
+        conn |> send_resp(404, "not found")
     end
   end
 

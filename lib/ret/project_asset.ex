@@ -18,5 +18,4 @@ defmodule Ret.ProjectAsset do
     |> put_assoc(:project, project)
     |> put_assoc(:asset, asset)
   end
-
 end

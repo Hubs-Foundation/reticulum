@@ -16,7 +16,7 @@ defmodule Ret.Repo.Migrations.AddEmojiPermission do
       )
     end
 
-    execute("UPDATE ret0.hubs SET member_permissions = member_permissions | 16;");
+    execute("UPDATE ret0.hubs SET member_permissions = member_permissions | 16;")
   end
 
   def down do
