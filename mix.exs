@@ -51,7 +51,7 @@ defmodule Ret.Mixfile do
       {:httpoison, "~> 1.5"},
       {:poison, "~> 3.1"},
       {:ecto_autoslug_field, "~> 2.0"},
-      {:cors_plug, "~> 2.0"},
+      {:cors_plug, "~> 2.0.2"},
       {:statix, "~> 1.2"},
       {:quantum, "~> 2.2.7"},
       {:credo, "~> 1.1", only: [:dev, :test], runtime: false},
@@ -76,12 +76,13 @@ defmodule Ret.Mixfile do
       {:ua_parser, "~> 1.5"},
       {:download, git: "https://github.com/gfodor/download.git", branch: "reticulum/master"},
       {:reverse_proxy_plug,
-       git: "https://github.com/mozillareality/reverse_proxy_plug.git", branch: "reticulum/master"},
+       git: "https://github.com/robertlong/reverse_proxy_plug.git", branch: "feature/allow_origin"},
       {:oauther, "~> 1.1"},
       {:jason, "~> 1.1"},
       {:mix_test_watch, "~> 1.0", only: :dev, runtime: false},
       {:ex_json_schema, "~> 0.7.3"},
-      {:observer_cli, "~> 1.5"}
+      {:observer_cli, "~> 1.5"},
+      {:cidr, ">= 1.1.0"}
     ]
   end
 

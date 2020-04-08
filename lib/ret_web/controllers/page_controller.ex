@@ -573,12 +573,10 @@ defmodule RetWeb.PageController do
 
     # Disallow CORS proxying unless request was made to the cors proxy url
     if cors_scheme == Atom.to_string(conn.scheme) && cors_host == conn.host && cors_port == conn.port do
-      allowed_origins = Application.get_env(:ret, RetWeb.Endpoint)[:allowed_origins] |> String.split(",")
-
       opts =
         ReverseProxyPlug.init(
           upstream: url,
-          allowed_origins: allowed_origins,
+          allow_origin: &RetWeb.Endpoint.allowed_origin?/1,
           proxy_url: "#{cors_scheme}://#{cors_host}:#{cors_port}",
           client_options: [ssl: [{:versions, [:"tlsv1.2"]}]]
         )
