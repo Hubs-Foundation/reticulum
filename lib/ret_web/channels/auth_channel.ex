@@ -2,6 +2,7 @@ defmodule RetWeb.AuthChannel do
   @moduledoc "Ret Web Channel for Authentication"
 
   use RetWeb, :channel
+  import Canada, only: [can?: 2]
 
   alias Ret.{Statix, LoginToken, Account, Crypto}
 
@@ -22,17 +23,30 @@ defmodule RetWeb.AuthChannel do
     if !Map.get(socket.assigns, :used) do
       socket = socket |> assign(:used, true)
 
-      # Create token + send email
-      %LoginToken{token: token, payload_key: payload_key} = LoginToken.new_login_token_for_email(email)
+      account = email |> Account.account_for_email()
+      account_disabled = account && account.state == :disabled
 
-      encrypted_payload = %{"email" => email} |> Poison.encode!() |> Crypto.encrypt(payload_key) |> :base64.encode()
+      if !account_disabled && (can?(nil, create_account(nil)) || !!account) do
+        # Create token + send email
+        %LoginToken{token: token, payload_key: payload_key} = LoginToken.new_login_token_for_email(email)
 
-      signin_args = %{auth_topic: socket.topic, auth_token: token, auth_origin: origin, auth_payload: encrypted_payload}
-      Statix.increment("ret.emails.auth.attempted", 1)
+        encrypted_payload = %{"email" => email} |> Poison.encode!() |> Crypto.encrypt(payload_key) |> :base64.encode()
 
-      RetWeb.Email.auth_email(email, signin_args) |> Ret.Mailer.deliver_now()
+        signin_args = %{
+          auth_topic: socket.topic,
+          auth_token: token,
+          auth_origin: origin,
+          auth_payload: encrypted_payload
+        }
 
-      Statix.increment("ret.emails.auth.sent", 1)
+        Statix.increment("ret.emails.auth.attempted", 1)
+
+        if RetWeb.Email.enabled?() do
+          RetWeb.Email.auth_email(email, signin_args) |> Ret.Mailer.deliver_now()
+        end
+
+        Statix.increment("ret.emails.auth.sent", 1)
+      end
 
       {:noreply, socket}
     else
@@ -70,6 +84,11 @@ defmodule RetWeb.AuthChannel do
     {:noreply, socket}
   end
 
+  def handle_info(:channel_expired, socket) do
+    GenServer.cast(self(), :close)
+    {:noreply, socket}
+  end
+
   def handle_out("auth_credentials" = event, payload, socket) do
     Process.send_after(self(), :close_channel, 1000 * 5)
     push(socket, event, payload)
@@ -79,7 +98,8 @@ defmodule RetWeb.AuthChannel do
   defp broadcast_credentials_and_payload(nil, _payload, _socket), do: nil
 
   defp broadcast_credentials_and_payload(identifier_hash, payload, socket) do
-    credentials = identifier_hash |> Account.credentials_for_identifier_hash()
+    account = identifier_hash |> Account.account_for_login_identifier_hash(can?(nil, create_account(nil)))
+    credentials = account |> Account.credentials_for_account()
     broadcast!(socket, "auth_credentials", %{credentials: credentials, payload: payload})
   end
 end

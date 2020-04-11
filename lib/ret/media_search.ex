@@ -69,6 +69,10 @@ defmodule Ret.MediaSearch do
     favorites_search(cursor, type, account_id, q)
   end
 
+  def search(%Ret.MediaSearchQuery{source: "rooms", filter: "public", cursor: cursor, q: q}) do
+    public_rooms_search(cursor, q)
+  end
+
   def search(%Ret.MediaSearchQuery{source: "sketchfab", cursor: cursor, filter: nil, collection: nil, q: q})
       when q == nil or q == "" do
     search(%Ret.MediaSearchQuery{source: "sketchfab", cursor: cursor, filter: "featured", q: q})
@@ -468,6 +472,20 @@ defmodule Ret.MediaSearch do
     {:commit, results}
   end
 
+  defp public_rooms_search(cursor, _query) do
+    page_number = (cursor || "1") |> Integer.parse() |> elem(0)
+
+    results =
+      Hub
+      |> where([h], h.allow_promotion and h.entry_mode == ^"allow")
+      |> preload(scene: [:screenshot_owned_file], scene_listing: [:scene, :screenshot_owned_file])
+      |> order_by(desc: :inserted_at)
+      |> Repo.paginate(%{page: page_number, page_size: @page_size})
+      |> result_for_page(page_number, :public_rooms, &hub_to_entry/1)
+
+    {:commit, results}
+  end
+
   defp favorites_search(cursor, _type, account_id, _query, order \\ [desc: :last_activated_at]) do
     page_number = (cursor || "1") |> Integer.parse() |> elem(0)
 
@@ -507,12 +525,12 @@ defmodule Ret.MediaSearch do
   defp asset_to_entry(asset) do
     %{
       id: asset.asset_sid,
-      url: asset.asset_owned_file |> OwnedFile.uri_for() |> URI.to_string(),
+      url: OwnedFile.url_or_nil_for(asset.asset_owned_file),
       type: asset.type,
       name: asset.name,
       attributions: %{},
       images: %{
-        preview: %{url: asset.thumbnail_owned_file |> OwnedFile.uri_for() |> URI.to_string()}
+        preview: %{url: OwnedFile.url_or_nil_for(asset.thumbnail_owned_file)}
       }
     }
   end
@@ -640,6 +658,10 @@ defmodule Ret.MediaSearch do
   end
 
   defp favorite_to_entry(%AccountFavorite{hub: hub} = favorite) when hub != nil do
+    Map.merge(hub_to_entry(hub), %{last_activated_at: favorite.last_activated_at, favorited: true})
+  end
+
+  defp hub_to_entry(%Hub{} = hub) when hub != nil do
     scene_or_scene_listing = hub.scene || hub.scene_listing
 
     images =
@@ -649,12 +671,24 @@ defmodule Ret.MediaSearch do
         %{preview: %{url: "#{RetWeb.Endpoint.url()}/app-thumbnail.png"}}
       end
 
+    scene_id =
+      if scene_or_scene_listing do
+        Scene.to_sid(scene_or_scene_listing)
+      else
+        nil
+      end
+
     %{
       id: hub.hub_sid,
       url: hub |> Hub.url_for(),
-      type: :hub,
+      type: :room,
+      room_size: hub |> Hub.room_size_for(),
+      member_count: hub |> Hub.member_count_for(),
+      lobby_count: hub |> Hub.lobby_count_for(),
       name: hub.name,
-      last_activated_at: favorite.last_activated_at,
+      description: hub.description,
+      scene_id: scene_id,
+      user_data: hub.user_data,
       images: images
     }
   end

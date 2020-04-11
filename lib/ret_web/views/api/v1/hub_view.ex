@@ -30,7 +30,10 @@ defmodule RetWeb.Api.V1.HubView do
         %{
           hub_id: hub.hub_sid,
           name: hub.name,
+          description: hub.description,
+          user_data: hub.user_data,
           slug: hub.slug,
+          allow_promotion: hub.allow_promotion,
           entry_code: hub.entry_code,
           entry_mode: hub.entry_mode,
           host: hub.host,
@@ -42,7 +45,10 @@ defmodule RetWeb.Api.V1.HubView do
             else
               nil
             end,
-          member_permissions: hub |> Hub.member_permissions_for_hub()
+          member_permissions: hub |> Hub.member_permissions_for_hub(),
+          room_size: hub |> Hub.room_size_for(),
+          member_count: hub |> Hub.member_count_for(),
+          lobby_count: hub |> Hub.lobby_count_for()
         }
       ]
     }
@@ -54,7 +60,10 @@ defmodule RetWeb.Api.V1.HubView do
         %{
           hub_id: hub.hub_sid,
           name: hub.name,
+          description: hub.description,
+          user_data: hub.user_data,
           slug: hub.slug,
+          allow_promotion: hub.allow_promotion,
           entry_code: hub.entry_code,
           entry_mode: hub.entry_mode,
           host: hub.host,
@@ -66,7 +75,10 @@ defmodule RetWeb.Api.V1.HubView do
               assets: [%{asset_type: asset_type, src: asset_url}]
             }
           ],
-          member_permissions: hub |> Hub.member_permissions_for_hub()
+          member_permissions: hub |> Hub.member_permissions_for_hub(),
+          room_size: hub |> Hub.room_size_for(),
+          member_count: hub |> Hub.member_count_for(),
+          lobby_count: hub |> Hub.lobby_count_for()
         }
       ]
     }

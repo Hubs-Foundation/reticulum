@@ -12,6 +12,7 @@ defmodule Ret.PageOriginWarmer do
              scene.html
              avatar.html
              discord.html
+             cloud.html
              hub.service.js
              schema.toml
            ),
@@ -55,7 +56,13 @@ defmodule Ret.PageOriginWarmer do
   end
 
   def chunks_for_page(source, page) do
-    {:ok, source |> page_to_cache_entry(page) |> elem(1)}
+    case source |> page_to_cache_entry(page) do
+      nil ->
+        {:error}
+
+      {_, result} ->
+        {:ok, result}
+    end
   end
 
   # Fetches and returns the latest last modified header for all of the pages

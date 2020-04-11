@@ -2,6 +2,7 @@ defmodule RetWeb.Api.V1.OAuthController do
   use RetWeb, :controller
 
   alias Ret.{Repo, OAuthToken, OAuthProvider, DiscordClient, TwitterClient, Hub, Account, PermsToken}
+  import Canada, only: [can?: 2]
 
   plug(RetWeb.Plugs.RateLimit when action in [:show])
 
@@ -137,7 +138,7 @@ defmodule RetWeb.Api.V1.OAuthController do
 
   # Create or get the account associated with the email and create or get an oauthprovider for that account.
   defp account_for_oauth_provider(nil = _oauth_provider, email, discord_user_id) do
-    account = email |> Account.account_for_email()
+    account = email |> Account.account_for_email(can?(nil, create_account(nil)))
 
     (OAuthProvider |> Repo.get_by(source: :discord, account_id: account.account_id) ||
        %OAuthProvider{source: :discord, account: account})

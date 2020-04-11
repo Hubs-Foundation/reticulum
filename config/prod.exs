@@ -29,6 +29,7 @@ config :ret, RetWeb.Endpoint,
   assets_url: [scheme: "https", host: "", port: 443],
   link_url: [scheme: "https", host: "", port: 443],
   imgproxy_url: [scheme: "http", host: "", port: 5000],
+  pubsub: [name: Ret.PubSub, adapter: Phoenix.PubSub.PG2, pool_size: 4],
   server: true,
   root: "."
 
@@ -102,6 +103,11 @@ config :ret, Ret.Scheduler,
 
     # Flush stats to db every 5 minutes
     {{:cron, "*/5 * * * *"}, {Ret.StatsJob, :save_node_stats, []}},
+
+    # Keep database warm when connected users
+    {{:cron, "*/3 * * * *"}, {Ret.DbWarmerJob, :warm_db_if_has_ccu, []}},
+
+    # Various maintenence routines
     {{:cron, "0 10 * * *"}, {Ret.Storage, :vacuum, []}},
     {{:cron, "3 10 * * *"}, {Ret.Storage, :demote_inactive_owned_files, []}},
     {{:cron, "4 10 * * *"}, {Ret.LoginToken, :expire_stale, []}},
@@ -111,7 +117,6 @@ config :ret, Ret.Scheduler,
   ]
 
 config :ret, RetWeb.Plugs.HeaderAuthorization, header_name: "x-ret-admin-access-key"
-config :ret, RetWeb.Plugs.AddCSP, content_security_policy: nil
 
 config :ret, Ret.Mailer,
   adapter: Bamboo.SMTPAdapter,

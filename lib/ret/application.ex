@@ -7,6 +7,23 @@ defmodule Ret.Application do
   def start(_type, _args) do
     import Supervisor.Spec
 
+    # Start application, start repos, take lock, run migrations, stop repos
+    Application.load(:ret)
+    EctoBootMigration.start_dependencies()
+
+    repos_pids = EctoBootMigration.start_repos([Ret.Repo])
+
+    Ret.Locking.exec_if_session_lockable("ret_migration", fn ->
+      # Can't check mix_env here, so check db name
+      if Application.get_env(:ret, Ret.Repo)[:database] !== "ret_test" do
+        Ecto.Adapters.SQL.query!(Ret.Repo, "CREATE SCHEMA IF NOT EXISTS ret0")
+        priv_path = Path.join(["#{:code.priv_dir(:ret)}", "repo", "migrations"])
+        Ecto.Migrator.run(Ret.Repo, priv_path, :up, all: true, prefix: "ret0")
+      end
+    end)
+
+    EctoBootMigration.stop_repos(repos_pids)
+
     :ok = Ret.Statix.connect()
 
     # Define workers and child supervisors to be supervised

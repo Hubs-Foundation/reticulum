@@ -25,4 +25,6 @@
 
 <title><%= @scene.name %> | <%= @translations["app-full-name"] || @translations["app-name"] %></title>
 <%= @app_config_script %>
+<%= @extra_html %>
+<%= @extra_script %>
 <% end %>
