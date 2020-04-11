@@ -51,35 +51,30 @@ defmodule Ret.MediaResolver do
   # For youtube.com, we need to rate limit requests. Only do one at a time on this host.
   # Also compute ttl here based upon expire, to localize youtube.com specific logic.
   def resolve(%MediaResolverQuery{} = query, "youtube.com" = root_host) do
-    Mutex.under(MediaResolverMutex, :youtube, @youtube_rate_limit_timeout, fn ->
-      now = System.system_time(:millisecond)
-      res = resolve_with_ytdl(query, root_host, query |> ytdl_format(root_host))
+    lock = Mutex.await(MediaResolverMutex, :youtube, @youtube_rate_limit_timeout)
 
-      {:commit, %Ret.ResolvedMedia{uri: %URI{query: youtube_query}} = resolved_media} = res
+    res = resolve_with_ytdl(query, root_host, query |> ytdl_format(root_host))
 
-      # YouTube returns a 'expire' which has timestamp of expiration.
-      resolved_media =
-        with parsed_youtube_query <- URI.decode_query(youtube_query),
-             expire when is_binary(expire) <- Map.get(parsed_youtube_query, "expire"),
-             {expire_s, _} <- Integer.parse(expire),
-             # Don't use custom TTL if expires in < 2 minutes
-             ttl_s when ttl_s > 120 <- expire_s - System.system_time(:second) do
-          # Expire a minute early
-          resolved_media |> Map.put(:ttl, ttl_s * 1000 - 60000)
-        else
-          _ -> resolved_media
-        end
+    Task.async(fn ->
+      :timer.sleep(@youtube_ms_per_request_rate_limit)
+      Mutex.release(MediaResolverMutex, lock)
+    end)
 
-      request_duration_ms = System.system_time(:millisecond) - now
-      remaining_duration_ms = @youtube_ms_per_request_rate_limit - request_duration_ms
+    {:commit, %Ret.ResolvedMedia{uri: %URI{query: youtube_query}} = resolved_media} = res
 
-      if remaining_duration_ms > 0 do
-        # Rate limit youtube resolves
-        :timer.sleep(remaining_duration_ms)
+    # YouTube returns a 'expire' which has timestamp of expiration.
+    resolved_media =
+      with parsed_youtube_query <- URI.decode_query(youtube_query),
+           expire when is_binary(expire) <- Map.get(parsed_youtube_query, "expire"),
+           {expire_s, _} <- Integer.parse(expire),
+           ttl_s <- expire_s - System.system_time(:second) do
+        # Expire a minute early
+        resolved_media |> Map.put(:ttl, ttl_s * 1000 - 60000)
+      else
+        _ -> resolved_media
       end
 
-      {:commit, resolved_media}
-    end)
+    {:commit, resolved_media}
   end
 
   def resolve(%MediaResolverQuery{} = query, root_host) do
