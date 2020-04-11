@@ -18,9 +18,10 @@ defmodule Ret.MediaResolver do
 
   @ytdl_valid_status_codes [200, 302, 500]
 
-  @youtube_rate_limit %{ scale: 4_000, limit: 1 }
+  @youtube_rate_limit %{ scale: 7_000, limit: 1 } # Need to include yt-dl time itself in scale, usualy 3-4s
   @sketchfab_rate_limit %{ scale: 60_000, limit: 15 }
   @poly_rate_limit %{ scale: 1_000, limit: 5 }
+  @max_await_for_rate_limit_s 120
 
   @non_video_root_hosts [
     "sketchfab.com",
@@ -512,12 +513,16 @@ defmodule Ret.MediaResolver do
     end
   end
 
-  defp rate_limited_resolve(query, root_host, limits, func) do
-    case ExRated.check_rate(root_host, @youtube_rate_limit[:scale], @youtube_rate_limit[:limit]) do
-      { :error, _ } ->
-        :timer.sleep(1000)
-        rate_limited_resolve(query, root_host, limits, func)
-      _ -> func.()
+  defp rate_limited_resolve(query, root_host, limits, func, depth \\ 0) do
+    if depth < @max_await_for_rate_limit_s do
+      case ExRated.check_rate(root_host, @youtube_rate_limit[:scale], @youtube_rate_limit[:limit]) do
+        { :error, _ } ->
+          :timer.sleep(1000)
+          rate_limited_resolve(query, root_host, limits, func, depth + 1)
+        _ -> func.()
+      end
+    else
+      { :error, "Rate limiter timeout" }
     end
   end
 
