@@ -79,7 +79,7 @@ defmodule Ret.Mixfile do
        git: "https://github.com/mozillareality/reverse_proxy_plug.git", branch: "reticulum/master"},
       {:oauther, "~> 1.1"},
       {:jason, "~> 1.1"},
-      {:mutex, "~> 1.1.3"},
+      {:ex_rated, "~> 1.3.3"},
       {:mix_test_watch, "~> 1.0", only: :dev, runtime: false},
       {:ex_json_schema, "~> 0.7.3"},
       {:observer_cli, "~> 1.5"}
