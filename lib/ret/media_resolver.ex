@@ -18,8 +18,9 @@ defmodule Ret.MediaResolver do
 
   @ytdl_valid_status_codes [200, 302, 500]
 
-  @youtube_ms_per_request_rate_limit 4000
-  @youtube_rate_limit_timeout 60000
+  @youtube_rate_limit %{ scale: 4_000, limit: 1 }
+  @sketchfab_rate_limit %{ scale: 60_000, limit: 15 }
+  @poly_rate_limit %{ scale: 1_000, limit: 5 }
 
   @non_video_root_hosts [
     "sketchfab.com",
@@ -41,7 +42,9 @@ defmodule Ret.MediaResolver do
 
   # Necessary short circuit around google.com root_host to skip YT-DL check for Poly
   def resolve(%MediaResolverQuery{url: %URI{host: "poly.google.com"}} = query, root_host) do
-    resolve_non_video(query, root_host)
+    rate_limited_resolve(query, root_host, @poly_rate_limit, fn ->
+      resolve_non_video(query, root_host)
+    end)
   end
 
   def resolve(%MediaResolverQuery{} = query, root_host) when root_host in @non_video_root_hosts do
@@ -51,31 +54,25 @@ defmodule Ret.MediaResolver do
   # For youtube.com, we need to rate limit requests. Only do one at a time on this host.
   # Also compute ttl here based upon expire, to localize youtube.com specific logic.
   def resolve(%MediaResolverQuery{} = query, "youtube.com" = root_host) do
-    lock = Mutex.await(MediaResolverMutex, :youtube, @youtube_rate_limit_timeout)
-    pid = self()
+    rate_limited_resolve(query, root_host, @youtube_rate_limit, fn ->
+      res = resolve_with_ytdl(query, root_host, query |> ytdl_format(root_host))
 
-    res = resolve_with_ytdl(query, root_host, query |> ytdl_format(root_host))
+      {:commit, %Ret.ResolvedMedia{uri: %URI{query: youtube_query}} = resolved_media} = res
 
-    Task.async(fn ->
-      :timer.sleep(@youtube_ms_per_request_rate_limit)
-      GenServer.cast(MediaResolverMutex, { :release, lock.key, pid })
+      # YouTube returns a 'expire' which has timestamp of expiration.
+      resolved_media =
+        with parsed_youtube_query <- URI.decode_query(youtube_query),
+             expire when is_binary(expire) <- Map.get(parsed_youtube_query, "expire"),
+             {expire_s, _} <- Integer.parse(expire),
+             ttl_s <- expire_s - System.system_time(:second) do
+          # Expire a minute early
+          resolved_media |> Map.put(:ttl, ttl_s * 1000 - 60000)
+        else
+          _ -> resolved_media
+        end
+
+      {:commit, resolved_media}
     end)
-
-    {:commit, %Ret.ResolvedMedia{uri: %URI{query: youtube_query}} = resolved_media} = res
-
-    # YouTube returns a 'expire' which has timestamp of expiration.
-    resolved_media =
-      with parsed_youtube_query <- URI.decode_query(youtube_query),
-           expire when is_binary(expire) <- Map.get(parsed_youtube_query, "expire"),
-           {expire_s, _} <- Integer.parse(expire),
-           ttl_s <- expire_s - System.system_time(:second) do
-        # Expire a minute early
-        resolved_media |> Map.put(:ttl, ttl_s * 1000 - 60000)
-      else
-        _ -> resolved_media
-      end
-
-    {:commit, resolved_media}
   end
 
   def resolve(%MediaResolverQuery{} = query, root_host) do
@@ -265,17 +262,22 @@ defmodule Ret.MediaResolver do
 
   defp resolve_non_video(
          %MediaResolverQuery{url: %URI{path: "/models/" <> model_id}} = query,
-         "sketchfab.com"
+         "sketchfab.com" = root_host
        ) do
-    resolve_sketchfab_model(model_id, query)
+    rate_limited_resolve(query, root_host, @sketchfab_rate_limit, fn ->
+      resolve_sketchfab_model(model_id, query)
+    end)
   end
 
   defp resolve_non_video(
          %MediaResolverQuery{url: %URI{path: "/3d-models/" <> model_id}} = query,
-         "sketchfab.com"
+         "sketchfab.com" = root_host
        ) do
     model_id = model_id |> String.split("-") |> Enum.at(-1)
-    resolve_sketchfab_model(model_id, query)
+
+    rate_limited_resolve(query, root_host, @sketchfab_rate_limit, fn ->
+      resolve_sketchfab_model(model_id, query)
+    end)
   end
 
   defp resolve_non_video(%MediaResolverQuery{url: %URI{host: host} = uri, version: version}, _root_host) do
@@ -507,6 +509,15 @@ defmodule Ret.MediaResolver do
       [{"Authorization", "Client-ID #{client_id}"}, {"X-Mashape-Key", api_key}]
     else
       _err -> nil
+    end
+  end
+
+  defp rate_limited_resolve(query, root_host, limits, func) do
+    case ExRated.check_rate(root_host, @youtube_rate_limit[:scale], @youtube_rate_limit[:limit]) do
+      { :error, _ } ->
+        :timer.sleep(1000)
+        rate_limited_resolve(query, root_host, limits, func)
+      _ -> func.()
     end
   end
 
