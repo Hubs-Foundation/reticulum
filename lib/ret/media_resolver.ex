@@ -52,12 +52,13 @@ defmodule Ret.MediaResolver do
   # Also compute ttl here based upon expire, to localize youtube.com specific logic.
   def resolve(%MediaResolverQuery{} = query, "youtube.com" = root_host) do
     lock = Mutex.await(MediaResolverMutex, :youtube, @youtube_rate_limit_timeout)
+    pid = self()
 
     res = resolve_with_ytdl(query, root_host, query |> ytdl_format(root_host))
 
     Task.async(fn ->
       :timer.sleep(@youtube_ms_per_request_rate_limit)
-      Mutex.release(MediaResolverMutex, lock)
+      GenServer.cast(MediaResolverMutex, { :release, lock.key, pid })
     end)
 
     {:commit, %Ret.ResolvedMedia{uri: %URI{query: youtube_query}} = resolved_media} = res
