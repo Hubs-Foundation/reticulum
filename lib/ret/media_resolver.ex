@@ -514,10 +514,10 @@ defmodule Ret.MediaResolver do
   end
 
   defp rate_limited_resolve(query, root_host, limits, func, depth \\ 0) do
-    if depth < @max_await_for_rate_limit_s do
+    if depth < @max_await_for_rate_limit_s * 2 do
       case ExRated.check_rate(root_host, @youtube_rate_limit[:scale], @youtube_rate_limit[:limit]) do
         { :error, _ } ->
-          :timer.sleep(1000)
+          :timer.sleep(500)
           rate_limited_resolve(query, root_host, limits, func, depth + 1)
         _ -> func.()
       end
