@@ -1,6 +1,6 @@
 defmodule Ret.ResolvedMedia do
   @enforce_keys [:uri]
-  defstruct [:uri, :audio_uri, :meta]
+  defstruct [:uri, :audio_uri, :meta, :ttl]
 end
 
 defmodule Ret.MediaResolverQuery do
@@ -17,6 +17,9 @@ defmodule Ret.MediaResolver do
   alias Ret.{CachedFile, MediaResolverQuery, Statix}
 
   @ytdl_valid_status_codes [200, 302, 500]
+
+  @youtube_ms_per_request_rate_limit 4000
+  @youtube_rate_limit_timeout 60000
 
   @non_video_root_hosts [
     "sketchfab.com",
@@ -43,6 +46,35 @@ defmodule Ret.MediaResolver do
 
   def resolve(%MediaResolverQuery{} = query, root_host) when root_host in @non_video_root_hosts do
     resolve_non_video(query, root_host)
+  end
+
+  # For youtube.com, we need to rate limit requests. Only do one at a time on this host.
+  # Also compute ttl here based upon expire, to localize youtube.com specific logic.
+  def resolve(%MediaResolverQuery{} = query, "youtube.com" = root_host) do
+    lock = Mutex.await(MediaResolverMutex, :youtube, @youtube_rate_limit_timeout)
+
+    res = resolve_with_ytdl(query, root_host, query |> ytdl_format(root_host))
+
+    Task.async(fn ->
+      :timer.sleep(@youtube_ms_per_request_rate_limit)
+      Mutex.release(MediaResolverMutex, lock)
+    end)
+
+    {:commit, %Ret.ResolvedMedia{uri: %URI{query: youtube_query}} = resolved_media} = res
+
+    # YouTube returns a 'expire' which has timestamp of expiration.
+    resolved_media =
+      with parsed_youtube_query <- URI.decode_query(youtube_query),
+           expire when is_binary(expire) <- Map.get(parsed_youtube_query, "expire"),
+           {expire_s, _} <- Integer.parse(expire),
+           ttl_s <- expire_s - System.system_time(:second) do
+        # Expire a minute early
+        resolved_media |> Map.put(:ttl, ttl_s * 1000 - 60000)
+      else
+        _ -> resolved_media
+      end
+
+    {:commit, resolved_media}
   end
 
   def resolve(%MediaResolverQuery{} = query, root_host) do
