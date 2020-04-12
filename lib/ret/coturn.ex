@@ -1,5 +1,5 @@
 defmodule Ret.Coturn do
-  # Adds a new secret, and removes secrets older than an hour
+  # Adds a new secret, and removes secrets older than 15 minutes since a new one is generated every five.
   # Note this is safe to run on a multi-node cluster since coturn respects all secrets in the db.
   def rotate_secrets do
     if enabled?() do
@@ -11,7 +11,7 @@ defmodule Ret.Coturn do
 
       Ecto.Adapters.SQL.query!(
         Ret.Repo,
-        "DELETE FROM coturn.turn_secret WHERE inserted_at < now() - interval '1 day'"
+        "DELETE FROM coturn.turn_secret WHERE inserted_at < now() - interval '15 minutes'"
       )
     end
   end
@@ -20,7 +20,7 @@ defmodule Ret.Coturn do
     {_, coturn_secret} = Cachex.fetch(:coturn_secret, :coturn_secret)
 
     # Credentials are good for two minutes, since we connect immediately.
-    username = "#{Timex.now() |> Timex.shift(minutes: 2) |> Timex.to_unix()}:hubs"
+    username = "#{Timex.now() |> Timex.shift(minutes: 2) |> Timex.to_unix()}:coturn"
     credential = :crypto.hmac(:sha, coturn_secret, username) |> :base64.encode()
 
     {username, credential}
