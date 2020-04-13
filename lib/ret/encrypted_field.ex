@@ -1,5 +1,5 @@
 defmodule Ret.EncryptedField do
-  @behaviour Ecto.Type
+  use Ecto.Type
   alias Ret.Crypto
 
   def type, do: :binary
