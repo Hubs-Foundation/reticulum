@@ -18,7 +18,7 @@ defmodule Ret.MediaResolver do
 
   @ytdl_valid_status_codes [200, 302, 500]
 
-  @youtube_rate_limit %{ scale: 4_000, limit: 1 }
+  @youtube_rate_limit %{ scale: 8_000, limit: 1 }
   @sketchfab_rate_limit %{ scale: 60_000, limit: 15 }
   @poly_rate_limit %{ scale: 1_000, limit: 5 }
   @max_await_for_rate_limit_s 120
