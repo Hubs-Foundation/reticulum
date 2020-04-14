@@ -90,7 +90,7 @@ defmodule RetWeb.Api.V1.HubView do
   end
 
   defp turn_info do
-    if Ret.Coturn.enabled() do
+    if Ret.Coturn.enabled?() do
       {username, credential} = Ret.Coturn.generate_credentials()
       %{enabled: true, username: username, credential: credential}
     else
