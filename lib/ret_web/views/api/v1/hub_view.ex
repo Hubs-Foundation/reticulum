@@ -68,6 +68,7 @@ defmodule RetWeb.Api.V1.HubView do
           entry_mode: hub.entry_mode,
           host: hub.host,
           port: janus_port(),
+          turn: turn_info(),
           topics: [
             %{
               topic_id: "#{hub.hub_sid}/#{hub.slug}",
@@ -86,5 +87,14 @@ defmodule RetWeb.Api.V1.HubView do
 
   defp janus_port do
     Application.get_env(:ret, Ret.JanusLoadStatus)[:janus_port]
+  end
+
+  defp turn_info do
+    if Ret.Coturn.enabled() do
+      {username, credential} = Ret.Coturn.generate_credentials()
+      %{enabled: true, username: username, credential: credential}
+    else
+      %{enabled: false}
+    end
   end
 end

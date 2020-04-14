@@ -257,6 +257,11 @@ docs_path = "{{ cfg.assets.docs_path }}"
 admin_email = "{{ cfg.accounts.admin_email }}"
 {{/if}}
 
+[ret."Elixir.Ret.Coturn"]
+{{#if cfg.turn.realm }}
+realm = "{{ cfg.turn.realm }}"
+{{/if}}
+
 [web_push_encryption.vapid_details]
 subject = "{{ cfg.web_push.subject }}"
 public_key = "{{ cfg.web_push.public_key }}"
@@ -270,3 +275,4 @@ hostname_dns_suffix = "{{ cfg.run.hostname_dns_suffix }}"
 
 [hackney]
 max_connections = {{ cfg.hackney.max_connections }}
+
