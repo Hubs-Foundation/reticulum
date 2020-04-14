@@ -45,7 +45,7 @@ defmodule Ret.Coturn do
     !!realm()
   end
 
-  def realm do
+  defp realm do
     Application.get_env(:ret, __MODULE__)[:realm]
   end
 end
