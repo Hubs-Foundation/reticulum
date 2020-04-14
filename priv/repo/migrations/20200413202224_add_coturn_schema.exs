@@ -2,6 +2,8 @@ defmodule Ret.Repo.Migrations.AddCoturnSchema do
   use Ecto.Migration
 
   def up do
+    execute("create schema if not exists ret0")
+
     execute(
       "create table coturn.turn_secret (realm varchar(127), value varchar(256), inserted_at timestamp, updated_at timestamp)"
     )
@@ -16,8 +18,6 @@ defmodule Ret.Repo.Migrations.AddCoturnSchema do
   end
 
   def down do
-    execute("drop table coturn.turn_secret")
-    execute("drop table coturn.allowed_peer_ip")
-    execute("drop table coturn.denied_peer_ip")
+    execute("drop schema coturn cascade")
   end
 end
