@@ -20,7 +20,7 @@ defmodule Ret.MediaResolver do
 
   @youtube_rate_limit %{scale: 8_000, limit: 1}
   @sketchfab_rate_limit %{scale: 60_000, limit: 15}
-  @poly_rate_limit %{scale: 1_000, limit: 5}
+  @poly_rate_limit %{scale: 60_000, limit: 1000}
   @max_await_for_rate_limit_s 120
 
   @non_video_root_hosts [
