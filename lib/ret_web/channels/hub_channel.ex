@@ -758,7 +758,7 @@ defmodule RetWeb.HubChannel do
     account = Guardian.Phoenix.Socket.current_resource(socket)
 
     response =
-      HubView.render("show.json", %{hub: hub, embeddable: account |> can?(embed_hub(hub))})
+      HubView.render("show.json", %{hub: hub, embeddable: account |> can?(embed_hub(hub)), account: account})
       |> Map.put(:session_id, socket.assigns.session_id)
       |> Map.put(:stale_fields, stale_fields)
 
