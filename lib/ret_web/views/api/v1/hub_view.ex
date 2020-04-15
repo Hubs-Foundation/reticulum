@@ -89,10 +89,17 @@ defmodule RetWeb.Api.V1.HubView do
     Application.get_env(:ret, Ret.JanusLoadStatus)[:janus_port]
   end
 
+  defp turn_transports do
+    (Application.get_env(:ret, Ret.Coturn)[:public_tls_ports] || "5349")
+    |> String.split(",")
+    |> Enum.map(&%{transport: :tls, port: &1 |> Integer.parse() |> elem(0)})
+  end
+
   defp turn_info do
     if Ret.Coturn.enabled?() do
       {username, credential} = Ret.Coturn.generate_credentials()
-      %{enabled: true, username: username, credential: credential}
+      transports = turn_transports()
+      %{enabled: true, username: username, credential: credential, transports: transports}
     else
       %{enabled: false}
     end

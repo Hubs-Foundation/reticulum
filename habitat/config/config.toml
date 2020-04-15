@@ -261,6 +261,9 @@ admin_email = "{{ cfg.accounts.admin_email }}"
 {{#if cfg.turn.realm }}
 realm = "{{ cfg.turn.realm }}"
 {{/if}}
+{{#if cfg.turn.public_tls_ports }}
+public_tls_ports = "{{ cfg.turn.public_tls_ports }}"
+{{/if}}
 
 [web_push_encryption.vapid_details]
 subject = "{{ cfg.web_push.subject }}"

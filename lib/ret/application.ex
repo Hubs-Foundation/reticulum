@@ -26,15 +26,16 @@ defmodule Ret.Application do
           Ecto.Adapters.SQL.query!(Ret.Repo, "CREATE SCHEMA IF NOT EXISTS coturn")
         end
 
+        schemas =
+          if coturn_enabled do
+            ["ret0", "coturn"]
+          else
+            ["ret0"]
+          end
+
         Ecto.Adapters.SQL.query!(
           Ret.Repo,
-          "ALTER DATABASE #{db_name} SET search_path TO ret0#{
-            if coturn_enabled do
-              ", coturn"
-            else
-              ""
-            end
-          }"
+          "ALTER DATABASE #{db_name} SET search_path TO #{schemas |> Enum.join(",")}"
         )
 
         priv_path = Path.join(["#{:code.priv_dir(:ret)}", "repo", "migrations"])
