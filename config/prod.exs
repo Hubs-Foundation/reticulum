@@ -107,6 +107,9 @@ config :ret, Ret.Scheduler,
     # Keep database warm when connected users
     {{:cron, "*/3 * * * *"}, {Ret.DbWarmerJob, :warm_db_if_has_ccu, []}},
 
+    # Rotate TURN secrets if enabled
+    {{:cron, "*/5 * * * *"}, {Ret.Coturn, :rotate_secrets, []}},
+
     # Various maintenence routines
     {{:cron, "0 10 * * *"}, {Ret.Storage, :vacuum, []}},
     {{:cron, "3 10 * * *"}, {Ret.Storage, :demote_inactive_owned_files, []}},

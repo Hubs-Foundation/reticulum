@@ -14,9 +14,30 @@ defmodule Ret.Application do
     repos_pids = EctoBootMigration.start_repos([Ret.Repo])
 
     Ret.Locking.exec_if_session_lockable("ret_migration", fn ->
+      db_name = Application.get_env(:ret, Ret.Repo)[:database]
+
       # Can't check mix_env here, so check db name
-      if Application.get_env(:ret, Ret.Repo)[:database] !== "ret_test" do
+      if db_name !== "ret_test" do
+        coturn_enabled = Ret.Coturn.enabled?()
+
         Ecto.Adapters.SQL.query!(Ret.Repo, "CREATE SCHEMA IF NOT EXISTS ret0")
+
+        if coturn_enabled do
+          Ecto.Adapters.SQL.query!(Ret.Repo, "CREATE SCHEMA IF NOT EXISTS coturn")
+        end
+
+        schemas =
+          if coturn_enabled do
+            ["ret0", "coturn"]
+          else
+            ["ret0"]
+          end
+
+        Ecto.Adapters.SQL.query!(
+          Ret.Repo,
+          "ALTER DATABASE #{db_name} SET search_path TO #{schemas |> Enum.join(",")}"
+        )
+
         priv_path = Path.join(["#{:code.priv_dir(:ret)}", "repo", "migrations"])
         Ecto.Migrator.run(Ret.Repo, priv_path, :up, all: true, prefix: "ret0")
       end
@@ -171,6 +192,19 @@ defmodule Ret.Application do
           ]
         ],
         id: :storage_used
+      ),
+
+      # Latest TURN secret cache
+      worker(
+        Cachex,
+        [
+          :coturn_secret,
+          [
+            expiration: expiration(default: :timer.minutes(1)),
+            fallback: fallback(default: &Ret.Coturn.latest_secret_commit/1)
+          ]
+        ],
+        id: :coturn_secret
       ),
       supervisor(TheEnd.Of.Phoenix, [[timeout: 10_000, endpoint: RetWeb.Endpoint]])
     ]
