@@ -390,7 +390,10 @@ defmodule RetWeb.HubChannel do
 
   def handle_in("get_host", _args, socket) do
     hub = socket |> hub_for_socket |> Hub.ensure_host()
-    {:reply, {:ok, %{host: hub.host}}, socket}
+    {:reply, {:ok, %{host: hub.host,
+          port: Ret.Hub.janus_port(),
+          turn: Ret.Hub.generate_turn_info(),
+    }}, socket}
   end
 
   def handle_in("update_hub", payload, socket) do
