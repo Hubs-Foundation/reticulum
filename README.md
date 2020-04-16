@@ -45,4 +45,3 @@ Ret.Account |> Ret.Repo.all() |> Enum.at(0) |> Ecto.Changeset.change(is_admin: t
 1. Follow the steps above to setup Hubs
 2. Clone and start spoke by running `./scripts/run_local_reticulum.sh` in the root of the spoke project
 3. Navigate to https://hubs.local:4000/spoke
- 
