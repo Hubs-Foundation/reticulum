@@ -208,5 +208,6 @@ config :ret, Ret.Locking,
   ]
 
 config :ret, Ret.Repo.Migrations.AdminSchemaInit, postgrest_password: "password"
+config :ret, Ret.Repo.Migrations.AddCoturnSchema, coturn_password: "password"
 config :ret, Ret.StatsJob, node_stats_enabled: false, node_gauges_enabled: false
 config :ret, Ret.Coturn, realm: "ret"

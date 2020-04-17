@@ -220,6 +220,11 @@ slack_webhook_url = "{{ cfg.support.slack_webhook_url }}"
 [ret."Ret.Repo.Migrations.AdminSchemaInit"]
 postgrest_password = "{{ cfg.db.postgrest_password }}"
 
+[ret."Ret.Repo.Migrations.AddCoturnSchema"]
+{{#if cfg.db.coturn_password }}
+coturn_password = "{{ cfg.db.coturn_password }}"
+{{/if}}
+
 [ret."Elixir.Ret.StatsJob"]
 {{#if cfg.stats.node_stats_enabled }}
 node_stats_enabled = {{ cfg.stats.node_stats_enabled }}
