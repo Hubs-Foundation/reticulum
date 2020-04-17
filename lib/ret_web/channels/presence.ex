@@ -25,6 +25,10 @@ defmodule RetWeb.Presence do
     |> Enum.sum()
   end
 
+  def has_present_members? do
+    present_member_count > 0
+  end
+
   defp present_sessions do
     list("ret")
   end
