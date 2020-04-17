@@ -41,14 +41,20 @@ defmodule RetWeb.Router do
     plug(RetWeb.Guardian.AuthOptionalPipeline)
   end
 
+  pipeline :forbid_disabled_accounts do
+    plug(RetWeb.Plugs.ForbidDisabledAccounts)
+  end
+
   pipeline :auth_required do
     plug(RetWeb.Guardian.AuthPipeline)
     plug(RetWeb.Canary.AuthorizationPipeline)
+    plug(RetWeb.Plugs.ForbidDisabledAccounts)
   end
 
   pipeline :admin_required do
     plug(RetWeb.Guardian.AuthPipeline)
     plug(RetWeb.Plugs.AdminOnly)
+    plug(RetWeb.Plugs.ForbidDisabledAccounts)
   end
 
   pipeline :bot_header_auth do
@@ -98,8 +104,12 @@ defmodule RetWeb.Router do
     end
 
     scope "/v1", as: :api_v1 do
-      pipe_through([:auth_optional])
+      pipe_through([:auth_optional, :forbid_disabled_accounts])
       resources("/hubs", Api.V1.HubController, only: [:create, :delete])
+    end
+
+    scope "/v1", as: :api_v1 do
+      pipe_through([:auth_optional])
       resources("/media/search", Api.V1.MediaSearchController, only: [:index])
       resources("/avatars", Api.V1.AvatarController, only: [:show])
       resources("/scenes", Api.V1.SceneController, only: [:show])
@@ -123,6 +133,7 @@ defmodule RetWeb.Router do
       pipe_through([:admin_required])
       resources("/app_configs", Api.V1.AppConfigController, only: [:index, :create])
       resources("/accounts", Api.V1.AccountController, only: [:create])
+      patch("/accounts", Api.V1.AccountController, :update)
       resources("/accounts/search", Api.V1.AccountSearchController, only: [:create])
     end
   end

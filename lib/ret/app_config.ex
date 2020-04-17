@@ -7,6 +7,14 @@ defmodule Ret.AppConfig do
   @schema_prefix "ret0"
   @primary_key {:app_config_id, :id, autogenerate: true}
 
+  # TODO these should be parsed out of schema.toml
+  @config_defaults %{
+    "features" => %{
+      "max_room_size" => 50,
+      "default_room_size" => 24
+    }
+  }
+
   schema "app_configs" do
     field(:key, :string)
     field(:value, :map)
@@ -52,9 +60,14 @@ defmodule Ret.AppConfig do
       |> Repo.all()
       |> Repo.preload(:owned_file)
       |> Enum.map(fn app_config -> expand_key(app_config.key, app_config) end)
+      |> add_defaults()
       |> Enum.reduce(%{}, fn config, acc -> deep_merge(acc, config) end)
 
     {:commit, config}
+  end
+
+  defp add_defaults(config_entries) do
+    [@config_defaults] ++ config_entries
   end
 
   def collapse(config, parent_key \\ "") do
@@ -75,7 +88,7 @@ defmodule Ret.AppConfig do
         end
 
       nil ->
-        nil
+        @config_defaults |> Kernel.get_in(key |> String.split("|"))
     end
   end
 

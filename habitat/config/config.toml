@@ -99,6 +99,9 @@ idle_interval = {{ cfg.db.idle_interval }}
 {{#if cfg.db.queue_interval }}
 queue_interval = {{ cfg.db.queue_interval }}
 {{/if}}
+{{#if cfg.db.queue_target }}
+queue_target = {{ cfg.db.queue_target }}
+{{/if}}
 {{#if cfg.db.timeout }}
 timeout = {{ cfg.db.timeout }}
 {{/if}}
@@ -187,6 +190,8 @@ hubs_page_origin = "{{ cfg.pages.hubs_page_origin }}"
 spoke_page_origin = "{{ cfg.pages.spoke_page_origin }}"
 # Intentionally re-using hubs_page_origin here, since they are currently deployed to the same S3 bucket.
 admin_page_origin = "{{ cfg.pages.hubs_page_origin }}"
+
+[ret."Elixir.Ret.HttpUtils"]
 insecure_ssl = {{ cfg.pages.insecure_ssl }}
 
 [ret."Elixir.Ret.Storage"]
@@ -252,6 +257,14 @@ docs_path = "{{ cfg.assets.docs_path }}"
 admin_email = "{{ cfg.accounts.admin_email }}"
 {{/if}}
 
+[ret."Elixir.Ret.Coturn"]
+{{#if cfg.turn.realm }}
+realm = "{{ cfg.turn.realm }}"
+{{/if}}
+{{#if cfg.turn.public_tls_ports }}
+public_tls_ports = "{{ cfg.turn.public_tls_ports }}"
+{{/if}}
+
 [web_push_encryption.vapid_details]
 subject = "{{ cfg.web_push.subject }}"
 public_key = "{{ cfg.web_push.public_key }}"
@@ -262,3 +275,7 @@ dsn = "{{ cfg.sentry.dsn }}"
 
 [run]
 hostname_dns_suffix = "{{ cfg.run.hostname_dns_suffix }}"
+
+[hackney]
+max_connections = {{ cfg.hackney.max_connections }}
+

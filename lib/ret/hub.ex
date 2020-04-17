@@ -23,7 +23,8 @@ defmodule Ret.Hub do
     WebPushSubscription,
     RoomAssigner,
     BitFieldUtils,
-    HubRoleMembership
+    HubRoleMembership,
+    AppConfig
   }
 
   alias Ret.Hub.{HubSlug}
@@ -38,7 +39,9 @@ defmodule Ret.Hub do
     (1 <<< 0) => :spawn_and_move_media,
     (1 <<< 1) => :spawn_camera,
     (1 <<< 2) => :spawn_drawing,
-    (1 <<< 3) => :pin_objects
+    (1 <<< 3) => :pin_objects,
+    (1 <<< 4) => :spawn_emoji,
+    (1 <<< 5) => :fly
   }
 
   @member_permissions_keys @member_permissions |> Map.values()
@@ -47,15 +50,37 @@ defmodule Ret.Hub do
     spawn_and_move_media: true,
     spawn_camera: true,
     spawn_drawing: true,
-    pin_objects: true
+    pin_objects: true,
+    spawn_emoji: true,
+    fly: true
   }
 
   @default_restrictive_member_permissions %{
     spawn_and_move_media: false,
     spawn_camera: false,
     spawn_drawing: false,
-    pin_objects: false
+    pin_objects: false,
+    spawn_emoji: false,
+    fly: false
   }
+
+  def hub_preloads() do
+    [
+      scene: Scene.scene_preloads(),
+      scene_listing: [
+        :model_owned_file,
+        :screenshot_owned_file,
+        :scene_owned_file,
+        :project,
+        :account,
+        scene: Scene.scene_preloads()
+      ],
+      web_push_subscriptions: [],
+      hub_bindings: [],
+      created_by_account: [],
+      hub_role_memberships: []
+    ]
+  end
 
   schema "hubs" do
     field(:name, :string)
@@ -74,6 +99,7 @@ defmodule Ret.Hub do
     field(:max_occupant_count, :integer, default: 0)
     field(:spawned_object_types, :integer, default: 0)
     field(:entry_mode, Ret.Hub.EntryMode)
+    field(:user_data, :map)
     belongs_to(:scene, Ret.Scene, references: :scene_id)
     belongs_to(:scene_listing, Ret.SceneListing, references: :scene_listing_id)
     has_many(:web_push_subscriptions, Ret.WebPushSubscription, foreign_key: :hub_id)
@@ -82,6 +108,8 @@ defmodule Ret.Hub do
     has_many(:hub_role_memberships, Ret.HubRoleMembership, foreign_key: :hub_id)
 
     field(:allow_promotion, :boolean)
+
+    field(:room_size, :integer)
 
     timestamps()
   end
@@ -108,7 +136,7 @@ defmodule Ret.Hub do
   def changeset(%Hub{} = hub, nil, attrs) do
     hub
     |> cast(attrs, [:default_environment_gltf_bundle_url])
-    |> add_meta_to_changeset(attrs)
+    |> add_attrs_to_changeset(attrs)
     |> add_hub_sid_to_changeset
     |> add_generated_tokens_to_changeset
     |> add_entry_code_to_changeset
@@ -117,11 +145,16 @@ defmodule Ret.Hub do
     |> unique_constraint(:entry_code)
   end
 
-  def add_meta_to_changeset(changeset, attrs) do
+  def add_attrs_to_changeset(changeset, attrs) do
     changeset
-    |> cast(attrs, [:name, :description])
+    |> cast(attrs, [:name, :description, :user_data, :room_size])
     |> validate_required([:name])
     |> validate_length(:name, max: 64)
+    |> validate_length(:description, max: 64_000)
+    |> validate_number(:room_size,
+      greater_than_or_equal_to: 0,
+      less_than_or_equal_to: AppConfig.get_cached_config_value("features|max_room_size")
+    )
     |> HubSlug.maybe_generate_slug()
   end
 
@@ -129,11 +162,26 @@ defmodule Ret.Hub do
     attrs["member_permissions"] |> Map.new(fn {k, v} -> {String.to_atom(k), v} end) |> member_permissions_to_int
   end
 
+  def add_member_permissions_update_to_changeset(changeset, hub, attrs) do
+    member_permissions =
+      Map.merge(member_permissions_for_hub(hub), attrs["member_permissions"])
+      |> Map.new(fn {k, v} -> {String.to_atom(k), v} end)
+      |> member_permissions_to_int
+
+    changeset
+    |> put_change(:member_permissions, member_permissions)
+  end
+
   def add_member_permissions_to_changeset(changeset, attrs) do
     member_permissions = attrs |> member_permissions_from_attrs
 
     changeset
     |> put_change(:member_permissions, member_permissions)
+  end
+
+  def maybe_add_promotion_to_changeset(changeset, account, hub, attrs) do
+    can_change_promotion = account |> can?(update_hub_promotion(hub))
+    if can_change_promotion, do: changeset |> add_promotion_to_changeset(attrs), else: changeset
   end
 
   def add_promotion_to_changeset(changeset, attrs) do
@@ -160,13 +208,23 @@ defmodule Ret.Hub do
   def changeset_for_new_scene(%Hub{} = hub, %Scene{} = scene) do
     hub
     |> change()
-    |> put_change(:scene_id, scene.scene_id)
-    |> put_change(:scene_listing_id, nil)
+    |> add_new_scene_to_changeset(scene)
   end
 
   def changeset_for_new_scene(%Hub{} = hub, %SceneListing{} = scene_listing) do
     hub
     |> change()
+    |> add_new_scene_to_changeset(scene_listing)
+  end
+
+  def add_new_scene_to_changeset(changeset, %Scene{} = scene) do
+    changeset
+    |> put_change(:scene_id, scene.scene_id)
+    |> put_change(:scene_listing_id, nil)
+  end
+
+  def add_new_scene_to_changeset(changeset, %SceneListing{} = scene_listing) do
+    changeset
     |> put_change(:scene_listing_id, scene_listing.scene_listing_id)
     |> put_change(:scene_id, nil)
   end
@@ -240,8 +298,28 @@ defmodule Ret.Hub do
     scene_listing.screenshot_owned_file |> Ret.OwnedFile.uri_for() |> URI.to_string()
   end
 
-  def member_count_for(%Hub{hub_sid: hub_sid}) do
-    RetWeb.Presence.list("hub:#{hub_sid}") |> Enum.count()
+  def member_count_for(%Hub{hub_sid: hub_sid}), do: member_count_for(hub_sid)
+
+  def member_count_for(hub_sid) do
+    RetWeb.Presence.list("hub:#{hub_sid}")
+    |> Enum.filter(fn {_, %{metas: m}} ->
+      m |> Enum.any?(fn %{presence: p, context: c} -> p == :room and !(c != nil and Map.get(c, "discord", false)) end)
+    end)
+    |> Enum.count()
+  end
+
+  def lobby_count_for(%Hub{hub_sid: hub_sid}), do: lobby_count_for(hub_sid)
+
+  def lobby_count_for(hub_sid) do
+    RetWeb.Presence.list("hub:#{hub_sid}")
+    |> Enum.filter(fn {_, %{metas: m}} ->
+      m |> Enum.any?(fn %{presence: p, context: c} -> p == :lobby and !(c != nil and Map.get(c, "discord", false)) end)
+    end)
+    |> Enum.count()
+  end
+
+  def room_size_for(%Hub{} = hub) do
+    hub.room_size || AppConfig.get_cached_config_value("features|default_room_size")
   end
 
   defp changeset_for_new_entry_code(%Hub{} = hub) do
@@ -350,6 +428,25 @@ defmodule Ret.Hub do
     end
   end
 
+  def janus_port do
+    Application.get_env(:ret, Ret.JanusLoadStatus)[:janus_port]
+  end
+
+  def generate_turn_info do
+    if Ret.Coturn.enabled?() do
+      {username, credential} = Ret.Coturn.generate_credentials()
+
+      transports =
+        (Application.get_env(:ret, Ret.Coturn)[:public_tls_ports] || "5349")
+        |> String.split(",")
+        |> Enum.map(&%{transport: :tls, port: &1 |> Integer.parse() |> elem(0)})
+
+      %{enabled: true, username: username, credential: credential, transports: transports}
+    else
+      %{enabled: false}
+    end
+  end
+
   defp add_default_member_permissions_to_changeset(changeset) do
     if Ret.AppConfig.get_config_bool("features|permissive_rooms") do
       changeset |> put_change(:member_permissions, @default_member_permissions |> member_permissions_to_int)
@@ -413,7 +510,9 @@ defmodule Ret.Hub do
   end
 
   def member_permissions_for_hub(%Hub{} = hub) do
-    hub.member_permissions |> BitFieldUtils.permissions_to_map(@member_permissions)
+    hub.member_permissions
+    |> BitFieldUtils.permissions_to_map(@member_permissions)
+    |> Map.new(fn {k, v} -> {Atom.to_string(k), v} end)
   end
 
   # The account argument here can be a Ret.Account, a Ret.OAuthProvider or nil.
@@ -430,7 +529,9 @@ defmodule Ret.Hub do
       spawn_camera: account |> can?(spawn_camera(hub)),
       spawn_drawing: account |> can?(spawn_drawing(hub)),
       spawn_and_move_media: account |> can?(spawn_and_move_media(hub)),
-      pin_objects: account |> can?(pin_objects(hub))
+      pin_objects: account |> can?(pin_objects(hub)),
+      spawn_emoji: account |> can?(spawn_emoji(hub)),
+      fly: account |> can?(fly(hub))
     }
   end
 
@@ -445,8 +546,11 @@ defimpl Canada.Can, for: Ret.Account do
   alias Ret.{Hub, AppConfig}
 
   @owner_actions [:update_hub, :close_hub, :embed_hub, :kick_users, :mute_users]
-  @object_actions [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects]
+  @object_actions [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects, :spawn_emoji, :fly]
   @creator_actions [:update_roles]
+
+  # Always deny all actions to disabled accounts
+  def can?(%Ret.Account{state: :disabled}, _, _), do: false
 
   # Always deny access to non-enterable hubs
   def can?(%Ret.Account{}, :join_hub, %Ret.Hub{entry_mode: :deny}), do: false
@@ -530,7 +634,8 @@ end
 # Perms for oauth users that do not have a hubs account
 defimpl Canada.Can, for: Ret.OAuthProvider do
   alias Ret.{AppConfig, Hub}
-  @object_actions [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects]
+
+  @object_actions [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects, :spawn_emoji, :fly]
   @special_actions [:update_hub, :update_roles, :close_hub, :embed_hub, :kick_users, :mute_users]
 
   # Always deny access to non-enterable hubs
@@ -561,7 +666,8 @@ end
 # Permissions for un-authenticated clients
 defimpl Canada.Can, for: Atom do
   alias Ret.{AppConfig, Hub}
-  @object_actions [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects]
+
+  @object_actions [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects, :spawn_emoji, :fly]
 
   # Always deny access to non-enterable hubs
   def can?(_, :join_hub, %Ret.Hub{entry_mode: :deny}), do: false

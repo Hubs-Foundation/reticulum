@@ -24,29 +24,24 @@ defmodule RetWeb.HubChannel do
   alias RetWeb.{Presence}
   alias RetWeb.Api.V1.{HubView}
 
-  intercept(["hub_refresh", "mute", "add_owner", "remove_owner", "naf", "message", "block", "unblock"])
-
-  @hub_preloads [
-    scene: Scene.scene_preloads(),
-    scene_listing: [
-      :model_owned_file,
-      :screenshot_owned_file,
-      :scene_owned_file,
-      :project,
-      :account,
-      scene: Scene.scene_preloads()
-    ],
-    web_push_subscriptions: [],
-    hub_bindings: [],
-    created_by_account: [],
-    hub_role_memberships: []
-  ]
+  intercept([
+    "hub_refresh",
+    "mute",
+    "add_owner",
+    "remove_owner",
+    "message",
+    "block",
+    "unblock",
+    # See internal_naf_event_for/2
+    "maybe-naf",
+    "maybe-nafr"
+  ])
 
   def join("hub:" <> hub_sid, %{"profile" => profile, "context" => context} = params, socket) do
     hub =
       Hub
       |> Repo.get_by(hub_sid: hub_sid)
-      |> Repo.preload(@hub_preloads)
+      |> Repo.preload(Hub.hub_preloads())
 
     socket
     |> assign(:profile, profile)
@@ -54,6 +49,8 @@ defmodule RetWeb.HubChannel do
     |> assign(:block_naf, false)
     |> assign(:blocked_session_ids, %{})
     |> assign(:blocked_by_session_ids, %{})
+    |> assign(:has_blocks, false)
+    |> assign(:has_embeds, false)
     |> perform_join(
       hub,
       context,
@@ -115,6 +112,63 @@ defmodule RetWeb.HubChannel do
     hub |> join_with_hub(account, socket, context, params)
   end
 
+  # Optimization: "raw" NAF event, with the underlying NAF payload as a string.
+  # By going through this event, the server can avoid parsing the NAF messages.
+  def handle_in("nafr" = event, %{"naf" => naf_payload} = payload, socket) do
+    # We expect the client to have stripped the "isFirstSync" keys from the message
+    # for this optimization.
+    if !String.contains?(naf_payload, "isFirstSync") do
+      broadcast_from!(socket, event |> internal_naf_event_for(socket), payload |> payload_with_from(socket))
+      {:noreply, socket}
+    else
+      # Full syncs must be properly authorized
+      handle_in("naf", naf_payload |> Jason.decode!(), socket)
+    end
+  end
+
+  # Captures all inbound NAF messages that result in spawned objects.
+  def handle_in(
+        "naf" = event,
+        %{"data" => %{"isFirstSync" => true, "persistent" => false, "template" => template}} = payload,
+        socket
+      ) do
+    data = payload["data"]
+
+    if template |> spawn_permitted?(socket) do
+      data =
+        data
+        |> Map.put("creator", socket.assigns.session_id)
+        |> Map.put("owner", socket.assigns.session_id)
+
+      payload = payload |> Map.put("data", data)
+
+      broadcast_from!(socket, event |> internal_naf_event_for(socket), payload |> payload_with_from(socket))
+
+      {:noreply, socket}
+    else
+      {:noreply, socket}
+    end
+  end
+
+  # Captures all inbound NAF Update Multi messages
+  def handle_in("naf" = event, %{"dataType" => "um", "data" => %{"d" => updates}} = payload, socket) do
+    if updates |> Enum.any?(& &1["isFirstSync"]) do
+      # Do not broadcast "um" messages that contain isFirstSyncs. NAF should never send these, so we'd only see them
+      # from a malicious client.
+      {:noreply, socket}
+    else
+      broadcast_from!(socket, event |> internal_naf_event_for(socket), payload |> payload_with_from(socket))
+
+      {:noreply, socket}
+    end
+  end
+
+  # Fallthrough for all other NAF dataTypes
+  def handle_in("naf" = event, payload, socket) do
+    broadcast_from!(socket, event |> internal_naf_event_for(socket), payload |> payload_with_from(socket))
+    {:noreply, socket}
+  end
+
   def handle_in("events:entering", _payload, socket) do
     context = socket.assigns.context || %{}
     socket = socket |> assign(:context, context |> Map.put("entering", true)) |> broadcast_presence_update
@@ -172,49 +226,6 @@ defmodule RetWeb.HubChannel do
   def handle_in("events:end_recording", _payload, socket), do: socket |> set_presence_flag(:recording, false)
   def handle_in("events:begin_streaming", _payload, socket), do: socket |> set_presence_flag(:streaming, true)
   def handle_in("events:end_streaming", _payload, socket), do: socket |> set_presence_flag(:streaming, false)
-
-  # Captures all inbound NAF messages that result in spawned objects.
-  def handle_in(
-        "naf" = event,
-        %{"data" => %{"isFirstSync" => true, "persistent" => false, "template" => template}} = payload,
-        socket
-      ) do
-    data = payload["data"]
-
-    if template |> spawn_permitted?(socket) do
-      data =
-        data
-        |> Map.put("creator", socket.assigns.session_id)
-        |> Map.put("owner", socket.assigns.session_id)
-
-      payload = payload |> Map.put("data", data)
-
-      broadcast_from!(socket, event, payload |> payload_with_from(socket))
-
-      {:noreply, socket}
-    else
-      {:noreply, socket}
-    end
-  end
-
-  # Captures all inbound NAF Update Multi messages
-  def handle_in("naf" = event, %{"dataType" => "um", "data" => %{"d" => updates}} = payload, socket) do
-    if updates |> Enum.any?(& &1["isFirstSync"]) do
-      # Do not broadcast "um" messages that contain isFirstSyncs. NAF should never send these, so we'd only see them
-      # from a malicious client.
-      {:noreply, socket}
-    else
-      broadcast_from!(socket, event, payload |> payload_with_from(socket))
-
-      {:noreply, socket}
-    end
-  end
-
-  # Fallthrough for all other NAF dataTypes
-  def handle_in("naf" = event, payload, socket) do
-    broadcast_from!(socket, event, payload |> payload_with_from(socket))
-    {:noreply, socket}
-  end
 
   def handle_in("message" = event, %{"type" => type} = payload, socket) do
     account = Guardian.Phoenix.Socket.current_resource(socket)
@@ -279,7 +290,7 @@ defmodule RetWeb.HubChannel do
       {:ok, %Account{} = account, _claims} ->
         socket = Guardian.Phoenix.Socket.put_current_resource(socket, account)
 
-        hub = socket |> hub_for_socket |> Repo.preload(@hub_preloads)
+        hub = socket |> hub_for_socket |> Repo.preload(Hub.hub_preloads())
 
         hub =
           if creator_assignment_token do
@@ -379,7 +390,7 @@ defmodule RetWeb.HubChannel do
 
   def handle_in("get_host", _args, socket) do
     hub = socket |> hub_for_socket |> Hub.ensure_host()
-    {:reply, {:ok, %{host: hub.host}}, socket}
+    {:reply, {:ok, %{host: hub.host, port: Hub.janus_port(), turn: Hub.generate_turn_info()}}, socket}
   end
 
   def handle_in("update_hub", payload, socket) do
@@ -390,6 +401,7 @@ defmodule RetWeb.HubChannel do
       name_changed = hub.name != payload["name"]
       description_changed = hub.description != payload["description"]
       member_permissions_changed = hub.member_permissions != payload |> Hub.member_permissions_from_attrs()
+      room_size_changed = hub.room_size != payload["room_size"]
       can_change_promotion = account |> can?(update_hub_promotion(hub))
       promotion_changed = can_change_promotion and hub.allow_promotion != payload["allow_promotion"]
 
@@ -397,14 +409,15 @@ defmodule RetWeb.HubChannel do
       stale_fields = if name_changed, do: ["name" | stale_fields], else: stale_fields
       stale_fields = if description_changed, do: ["description" | stale_fields], else: stale_fields
       stale_fields = if member_permissions_changed, do: ["member_permissions" | stale_fields], else: stale_fields
+      stale_fields = if room_size_changed, do: ["room_size" | stale_fields], else: stale_fields
       stale_fields = if promotion_changed, do: ["allow_promotion" | stale_fields], else: stale_fields
 
       hub
-      |> Hub.add_meta_to_changeset(payload)
+      |> Hub.add_attrs_to_changeset(payload)
       |> Hub.add_member_permissions_to_changeset(payload)
-      |> maybe_add_promotion_to_changeset(account, hub, payload)
+      |> Hub.maybe_add_promotion_to_changeset(account, hub, payload)
       |> Repo.update!()
-      |> Repo.preload(@hub_preloads)
+      |> Repo.preload(Hub.hub_preloads())
       |> broadcast_hub_refresh!(socket, stale_fields)
     end
 
@@ -431,7 +444,7 @@ defmodule RetWeb.HubChannel do
           hub |> Hub.changeset_for_new_environment_url(url)
       end
       |> Repo.update!()
-      |> Repo.preload(@hub_preloads, force: true)
+      |> Repo.preload(Hub.hub_preloads(), force: true)
       |> broadcast_hub_refresh!(socket, ["scene"])
     end
 
@@ -462,13 +475,21 @@ defmodule RetWeb.HubChannel do
   end
 
   def handle_in("block" = event, %{"session_id" => session_id} = payload, socket) do
-    socket = socket |> assign(:blocked_session_ids, socket.assigns.blocked_session_ids |> Map.put(session_id, true))
+    socket =
+      socket
+      |> assign(:blocked_session_ids, socket.assigns.blocked_session_ids |> Map.put(session_id, true))
+      |> assign_has_blocks
+
     broadcast_from!(socket, event, payload |> payload_with_from(socket))
     {:noreply, socket}
   end
 
   def handle_in("unblock" = event, %{"session_id" => session_id} = payload, socket) do
-    socket = socket |> assign(:blocked_session_ids, socket.assigns.blocked_session_ids |> Map.delete(session_id))
+    socket =
+      socket
+      |> assign(:blocked_session_ids, socket.assigns.blocked_session_ids |> Map.delete(session_id))
+      |> assign_has_blocks
+
     broadcast_from!(socket, event, payload |> payload_with_from(socket))
     {:noreply, socket}
   end
@@ -484,6 +505,8 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
+  # NOTE: block_naf will only work if the hub is embedded. We *only* enable packet filtering
+  # (and therefore, only respect block_naf) when a hub is embedded (or if there are blocks on the socket.)
   def handle_in("block_naf", _payload, socket), do: {:noreply, socket |> assign(:block_naf, true)}
   def handle_in("unblock_naf", _payload, socket), do: {:noreply, socket |> assign(:block_naf, false)}
 
@@ -515,6 +538,22 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
+  # If the maybe- variant of the naf/nafr messages are seen, we are performing packet filtering due to blocks
+  # or iframe embeds opting out of NAF traffic. Handle them appropriately. (This is expensive, and should be rare!)
+  def handle_out(event, payload, socket) when event in ["maybe-nafr"] do
+    %{block_naf: block_naf, blocked_session_ids: blocked_session_ids, blocked_by_session_ids: blocked_by_session_ids} =
+      socket.assigns
+
+    socket |> maybe_push_naf("nafr", payload, block_naf, blocked_session_ids, blocked_by_session_ids)
+  end
+
+  def handle_out(event, payload, socket) when event in ["maybe-naf"] do
+    %{block_naf: block_naf, blocked_session_ids: blocked_session_ids, blocked_by_session_ids: blocked_by_session_ids} =
+      socket.assigns
+
+    socket |> maybe_push_naf("naf", payload, block_naf, blocked_session_ids, blocked_by_session_ids)
+  end
+
   def handle_out("mute" = event, %{"session_id" => session_id} = payload, socket) do
     if socket.assigns.session_id == session_id do
       push(socket, event, payload)
@@ -540,6 +579,7 @@ defmodule RetWeb.HubChannel do
       if socket.assigns.session_id === session_id do
         socket
         |> assign(:blocked_by_session_ids, socket.assigns.blocked_by_session_ids |> Map.put(from_session_id, true))
+        |> assign_has_blocks
       else
         socket
       end
@@ -550,7 +590,9 @@ defmodule RetWeb.HubChannel do
   def handle_out("unblock", %{"session_id" => session_id, :from_session_id => from_session_id}, socket) do
     socket =
       if socket.assigns.session_id === session_id do
-        socket |> assign(:blocked_by_session_ids, socket.assigns.blocked_by_session_ids |> Map.delete(from_session_id))
+        socket
+        |> assign(:blocked_by_session_ids, socket.assigns.blocked_by_session_ids |> Map.delete(from_session_id))
+        |> assign_has_blocks
       else
         socket
       end
@@ -577,17 +619,6 @@ defmodule RetWeb.HubChannel do
     end
 
     {:noreply, socket}
-  end
-
-  def handle_out("naf" = event, payload, socket) do
-    socket
-    |> maybe_push_naf(
-      event,
-      payload,
-      socket.assigns.block_naf,
-      socket.assigns.blocked_session_ids,
-      socket.assigns.blocked_by_session_ids
-    )
   end
 
   def handle_out("message" = event, %{from_session_id: from_session_id} = payload, socket) do
@@ -637,6 +668,7 @@ defmodule RetWeb.HubChannel do
       template |> String.ends_with?("-camera") -> account |> can?(spawn_camera(hub))
       template |> String.ends_with?("-drawing") -> account |> can?(spawn_drawing(hub))
       template |> String.ends_with?("-pen") -> account |> can?(spawn_drawing(hub))
+      template |> String.ends_with?("-emoji") -> account |> can?(spawn_emoji(hub))
       # We want to forbid messages if they fall through the above list of template suffixes
       true -> false
     end
@@ -650,7 +682,7 @@ defmodule RetWeb.HubChannel do
       hub
       |> Hub.changeset_for_entry_mode(entry_mode)
       |> Repo.update!()
-      |> Repo.preload(@hub_preloads)
+      |> Repo.preload(Hub.hub_preloads())
       |> broadcast_hub_refresh!(socket, ["entry_mode"])
     end
 
@@ -850,6 +882,18 @@ defmodule RetWeb.HubChannel do
          _socket,
          _context,
          %{
+           hub_requires_oauth: false,
+           account_can_join: false
+         }
+       ),
+       do: deny_join()
+
+  defp join_with_hub(
+         %Hub{},
+         %Account{},
+         _socket,
+         _context,
+         %{
            hub_requires_oauth: true,
            account_has_provider_for_hub: true,
            account_can_join: false
@@ -914,11 +958,18 @@ defmodule RetWeb.HubChannel do
   defp join_with_hub(%Hub{} = hub, account, socket, context, params) do
     hub = hub |> Hub.ensure_valid_entry_code!() |> Hub.ensure_host()
 
-    if context["embed"] do
-      hub
-      |> Hub.changeset_for_seen_embedded_hub()
-      |> Repo.update!()
-    end
+    hub =
+      if context["embed"] && !hub.embedded do
+        hub
+        |> Hub.changeset_for_seen_embedded_hub()
+        |> Repo.update!()
+      else
+        hub
+      end
+
+    # Each channel connection needs to be aware if there are, or ever have been,
+    # embeddings of this hub (see internal_naf_event_for/2)
+    socket = socket |> assign(:has_embeds, hub.embedded)
 
     push_subscription_endpoint = params["push_subscription_endpoint"]
 
@@ -1031,7 +1082,12 @@ defmodule RetWeb.HubChannel do
     |> SessionStat.stat_query_for_socket()
     |> Repo.update_all(set: stat_attributes)
 
-    socket |> assign(:presence, :room) |> broadcast_presence_update
+    context = socket.assigns.context || %{}
+
+    socket
+    |> assign(:presence, :room)
+    |> assign(:context, context |> Map.delete("entering"))
+    |> broadcast_presence_update
   end
 
   defp handle_max_occupant_update(socket, occupant_count) do
@@ -1064,8 +1120,21 @@ defmodule RetWeb.HubChannel do
     payload |> Map.delete(:from_session_id)
   end
 
-  defp maybe_add_promotion_to_changeset(changeset, account, hub, payload) do
-    can_change_promotion = account |> can?(update_hub_promotion(hub))
-    if can_change_promotion, do: changeset |> Hub.add_promotion_to_changeset(payload), else: changeset
+  defp assign_has_blocks(socket) do
+    has_blocks =
+      socket.assigns.blocked_session_ids |> Enum.any?() || socket.assigns.blocked_by_session_ids |> Enum.any?()
+
+    socket |> assign(:has_blocks, has_blocks)
   end
+
+  # Normally, naf and nafr messages are sent as is. However, if this connection is blocking users,
+  # has been blocked, or the hub itself has been seen in an iframe, we need to potentially filter
+  # NAF messages. As such, we internally route messages via an intercepted handle_out for filtering.
+  # This is done via the intercepted maybe-nafr and maybe-naf events.
+  #
+  # We avoid doing this in general because it's extremely expensive, since it re-encodes all outgoing messages.
+  defp internal_naf_event_for("nafr", %Phoenix.Socket{assigns: %{has_blocks: false, has_embeds: false}}), do: "nafr"
+  defp internal_naf_event_for("naf", %Phoenix.Socket{assigns: %{has_blocks: false, has_embeds: false}}), do: "naf"
+  defp internal_naf_event_for("nafr", _socket), do: "maybe-nafr"
+  defp internal_naf_event_for("naf", _socket), do: "maybe-naf"
 end

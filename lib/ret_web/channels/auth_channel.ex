@@ -23,7 +23,10 @@ defmodule RetWeb.AuthChannel do
     if !Map.get(socket.assigns, :used) do
       socket = socket |> assign(:used, true)
 
-      if can?(nil, create_account(nil)) || Account.exists_for_email?(email) do
+      account = email |> Account.account_for_email()
+      account_disabled = account && account.state == :disabled
+
+      if !account_disabled && (can?(nil, create_account(nil)) || !!account) do
         # Create token + send email
         %LoginToken{token: token, payload_key: payload_key} = LoginToken.new_login_token_for_email(email)
 
@@ -77,6 +80,11 @@ defmodule RetWeb.AuthChannel do
   end
 
   def handle_info(:close_channel, socket) do
+    GenServer.cast(self(), :close)
+    {:noreply, socket}
+  end
+
+  def handle_info(:channel_expired, socket) do
     GenServer.cast(self(), :close)
     {:noreply, socket}
   end

@@ -22,6 +22,15 @@ config :ret, Ret.Repo,
   pool_size: 10,
   pool: Ecto.Adapters.SQL.Sandbox
 
+config :ret, Ret.Locking,
+  lock_timeout_ms: 1000 * 60 * 15,
+  session_lock_db: [
+    username: "admin",
+    password: "admin",
+    database: "ret_test",
+    hostname: "localhost"
+  ]
+
 config :ret, Ret.Guardian,
   issuer: "ret",
   secret_key: "47iqPEdWcfE7xRnyaxKDLt9OGEtkQG3SycHBEMOuT2qARmoESnhc76IgCUjaQIwX"

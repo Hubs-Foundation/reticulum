@@ -24,6 +24,6 @@ defmodule Ret.Habitat do
     |> get_in(["census_groups", full_service_name, "population"])
     |> Map.values()
     |> Enum.filter(&(&1["alive"] == true))
-    |> Enum.map(&({&1["sys"]["hostname"], &1["sys"]["ip"]}))
+    |> Enum.map(&{&1["sys"]["hostname"], &1["sys"]["ip"]})
   end
 end

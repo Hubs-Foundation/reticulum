@@ -1,6 +1,6 @@
 defmodule Ret.ResolvedMedia do
   @enforce_keys [:uri]
-  defstruct [:uri, :audio_uri, :meta]
+  defstruct [:uri, :audio_uri, :meta, :ttl]
 end
 
 defmodule Ret.MediaResolverQuery do
@@ -17,6 +17,11 @@ defmodule Ret.MediaResolver do
   alias Ret.{CachedFile, MediaResolverQuery, Statix}
 
   @ytdl_valid_status_codes [200, 302, 500]
+
+  @youtube_rate_limit %{scale: 8_000, limit: 1}
+  @sketchfab_rate_limit %{scale: 60_000, limit: 15}
+  @poly_rate_limit %{scale: 60_000, limit: 1000}
+  @max_await_for_rate_limit_s 120
 
   @non_video_root_hosts [
     "sketchfab.com",
@@ -38,11 +43,37 @@ defmodule Ret.MediaResolver do
 
   # Necessary short circuit around google.com root_host to skip YT-DL check for Poly
   def resolve(%MediaResolverQuery{url: %URI{host: "poly.google.com"}} = query, root_host) do
-    resolve_non_video(query, root_host)
+    rate_limited_resolve(query, root_host, @poly_rate_limit, fn ->
+      resolve_non_video(query, root_host)
+    end)
   end
 
   def resolve(%MediaResolverQuery{} = query, root_host) when root_host in @non_video_root_hosts do
     resolve_non_video(query, root_host)
+  end
+
+  # For youtube.com, we need to rate limit requests. Only do one at a time on this host.
+  # Also compute ttl here based upon expire, to localize youtube.com specific logic.
+  def resolve(%MediaResolverQuery{} = query, "youtube.com" = root_host) do
+    rate_limited_resolve(query, root_host, @youtube_rate_limit, fn ->
+      res = resolve_with_ytdl(query, root_host, query |> ytdl_format(root_host))
+
+      {:commit, %Ret.ResolvedMedia{uri: %URI{query: youtube_query}} = resolved_media} = res
+
+      # YouTube returns a 'expire' which has timestamp of expiration.
+      resolved_media =
+        with parsed_youtube_query <- URI.decode_query(youtube_query),
+             expire when is_binary(expire) <- Map.get(parsed_youtube_query, "expire"),
+             {expire_s, _} <- Integer.parse(expire),
+             ttl_s <- expire_s - System.system_time(:second) do
+          # Expire a minute early
+          resolved_media |> Map.put(:ttl, ttl_s * 1000 - 60000)
+        else
+          _ -> resolved_media
+        end
+
+      {:commit, resolved_media}
+    end)
   end
 
   def resolve(%MediaResolverQuery{} = query, root_host) do
@@ -52,6 +83,18 @@ defmodule Ret.MediaResolver do
   def resolve_with_ytdl(%MediaResolverQuery{} = query, root_host, ytdl_format) do
     with ytdl_host when is_binary(ytdl_host) <- module_config(:ytdl_host) do
       case fetch_ytdl_response(query, ytdl_format) do
+        %HTTPoison.Response{status_code: 500, body: body} ->
+          if String.contains?(body, "is offline") do
+            {:commit,
+             resolved(query.url, %{
+               expected_content_type: "text/html",
+               media_status: :offline_stream,
+               thumbnail: RetWeb.Endpoint.static_url() <> "/stream-offline.png"
+             })}
+          else
+            resolve_non_video(query, root_host)
+          end
+
         %HTTPoison.Response{status_code: 302, headers: headers} ->
           # todo: it would be really nice to return video/* content type here!
           # but it seems that the way we're using youtube-dl will return a 302 with the
@@ -220,17 +263,22 @@ defmodule Ret.MediaResolver do
 
   defp resolve_non_video(
          %MediaResolverQuery{url: %URI{path: "/models/" <> model_id}} = query,
-         "sketchfab.com"
+         "sketchfab.com" = root_host
        ) do
-    resolve_sketchfab_model(model_id, query)
+    rate_limited_resolve(query, root_host, @sketchfab_rate_limit, fn ->
+      resolve_sketchfab_model(model_id, query)
+    end)
   end
 
   defp resolve_non_video(
          %MediaResolverQuery{url: %URI{path: "/3d-models/" <> model_id}} = query,
-         "sketchfab.com"
+         "sketchfab.com" = root_host
        ) do
     model_id = model_id |> String.split("-") |> Enum.at(-1)
-    resolve_sketchfab_model(model_id, query)
+
+    rate_limited_resolve(query, root_host, @sketchfab_rate_limit, fn ->
+      resolve_sketchfab_model(model_id, query)
+    end)
   end
 
   defp resolve_non_video(%MediaResolverQuery{url: %URI{host: host} = uri, version: version}, _root_host) do
@@ -462,6 +510,21 @@ defmodule Ret.MediaResolver do
       [{"Authorization", "Client-ID #{client_id}"}, {"X-Mashape-Key", api_key}]
     else
       _err -> nil
+    end
+  end
+
+  defp rate_limited_resolve(query, root_host, limits, func, depth \\ 0) do
+    if depth < @max_await_for_rate_limit_s * 2 do
+      case ExRated.check_rate(root_host, limits[:scale], limits[:limit]) do
+        {:error, _} ->
+          :timer.sleep(500)
+          rate_limited_resolve(query, root_host, limits, func, depth + 1)
+
+        _ ->
+          func.()
+      end
+    else
+      {:error, "Rate limiter timeout"}
     end
   end
 
