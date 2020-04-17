@@ -26,7 +26,7 @@ defmodule RetWeb.Presence do
   end
 
   def has_present_members? do
-    present_member_count > 0
+    present_member_count() > 0
   end
 
   defp present_sessions do
