@@ -18,7 +18,7 @@ defmodule Ret.Repo.Migrations.AddCoturnSchema do
       "create table coturn.denied_peer_ip (realm varchar(127), ip_range varchar(256), inserted_at timestamp, updated_at timestamp)"
     )
 
-    if coturn_password && coturn_password != "" do
+    if coturn_password do
       execute("""
       DO
       $do$
