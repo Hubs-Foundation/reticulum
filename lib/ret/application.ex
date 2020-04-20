@@ -7,6 +7,9 @@ defmodule Ret.Application do
   def start(_type, _args) do
     import Supervisor.Spec
 
+    # Disallow stop of the application via SIGTERM until migrations are finished.
+    Ret.DelayStopSignalHandler.delay_stop()
+
     # Start application, start repos, take lock, run migrations, stop repos
     Application.load(:ret)
     EctoBootMigration.start_dependencies()
@@ -44,6 +47,8 @@ defmodule Ret.Application do
     end)
 
     EctoBootMigration.stop_repos(repos_pids)
+
+    Ret.DelayStopSignalHandler.allow_stop()
 
     :ok = Ret.Statix.connect()
 
