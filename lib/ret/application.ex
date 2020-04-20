@@ -46,6 +46,10 @@ defmodule Ret.Application do
       end
     end)
 
+    # Ensure there are some TURN secrets in the database, so that if system is idle
+    # the cron isn't indefinitely skipped.
+    Ret.Coturn.rotate_secrets(true)
+
     EctoBootMigration.stop_repos(repos_pids)
 
     Ret.DelayStopSignalHandler.allow_stop()
