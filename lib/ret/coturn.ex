@@ -1,17 +1,17 @@
 defmodule Ret.Coturn do
   # Adds a new secret, and removes secrets older than 15 minutes since a new one is generated every five.
   # Note this is safe to run on a multi-node cluster since coturn respects all secrets in the db.
-  def rotate_secrets(force \\ false) do
+  def rotate_secrets(force \\ false, repo \\ Ret.Repo) do
     # Don't perform database cron if turn is disabled or nobody is connected, to prevent un-pausing db.
     if enabled?() && (force || RetWeb.Presence.has_present_members?()) do
       Ecto.Adapters.SQL.query!(
-        Ret.Repo,
+        repo,
         "INSERT INTO coturn.turn_secret (realm, value, inserted_at, updated_at) values ($1, $2, now(), now())",
         [realm(), SecureRandom.hex()]
       )
 
       Ecto.Adapters.SQL.query!(
-        Ret.Repo,
+        repo,
         "DELETE FROM coturn.turn_secret WHERE inserted_at < now() - interval '15 minutes'"
       )
     end

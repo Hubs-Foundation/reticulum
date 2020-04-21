@@ -112,6 +112,19 @@ port = {{ cfg.db.port }}
 ssl = {{ cfg.db.ssl }}
 {{/if}}
 
+[ret."Elixir.Ret.SessionLockRepo"]
+username = "{{ cfg.session_lock_db.username }}"
+password = "{{ cfg.session_lock_db.password }}"
+database = "{{ cfg.session_lock_db.database }}"
+hostname = "{{ cfg.session_lock_db.hostname }}"
+template = "{{ cfg.session_lock_db.template }}"
+{{#if cfg.session_lock_db.port }}
+port = {{ cfg.session_lock_db.port }}
+{{/if}}
+{{#if cfg.db.ssl }}
+ssl = {{ cfg.db.ssl }}
+{{/if}}
+
 [ret."Elixir.Ret.Locking".session_lock_db]
 username = "{{ cfg.session_lock_db.username }}"
 password = "{{ cfg.session_lock_db.password }}"

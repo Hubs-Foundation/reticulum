@@ -14,36 +14,40 @@ defmodule Ret.Application do
     Application.load(:ret)
     EctoBootMigration.start_dependencies()
 
-    repos_pids = EctoBootMigration.start_repos([Ret.Repo])
+    repos_pids = Ret.Locking.exec_if_session_lockable("ret_migration", fn ->
+      repos_pids = EctoBootMigration.start_repos([Ret.SessionLockRepo])
 
-    Ret.Locking.exec_if_session_lockable("ret_migration", fn ->
-      db_name = Application.get_env(:ret, Ret.Repo)[:database]
+      db_name = Application.get_env(:ret, Ret.SessionLockRepo)[:database]
 
       # Can't check mix_env here, so check db name
       if db_name !== "ret_test" do
         coturn_enabled = Ret.Coturn.enabled?()
 
-        Ecto.Adapters.SQL.query!(Ret.Repo, "CREATE SCHEMA IF NOT EXISTS ret0")
+        Ecto.Adapters.SQL.query!(Ret.SessionLockRepo, "CREATE SCHEMA IF NOT EXISTS ret0")
 
         if coturn_enabled do
-          Ecto.Adapters.SQL.query!(Ret.Repo, "CREATE SCHEMA IF NOT EXISTS coturn")
+          Ecto.Adapters.SQL.query!(Ret.SessionLockRepo, "CREATE SCHEMA IF NOT EXISTS coturn")
         end
 
         Ecto.Adapters.SQL.query!(
-          Ret.Repo,
+          Ret.SessionLockRepo,
           "ALTER DATABASE #{db_name} SET search_path TO ret0"
         )
 
         priv_path = Path.join(["#{:code.priv_dir(:ret)}", "repo", "migrations"])
-        Ecto.Migrator.run(Ret.Repo, priv_path, :up, all: true, prefix: "ret0")
+        Ecto.Migrator.run(Ret.SessionLockRepo, priv_path, :up, all: true, prefix: "ret0")
+
+        repos_pids
       end
     end)
 
-    # Ensure there are some TURN secrets in the database, so that if system is idle
-    # the cron isn't indefinitely skipped.
-    Ret.Coturn.rotate_secrets(true)
+    if repos_pids do
+      # Ensure there are some TURN secrets in the database, so that if system is idle
+      # the cron isn't indefinitely skipped.
+      Ret.Coturn.rotate_secrets(true, Ret.SessionLockRepo)
 
-    EctoBootMigration.stop_repos(repos_pids)
+      EctoBootMigration.stop_repos(repos_pids)
+    end
 
     Ret.DelayStopSignalHandler.allow_stop()
 

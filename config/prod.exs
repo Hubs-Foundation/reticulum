@@ -44,6 +44,14 @@ config :ret, Ret.Repo,
   template: "template0",
   pool_size: 10
 
+config :ret, Ret.SessionLockRepo,
+  username: "postgres",
+  password: "postgres",
+  database: "ret_production",
+  hostname: "localhost",
+  template: "template0",
+  pool_size: 10
+
 # ## SSL Support
 #
 # To get SSL working, you will need to add the `https` key

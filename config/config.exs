@@ -45,6 +45,14 @@ config :ret, Ret.Repo,
   ownership_timeout: 60_000,
   timeout: 60_000
 
+config :ret, Ret.SessionLockRepo,
+  migration_source: "schema_migrations",
+  migration_default_prefix: "ret0",
+  after_connect: {Ret.SessionLockRepo, :set_search_path, ["public, ret0"]},
+  # Downloads from Sketchfab to file cache hold connections open
+  ownership_timeout: 60_000,
+  timeout: 60_000
+
 config :peerage, log_results: false
 
 config :statix, prefix: "ret"
