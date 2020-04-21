@@ -118,6 +118,15 @@ password = "{{ cfg.session_lock_db.password }}"
 database = "{{ cfg.session_lock_db.database }}"
 hostname = "{{ cfg.session_lock_db.hostname }}"
 template = "{{ cfg.db.template }}"
+{{#if cfg.db.queue_interval }}
+queue_interval = {{ cfg.db.queue_interval }}
+{{/if}}
+{{#if cfg.db.queue_target }}
+queue_target = {{ cfg.db.queue_target }}
+{{/if}}
+{{#if cfg.db.timeout }}
+timeout = {{ cfg.db.timeout }}
+{{/if}}
 {{#if cfg.session_lock_db.port }}
 port = {{ cfg.session_lock_db.port }}
 {{/if}}
