@@ -2,7 +2,7 @@ defmodule Ret.Repo.Migrations.AddAvatarListingsAccount do
   use Ecto.Migration
   import Ecto.Query
 
-  alias Ret.{SessionLockRepo, Avatar}
+  alias Ret.{Avatar}
 
   def up do
     alter table(:avatar_listings) do
@@ -24,7 +24,7 @@ defmodule Ret.Repo.Migrations.AddAvatarListingsAccount do
       on: a.avatar_id == l.avatar_id,
       update: [set: [account_id: a.account_id]]
     )
-    |> SessionLockRepo.update_all([])
+    |> repo().update_all([])
   end
 
   def down do
