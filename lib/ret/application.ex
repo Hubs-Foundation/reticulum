@@ -17,7 +17,9 @@ defmodule Ret.Application do
     repos_pids = Ret.Locking.exec_if_session_lockable("ret_migration", fn ->
       repos_pids = EctoBootMigration.start_repos([Ret.SessionLockRepo])
 
-      db_name = Application.get_env(:ret, Ret.SessionLockRepo)[:database]
+      # Note the main Repo database is used here, since the session locking database
+      # name may be a proxy database in pgbouncer which doesn't actually exist.
+      db_name = Application.get_env(:ret, Ret.Repo)[:database]
 
       # Can't check mix_env here, so check db name
       if db_name !== "ret_test" do
