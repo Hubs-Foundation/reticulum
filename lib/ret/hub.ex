@@ -439,7 +439,7 @@ defmodule Ret.Hub do
       transports =
         (Application.get_env(:ret, Ret.Coturn)[:public_tls_ports] || "5349")
         |> String.split(",")
-        |> Enum.map(&%{transport: :tls, port: &1 |> Integer.parse() |> elem(0)})
+        |> Enum.map(&%{port: &1 |> Integer.parse() |> elem(0)})
 
       %{enabled: true, username: username, credential: credential, transports: transports}
     else
