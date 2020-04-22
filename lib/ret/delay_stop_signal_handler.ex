@@ -24,7 +24,7 @@ defmodule Ret.DelayStopSignalHandler do
     :ok =
       :gen_event.swap_sup_handler(
         :erl_signal_server,
-        {Ret.SignalHandler, []},
+        {Ret.DelayStopSignalHandler, []},
         {:erl_signal_handler, []}
       )
   end
