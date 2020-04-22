@@ -12,10 +12,22 @@ config :ret, RetWeb.Endpoint,
 # Print only warnings and errors during test
 config :logger, level: :warn
 
+db_credentials = "admin"
+
 config :ret, Ret.Repo,
   adapter: Ecto.Adapters.Postgres,
-  username: "admin",
-  password: "admin",
+  username: db_credentials,
+  password: db_credentials,
+  database: "ret_test",
+  hostname: "localhost",
+  template: "template0",
+  pool_size: 10,
+  pool: Ecto.Adapters.SQL.Sandbox
+
+config :ret, Ret.SessionLockRepo,
+  adapter: Ecto.Adapters.Postgres,
+  username: db_credentials,
+  password: db_credentials,
   database: "ret_test",
   hostname: "localhost",
   template: "template0",
@@ -25,8 +37,8 @@ config :ret, Ret.Repo,
 config :ret, Ret.Locking,
   lock_timeout_ms: 1000 * 60 * 15,
   session_lock_db: [
-    username: "admin",
-    password: "admin",
+    username: db_credentials,
+    password: db_credentials,
     database: "ret_test",
     hostname: "localhost"
   ]

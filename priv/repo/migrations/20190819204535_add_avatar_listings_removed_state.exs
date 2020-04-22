@@ -1,7 +1,7 @@
 defmodule Ret.Repo.Migrations.AddAvatarListingsRemovedState do
   use Ecto.Migration
   import Ecto.Query
-  alias Ret.{Repo, AvatarListing}
+  alias Ret.{AvatarListing}
 
   @disable_ddl_transaction true
 
@@ -10,7 +10,7 @@ defmodule Ret.Repo.Migrations.AddAvatarListingsRemovedState do
 
     flush()
 
-    Repo.update_all(
+    repo().update_all(
       from(l in AvatarListing, where: l.state == ^:delisted and not is_nil(l.avatar_id)),
       set: [state: :removed]
     )

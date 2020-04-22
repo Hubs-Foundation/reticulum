@@ -6,7 +6,7 @@
 use Mix.Config
 
 # General application configuration
-config :ret, ecto_repos: [Ret.Repo]
+config :ret, ecto_repos: [Ret.Repo, Ret.SessionLockRepo]
 
 config :phoenix, :format_encoders, "json-api": Jason
 config :phoenix, :json_library, Jason
@@ -41,6 +41,14 @@ config :ret, Ret.Repo,
   migration_source: "schema_migrations",
   migration_default_prefix: "ret0",
   after_connect: {Ret.Repo, :set_search_path, ["public, ret0"]},
+  # Downloads from Sketchfab to file cache hold connections open
+  ownership_timeout: 60_000,
+  timeout: 60_000
+
+config :ret, Ret.SessionLockRepo,
+  migration_source: "schema_migrations",
+  migration_default_prefix: "ret0",
+  after_connect: {Ret.SessionLockRepo, :set_search_path, ["public, ret0"]},
   # Downloads from Sketchfab to file cache hold connections open
   ownership_timeout: 60_000,
   timeout: 60_000

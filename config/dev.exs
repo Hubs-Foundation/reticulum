@@ -93,6 +93,14 @@ config :ret, Ret.Repo,
   template: "template0",
   pool_size: 10
 
+config :ret, Ret.SessionLockRepo,
+  username: "postgres",
+  password: "postgres",
+  database: "ret_dev",
+  hostname: if(env_db_host == "", do: "localhost", else: env_db_host),
+  template: "template0",
+  pool_size: 10
+
 config :ret, RetWeb.Plugs.HeaderAuthorization,
   header_name: "x-ret-admin-access-key",
   header_value: "admin-only"
@@ -208,6 +216,5 @@ config :ret, Ret.Locking,
   ]
 
 config :ret, Ret.Repo.Migrations.AdminSchemaInit, postgrest_password: "password"
-config :ret, Ret.Repo.Migrations.AddCoturnSchema, coturn_password: "password"
 config :ret, Ret.StatsJob, node_stats_enabled: false, node_gauges_enabled: false
 config :ret, Ret.Coturn, realm: "ret"
