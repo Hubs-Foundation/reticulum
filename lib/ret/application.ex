@@ -7,51 +7,58 @@ defmodule Ret.Application do
   def start(_type, _args) do
     import Supervisor.Spec
 
-    # Disallow stop of the application via SIGTERM until migrations are finished.
-    Ret.DelayStopSignalHandler.delay_stop()
-
     # Start application, start repos, take lock, run migrations, stop repos
     Application.load(:ret)
     EctoBootMigration.start_dependencies()
 
-    repos_pids = Ret.Locking.exec_if_session_lockable("ret_migration", fn ->
-      repos_pids = EctoBootMigration.start_repos([Ret.SessionLockRepo])
+    repos_pids =
+      Ret.Locking.exec_if_session_lockable("ret_migration", fn ->
+        repos_pids = EctoBootMigration.start_repos([Ret.SessionLockRepo])
 
-      # Note the main Repo database is used here, since the session locking database
-      # name may be a proxy database in pgbouncer which doesn't actually exist.
-      db_name = Application.get_env(:ret, Ret.Repo)[:database]
+        # Note the main Repo database is used here, since the session locking database
+        # name may be a proxy database in pgbouncer which doesn't actually exist.
+        db_name = Application.get_env(:ret, Ret.Repo)[:database]
 
-      # Can't check mix_env here, so check db name
-      if db_name !== "ret_test" do
-        coturn_enabled = Ret.Coturn.enabled?()
+        # Can't check mix_env here, so check db name
+        if db_name !== "ret_test" do
+          coturn_enabled = Ret.Coturn.enabled?()
 
-        Ecto.Adapters.SQL.query!(Ret.SessionLockRepo, "CREATE SCHEMA IF NOT EXISTS ret0")
+          Ecto.Adapters.SQL.query!(Ret.SessionLockRepo, "CREATE SCHEMA IF NOT EXISTS ret0")
 
-        if coturn_enabled do
-          Ecto.Adapters.SQL.query!(Ret.SessionLockRepo, "CREATE SCHEMA IF NOT EXISTS coturn")
+          if coturn_enabled do
+            Ecto.Adapters.SQL.query!(Ret.SessionLockRepo, "CREATE SCHEMA IF NOT EXISTS coturn")
+          end
+
+          Ecto.Adapters.SQL.query!(
+            Ret.SessionLockRepo,
+            "ALTER DATABASE #{db_name} SET search_path TO ret0"
+          )
+
+          priv_path = Path.join(["#{:code.priv_dir(:ret)}", "repo", "migrations"])
+
+          # Disallow stop of the application via SIGTERM until migrations are finished.
+          #
+          # If application is killed mid-migration, then it's possible for schema migrations
+          # table to not accurately reflect the migrations which have ran.
+          Ret.DelayStopSignalHandler.delay_stop()
+
+          try do
+            Ecto.Migrator.run(Ret.SessionLockRepo, priv_path, :up, all: true, prefix: "ret0")
+          after
+            Ret.DelayStopSignalHandler.allow_stop()
+          end
+
+          repos_pids
         end
-
-        Ecto.Adapters.SQL.query!(
-          Ret.SessionLockRepo,
-          "ALTER DATABASE #{db_name} SET search_path TO ret0"
-        )
-
-        priv_path = Path.join(["#{:code.priv_dir(:ret)}", "repo", "migrations"])
-        Ecto.Migrator.run(Ret.SessionLockRepo, priv_path, :up, all: true, prefix: "ret0")
-
-        repos_pids
-      end
-    end)
+      end)
 
     if repos_pids do
       # Ensure there are some TURN secrets in the database, so that if system is idle
-      # the cron isn't indefinitely skipped.
+      # the cron isn't indefinitely skipped and nobody can join rooms.
       Ret.Coturn.rotate_secrets(true, Ret.SessionLockRepo)
 
       EctoBootMigration.stop_repos(repos_pids)
     end
-
-    Ret.DelayStopSignalHandler.allow_stop()
 
     :ok = Ret.Statix.connect()
 
