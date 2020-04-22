@@ -6,7 +6,7 @@
 use Mix.Config
 
 # General application configuration
-config :ret, ecto_repos: [Ret.Repo]
+config :ret, ecto_repos: [Ret.Repo, Ret.SessionLockRepo]
 
 config :phoenix, :format_encoders, "json-api": Jason
 config :phoenix, :json_library, Jason
