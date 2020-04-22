@@ -5,7 +5,7 @@ defmodule Ret.SessionLockRepo do
   use Ecto.Repo, otp_app: :ret, adapter: Ecto.Adapters.Postgres
 
   def init(_, opts) do
-    {:ok, opts }
+    {:ok, opts}
   end
 
   def set_search_path(conn, path) do
