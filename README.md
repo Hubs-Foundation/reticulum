@@ -4,7 +4,7 @@ A hybrid game networking and web API server, focused on Social Mixed Reality.
 
 ## Development
 
-### Install Prerequisite Packages:
+### 1. Install Prerequisite Packages:
 #### PostgreSQL (recommended version 11.x):
 Linux: Use your package manager
 
@@ -16,7 +16,7 @@ Windows WSL: https://github.com/michaeltreat/Windows-Subsystem-For-Linux-Setup-G
 https://elixir-lang.org/install.html
 https://hexdocs.pm/phoenix/installation.html
 
-### Setup Reticulum:
+### 2. Setup Reticulum:
 Run the following commands at the root of the reticulum directory:
 1. `mix deps.get`
 2. `mix ecto.create`
@@ -25,17 +25,59 @@ Run the following commands at the root of the reticulum directory:
 3. from the `assets` directory, `npm install`
 4. From the project directory `mkdir -p storage/dev`
 
-### Start Reticulum
+### 3. Start Reticulum
 Run `scripts/run.sh` if you have the hubs secret repo cloned. Otherwise `iex -S mix phx.server`
 
 ## Run Hubs Against a Local Reticulum Instance
-1. Clone and start hubs by running `./scripts/run_local_reticulum.sh` in the root of the hubs project
-2. Go to https://hubs.local:4000?somerandomvar (note the random query string)
-3. To sign in click the sign in link and submit your email.
-4. Go to the reticulum terminal session and find a url that looks like https://hubs.local:4000/?auth_origin=hubs&auth_payload=XXXXX&auth_token=XXXX
-5. Navigate to that url in your browser to finish signing in.
 
-Adter you've started Reticulum for the first time you'll likely want to create an admin user. Assuming you want to make the first account the admin, this can be done in the iex console using the following code:
+### 0. Dependencies
+
+[Install NodeJS](https://nodejs.org) if you haven't already. We recommend version 12 or above.
+
+### 1. Setup the `hubs.local` hostname
+
+When running the full stack for Hubs (which includes Reticulum) locally it is necessary to add a `hosts` entry pointing `hubs.local` to your local server's IP.
+This will allow the CSP checks to pass that are served up by Reticulum so you can test the whole app. Note that you must also load hubs.local over https.
+
+Example:
+```
+hubs.local 127.0.0.1
+```
+
+### 2. Setting up the Hubs Repository
+
+Clone the Hubs repository and install the npm dependencies.
+
+```bash
+git clone https://github.com/mozilla/hubs.git
+cd hubs
+npm ci
+```
+
+### 3. Start the Hubs Webpack Dev Server
+
+Because we are running Hubs against the local Reticulum client you'll need to use the `npm run local` command in the root of the `hubs` folder. This will start the development server on port 8080, but configure it to be accessed through Reticulum on port 4000.
+
+### 4. Navigate To The Client Page
+
+Once both the Hubs Webpack Dev Server and Reticulum server are both running you can navigate to the client by opening up:
+
+https://hubs.local:4000?skipadmin
+
+> The `skipadmin` is a temporary measure to bypass being redirected to the admin panel. Once you have logged in you will no longer need this.
+
+### 5. Logging In
+
+To log into Hubs we use magic links that are sent to your email. When you are running Reticulum locally we do not send those emails. Instead, you'll find the contents of that email in the Reticulum console output.
+
+With the Hubs landing page open click the Sign In button at the top of the page. Enter an email address and click send.
+
+Go to the reticulum terminal session and find a url that looks like https://hubs.local:4000/?auth_origin=hubs&auth_payload=XXXXX&auth_token=XXXX
+
+Navigate to that url in your browser to finish signing in.
+
+### 6. Creating an Admin User
+After you've started Reticulum for the first time you'll likely want to create an admin user. Assuming you want to make the first account the admin, this can be done in the iex console using the following code:
 
 ```
 Ret.Account |> Ret.Repo.all() |> Enum.at(0) |> Ecto.Changeset.change(is_admin: true) |> Ret.Repo.update!()
