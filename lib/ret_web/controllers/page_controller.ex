@@ -107,7 +107,7 @@ defmodule RetWeb.PageController do
     conn |> send_resp(404, "")
   end
 
-  defp render_homepage_content(conn, nil = _public_room_id) do
+  defp render_landing_content(conn, nil = _public_room_id) do
     {app_config, app_config_script} = generate_app_config()
 
     index_meta_tags =
@@ -121,7 +121,7 @@ defmodule RetWeb.PageController do
         extra_html: {:safe, get_extra_html(:index) || ""}
       )
 
-    case try_chunks_for_page(conn, "index.html", :hubs) do
+    case try_chunks_for_page(conn, "index.html", :landing) do
       {:ok, chunks} ->
         chunks_with_meta = chunks |> List.insert_at(1, index_meta_tags)
 
@@ -137,7 +137,7 @@ defmodule RetWeb.PageController do
     end
   end
 
-  defp render_homepage_content(conn, default_room_id) do
+  defp render_landing_content(conn, default_room_id) do
     hub = Hub |> Repo.get_by(hub_sid: default_room_id)
     conn |> render_hub_content(hub, "homepage")
   end
@@ -188,22 +188,10 @@ defmodule RetWeb.PageController do
     |> redirect_to_hub_identifier(hub_identifier)
   end
 
-  def render_for_path("/discord", _params, conn), do: conn |> render_page("discord.html")
-  def render_for_path("/discord/", _params, conn), do: conn |> render_page("discord.html")
-
-  def render_for_path("/cloud", _params, conn), do: conn |> render_page("cloud.html")
-  def render_for_path("/cloud/", _params, conn), do: conn |> render_page("cloud.html")
-
   def render_for_path("/spoke", _params, conn), do: conn |> render_page("index.html", :spoke, "spoke-index-meta.html")
 
   def render_for_path("/spoke/" <> _path, _params, conn),
     do: conn |> render_page("index.html", :spoke, "spoke-index-meta.html")
-
-  def render_for_path("/whats-new", _params, conn),
-    do: conn |> render_page("whats-new.html", :hubs, "whats-new-meta.html")
-
-  def render_for_path("/whats-new/", _params, conn),
-    do: conn |> render_page("whats-new.html", :hubs, "whats-new-meta.html")
 
   def render_for_path("/hub.service.js", _params, conn),
     do: conn |> render_asset("hub.service.js", :hubs, "hub.service-meta.js")
@@ -279,18 +267,21 @@ defmodule RetWeb.PageController do
 
     hub = Hub |> Repo.get_by(hub_sid: hub_sid)
 
-    if embed_token && hub.embed_token != embed_token do
-      conn |> send_resp(404, "Invalid embed token.")
-    else
-      conn =
-        if embed_token do
-          # Allow iframe embedding
-          conn |> delete_resp_header("x-frame-options")
-        else
-          conn
-        end
+    cond do
+      embed_token && hub.embed_token != embed_token ->
+        conn |> send_resp(404, "Invalid embed token.")
+      is_nil(hub) ->
+        render_landing_content(conn, nil)
+      true ->
+        conn =
+          if embed_token do
+            # Allow iframe embedding
+            conn |> delete_resp_header("x-frame-options")
+          else
+            conn
+          end
 
-      render_hub_content(conn, hub, subresource |> Enum.at(0))
+        render_hub_content(conn, hub, subresource |> Enum.at(0))
     end
   end
 
@@ -340,7 +331,7 @@ defmodule RetWeb.PageController do
   end
 
   defp render_index(conn, _method) do
-    conn |> render_homepage_content(get_app_config_value("features|default_room_id"))
+    conn |> render_landing_content(get_app_config_value("features|default_room_id"))
   end
 
   defp put_hub_headers(conn, entity_type) do
@@ -382,10 +373,6 @@ defmodule RetWeb.PageController do
       end
 
     conn |> put_resp_header("content-security-policy", csp_value)
-  end
-
-  def render_hub_content(conn, nil, _) do
-    conn |> send_resp(404, "Invalid URL.")
   end
 
   def render_hub_content(conn, hub, "objects.gltf") do

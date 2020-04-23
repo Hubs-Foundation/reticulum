@@ -5,19 +5,16 @@ defmodule Ret.PageOriginWarmer do
 
   @pages %{
            hubs: ~w(
-             index.html
-             whats-new.html
              hub.html
              link.html
              scene.html
              avatar.html
-             discord.html
-             cloud.html
              hub.service.js
              schema.toml
            ),
            admin: ~w(admin.html),
-           spoke: ~w(index.html)
+           spoke: ~w(index.html),
+           landing: ~w(index.html)
          }
          |> Enum.map(fn {k, vs} -> vs |> Enum.map(&{k, &1}) end)
          |> List.flatten()
@@ -27,7 +24,8 @@ defmodule Ret.PageOriginWarmer do
   def execute(_state) do
     with hubs_page_origin when is_binary(hubs_page_origin) <- module_config(:hubs_page_origin),
          admin_page_origin when is_binary(admin_page_origin) <- module_config(:admin_page_origin),
-         spoke_page_origin when is_binary(spoke_page_origin) <- module_config(:spoke_page_origin) do
+         spoke_page_origin when is_binary(spoke_page_origin) <- module_config(:spoke_page_origin),
+         landing_page_origin when is_binary(landing_page_origin) <- module_config(:landing_page_origin) do
       # Don't bother with the full fetch if the aggregated etag hasn't changed
       case Cachex.get(:page_chunks, :last_aggregated_etag) do
         {:ok, last_aggregated_etag} ->
@@ -69,7 +67,8 @@ defmodule Ret.PageOriginWarmer do
   defp get_aggregated_etag() do
     with hubs_page_origin when is_binary(hubs_page_origin) <- module_config(:hubs_page_origin),
          admin_page_origin when is_binary(admin_page_origin) <- module_config(:admin_page_origin),
-         spoke_page_origin when is_binary(spoke_page_origin) <- module_config(:spoke_page_origin) do
+         spoke_page_origin when is_binary(spoke_page_origin) <- module_config(:spoke_page_origin),
+         landing_page_origin when is_binary(landing_page_origin) <- module_config(:landing_page_origin) do
       etags =
         @pages
         |> Enum.map(fn {source, page} -> Task.async(fn -> page_to_etag(source, page) end) end)
@@ -123,6 +122,7 @@ defmodule Ret.PageOriginWarmer do
   defp config_key_for_source(:hubs), do: :hubs_page_origin
   defp config_key_for_source(:admin), do: :admin_page_origin
   defp config_key_for_source(:spoke), do: :spoke_page_origin
+  defp config_key_for_source(:landing), do: :landing_page_origin
 
   defp module_config(key) do
     Application.get_env(:ret, __MODULE__)[key]
