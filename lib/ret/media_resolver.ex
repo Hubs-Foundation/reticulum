@@ -42,7 +42,7 @@ defmodule Ret.MediaResolver do
   end
 
   # auto convert dropbox urls to "raw" urls
-  def resolve(%MediaResolverQuery{url: %URI{host: "www.dropbox.com", path: "/s/" <> _rest} = url} = query, root_host) do
+  def resolve(%MediaResolverQuery{url: %URI{host: "www.dropbox.com", path: "/s/" <> _rest} = url}, _root_host) do
     {:commit,
      url
      |> Map.put(
