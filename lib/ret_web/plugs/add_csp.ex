@@ -76,7 +76,9 @@ defmodule RetWeb.Plugs.AddCSP do
       custom_rules[:media_src]
     } 'self' #{cors_proxy_url} #{storage_url} #{assets_url} #{thumbnail_url} https://www.youtube.com *.googlevideo.com data: blob:; frame-src #{
       custom_rules[:frame_src]
-    } https://www.youtube.com https://docs.google.com https://player.vimeo.com 'self'; base-uri 'none'; form-action #{custom_rules[:form_action]} 'self';"
+    } https://www.youtube.com https://docs.google.com https://player.vimeo.com 'self'; base-uri 'none'; form-action #{
+      custom_rules[:form_action]
+    } 'self';"
   end
 
   defp get_custom_rules do
