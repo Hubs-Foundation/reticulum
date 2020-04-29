@@ -6,15 +6,15 @@ pkg_upstream_url="http://github.com/mozilla/reticulum"
 pkg_license=('MPL-2.0')
 
 pkg_deps=(
-    core/coreutils
-    core/bash
-    core/which
+    core/coreutils/8.30/20190115012313
+    core/bash/4.4.19/20190115012619
+    core/which/2.21/20190430084037
     mozillareality/erlang/22.0
 )
 
 pkg_build_deps=(
-    core/coreutils
-    core/git
+    core/coreutils/8.30/20190115012313
+    core/git/2.23.0
     mozillareality/erlang/22.0
     core/elixir/1.8.0
 )
