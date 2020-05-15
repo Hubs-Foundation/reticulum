@@ -137,6 +137,10 @@ defmodule RetWeb.PageController do
     end
   end
 
+  # Allow loading homepage if auth_token is being used to log in
+  defp render_homepage_content(%Plug.Conn{query_params: %{"auth_token" => _auth_token}} = conn, _default_room_id),
+    do: render_homepage_content(conn, nil)
+
   defp render_homepage_content(conn, default_room_id) do
     hub = Hub |> Repo.get_by(hub_sid: default_room_id)
     conn |> render_hub_content(hub, "homepage")
