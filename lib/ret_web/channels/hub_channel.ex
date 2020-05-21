@@ -1078,6 +1078,14 @@ defmodule RetWeb.HubChannel do
         _ -> socket
       end
 
+    socket =
+      with %{"mic" => mic} when is_boolean(mic) <- payload,
+           %{context: context} when is_map(context) <- socket.assigns do
+        socket |> assign(:context, context |> Map.put("mic", mic))
+      else
+        _ -> socket
+      end
+
     socket
     |> SessionStat.stat_query_for_socket()
     |> Repo.update_all(set: stat_attributes)
