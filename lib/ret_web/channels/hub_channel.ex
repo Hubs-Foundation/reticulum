@@ -108,6 +108,8 @@ defmodule RetWeb.HubChannel do
         oauth_source: oauth_source,
         perms_token_can_join: perms_token_can_join
       })
+    IO.puts("Hub channel params printed")
+    IO.inspect(params)
 
     hub |> join_with_hub(account, socket, context, params)
   end
@@ -1038,10 +1040,12 @@ defmodule RetWeb.HubChannel do
   end
 
   defp get_oauth_info(hub_bindings, hub_sid) do
+    IO.puts("inside discord get_oauth_info")
     hub_bindings
     |> Enum.map(
       &case &1 do
         %{type: :discord} -> %{type: :discord, url: Ret.DiscordClient.get_oauth_url(hub_sid)}
+        %{type: :slack} -> %{type: :slack, url: Ret.SlackClient.get_oauth_url(hub_sid)}
       end
     )
   end

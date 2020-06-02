@@ -54,9 +54,9 @@ config :ret, RetWeb.Endpoint,
 # command from your terminal:
 #
 #     openssl req -new -newkey rsa:4096 -days 365 -nodes -x509 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout priv/server.key -out priv/server.pem
-#
+
 # The `http:` config above can be replaced with:
-#
+
 #     https: [port: 4000, keyfile: "priv/server.key", certfile: "priv/server.pem"],
 #
 # If desired, both `http:` and `https:` keys can be
@@ -105,10 +105,16 @@ config :ret, RetWeb.Plugs.HeaderAuthorization,
   header_name: "x-ret-admin-access-key",
   header_value: "admin-only"
 
+config :ret, Ret.SlackClient,
+  client_id: "1111958564852.1152552627507",
+  client_secret: "9996753175c0c685f478ddec85c1cc82",
+  bot_token: "xoxp-1111958564852-1105779913938-1152538883733-f8e049eac08cb5b6d5221955a507ad12",
+  signing_secret: "bd21bafdfa30d980d2e64b1cc6cbfeeb"
+
 config :ret, Ret.DiscordClient,
-  client_id: "",
-  client_secret: "",
-  bot_token: ""
+  client_id: "709576063595839549",
+  client_secret: "WDyFUYerqYenKN2vqhej5xwTxn_Q0gsQ",
+  bot_token: "NzA5NTc2MDYzNTk1ODM5NTQ5.XrxvCQ.F-ggxiUTTN4ugKJtzRMD2Ibmjtc"
 
 # Allow any origin for API access in dev
 config :cors_plug, origin: ["*"]
