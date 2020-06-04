@@ -2,7 +2,7 @@ defmodule Ret.SlackClient do
   use Bitwise
   alias Ret.{BitFieldUtils}
 
-  @oauth_scope "identity.basic"
+  @oauth_scope "identity.basic,identity.email"
   @slack_api_base "https://slack.com/"
 
   def get_oauth_url(hub_sid) do
@@ -10,14 +10,15 @@ defmodule Ret.SlackClient do
     authorize_params = %{
     response_type: "code",
     client_id: module_config(:client_id),
-    scope: @oauth_scope,
+    user_scope: @oauth_scope,
     state: Ret.OAuthToken.token_for_hub(hub_sid),
     redirect_uri: get_redirect_uri()
     }
 
-    "#{@slack_api_base}/oauth/authorize?" <> URI.encode_query(authorize_params)
+    "#{@slack_api_base}/oauth/v2/authorize?" <> URI.encode_query(authorize_params)
   end
 
+  #
   def fetch_access_token(oauth_code) do
     IO.puts("inside slack fetch_access_token")
     body = {
@@ -25,46 +26,69 @@ defmodule Ret.SlackClient do
     [
       client_id: module_config(:client_id),
       client_secret: module_config(:client_secret),
-      grant_type: "authorization_code",
+      # grant_type: "authorization_code",
       code: oauth_code,
       redirect_uri: get_redirect_uri(),
-      scope: @oauth_scope
+      # scope: @oauth_scope
     ]
     }
+    IO.inspect(body)
 
-    "#{@slack_api_base}/api/oauth.v2.access"
+    %{"authed_user" => authed_user} = "#{@slack_api_base}/api/oauth.v2.access"
     |> Ret.HttpUtils.retry_post_until_success(body, [{"content-type", "application/x-www-form-urlencoded"}])
     |> Map.get(:body)
     |> Poison.decode!()
-    |> Map.get("access_token")
+
+    IO.inspect(authed_user)
+
+    Map.get(authed_user, "access_token")
   end
 
   def fetch_user_info(access_token) do
+    IO.puts(access_token)
     IO.puts("inside slack fetch_user_info")
-    "#{@slack_api_base}/users/@me"
-    |> Ret.HttpUtils.retry_get_until_success([{"authorization", "Bearer #{access_token}"}])
+
+    %{"user" => user} = "#{@slack_api_base}/api/users.identity?" <> URI.encode_query(%{token: access_token})
+    |> Ret.HttpUtils.retry_get_until_success()
     |> Map.get(:body)
     |> Poison.decode!()
+
+    IO.inspect(user)
+    user |> Map.put("verified", true)
   end
+
+  # {
+  #   user: {
+    # id:
+  #     email:
+  #     name // display name
+  #   }
+  #   team: {
+  #     id
+  #     can get "name" if I add identity.team to scopes
+  #   }
+  # }
+
+  # **** permissions... what are we looking at here
 
   def has_permission?(nil, _, _), do: true
 
   def has_permission?(%Ret.OAuthProvider{} = oauth_provider, %Ret.HubBinding{} = hub_binding, permission) do
-    IO.puts("inside slack has_permission 1")
+    IO.puts("1_2 inside slack has_permission 1")
     oauth_provider.provider_account_id |> has_permission?(hub_binding, permission)
   end
 
   def has_permission?(provider_account_id, %Ret.HubBinding{} = hub_binding, permission)
-    # IO.puts("inside slack has_permission 2")
     when is_binary(provider_account_id) do
     permissions =
     compute_permissions(provider_account_id, hub_binding.community_id, hub_binding.channel_id) |> permissions_to_map
 
+    IO.puts("1_1 inside slack has_permission 2")
     permissions[permission]
   end
 
   def fetch_display_name(
-      %Ret.OAuthProvider{source: :discord, provider_account_id: provider_account_id},
+      %Ret.OAuthProvider{source: :slack, provider_account_id: provider_account_id},
       %Ret.HubBinding{community_id: community_id}
     ) do
     nickname =

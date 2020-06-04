@@ -1040,7 +1040,7 @@ defmodule RetWeb.HubChannel do
   end
 
   defp get_oauth_info(hub_bindings, hub_sid) do
-    IO.puts("inside discord get_oauth_info")
+    IO.puts("inside  get_oauth_info")
     hub_bindings
     |> Enum.map(
       &case &1 do

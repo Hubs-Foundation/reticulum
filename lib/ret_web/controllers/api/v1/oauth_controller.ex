@@ -68,14 +68,10 @@ defmodule RetWeb.Api.V1.OAuthController do
     %{claims: %{"hub_sid" => hub_sid}} = OAuthToken.peek(state)
     hub = Hub |> Repo.get_by(hub_sid: hub_sid)
 
-    module = case type do
-      "discord" -> DiscordClient
-      "slack" -> SlackClient
-    end
-
-    source = case type do
-      "discord" -> :discord
-      "slack" -> :slack
+    source = String.to_atom(type)
+    module = case source do
+      :discord -> DiscordClient
+      :slack -> SlackClient
     end
 
     IO.puts("atom source printed")
@@ -89,7 +85,7 @@ defmodule RetWeb.Api.V1.OAuthController do
         hub = hub |> Repo.preload(:hub_bindings)
 
         conn
-        |> process_slack_or_discord_oauth(source, chat_user_id, verified, email, hub)
+        |> process_chat_oauth(source, chat_user_id, verified, email, hub)
         |> put_resp_header("location", hub |> Hub.url_for())
         |> send_resp(307, "")
 
@@ -103,15 +99,15 @@ defmodule RetWeb.Api.V1.OAuthController do
 
 
   # Discord user has a verified email, so we create a Hubs account for them associate it with their discord user id.
-  defp process_slack_or_discord_oauth(conn, source, chat_user_id, true = _verified, email, _hub) do
-    IO.puts("3_1 OAUTH CONTROLLER: inside process_slack_or_discord_oauth")
+  defp process_chat_oauth(conn, source, chat_user_id, true = _verified, email, _hub) do
+    IO.puts("3_1 OAUTH CONTROLLER: inside process_chat_oauth")
 
     oauth_provider =
       OAuthProvider
       |> Repo.get_by(source: source, provider_account_id: chat_user_id)
       |> Repo.preload(:account)
 
-    account = oauth_provider |> account_for_oauth_provider(email, chat_user_id)
+    account = oauth_provider |> account_for_oauth_provider(email, chat_user_id, source)
 
     credentials = %{
       email: email,
@@ -123,9 +119,9 @@ defmodule RetWeb.Api.V1.OAuthController do
 
   # Discord user does not have a verified email, so we can't create an account for them. Instead, we generate a perms
   # token to let them join the hub if permitted.
-  defp process_slack_or_discord_oauth(conn, source, chat_user_id, false = _verified, _email, hub) do
+  defp process_chat_oauth(conn, source, chat_user_id, false = _verified, _email, hub) do
     oauth_provider = %Ret.OAuthProvider{provider_account_id: chat_user_id, source: source}
-    IO.puts("3_2 OAUTH CONTROLLER: inside process_slack_or_discord_oauth")
+    IO.puts("3_2 OAUTH CONTROLLER: inside process_chat_oauth")
 
     perms_token =
       hub
@@ -163,7 +159,7 @@ defmodule RetWeb.Api.V1.OAuthController do
 
   # If an oauthprovider exists for the given discord_user_id (chat_user_id), return the associated account, updating the email
   # if necessary.
-  defp account_for_oauth_provider(%OAuthProvider{} = oauth_provider, email, _chat_user_id) do
+  defp account_for_oauth_provider(%OAuthProvider{} = oauth_provider, email, _chat_user_id, _source) do
     # ****
     IO.puts("4_1 OAUTH CONTROLLER: inside account_for_oauth_provider")
     account = oauth_provider.account |> Repo.preload(:login)
@@ -179,11 +175,11 @@ defmodule RetWeb.Api.V1.OAuthController do
   end
 
   # Create or get the account associated with the email and create or get an oauthprovider for that account.
-  defp account_for_oauth_provider(nil = _oauth_provider, email, chat_user_id) do
+  defp account_for_oauth_provider(nil = _oauth_provider, email, chat_user_id, source) do
     account = email |> Account.account_for_email(can?(nil, create_account(nil)))
     IO.puts("4_2 OAUTH CONTROLLER: inside account_for_oauth_provider")
-    (OAuthProvider |> Repo.get_by(source: :discord, account_id: account.account_id) ||
-       %OAuthProvider{source: :discord, account: account})
+    (OAuthProvider |> Repo.get_by(source: source, account_id: account.account_id) ||
+       %OAuthProvider{source: source, account: account})
     |> Ecto.Changeset.change(provider_account_id: chat_user_id)
     |> Repo.insert_or_update()
 
