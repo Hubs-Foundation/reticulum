@@ -6,7 +6,7 @@
 <meta property="og:description" content="Join others in VR at <%= @hub.name %>, right in your browser." />
 <meta property="og:image" content="<%= @hub |> Ret.Hub.image_url_for %>"/>
 
-<meta name="description" content="Join others in VR at <%= @hub.name %>, right in your browser." />
+<meta name="description" content="Join others at <%= @hub.name %>, right in your browser." />
 
 <meta itemprop="name" content="<%= @hub.name %> | <%= @translations["app-full-name"] || @translations["app-name"] %>" />
 <meta itemprop="description" content="Join others in VR at <%= @hub.name %>, right in your browser." />

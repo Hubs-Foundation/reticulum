@@ -51,11 +51,17 @@ defmodule RetWeb.Plugs.AddCSP do
     # legacy
     thumbnail_url = config_url(:thumbnail_url) || cors_proxy_url |> String.replace("cors-proxy", "nearspark")
 
+    # TODO the trailing https janus port CSP rules can be removed after dialog is deployed, since they are used to 
+    # snoop and see what SFU it is.
     ret_direct_connect =
       if is_subdomain do
-        "https://*.#{ret_domain}:#{ret_port} wss://*.#{ret_domain}:#{ret_port} wss://*.#{ret_domain}:#{janus_port}"
+        "https://*.#{ret_domain}:#{ret_port} wss://*.#{ret_domain}:#{ret_port} wss://*.#{ret_domain}:#{janus_port} https://*.#{
+          ret_domain
+        }:#{janus_port}"
       else
-        "https://#{ret_host}:#{ret_port} wss://#{ret_host}:#{janus_port} wss://#{ret_host}:#{ret_port}"
+        "https://#{ret_host}:#{ret_port} wss://#{ret_host}:#{janus_port} wss://#{ret_host}:#{ret_port} https://#{
+          ret_host
+        }:#{janus_port}"
       end
 
     "default-src 'none'; manifest-src #{custom_rules[:manifest_src]} 'self'; script-src #{custom_rules[:script_src]} #{
