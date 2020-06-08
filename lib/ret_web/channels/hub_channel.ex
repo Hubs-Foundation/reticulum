@@ -43,6 +43,14 @@ defmodule RetWeb.HubChannel do
       |> Repo.get_by(hub_sid: hub_sid)
       |> Repo.preload(Hub.hub_preloads())
 
+    IO.puts("hit join function")
+    IO.puts("hub")
+    IO.inspect(hub)
+    IO.puts("profile")
+    IO.inspect(profile)
+    IO.puts("context")
+    IO.inspect(context)
+
     socket
     |> assign(:profile, profile)
     |> assign(:context, context)
@@ -64,14 +72,28 @@ defmodule RetWeb.HubChannel do
         {:ok, %Account{} = account, _claims} -> account
         _ -> nil
       end
+    IO.puts("perform_join params")
+    IO.inspect(params)
 
     hub_requires_oauth = hub.hub_bindings |> Enum.empty?() |> Kernel.not()
 
     bot_access_key = Application.get_env(:ret, :bot_access_key)
+    IO.puts("hub channel perform_join bot_access_key")
+    IO.inspect(bot_access_key)
 
     has_valid_bot_access_key = !!(bot_access_key && params["bot_access_key"] == bot_access_key)
 
+
+    IO.puts("hub channel perform_join has_valid_bot_access_key")
+    IO.puts(has_valid_bot_access_key)
+
     account_has_provider_for_hub = account |> Ret.Account.matching_oauth_providers(hub) |> Enum.empty?() |> Kernel.not()
+
+    IO.puts("hub channel perform_join account check start")
+    IO.puts(account_has_provider_for_hub)
+    IO.inspect(hub)
+    IO.inspect(account)
+    IO.puts("hub channel perform_join account end")
 
     account_can_join = account |> can?(join_hub(hub))
 
@@ -832,7 +854,9 @@ defmodule RetWeb.HubChannel do
     oauth_provider =
       account.oauth_providers |> Enum.filter(fn provider -> hub_binding.type == provider.source end) |> Enum.at(0)
 
+    # when oauth_provider.type == :discord do
     assigns |> override_display_name_via_binding(oauth_provider, hub_binding)
+    # end
   end
 
   # For unbound hubs, set the identity name for the account.

@@ -61,6 +61,15 @@ defmodule RetWeb.Api.V1.OAuthController do
   #   end
   # end
 
+  def handle_chat_oauth(%{"error" => "access_denied", "state" => state}, conn) do
+    %{claims: %{"hub_sid" => hub_sid}} = OAuthToken.peek(state)
+    hub = Hub |> Repo.get_by(hub_sid: hub_sid)
+
+    conn
+    |> put_resp_header("location", hub |> Hub.url_for())
+    |> send_resp(307, "")
+  end
+
   def handle_chat_oauth(params, conn) do
     IO.puts("2 OAUTH CONTROLLER: inside handle chat app oauth")
     %{"type" => type, "code" => code, "state" => state} = params
