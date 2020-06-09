@@ -160,7 +160,7 @@ config :ret, RetWeb.Plugs.AddCSP,
   font_src: asset_hosts,
   style_src: asset_hosts,
   connect_src:
-    "https://#{host}:8080 https://sentry.prod.mozaws.net #{asset_hosts} #{websocket_hosts} https://www.mozilla.org",
+    "https://#{host}:8080 https://sentry.prod.mozaws.net #{asset_hosts} #{websocket_hosts} https://www.mozilla.org https://dev-janus.reticulum.io",
   img_src: asset_hosts,
   media_src: asset_hosts,
   manifest_src: asset_hosts
