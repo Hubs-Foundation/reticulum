@@ -43,6 +43,7 @@ defmodule RetWeb.Plugs.AddCSP do
     storage_url = Application.get_env(:ret, Ret.Storage)[:host]
     cors_proxy_url = config_url(:cors_proxy_url)
     janus_port = Application.get_env(:ret, Ret.JanusLoadStatus)[:janus_port]
+    default_janus_host = Application.get_env(:ret, Ret.JanusLoadStatus)[:default_janus_host]
     ret_host = Ret.Meta.get_meta(include_repo: false)[:phx_host]
     ret_domain = ret_host |> String.split(".") |> Enum.take(-2) |> Enum.join(".")
     ret_port = RetWeb.Endpoint.config(:url) |> Keyword.get(:port)
@@ -51,17 +52,22 @@ defmodule RetWeb.Plugs.AddCSP do
     # legacy
     thumbnail_url = config_url(:thumbnail_url) || cors_proxy_url |> String.replace("cors-proxy", "nearspark")
 
-    # TODO the trailing https janus port CSP rules can be removed after dialog is deployed, since they are used to 
-    # snoop and see what SFU it is.
+    # TODO: The https janus port CSP rules (including the default) can be removed after dialog is deployed,
+    # since they are used to snoop and see what SFU it is.
+    default_janus_csp_rule =
+      if default_janus_host,
+        do: "wss://#{default_janus_host}:#{janus_port} https://#{default_janus_host}:#{janus_port}",
+        else: ""
+
     ret_direct_connect =
       if is_subdomain do
         "https://*.#{ret_domain}:#{ret_port} wss://*.#{ret_domain}:#{ret_port} wss://*.#{ret_domain}:#{janus_port} https://*.#{
           ret_domain
-        }:#{janus_port}"
+        }:#{janus_port} #{default_janus_csp_rule}"
       else
         "https://#{ret_host}:#{ret_port} wss://#{ret_host}:#{janus_port} wss://#{ret_host}:#{ret_port} https://#{
           ret_host
-        }:#{janus_port}"
+        }:#{janus_port} #{default_janus_csp_rule}"
       end
 
     "default-src 'none'; manifest-src #{custom_rules[:manifest_src]} 'self'; script-src #{custom_rules[:script_src]} #{
