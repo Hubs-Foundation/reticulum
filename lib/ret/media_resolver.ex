@@ -41,6 +41,20 @@ defmodule Ret.MediaResolver do
     {:commit, nil}
   end
 
+  # auto convert dropbox urls to "raw" urls
+  def resolve(%MediaResolverQuery{url: %URI{host: "www.dropbox.com", path: "/s/" <> _rest} = url}, _root_host) do
+    {:commit,
+     url
+     |> Map.put(
+       :query,
+       URI.decode_query(url.query)
+       |> Map.delete("dl")
+       |> Map.put("raw", 1)
+       |> URI.encode_query()
+     )
+     |> resolved()}
+  end
+
   # Necessary short circuit around google.com root_host to skip YT-DL check for Poly
   def resolve(%MediaResolverQuery{url: %URI{host: "poly.google.com"}} = query, root_host) do
     rate_limited_resolve(query, root_host, @poly_rate_limit, fn ->
