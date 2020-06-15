@@ -13,7 +13,6 @@ defmodule RetWeb.Api.V1.OAuthController do
         "oauth_token" => oauth_token,
         "oauth_verifier" => oauth_verifier
       }) do
-    IO.puts("OAUTH CONTROLLER: inside show twitter type")
     %{claims: %{"hub_sid" => hub_sid, "account_id" => account_id}} = OAuthToken.peek(state)
 
     hub = Hub |> Repo.get_by(hub_sid: hub_sid)
@@ -38,7 +37,6 @@ defmodule RetWeb.Api.V1.OAuthController do
 
   # handle the chat app oauth information: discord, slack etc.
   def show(conn, %{"type" => _type} = params) do
-    IO.puts("1 OAUTH CONTROLLER: inside show chat app oauth")
     handle_chat_oauth(params, conn)
     # handle_oauth(type, params, conn)
   end
@@ -71,7 +69,6 @@ defmodule RetWeb.Api.V1.OAuthController do
   end
 
   def handle_chat_oauth(params, conn) do
-    IO.puts("2 OAUTH CONTROLLER: inside handle chat app oauth")
     %{"type" => type, "code" => code, "state" => state} = params
 
     %{claims: %{"hub_sid" => hub_sid}} = OAuthToken.peek(state)
@@ -82,9 +79,6 @@ defmodule RetWeb.Api.V1.OAuthController do
       :discord -> DiscordClient
       :slack -> SlackClient
     end
-
-    IO.puts("atom source printed")
-    IO.puts(source)
 
     case OAuthToken.decode_and_verify(state) do
       {:ok, _} ->
@@ -109,7 +103,6 @@ defmodule RetWeb.Api.V1.OAuthController do
 
   # Discord user has a verified email, so we create a Hubs account for them associate it with their discord user id.
   defp process_chat_oauth(conn, source, chat_user_id, true = _verified, email, _hub) do
-    IO.puts("3_1 OAUTH CONTROLLER: inside process_chat_oauth")
 
     oauth_provider =
       OAuthProvider
@@ -130,7 +123,6 @@ defmodule RetWeb.Api.V1.OAuthController do
   # token to let them join the hub if permitted.
   defp process_chat_oauth(conn, source, chat_user_id, false = _verified, _email, hub) do
     oauth_provider = %Ret.OAuthProvider{provider_account_id: chat_user_id, source: source}
-    IO.puts("3_2 OAUTH CONTROLLER: inside process_chat_oauth")
 
     perms_token =
       hub
@@ -144,7 +136,6 @@ defmodule RetWeb.Api.V1.OAuthController do
 
   defp process_twitter_oauth(conn, account, access_token, access_token_secret, twitter_user_id) do
     # TODO deal with case where we get a user's email and may create an account
-    IO.puts("OAUTH CONTROLLER: inside process_twitter_oauth")
 
     oauth_provider =
       OAuthProvider
@@ -169,8 +160,6 @@ defmodule RetWeb.Api.V1.OAuthController do
   # If an oauthprovider exists for the given discord_user_id (chat_user_id), return the associated account, updating the email
   # if necessary.
   defp account_for_oauth_provider(%OAuthProvider{} = oauth_provider, email, _chat_user_id, _source) do
-    # ****
-    IO.puts("4_1 OAUTH CONTROLLER: inside account_for_oauth_provider")
     account = oauth_provider.account |> Repo.preload(:login)
     login = account.login
     current_identifier_hash = login.identifier_hash
@@ -186,7 +175,6 @@ defmodule RetWeb.Api.V1.OAuthController do
   # Create or get the account associated with the email and create or get an oauthprovider for that account.
   defp account_for_oauth_provider(nil = _oauth_provider, email, chat_user_id, source) do
     account = email |> Account.account_for_email(can?(nil, create_account(nil)))
-    IO.puts("4_2 OAUTH CONTROLLER: inside account_for_oauth_provider")
     (OAuthProvider |> Repo.get_by(source: source, account_id: account.account_id) ||
        %OAuthProvider{source: source, account: account})
     |> Ecto.Changeset.change(provider_account_id: chat_user_id)
