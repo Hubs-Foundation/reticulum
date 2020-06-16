@@ -1,7 +1,4 @@
 defmodule Ret.SlackClient do
-  use Bitwise
-  alias Ret.{BitFieldUtils}
-
   @oauth_scope "identity.basic,identity.email"
   @slack_api_base "https://slack.com/"
 
@@ -67,18 +64,10 @@ defmodule Ret.SlackClient do
   end
 
   defp get_permissions(channel_id, provider_account_id) do
-    %{"user" => user} = "#{@slack_api_base}/api/users.info?" <> URI.encode_query(%{token: module_config(:bot_token), user: provider_account_id})
-    |> Ret.HttpUtils.retry_get_until_success()
-    |> Map.get(:body)
-    |> Poison.decode!()
-
-    # Team permissions
-    %{"is_owner" => is_owner, "is_admin" => is_admin} = user
-
     # Specific channel permissions
     is_member = is_member_in_channel(channel_id, provider_account_id)
 
-    perms = %{@permissions |
+    %{@permissions |
       manage_channels: is_member, # change scene
       kick_members: is_member, # moderate room
       view_channel: is_member # can access room

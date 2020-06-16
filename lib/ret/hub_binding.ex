@@ -26,7 +26,7 @@ defmodule Ret.HubBinding do
   end
 
   defp get_chat_client(type) do
-    chat_client = case type do
+    case type do
       :discord -> Ret.DiscordClient
       :slack -> Ret.SlackClient
     end
