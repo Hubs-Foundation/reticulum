@@ -1,5 +1,6 @@
 defmodule RetWeb.Api.V1.HubController do
   use RetWeb, :controller
+  import RetWeb.ApiHelpers
 
   alias Ret.{Hub, Scene, SceneListing, Repo}
 
@@ -10,6 +11,27 @@ defmodule RetWeb.Api.V1.HubController do
 
   # Only allow access to remove hubs with secret header
   plug(RetWeb.Plugs.HeaderAuthorization when action in [:delete])
+
+  @ccu_request_schema %{
+                        "type" => "string"
+                      }
+                      |> ExJsonSchema.Schema.resolve()
+
+  def ccu(conn, params) do
+    exec_api_create(conn, params, @ccu_request_schema, &render_ccu_record/2)
+  end
+
+  defp render_ccu_record(hub_sid, source) do
+    hub = Hub |> Repo.get_by(hub_sid: hub_sid) |> Repo.preload(:scene)
+
+    case hub do
+      nil ->
+        {:error, [{:RECORD_DOES_NOT_EXIST, "Hub with sid " <> hub_sid <> " does not exist.", source}]}
+
+      _ ->
+        {:ok, {200, Phoenix.View.render(RetWeb.Api.V1.HubView, "ccu.json", %{hub: hub})}}
+    end
+  end
 
   def create(conn, %{"hub" => %{"scene_id" => scene_id}} = params) do
     scene = Scene.scene_or_scene_listing_by_sid(scene_id)

@@ -24,6 +24,15 @@ defmodule RetWeb.Api.V1.HubView do
     hub |> render_with_scene_asset(:gltf_bundle, hub.default_environment_gltf_bundle_url)
   end
 
+  def render("ccu.json", %{hub: hub}) do
+    %{
+      hub_sid: hub.hub_sid,
+      room_size: hub |> Hub.room_size_for(),
+      member_count: hub |> Hub.member_count_for(),
+      lobby_count: hub |> Hub.lobby_count_for()
+    }
+  end
+
   def render_with_scene(hub, embeddable) do
     %{
       hubs: [
