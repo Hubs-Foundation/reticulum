@@ -51,7 +51,6 @@ defmodule RetWeb.Api.V1.OAuthController do
   # def handle_chat_error(params, conn) do
   #   case
 
-
   # def handle_oauth("slack", params, conn) do
   #   case params do
   #     %{"error" => _} -> handle_chat_error(params)
@@ -75,10 +74,12 @@ defmodule RetWeb.Api.V1.OAuthController do
     hub = Hub |> Repo.get_by(hub_sid: hub_sid)
 
     source = String.to_atom(type)
-    module = case source do
-      :discord -> DiscordClient
-      :slack -> SlackClient
-    end
+
+    module =
+      case source do
+        :discord -> DiscordClient
+        :slack -> SlackClient
+      end
 
     case OAuthToken.decode_and_verify(state) do
       {:ok, _} ->
@@ -99,11 +100,8 @@ defmodule RetWeb.Api.V1.OAuthController do
     end
   end
 
-
-
   # Discord user has a verified email, so we create a Hubs account for them associate it with their discord user id.
   defp process_chat_oauth(conn, source, chat_user_id, true = _verified, email, _hub) do
-
     oauth_provider =
       OAuthProvider
       |> Repo.get_by(source: source, provider_account_id: chat_user_id)
@@ -131,7 +129,7 @@ defmodule RetWeb.Api.V1.OAuthController do
       |> Map.put(:oauth_source, source)
       |> PermsToken.token_for_perms()
 
-    conn |> put_short_lived_cookie("ret-oauth-flow-perms-token", perms_token) # Todo should this cookie support both discord and slack?
+    conn |> put_short_lived_cookie("ret-oauth-flow-perms-token", perms_token)
   end
 
   defp process_twitter_oauth(conn, account, access_token, access_token_secret, twitter_user_id) do
@@ -175,6 +173,7 @@ defmodule RetWeb.Api.V1.OAuthController do
   # Create or get the account associated with the email and create or get an oauthprovider for that account.
   defp account_for_oauth_provider(nil = _oauth_provider, email, chat_user_id, source) do
     account = email |> Account.account_for_email(can?(nil, create_account(nil)))
+
     (OAuthProvider |> Repo.get_by(source: source, account_id: account.account_id) ||
        %OAuthProvider{source: source, account: account})
     |> Ecto.Changeset.change(provider_account_id: chat_user_id)

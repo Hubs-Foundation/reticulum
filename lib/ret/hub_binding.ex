@@ -56,9 +56,9 @@ defmodule Ret.HubBinding do
 
   # Slack
   def member_of_channel?(
-    %Ret.OAuthProvider{source: :slack} = oauth_provider,
-    %Ret.HubBinding{type: :slack} = hub_binding
-  ) do
+        %Ret.OAuthProvider{source: :slack} = oauth_provider,
+        %Ret.HubBinding{type: :slack} = hub_binding
+      ) do
     oauth_provider |> Ret.SlackClient.has_permission?(hub_binding, :view_channel)
   end
 
