@@ -27,6 +27,24 @@ defmodule RetWeb.Api.V1.HubController do
     |> exec_create(conn)
   end
 
+  # For modules inside reticulum that create scenes
+  def create_new_room(scene_id) do
+    scene = Scene.scene_or_scene_listing_by_sid(scene_id)
+
+    %Hub{}
+    |> Hub.changeset(scene, params["hub"])
+    |> exec_create()
+  end
+
+  # Random scene created
+  def create_new_room() do
+    scene_listing = SceneListing.get_random_default_scene_listing()
+
+    %Hub{}
+    |> Hub.changeset(scene_listing, params["hub"])
+    |> exec_create()
+  end
+
   defp exec_create(hub_changeset, conn) do
     account = Guardian.Plug.current_resource(conn)
 
@@ -42,6 +60,25 @@ defmodule RetWeb.Api.V1.HubController do
       end
     else
       conn |> send_resp(401, "unauthorized")
+    end
+  end
+
+  # Without web response for reticulum modules
+  defp exec_create(hub_changeset) do
+    account = Guardian.Plug.current_resource(conn)
+
+    if account |> can?(create_hub(nil)) do
+      {result, hub} =
+        hub_changeset
+        |> Hub.add_account_to_changeset(account)
+        |> Repo.insert()
+
+      case result do
+        :ok -> hub
+        :error -> "invalid hub"
+      end
+    else
+      "unauthorized"
     end
   end
 
