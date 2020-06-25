@@ -46,12 +46,6 @@ defmodule Ret.SlackClient do
     user |> Map.put("verified", true)
   end
 
-  @permissions %{
-    manage_channels: false,
-    kick_members: false,
-    view_channel: false
-  }
-
   def has_permission?(nil, _, _), do: false
 
   def has_permission?(%Ret.OAuthProvider{} = oauth_provider, %Ret.HubBinding{} = hub_binding, permission) do

@@ -16,10 +16,8 @@ bot_token = {{ toToml cfg.slack_client.bot_token }}
 signing_secret = {{ toToml cfg.slack_client.signing_secret }}
 
 [ret."Elixir.RetWeb.Api.V1.BotController"]
-client_id = {{ toToml cfg.bot_controller.client_id }}
-client_secret = {{ toToml cfg.bot_controller.client_secret }}
 bot_token = {{ toToml cfg.bot_controller.bot_token }}
-signing_secret = {{ toToml cfg.bot_controller.signing_secret }}
+host = {{ toToml cfg.bot_controller.host }}
 
 {{ #if cfg.twitter_client.consumer_secret }}
 [ret."Elixir.Ret.TwitterClient"]

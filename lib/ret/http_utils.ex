@@ -17,7 +17,6 @@ defmodule Ret.HttpUtils do
     case url |> retry_head_until_success(headers, cap_ms, expiry_ms) do
       :error ->
         url |> retry_get_until_success(headers, cap_ms, expiry_ms)
-
       res ->
         res
     end
