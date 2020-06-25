@@ -25,11 +25,10 @@ defmodule RetWeb.Api.V1.HubBindingController do
     hub_binding = HubBinding |> Repo.get_by(community_id: community_id, channel_id: channel_id)
 
     IO.inspect(params)
+
     {result, _} =
       (hub_binding || %HubBinding{})
       |> HubBinding.changeset(params)
       |> Repo.insert_or_update()
   end
-
 end
-

@@ -53,22 +53,23 @@ defmodule Ret.SlackClient do
   end
 
   def has_permission?(provider_account_id, %Ret.HubBinding{} = hub_binding, permission)
-    when is_binary(provider_account_id) do
-      permissions = get_permissions(hub_binding.channel_id, provider_account_id)
+      when is_binary(provider_account_id) do
+    permissions = get_permissions(hub_binding.channel_id, provider_account_id)
 
-      permissions[permission]
+    permissions[permission]
   end
 
   defp get_permissions(channel_id, provider_account_id) do
     # Specific channel permissions
     is_member = is_member_in_channel(channel_id, provider_account_id)
 
-    %{ # change scene
-        manage_channels: is_member,
-        # moderate room
-        kick_members: is_member,
-        # can access room
-        view_channel: is_member
+    # change scene
+    %{
+      manage_channels: is_member,
+      # moderate room
+      kick_members: is_member,
+      # can access room
+      view_channel: is_member
     }
   end
 
