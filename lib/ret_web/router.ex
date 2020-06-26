@@ -89,7 +89,7 @@ defmodule RetWeb.Router do
       get("/avatars/:id/base.gltf", Api.V1.AvatarController, :show_base_gltf)
       get("/avatars/:id/avatar.gltf", Api.V1.AvatarController, :show_avatar_gltf)
       get("/oauth/:type", Api.V1.OAuthController, :show)
-      post("/rooms", Api.V1.HubController, :show)
+      get("/rooms", Api.V1.HubController, :show)
 
       scope "/support" do
         resources("/subscriptions", Api.V1.SupportSubscriptionController, only: [:create, :delete])

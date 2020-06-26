@@ -2,20 +2,9 @@
 The endpoint `/api/v1/rooms` can be used to retrieve information about rooms.
 
 ## Example usage : Hub sids
-```js
-// show_rooms_by_hub_sids.json
-{
-  "hub_sids": [
-    "bLYUYMN",
-    "V56MWQC",
-    "EAtxxgX",
-    "foo"
-  ]
-}
-```
 The following curl request
 ```sh
-curl -s -w "\nStatus Code : %{http_code}\n" -XPOST -d @show_rooms_by_hub_sids.json -H "Content-Type: application/json" -k https://hubs.local:4000/api/v1/rooms -o response.json
+curl -s -w "\nStatus Code : %{http_code}\n" -XGET -H "Content-Type: application/json" -k "https://hubs.local:4000/api/v1/rooms?hub_sids[]=bLYUYMN&hub_sids[]=V56MWQC&hub_sids[]=EAtxxgX&hub_sids[]=foo" -o response.json
 ```
 returns status code 207 with response:
 ```js
@@ -198,15 +187,9 @@ returns status code 207 with response:
 ```
 
 ## Example Usage: Creator Email
-```js
-// show_rooms_by_email.json
-{
-  "created_by_account_with_email": "foo@example.com"
-}
-```
 The curl request
 ```sh
-curl -s -w "\nStatus Code : %{http_code}\n" -XPOST -d @show_rooms_by_email.json -H "Content-Type: application/json" -k https://hubs.local:4000/api/v1/rooms -o response.json
+curl -s -w "\nStatus Code : %{http_code}\n" -XGET -H "Content-Type: application/json" -k https://hubs.local:4000/api/v1/rooms?created_by_account_with_email=foo@example.com -o response.json
 ```
 returns a 200 with response:
 ```js

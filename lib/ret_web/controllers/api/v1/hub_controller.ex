@@ -30,6 +30,20 @@ defmodule RetWeb.Api.V1.HubController do
     exec_api_show(conn, params, @email_schema, &render_hubs_by_email/2)
   end
 
+  def show(conn, params) do
+    conn
+    |> send_resp(
+      400,
+      %{
+        errors:
+          Enum.map([{:MALFORMED_REQUEST, "Malformed request to rooms api"}], fn {code, detail} ->
+            %{code: code, detail: detail}
+          end)
+      }
+      |> Poison.encode!()
+    )
+  end
+
   defp render_hubs_by_email(email, source) do
     account = Ret.Account.account_for_email(email)
 
