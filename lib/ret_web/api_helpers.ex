@@ -12,6 +12,56 @@ defmodule RetWeb.ApiHelpers do
     conn |> send_error_resp([{:MALFORMED_REQUEST, "Missing 'data' property in request.", nil}])
   end
 
+  def exec_api_show(conn, %{"created_by_account_with_email" => email} = params, schema, handler) do
+    case ExJsonSchema.Validator.validate(schema, email, error_formatter: Ret.JsonSchemaApiErrorFormatter) do
+      :ok ->
+        case handler.(email, "created_by_account_with_email") do
+          {:ok, results} ->
+            conn |> send_resp(200, results |> Poison.encode!())
+
+          {:error, errors} ->
+            conn |> send_error_resp(errors)
+        end
+
+      {:error, errors} ->
+        conn
+        |> send_error_resp(
+          Enum.map(errors, fn {code, detail, source} -> {code, detail, source |> String.replace(~r/^#/, "created_by_account_with_email")} end)
+        )
+    end
+  end
+
+  def exec_api_show(conn, records, schema, handler) when is_list(records) do
+    results =
+      records
+      |> Enum.with_index()
+      |> Enum.map(fn {record, index} ->
+        case ExJsonSchema.Validator.validate(schema, record, error_formatter: Ret.JsonSchemaApiErrorFormatter) do
+          :ok ->
+            case handler.(record, index) do
+              {:ok, {status, result}} ->
+                %{status: status, body: %{"data" => result}}
+
+              {:error, errors} ->
+                %{status: 400, body: to_error_multi_request_response(errors)}
+            end
+
+          {:error, errors} ->
+            %{
+              status: 400,
+              body:
+                to_error_multi_request_response(
+                  Enum.map(errors, fn {code, detail, source} ->
+                    {code, detail, source |> String.replace(~r/^#/, "data[#{index}]")}
+                  end)
+                )
+            }
+        end
+      end)
+
+    conn |> send_resp(207, results |> Poison.encode!())
+  end
+
   defp create_records(conn, record, schema, handler) when is_map(record) do
     case ExJsonSchema.Validator.validate(schema, record, error_formatter: Ret.JsonSchemaApiErrorFormatter) do
       :ok ->

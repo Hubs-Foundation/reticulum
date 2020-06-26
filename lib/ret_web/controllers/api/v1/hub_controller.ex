@@ -12,24 +12,55 @@ defmodule RetWeb.Api.V1.HubController do
   # Only allow access to remove hubs with secret header
   plug(RetWeb.Plugs.HeaderAuthorization when action in [:delete])
 
-  @ccu_request_schema %{
-                        "type" => "string"
-                      }
-                      |> ExJsonSchema.Schema.resolve()
+  @hub_sid_schema %{
+                    "type" => "string"
+                  }
+                  |> ExJsonSchema.Schema.resolve()
+  @email_schema %{
+                  "type" => "string",
+                  "format" => "email"
+                }
+                |> ExJsonSchema.Schema.resolve()
 
-  def ccu(conn, params) do
-    exec_api_create(conn, params, @ccu_request_schema, &render_ccu_record/2)
+  def show(conn, %{"hub_sids" => hub_sids} = params) when is_list(hub_sids) do
+    exec_api_show(conn, hub_sids, @hub_sid_schema, &render_hub_record/2)
   end
 
-  defp render_ccu_record(hub_sid, source) do
+  def show(conn, %{"created_by_account_with_email" => email} = params) do
+    exec_api_show(conn, params, @email_schema, &render_hubs_by_email/2)
+  end
+
+  defp render_hubs_by_email(email, source) do
+    account = Ret.Account.account_for_email(email)
+
+    case account do
+      nil ->
+        {:error, [{:RECORD_DOES_NOT_EXIST, "Account with email " <> email <> " does not exist.", source}]}
+
+      _ ->
+        hubs =
+          account
+          |> Ret.Repo.preload([:created_hubs])
+          |> Map.get(:created_hubs)
+
+        results =
+          Enum.map(hubs, fn hub ->
+            Phoenix.View.render(RetWeb.Api.V1.HubView, "show.json", %{hub: hub}) |> Map.get(:hubs) |> hd
+          end)
+
+        {:ok, results}
+    end
+  end
+
+  defp render_hub_record(hub_sid, index) do
     hub = Hub |> Repo.get_by(hub_sid: hub_sid) |> Repo.preload(:scene)
 
     case hub do
       nil ->
-        {:error, [{:RECORD_DOES_NOT_EXIST, "Hub with sid " <> hub_sid <> " does not exist.", source}]}
+        {:error, [{:RECORD_DOES_NOT_EXIST, "Hub with sid " <> hub_sid <> " does not exist.", index}]}
 
       _ ->
-        {:ok, {200, Phoenix.View.render(RetWeb.Api.V1.HubView, "ccu.json", %{hub: hub})}}
+        {:ok, {200, Phoenix.View.render(RetWeb.Api.V1.HubView, "show.json", %{hub: hub})}}
     end
   end
 
