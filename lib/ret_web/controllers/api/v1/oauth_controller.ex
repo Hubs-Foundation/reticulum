@@ -34,7 +34,7 @@ defmodule RetWeb.Api.V1.OAuthController do
     end
   end
 
-  def show(conn, %{"type" => type} = params) when type in ["discord", "slack"]  do
+  def show(conn, %{"type" => type} = params) when type in ["discord", "slack"] do
     handle_chat_oauth(params, conn)
   end
 
