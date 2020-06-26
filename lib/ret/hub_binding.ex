@@ -17,6 +17,14 @@ defmodule Ret.HubBinding do
     timestamps()
   end
 
+  def bind_hub(%{"community_id" => community_id, "channel_id" => channel_id, "type" => _, "hub_id" => _} = params) do
+    hub_binding = HubBinding |> Repo.get_by(community_id: community_id, channel_id: channel_id)
+
+    (hub_binding || %HubBinding{})
+    |> HubBinding.changeset(params)
+    |> Repo.insert_or_update()
+  end
+
   def changeset(%HubBinding{} = hub_binding, params) do
     %Hub{hub_id: hub_id} = Hub |> Repo.get_by(hub_sid: params["hub_id"])
 

@@ -11,42 +11,9 @@ defmodule RetWeb.Api.V1.HubController do
   # Only allow access to remove hubs with secret header
   plug(RetWeb.Plugs.HeaderAuthorization when action in [:delete])
 
-  def create(conn, %{"hub" => %{"scene_id" => scene_id}} = params) do
-    scene = Scene.scene_or_scene_listing_by_sid(scene_id)
-
-    %Hub{}
-    |> Hub.changeset(scene, params["hub"])
-    |> exec_create(conn)
-  end
-
   def create(conn, %{"hub" => _hub_params} = params) do
-    scene_listing = SceneListing.get_random_default_scene_listing()
-
-    %Hub{}
-    |> Hub.changeset(scene_listing, params["hub"])
+    Hub.create_new_room(params["hub"], false)
     |> exec_create(conn)
-  end
-
-  # For modules inside reticulum that create scenes
-  ## *****
-  # def create_new_room(conn, scene_id, params) do
-  #   IO.puts("inside create_new_room/1")
-  #   scene = Scene.scene_or_scene_listing_by_sid(scene_id)
-
-  #   %Hub{}
-  #   |> Hub.changeset(scene, params)
-  #   |> exec_create(conn)
-  # end
-
-  # Random scene created
-  ## *****
-  def create_new_room(%{name: _name} = params) do
-    IO.puts("inside create_new_room/0")
-    scene_listing = SceneListing.get_random_default_scene_listing()
-
-    %Hub{}
-    |> Hub.changeset(scene_listing, params)
-    |> Repo.insert()
   end
 
   defp exec_create(hub_changeset, conn) do

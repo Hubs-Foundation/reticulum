@@ -99,7 +99,7 @@ defmodule RetWeb.Router do
     end
 
     scope "/v1", as: :api_v1 do
-      resources("/slack", Api.V1.BotController, only: [:create, :index])
+      resources("/slack", Api.V1.BotController, only: [:create])
     end
 
     scope "/v1", as: :api_v1 do
