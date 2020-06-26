@@ -63,8 +63,8 @@ defmodule Ret.SlackClient do
     # Specific channel permissions
     is_member = is_member_in_channel(channel_id, provider_account_id)
 
-    # change scene
     %{
+      # change scene
       manage_channels: is_member,
       # moderate room
       kick_members: is_member,
@@ -98,7 +98,7 @@ defmodule Ret.SlackClient do
     name
   end
 
-  def fetch_community_identifier(%Ret.OAuthProvider{source: _type, provider_account_id: _provider_account_id}) do
+  def fetch_community_identifier(%Ret.OAuthProvider{source: _type, provider_account_id: provider_account_id}) do
     %{"user" => %{"real_name" => real_name}} =
       ("#{@slack_api_base}/api/users.info?" <>
          URI.encode_query(%{token: module_config(:bot_token), user: provider_account_id}))
