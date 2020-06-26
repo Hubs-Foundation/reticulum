@@ -828,9 +828,7 @@ defmodule RetWeb.HubChannel do
     oauth_provider =
       account.oauth_providers |> Enum.filter(fn provider -> hub_binding.type == provider.source end) |> Enum.at(0)
 
-    # when oauth_provider.type == :discord do
     assigns |> override_display_name_via_binding(oauth_provider, hub_binding)
-    # end
   end
 
   # For unbound hubs, set the identity name for the account.

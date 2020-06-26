@@ -88,7 +88,6 @@ defmodule Ret.SlackClient do
         %Ret.OAuthProvider{source: :slack, provider_account_id: provider_account_id},
         %Ret.HubBinding{community_id: _community_id}
       ) do
-    # access_token
     %{"user" => %{"name" => name}} =
       ("#{@slack_api_base}/api/users.info?" <>
          URI.encode_query(%{token: module_config(:bot_token), user: provider_account_id}))
@@ -99,10 +98,15 @@ defmodule Ret.SlackClient do
     name
   end
 
-  # not necessary for slack, only discord
-  # Todo remove references for slack fetching_community_identifier
   def fetch_community_identifier(%Ret.OAuthProvider{source: _type, provider_account_id: _provider_account_id}) do
-    "1234"
+    %{"user" => %{"real_name" => real_name}} =
+      ("#{@slack_api_base}/api/users.info?" <>
+         URI.encode_query(%{token: module_config(:bot_token), user: provider_account_id}))
+      |> Ret.HttpUtils.retry_get_until_success()
+      |> Map.get(:body)
+      |> Poison.decode!()
+
+    real_name
   end
 
   def api_request(path) do

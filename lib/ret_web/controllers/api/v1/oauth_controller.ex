@@ -6,7 +6,6 @@ defmodule RetWeb.Api.V1.OAuthController do
 
   plug(RetWeb.Plugs.RateLimit when action in [:show])
 
-  # handle twitter oauth to allow users hubs to tweet
   def show(conn, %{
         "type" => "twitter",
         "state" => state,
@@ -35,28 +34,9 @@ defmodule RetWeb.Api.V1.OAuthController do
     end
   end
 
-  # handle the chat app oauth information: discord, slack etc.
-  def show(conn, %{"type" => _type} = params) do
+  def show(conn, %{"type" => type} = params) when type in ["discord", "slack"]  do
     handle_chat_oauth(params, conn)
-    # handle_oauth(type, params, conn)
   end
-
-  # def handle_oauth(type, params, conn) do
-  #   case params do
-  #     %{"error" => _} -> handle_chat_error(params, conn)
-  #     _ -> handle_chat_oauth(params, conn)
-  #   end
-  # end
-
-  # def handle_chat_error(params, conn) do
-  #   case
-
-  # def handle_oauth("slack", params, conn) do
-  #   case params do
-  #     %{"error" => _} -> handle_chat_error(params)
-  #     _ -> handle_chat_oauth(params)
-  #   end
-  # end
 
   def handle_chat_oauth(%{"error" => "access_denied", "state" => state}, conn) do
     %{claims: %{"hub_sid" => hub_sid}} = OAuthToken.peek(state)
@@ -155,7 +135,7 @@ defmodule RetWeb.Api.V1.OAuthController do
     end
   end
 
-  # If an oauthprovider exists for the given discord_user_id (chat_user_id), return the associated account, updating the email
+  # If an oauthprovider exists for the given chat_user_id, return the associated account, updating the email
   # if necessary.
   defp account_for_oauth_provider(%OAuthProvider{} = oauth_provider, email, _chat_user_id, _source) do
     account = oauth_provider.account |> Repo.preload(:login)
