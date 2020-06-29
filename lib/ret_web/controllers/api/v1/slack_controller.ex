@@ -1,4 +1,4 @@
-defmodule RetWeb.Api.V1.BotController do
+defmodule RetWeb.Api.V1.SlackController do
   use RetWeb, :controller
   alias Ret.{Hub, HubBinding}
 
@@ -17,7 +17,7 @@ defmodule RetWeb.Api.V1.BotController do
     if (reticulum_token !== module_config(:token)) do
       conn
       |> send_resp(404, "Missing reticulum \"token\" in query params.")
-    else 
+    else
     %{
       "channel_id" => channel_id,
       # "text" = "help/create/etc. arg1 arg2 arg3"
@@ -34,7 +34,7 @@ defmodule RetWeb.Api.V1.BotController do
 
     conn
     |> send_resp(200, "")
-    end 
+    end
   end
 
   defp handle_command("help", channel_id, _args, _team_id) do
@@ -55,7 +55,7 @@ defmodule RetWeb.Api.V1.BotController do
         channel_id,
         "A Hubs room is already bridged in the topic, so I am cowardly refusing to replace it."
       )
-     String.length(name) > 64 -> 
+     String.length(name) > 64 ->
         send_message_to_channel(channel_id,
         "Room name is too long (over 64 characters). Please shorten room name."
       )
@@ -114,22 +114,26 @@ defmodule RetWeb.Api.V1.BotController do
 
   defp update_topic(channel_id, new_topic) do
     ("#{@slack_api_base}/api/conversations.setTopic?" <>
-       URI.encode_query(%{token: module_config(:bot_token), channel: channel_id, topic: new_topic}))
+       URI.encode_query(%{token: get_bot_token(), channel: channel_id, topic: new_topic}))
     |> Ret.HttpUtils.retry_get_until_success()
   end
 
   defp send_message_to_channel(channel_id, message) do
     ("#{@slack_api_base}/api/chat.postMessage?" <>
-       URI.encode_query(%{token: module_config(:bot_token), channel: channel_id, text: message}))
+       URI.encode_query(%{token: get_bot_token(), channel: channel_id, text: message}))
     |> Ret.HttpUtils.retry_get_until_success()
   end
 
   defp get_channel_info(channel_id) do
     ("#{@slack_api_base}/api/conversations.info?" <>
-       URI.encode_query(%{token: module_config(:bot_token), channel: channel_id}))
+       URI.encode_query(%{token: get_bot_token(), channel: channel_id}))
     |> Ret.HttpUtils.retry_get_until_success()
     |> Map.get(:body)
     |> Poison.decode!()
+  end
+
+  defp get_bot_token() do
+    Application.get_env(:ret, Ret.SlackClient)[:bot_token]
   end
 
   defp module_config(key) do
