@@ -287,3 +287,7 @@ returns a 200 with response:
   //... etc
 ]
 ```
+
+```sh
+curl -s -w "\nStatus Code : %{http_code}\n" -d @patch-account.json -XPATCH -H "authorization: bearer: YOUR_AUTH_TOKEN" -H "Content-Type: application/json" -k "https://hubs.local:4000/api/v1/accounts" -o response.json
+```
