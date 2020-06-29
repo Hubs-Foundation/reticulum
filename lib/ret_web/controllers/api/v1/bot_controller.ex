@@ -12,6 +12,12 @@ defmodule RetWeb.Api.V1.BotController do
                "🦆 `/hubs remove` - Removes the room URL from the topic."
 
   def create(conn, params) do
+    IO.puts(RetWeb.Endpoint.host())
+    %{:query_params => %{"token" => reticulum_token}} = conn
+    if (reticulum_token !== module_config(:token)) do
+      conn
+      |> send_resp(404, "Missing reticulum \"token\" in query params.")
+    else 
     %{
       "channel_id" => channel_id,
       # "text" = "help/create/etc. arg1 arg2 arg3"
@@ -28,6 +34,7 @@ defmodule RetWeb.Api.V1.BotController do
 
     conn
     |> send_resp(200, "")
+    end 
   end
 
   defp handle_command("help", channel_id, _args, _team_id) do
@@ -41,15 +48,18 @@ defmodule RetWeb.Api.V1.BotController do
         "topic" => %{"value" => topic}
       }
     } = get_channel_info(channel_id)
-
-    if has_hubs_url(topic) do
+    name = if is_nil(Enum.at(args, 0)), do: channel_name, else: Enum.join(args, " ")
+    cond do
+     has_hubs_url(topic) ->
       send_message_to_channel(
         channel_id,
         "A Hubs room is already bridged in the topic, so I am cowardly refusing to replace it."
       )
-    else
-      name = if is_nil(Enum.at(args, 0)), do: channel_name, else: Enum.join(args, " ")
-
+     String.length(name) > 64 -> 
+        send_message_to_channel(channel_id,
+        "Room name is too long (over 64 characters). Please shorten room name."
+      )
+    true ->
       {:ok, %{hub_sid: hub_sid} = new_hub} = Hub.create_new_room(%{"name" => name}, true)
       update_topic(channel_id, add_hub_topic(topic, Hub.url_for(new_hub)))
 
@@ -98,7 +108,7 @@ defmodule RetWeb.Api.V1.BotController do
   end
 
   defp get_hub_url_regex() do
-    {:ok, reg} = Regex.compile("https?://(#{module_config(:host)}(?:\\:\\d+)?)/\\S*")
+    {:ok, reg} = Regex.compile("https?://(#{RetWeb.Endpoint.host()}(?:\\:\\d+)?)/\\S*")
     reg
   end
 

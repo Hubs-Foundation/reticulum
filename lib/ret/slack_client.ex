@@ -89,29 +89,25 @@ defmodule Ret.SlackClient do
         %Ret.HubBinding{community_id: _community_id}
       ) do
     %{"user" => %{"name" => name}} =
-      ("#{@slack_api_base}/api/users.info?" <>
-         URI.encode_query(%{token: module_config(:bot_token), user: provider_account_id}))
-      |> Ret.HttpUtils.retry_get_until_success()
-      |> Map.get(:body)
-      |> Poison.decode!()
-
+      case Cachex.fetch(@slack_api_base, "/api/users.info?" <>
+         URI.encode_query(%{token: module_config(:bot_token), user: provider_account_id})) do
+         {status, result} when status in [:commit, :ok] -> result 
+    end
     name
   end
 
   def fetch_community_identifier(%Ret.OAuthProvider{source: _type, provider_account_id: provider_account_id}) do
     %{"user" => %{"real_name" => real_name}} =
-      ("#{@slack_api_base}/api/users.info?" <>
-         URI.encode_query(%{token: module_config(:bot_token), user: provider_account_id}))
-      |> Ret.HttpUtils.retry_get_until_success()
-      |> Map.get(:body)
-      |> Poison.decode!()
-
+      case Cachex.fetch(@slack_api_base, "/api/users.info?" <>
+         URI.encode_query(%{token: module_config(:bot_token), user: provider_account_id})) do
+         {status, result} when status in [:commit, :ok] -> result 
+    end
     real_name
   end
 
   def api_request(path) do
     "#{@slack_api_base}#{path}"
-    |> Ret.HttpUtils.retry_get_until_success([{"authorization", "Bot #{module_config(:bot_token)}"}])
+    |> Ret.HttpUtils.retry_get_until_success([{"authorization", "Bearer #{module_config(:bot_token)}"}])
     |> Map.get(:body)
     |> Poison.decode!()
   end

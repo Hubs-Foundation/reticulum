@@ -1,7 +1,7 @@
 defmodule RetWeb.Api.V1.HubController do
   use RetWeb, :controller
 
-  alias Ret.{Hub, Scene, SceneListing, Repo}
+  alias Ret.{Hub, Scene, Repo}
 
   import Canada, only: [can?: 2]
 
