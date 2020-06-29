@@ -12,29 +12,27 @@ defmodule RetWeb.Api.V1.SlackController do
                "🦆 `/hubs remove` - Removes the room URL from the topic."
 
   def create(conn, params) do
-    IO.puts(RetWeb.Endpoint.host())
     %{:query_params => %{"token" => reticulum_token}} = conn
-
-    if reticulum_token !== module_config(:token) do
+    if (reticulum_token !== module_config(:token)) do
       conn
       |> send_resp(404, "Missing reticulum \"token\" in query params.")
     else
-      %{
-        "channel_id" => channel_id,
-        # "text" = "help/create/etc. arg1 arg2 arg3"
-        "text" => text,
-        "team_id" => team_id
-      } = params
+    %{
+      "channel_id" => channel_id,
+      # "text" = "help/create/etc. arg1 arg2 arg3"
+      "text" => text,
+      "team_id" => team_id
+    } = params
 
-      # Parse arguments
-      args = String.split(text, " ")
-      command = List.first(args)
-      optional_args = List.delete_at(args, 0)
+    # Parse arguments
+    args = String.split(text, " ")
+    command = List.first(args)
+    optional_args = List.delete_at(args, 0)
 
-      handle_command(command, channel_id, optional_args, team_id)
+    handle_command(command, channel_id, optional_args, team_id)
 
-      conn
-      |> send_resp(200, "")
+    conn
+    |> send_resp(200, "")
     end
   end
 
@@ -49,32 +47,27 @@ defmodule RetWeb.Api.V1.SlackController do
         "topic" => %{"value" => topic}
       }
     } = get_channel_info(channel_id)
-
     name = if is_nil(Enum.at(args, 0)), do: channel_name, else: Enum.join(args, " ")
-
     cond do
-      has_hubs_url(topic) ->
-        send_message_to_channel(
-          channel_id,
-          "A Hubs room is already bridged in the topic, so I am cowardly refusing to replace it."
-        )
+     has_hubs_url(topic) ->
+      send_message_to_channel(
+        channel_id,
+        "A Hubs room is already bridged in the topic, so I am cowardly refusing to replace it."
+      )
+     String.length(name) > 64 ->
+        send_message_to_channel(channel_id,
+        "Room name is too long (over 64 characters). Please shorten room name."
+      )
+    true ->
+      {:ok, %{hub_sid: hub_sid} = new_hub} = Hub.create_new_room(%{"name" => name}, true)
+      update_topic(channel_id, add_hub_topic(topic, Hub.url_for(new_hub)))
 
-      String.length(name) > 64 ->
-        send_message_to_channel(
-          channel_id,
-          "Room name is too long (over 64 characters). Please shorten room name."
-        )
-
-      true ->
-        {:ok, %{hub_sid: hub_sid} = new_hub} = Hub.create_new_room(%{"name" => name}, true)
-        update_topic(channel_id, add_hub_topic(topic, Hub.url_for(new_hub)))
-
-        HubBinding.bind_hub(%{
-          "hub_id" => hub_sid,
-          "type" => "slack",
-          "community_id" => team_id,
-          "channel_id" => channel_id
-        })
+      HubBinding.bind_hub(%{
+        "hub_id" => hub_sid,
+        "type" => "slack",
+        "community_id" => team_id,
+        "channel_id" => channel_id
+      })
     end
   end
 
