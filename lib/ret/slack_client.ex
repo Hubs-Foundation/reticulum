@@ -89,19 +89,27 @@ defmodule Ret.SlackClient do
         %Ret.HubBinding{community_id: _community_id}
       ) do
     %{"user" => %{"name" => name}} =
-      case Cachex.fetch(:slack_api, "/api/users.info?" <>
-         URI.encode_query(%{token: module_config(:bot_token), user: provider_account_id})) do
-         {status, result} when status in [:commit, :ok] -> result
-    end
+      case Cachex.fetch(
+             :slack_api,
+             "/api/users.info?" <>
+               URI.encode_query(%{token: module_config(:bot_token), user: provider_account_id})
+           ) do
+        {status, result} when status in [:commit, :ok] -> result
+      end
+
     name
   end
 
   def fetch_community_identifier(%Ret.OAuthProvider{source: _type, provider_account_id: provider_account_id}) do
     %{"user" => %{"real_name" => real_name}} =
-      case Cachex.fetch(:slack_api, "/api/users.info?" <>
-         URI.encode_query(%{token: module_config(:bot_token), user: provider_account_id})) do
-         {status, result} when status in [:commit, :ok] -> result
-    end
+      case Cachex.fetch(
+             :slack_api,
+             "/api/users.info?" <>
+               URI.encode_query(%{token: module_config(:bot_token), user: provider_account_id})
+           ) do
+        {status, result} when status in [:commit, :ok] -> result
+      end
+
     real_name
   end
 

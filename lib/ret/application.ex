@@ -140,7 +140,6 @@ defmodule Ret.Application do
         id: :slack_api_cache
       ),
 
-
       # App Config cache
       worker(
         Cachex,
