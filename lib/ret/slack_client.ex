@@ -75,11 +75,12 @@ defmodule Ret.SlackClient do
 
   defp is_member_in_channel(channel_id, provider_account_id) do
     %{"members" => members} =
-      ("#{@slack_api_base}/api/conversations.members?" <>
-         URI.encode_query(%{token: module_config(:bot_token), channel: channel_id}))
-      |> Ret.HttpUtils.retry_get_until_success()
-      |> Map.get(:body)
-      |> Poison.decode!()
+    case Cachex.fetch(
+             :slack_api,
+             "/api/conversations.members?" <>
+         URI.encode_query(%{channel: channel_id})) do
+        {status, result} when status in [:commit, :ok] -> result
+      end
 
     Enum.member?(members, provider_account_id)
   end
@@ -92,7 +93,7 @@ defmodule Ret.SlackClient do
       case Cachex.fetch(
              :slack_api,
              "/api/users.info?" <>
-               URI.encode_query(%{token: module_config(:bot_token), user: provider_account_id})
+               URI.encode_query(%{user: provider_account_id})
            ) do
         {status, result} when status in [:commit, :ok] -> result
       end
@@ -105,7 +106,7 @@ defmodule Ret.SlackClient do
       case Cachex.fetch(
              :slack_api,
              "/api/users.info?" <>
-               URI.encode_query(%{token: module_config(:bot_token), user: provider_account_id})
+               URI.encode_query(%{user: provider_account_id})
            ) do
         {status, result} when status in [:commit, :ok] -> result
       end

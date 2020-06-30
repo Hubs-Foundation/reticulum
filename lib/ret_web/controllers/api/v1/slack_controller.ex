@@ -14,9 +14,9 @@ defmodule RetWeb.Api.V1.SlackController do
   def create(conn, params) do
     %{:query_params => %{"token" => reticulum_token}} = conn
 
-    if reticulum_token !== module_config(:token) do
+    if is_nil(module_config(:token)) || reticulum_token !== module_config(:token) do
       conn
-      |> send_resp(404, "Missing reticulum \"token\" in query params.")
+      |> send_resp(401, "Missing reticulum \"token\" in query params.")
     else
       %{
         "channel_id" => channel_id,
@@ -65,15 +65,17 @@ defmodule RetWeb.Api.V1.SlackController do
         )
 
       true ->
-        {:ok, %{hub_sid: hub_sid} = new_hub} = Hub.create_new_room(%{"name" => name}, true)
-        update_topic(channel_id, add_hub_topic(topic, Hub.url_for(new_hub)))
-
-        HubBinding.bind_hub(%{
+      {:ok, %{hub_sid: hub_sid} = new_hub} = Hub.create_new_room(%{"name" => name}, true)
+      
+       HubBinding.bind_hub(%{
           "hub_id" => hub_sid,
           "type" => "slack",
           "community_id" => team_id,
           "channel_id" => channel_id
         })
+
+        update_topic(channel_id, add_hub_topic(topic, Hub.url_for(new_hub)))
+
     end
   end
 

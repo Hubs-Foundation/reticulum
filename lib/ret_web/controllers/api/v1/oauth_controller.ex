@@ -55,7 +55,7 @@ defmodule RetWeb.Api.V1.OAuthController do
 
     source = String.to_atom(type)
 
-    module =
+    chat_client =
       case source do
         :discord -> DiscordClient
         :slack -> SlackClient
@@ -80,7 +80,7 @@ defmodule RetWeb.Api.V1.OAuthController do
     end
   end
 
-  # Discord user has a verified email, so we create a Hubs account for them associate it with their discord user id.
+  # Chat user has a verified email, so we create a Hubs account for them associate it with their chat user id.
   defp process_chat_oauth(conn, source, chat_user_id, true = _verified, email, _hub) do
     oauth_provider =
       OAuthProvider

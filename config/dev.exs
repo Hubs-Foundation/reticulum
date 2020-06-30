@@ -112,6 +112,7 @@ config :ret, Ret.SlackClient,
   signing_secret: ""
 
 # Token is our randomly generated auth token to append to Slacks slash command
+# As a query param "token"
 config :ret, RetWeb.Api.V1.SlackController, token: ""
 
 config :ret, Ret.DiscordClient,
