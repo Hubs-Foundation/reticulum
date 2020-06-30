@@ -54,9 +54,9 @@ config :ret, RetWeb.Endpoint,
 # command from your terminal:
 #
 #     openssl req -new -newkey rsa:4096 -days 365 -nodes -x509 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout priv/server.key -out priv/server.pem
-#
+
 # The `http:` config above can be replaced with:
-#
+
 #     https: [port: 4000, keyfile: "priv/server.key", certfile: "priv/server.pem"],
 #
 # If desired, both `http:` and `https:` keys can be
@@ -104,6 +104,15 @@ config :ret, Ret.SessionLockRepo,
 config :ret, RetWeb.Plugs.HeaderAuthorization,
   header_name: "x-ret-admin-access-key",
   header_value: "admin-only"
+
+config :ret, Ret.SlackClient,
+  client_id: "",
+  client_secret: "",
+  bot_token: ""
+
+# Token is our randomly generated auth token to append to Slacks slash command
+# As a query param "token"
+config :ret, RetWeb.Api.V1.SlackController, token: ""
 
 config :ret, Ret.DiscordClient,
   client_id: "",
