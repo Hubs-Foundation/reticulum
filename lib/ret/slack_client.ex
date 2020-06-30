@@ -77,8 +77,7 @@ defmodule Ret.SlackClient do
     %{"members" => members} =
       case Cachex.fetch(
              :slack_api,
-             "/api/conversations.members?" <>
-               URI.encode_query(%{channel: channel_id})
+             "/api/conversations.members?" <> URI.encode_query(%{channel: channel_id})
            ) do
         {status, result} when status in [:commit, :ok] -> result
       end
@@ -93,8 +92,7 @@ defmodule Ret.SlackClient do
     %{"user" => %{"name" => name}} =
       case Cachex.fetch(
              :slack_api,
-             "/api/users.info?" <>
-               URI.encode_query(%{user: provider_account_id})
+             "/api/users.info?" <> URI.encode_query(%{user: provider_account_id})
            ) do
         {status, result} when status in [:commit, :ok] -> result
       end
@@ -106,8 +104,7 @@ defmodule Ret.SlackClient do
     %{"user" => %{"real_name" => real_name}} =
       case Cachex.fetch(
              :slack_api,
-             "/api/users.info?" <>
-               URI.encode_query(%{user: provider_account_id})
+             "/api/users.info?" <> URI.encode_query(%{user: provider_account_id})
            ) do
         {status, result} when status in [:commit, :ok] -> result
       end

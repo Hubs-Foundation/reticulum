@@ -134,8 +134,7 @@ defmodule RetWeb.Api.V1.SlackController do
   end
 
   defp get_channel_info(channel_id) do
-    ("#{@slack_api_base}/api/conversations.info?" <>
-       URI.encode_query(%{token: get_bot_token(), channel: channel_id}))
+    ("#{@slack_api_base}/api/conversations.info?" <> URI.encode_query(%{token: get_bot_token(), channel: channel_id}))
     |> Ret.HttpUtils.retry_get_until_success()
     |> Map.get(:body)
     |> Poison.decode!()
