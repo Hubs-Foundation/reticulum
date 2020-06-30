@@ -64,7 +64,7 @@ defmodule RetWeb.Api.V1.OAuthController do
     case OAuthToken.decode_and_verify(state) do
       {:ok, _} ->
         %{"id" => chat_user_id, "email" => email, "verified" => verified} =
-          code |> module.fetch_access_token() |> module.fetch_user_info()
+          code |> chat_client.fetch_access_token() |> chat_client.fetch_user_info()
 
         hub = hub |> Repo.preload(:hub_bindings)
 

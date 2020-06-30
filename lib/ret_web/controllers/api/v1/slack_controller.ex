@@ -65,9 +65,9 @@ defmodule RetWeb.Api.V1.SlackController do
         )
 
       true ->
-      {:ok, %{hub_sid: hub_sid} = new_hub} = Hub.create_new_room(%{"name" => name}, true)
-      
-       HubBinding.bind_hub(%{
+        {:ok, %{hub_sid: hub_sid} = new_hub} = Hub.create_new_room(%{"name" => name}, true)
+
+        HubBinding.bind_hub(%{
           "hub_id" => hub_sid,
           "type" => "slack",
           "community_id" => team_id,
@@ -75,7 +75,6 @@ defmodule RetWeb.Api.V1.SlackController do
         })
 
         update_topic(channel_id, add_hub_topic(topic, Hub.url_for(new_hub)))
-
     end
   end
 

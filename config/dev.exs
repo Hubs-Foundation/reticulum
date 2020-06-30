@@ -108,7 +108,7 @@ config :ret, RetWeb.Plugs.HeaderAuthorization,
 config :ret, Ret.SlackClient,
   client_id: "",
   client_secret: "",
-  bot_token: "",
+  bot_token: ""
 
 # Token is our randomly generated auth token to append to Slacks slash command
 # As a query param "token"

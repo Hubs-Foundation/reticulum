@@ -75,10 +75,11 @@ defmodule Ret.SlackClient do
 
   defp is_member_in_channel(channel_id, provider_account_id) do
     %{"members" => members} =
-    case Cachex.fetch(
+      case Cachex.fetch(
              :slack_api,
              "/api/conversations.members?" <>
-         URI.encode_query(%{channel: channel_id})) do
+               URI.encode_query(%{channel: channel_id})
+           ) do
         {status, result} when status in [:commit, :ok] -> result
       end
 
