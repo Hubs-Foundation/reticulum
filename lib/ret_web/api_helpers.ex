@@ -15,7 +15,7 @@ defmodule RetWeb.ApiHelpers do
   def exec_api_show(conn, params, schema, handler) do
     case ExJsonSchema.Validator.validate(schema, params, error_formatter: Ret.JsonSchemaApiErrorFormatter) do
       :ok ->
-        case handler.(conn, params, "umm") do
+        case handler.(conn, params, "exec_api_show") do
           {:ok, results} ->
             conn |> send_resp(200, results |> Poison.encode!())
 
@@ -26,7 +26,9 @@ defmodule RetWeb.ApiHelpers do
       {:error, errors} ->
         conn
         |> send_error_resp(
-          Enum.map(errors, fn {code, detail, source} -> {code, detail, source |> String.replace(~r/^#/, "created_by_account_with_email")} end)
+          Enum.map(errors, fn {code, detail, source} ->
+            {code, detail, source |> String.replace(~r/^#/, "exec_api_show")}
+          end)
         )
     end
   end
