@@ -31,7 +31,7 @@ defmodule RetWeb.Api.V1.HubController do
                        |> ExJsonSchema.Schema.resolve()
 
   def show(conn, params) do
-    exec_api_show(conn, params, @show_request_schema, &render_hub_records/3)
+    exec_api_show(conn, params, @show_request_schema, &render_hub_records/2)
   end
 
   defp with_created_by_account(query, %Ret.Account{} = account) do
@@ -53,7 +53,7 @@ defmodule RetWeb.Api.V1.HubController do
     query
   end
 
-  defp filter_by_hub_sids(query, %{"hub_sids" => hub_sids} = params) do
+  defp filter_by_hub_sids(query, %{"hub_sids" => hub_sids}) do
     query |> filter_by_hub_sids(hub_sids)
   end
 
@@ -61,7 +61,7 @@ defmodule RetWeb.Api.V1.HubController do
     query |> where([hub], hub.hub_sid in ^hub_sids)
   end
 
-  defp filter_by_hub_sids(query, params) do
+  defp filter_by_hub_sids(query, _params) do
     query
   end
 
@@ -77,7 +77,7 @@ defmodule RetWeb.Api.V1.HubController do
     []
   end
 
-  defp render_hub_records(conn, params, index) do
+  defp render_hub_records(conn, params) do
     account = Guardian.Plug.current_resource(conn)
 
     hubs =
