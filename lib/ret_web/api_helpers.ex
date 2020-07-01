@@ -46,9 +46,7 @@ defmodule RetWeb.ApiHelpers do
 
       {:error, errors} ->
         conn
-        |> send_error_resp(
-          Enum.map(errors, fn {code, detail, source} -> {code, detail, source |> String.replace(~r/^#/, "data")} end)
-        )
+        |> send_error_resp(errors)
     end
   end
 

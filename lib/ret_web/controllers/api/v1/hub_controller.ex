@@ -34,20 +34,6 @@ defmodule RetWeb.Api.V1.HubController do
     exec_api_show(conn, params, @show_request_schema, &render_hub_records/3)
   end
 
-  def show(conn, params) do
-    conn
-    |> send_resp(
-      400,
-      %{
-        errors:
-          Enum.map([{:MALFORMED_REQUEST, "Malformed request to rooms api"}], fn {code, detail} ->
-            %{code: code, detail: detail}
-          end)
-      }
-      |> Poison.encode!()
-    )
-  end
-
   defp with_created_by_account(query, %Ret.Account{} = account) do
     query
     |> preload(:created_by_account)
