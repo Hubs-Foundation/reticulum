@@ -34,19 +34,19 @@ defmodule RetWeb.Api.V1.HubController do
     exec_api_show(conn, params, @show_request_schema, &render_hub_records/2)
   end
 
-  defp with_created_by_account(query, %Ret.Account{} = account) do
+  defp filter_by_created_by_account(query, %Ret.Account{} = account) do
     query
     |> preload(:created_by_account)
     |> where([hub], hub.created_by_account_id == ^account.account_id)
   end
 
-  defp with_created_by_account(query, _params) do
+  defp filter_by_created_by_account(query, _params) do
     query
   end
 
   defp filter_by_created_by_account_email(query, %{"created_by_account_email" => email}) do
     created_by_account = Ret.Account.account_for_email(email)
-    query |> with_created_by_account(created_by_account)
+    query |> filter_by_created_by_account(created_by_account)
   end
 
   defp filter_by_created_by_account_email(query, _params) do
