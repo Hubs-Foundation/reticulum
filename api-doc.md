@@ -8,7 +8,7 @@ The endpoint `/api/v1/rooms` can be used to retrieve information about rooms.
 - (Required) `authorization: bearer : <TOKEN>`
 
 ### Query String Parameters:
-- `created_by_account_example`
+- `created_by_account_email`
 - `hub_sids[]`
 
 ### Usage : 
