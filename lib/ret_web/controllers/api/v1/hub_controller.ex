@@ -5,6 +5,7 @@ defmodule RetWeb.Api.V1.HubController do
   alias Ret.{Hub, Scene, SceneListing, Repo}
 
   import Canada, only: [can?: 2]
+  import Ecto.Query, only: [where: 3, preload: 2]
 
   # Limit to 1 TPS
   plug(RetWeb.Plugs.RateLimit)
@@ -21,13 +22,25 @@ defmodule RetWeb.Api.V1.HubController do
                   "format" => "email"
                 }
                 |> ExJsonSchema.Schema.resolve()
+  @show_schema %{
+                 "type" => "object",
+                 "properties" => %{
+                   "email_of_creator" => %{
+                     "type" => "string",
+                     "format" => "email"
+                   },
+                   "hub_sids" => %{
+                     "type" => "array",
+                     "items" => %{
+                       "type" => "string"
+                     }
+                   }
+                 }
+               }
+               |> ExJsonSchema.Schema.resolve()
 
-  def show(conn, %{"hub_sids" => hub_sids} = params) when is_list(hub_sids) do
-    exec_api_show(conn, hub_sids, @hub_sid_schema, &render_hub_record/2)
-  end
-
-  def show(conn, %{"created_by_account_with_email" => email} = params) do
-    exec_api_show(conn, params, @email_schema, &render_hubs_by_email/2)
+  def show(conn, params) do
+    exec_api_show(conn, params, @show_schema, &render_hub_record/3)
   end
 
   def show(conn, params) do
@@ -44,26 +57,68 @@ defmodule RetWeb.Api.V1.HubController do
     )
   end
 
-  defp render_hubs_by_email(email, source) do
-    account = Ret.Account.account_for_email(email)
+  defp with_can_join(hubs, %Ret.Account{} = account) do
+    hubs
+    |> Enum.filter(fn hub ->
+      account |> can?(join_hub(hub))
+    end)
+  end
 
-    case account do
-      nil ->
-        {:error, [{:RECORD_DOES_NOT_EXIST, "Account with email " <> email <> " does not exist.", source}]}
+  defp with_created_by_account(query, %Ret.Account{} = account) do
+    query
+    |> preload(:created_by_account)
+    |> where([hub], hub.created_by_account_id == ^account.account_id)
+  end
 
-      _ ->
-        hubs =
-          account
-          |> Ret.Repo.preload([:created_hubs])
-          |> Map.get(:created_hubs)
+  defp with_created_by_account(query, _params) do
+    query
+  end
 
-        results =
-          Enum.map(hubs, fn hub ->
-            Phoenix.View.render(RetWeb.Api.V1.HubView, "show.json", %{hub: hub}) |> Map.get(:hubs) |> hd
-          end)
+  defp with_created_by_account_with_email(query, %{"created_by_account_with_email" => email}) do
+    created_by_account = Ret.Account.account_for_email(email)
+    query |> with_created_by_account(created_by_account)
+  end
 
-        {:ok, results}
-    end
+  defp with_created_by_account_with_email(query, _params) do
+    query
+  end
+
+  defp with_hub_sids(query, %{"hubs_sids" => hub_sids} = params) do
+    query |> with_hub_sids(hub_sids)
+  end
+
+  defp with_hub_sids(query, hub_sids) when is_list(hub_sids) do
+    query |> where([hub], hub.hub_sid in ^hub_sids)
+  end
+
+  defp with_hub_sids(query, _params) do
+    query
+  end
+
+  defp render_hub_record(conn, params, index) do
+    hubs =
+      Ret.Hub
+      |> with_created_by_account_with_email(params)
+      |> with_hub_sids(params)
+      |> Ret.Repo.all()
+
+    # Only return hubs you're allowed to join
+    account = Guardian.Plug.current_resource(conn)
+
+    hubs =
+      hubs
+      |> Repo.preload(:hub_bindings)
+      |> Enum.filter(fn hub ->
+        account |> can?(join_hub(hub))
+      end)
+
+    views =
+      hubs
+      |> Enum.map(fn hub ->
+        Phoenix.View.render(RetWeb.Api.V1.HubView, "show.json", %{hub: hub}) |> Map.get(:hubs) |> hd
+      end)
+
+    {:ok, views}
   end
 
   defp render_hub_record(hub_sid, index) do

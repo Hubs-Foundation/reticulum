@@ -89,7 +89,6 @@ defmodule RetWeb.Router do
       get("/avatars/:id/base.gltf", Api.V1.AvatarController, :show_base_gltf)
       get("/avatars/:id/avatar.gltf", Api.V1.AvatarController, :show_avatar_gltf)
       get("/oauth/:type", Api.V1.OAuthController, :show)
-      get("/rooms", Api.V1.HubController, :show)
 
       scope "/support" do
         resources("/subscriptions", Api.V1.SupportSubscriptionController, only: [:create, :delete])
@@ -121,6 +120,7 @@ defmodule RetWeb.Router do
       resources("/scenes", Api.V1.SceneController, only: [:create, :update])
       resources("/avatars", Api.V1.AvatarController, only: [:create, :update, :delete])
       resources("/hubs", Api.V1.HubController, only: [:update])
+      get("/rooms", Api.V1.HubController, :show)
       resources("/assets", Api.V1.AssetsController, only: [:create, :delete])
       post("/twitter/tweets", Api.V1.TwitterController, :tweets)
 
