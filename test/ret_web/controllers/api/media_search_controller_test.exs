@@ -18,9 +18,11 @@ defmodule RetWeb.MediaSearchControllerTest do
     scene_1 = create_scene(account_1)
     scene_2 = create_scene(account_2)
     {:ok, hub: private_hub} = create_hub(%{scene: scene_1})
+    {:ok, hub: private_hub_2} = create_hub(%{scene: scene_1})
     {:ok, hub: public_hub} = create_public_hub(%{scene: scene_2})
 
     AccountFavorite.ensure_favorited(private_hub, account_1)
+    AccountFavorite.ensure_favorited(private_hub_2, account_1)
 
     %{
       account_1: account_1,
@@ -31,6 +33,7 @@ defmodule RetWeb.MediaSearchControllerTest do
       scene_1: scene_1,
       scene_2: scene_2,
       private_hub: private_hub,
+      private_hub_2: private_hub_2,
       public_hub: public_hub
     }
   end
@@ -170,7 +173,8 @@ defmodule RetWeb.MediaSearchControllerTest do
   test "Search for a user's own favorites should return results if they have favorites", %{
     conn: conn,
     account_1: account,
-    private_hub: private_hub
+    private_hub: private_hub,
+    private_hub_2: private_hub_2,
   } do
     resp =
       conn
@@ -178,39 +182,42 @@ defmodule RetWeb.MediaSearchControllerTest do
       |> search_favorites_for_account_id(account.account_id)
       |> json_response(200)
 
-    # there should only be one entry
-    [entry] = resp["entries"]
-
-    # and the hub should be the favorited hub
-    assert entry["id"] == private_hub.hub_sid
-    assert entry["type"] == "room"
+    entries = resp["entries"]
+    assert length(entries) == 2
+    assert length(Enum.filter(entries, fn e -> e["id"] == private_hub.hub_sid && e["type"] == "room" end)) == 1
+    assert length(Enum.filter(entries, fn e -> e["id"] == private_hub_2.hub_sid && e["type"] == "room" end)) == 1
   end
 
   test "Search for a user's own favorites should not return closed hubs", %{
     conn: conn,
     account_1: account,
-    private_hub: private_hub
+    private_hub: private_hub,
+    private_hub_2: private_hub_2
   } do
     resp =
       conn
       |> auth_with_account(account)
       |> search_favorites_for_account_id(account.account_id)
       |> json_response(200)
-    # there should only be one entry
-    [entry] = resp["entries"]
-    # and the hub should be the favorited hub
-    assert entry["id"] == private_hub.hub_sid
-    assert entry["type"] == "room"
 
-    # Close the hub
+    entries = resp["entries"]
+    assert length(entries) == 2
+    assert length(Enum.filter(entries, fn e -> e["id"] == private_hub.hub_sid end)) == 1
+    assert length(Enum.filter(entries, fn e -> e["id"] == private_hub_2.hub_sid end)) == 1
+
+    # Close the first hub
     private_hub |> Hub.changeset_for_entry_mode(:deny) |> Repo.update!()
+
     resp =
       conn
       |> auth_with_account(account)
       |> search_favorites_for_account_id(account.account_id)
       |> json_response(200)
-    # There should be no entries
-    assert resp["entries"] == []
+
+    # there should only be one entry
+    [entry] = resp["entries"]
+    assert entry["id"] == private_hub_2.hub_sid
+    assert entry["type"] == "room"
   end
 
   test "Search for a user's own favorites should return an empty list if they have no favorites", %{
