@@ -174,7 +174,7 @@ defmodule RetWeb.MediaSearchControllerTest do
     conn: conn,
     account_1: account,
     private_hub: private_hub,
-    private_hub_2: private_hub_2,
+    private_hub_2: private_hub_2
   } do
     resp =
       conn
