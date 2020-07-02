@@ -2,7 +2,7 @@ defmodule RetWeb.MediaSearchControllerTest do
   use RetWeb.ConnCase
   import Ret.TestHelpers
 
-  alias Ret.{Account, AccountFavorite}
+  alias Ret.{Account, AccountFavorite, Hub, Repo}
 
   setup do
     on_exit(fn ->
@@ -184,6 +184,33 @@ defmodule RetWeb.MediaSearchControllerTest do
     # and the hub should be the favorited hub
     assert entry["id"] == private_hub.hub_sid
     assert entry["type"] == "room"
+  end
+
+  test "Search for a user's own favorites should not return closed hubs", %{
+    conn: conn,
+    account_1: account,
+    private_hub: private_hub
+  } do
+    resp =
+      conn
+      |> auth_with_account(account)
+      |> search_favorites_for_account_id(account.account_id)
+      |> json_response(200)
+    # there should only be one entry
+    [entry] = resp["entries"]
+    # and the hub should be the favorited hub
+    assert entry["id"] == private_hub.hub_sid
+    assert entry["type"] == "room"
+
+    # Close the hub
+    private_hub |> Hub.changeset_for_entry_mode(:deny) |> Repo.update!()
+    resp =
+      conn
+      |> auth_with_account(account)
+      |> search_favorites_for_account_id(account.account_id)
+      |> json_response(200)
+    # There should be no entries
+    assert resp["entries"] == []
   end
 
   test "Search for a user's own favorites should return an empty list if they have no favorites", %{
