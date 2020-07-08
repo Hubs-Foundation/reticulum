@@ -192,6 +192,12 @@ defmodule RetWeb.PageController do
     |> redirect_to_hub_identifier(hub_identifier)
   end
 
+  def render_for_path("/signin", _params, conn), do: conn |> render_page("signin.html")
+  def render_for_path("/signin/", _params, conn), do: conn |> render_page("signin.html")
+
+  def render_for_path("/verify", _params, conn), do: conn |> render_page("verify.html")
+  def render_for_path("/verify/", _params, conn), do: conn |> render_page("verify.html")
+
   def render_for_path("/discord", _params, conn), do: conn |> render_page("discord.html")
   def render_for_path("/discord/", _params, conn), do: conn |> render_page("discord.html")
 
