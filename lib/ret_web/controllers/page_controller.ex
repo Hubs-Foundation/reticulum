@@ -4,6 +4,11 @@ defmodule RetWeb.PageController do
   alias Plug.Conn
   import Ret.ConnUtils
 
+  ##
+  # NOTE: In addition to adding a route, you must add static html pages to the page_origin_warmer.ex
+  # file in order for them to work.
+  ##
+
   @configurable_assets %{
     app_config_favicon: {"favicon.ico", "images|favicon", "image/x-icon"},
     app_config_app_icon: {"app-icon.png", "images|app_icon", "image/png"},
