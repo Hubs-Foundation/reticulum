@@ -44,15 +44,6 @@ defmodule RetWeb.Api.V1.HubController do
     query
   end
 
-  defp filter_by_created_by_account_email(query, %{"created_by_account_email" => email}) do
-    created_by_account = Ret.Account.account_for_email(email)
-    query |> filter_by_created_by_account(created_by_account)
-  end
-
-  defp filter_by_created_by_account_email(query, _params) do
-    query
-  end
-
   defp filter_by_hub_sids(query, %{"hub_sids" => hub_sids}) do
     query |> filter_by_hub_sids(hub_sids)
   end
@@ -82,10 +73,10 @@ defmodule RetWeb.Api.V1.HubController do
 
     hubs =
       Ret.Hub
-      |> filter_by_created_by_account_email(params)
+      |> filter_by_created_by_account(account)
       |> filter_by_hub_sids(params)
       |> Ret.Repo.all()
-      |> filter_by_can_join(account)
+      |> filter_by_can_join(account) # TODO: Can move this above?
 
     views =
       hubs
