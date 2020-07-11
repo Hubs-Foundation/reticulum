@@ -62,6 +62,13 @@ defmodule RetWeb.Api.V1.RoomController do
     {:ok, {200, results}}
   end
 
+  defp hub_query(account, params) do
+    Ret.Hub
+    |> filter_by_entry_mode("allow")
+    |> maybe_filter_by_room_ids(params)
+    |> maybe_filter_by_only_favorites(account, params)
+  end
+
   defp filter_by_created_by_account(query, %Account{} = account) do
     query
     |> preload(:created_by_account)
@@ -121,13 +128,4 @@ defmodule RetWeb.Api.V1.RoomController do
     query
     |> where([_], false)
   end
-
-  defp hub_query(account, params) do
-    Ret.Hub
-    |> filter_by_entry_mode("allow")
-    |> maybe_filter_by_room_ids(params)
-    |> maybe_filter_by_only_favorites(account, params)
-  end
-
-
 end
