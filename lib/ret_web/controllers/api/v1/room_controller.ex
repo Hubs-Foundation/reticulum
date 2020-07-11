@@ -16,10 +16,13 @@ defmodule RetWeb.Api.V1.RoomController do
   @show_request_schema %{
                          "type" => "object",
                          "properties" => %{
-                           "hub_sids" => %{
+                           "room_ids" => %{
                              "type" => "array",
                              "items" => %{
                                "type" => "string"
+                             },
+                             "only_favorites" => %{
+                               "type" => "bool"
                              }
                            }
                          }
@@ -41,15 +44,15 @@ defmodule RetWeb.Api.V1.RoomController do
     |> ensure_query_returns_no_results
   end
 
-  defp maybe_filter_by_hub_sids(query, %{"hub_sids" => hub_sids}) do
-    query |> maybe_filter_by_hub_sids(hub_sids)
+  defp maybe_filter_by_room_ids(query, %{"room_ids" => room_ids}) do
+    query |> maybe_filter_by_room_ids(room_ids)
   end
 
-  defp maybe_filter_by_hub_sids(query, hub_sids) when is_list(hub_sids) do
-    query |> where([hub], hub.hub_sid in ^hub_sids)
+  defp maybe_filter_by_room_ids(query, room_ids) when is_list(room_ids) do
+    query |> where([hub], hub.hub_sid in ^room_ids)
   end
 
-  defp maybe_filter_by_hub_sids(query, _params) do
+  defp maybe_filter_by_room_ids(query, _params) do
     query
   end
 
@@ -89,7 +92,7 @@ defmodule RetWeb.Api.V1.RoomController do
   defp hub_query(account, params) do
     Ret.Hub
     |> filter_by_entry_mode("allow")
-    |> maybe_filter_by_hub_sids(params)
+    |> maybe_filter_by_room_ids(params)
     |> maybe_filter_by_only_favorites(account, params)
   end
 
@@ -116,7 +119,7 @@ defmodule RetWeb.Api.V1.RoomController do
     results =
       rooms
       |> Enum.map(fn hub ->
-        Phoenix.View.render(RetWeb.Api.V1.HubView, "show.json", %{hub: hub}) |> Map.get(:hubs) |> hd
+        Phoenix.View.render(RetWeb.Api.V1.RoomView, "show.json", %{hub: hub})
       end)
 
     {:ok, results}
