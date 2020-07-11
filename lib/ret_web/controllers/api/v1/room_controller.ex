@@ -126,7 +126,7 @@ defmodule RetWeb.Api.V1.RoomController do
         Phoenix.View.render(RetWeb.Api.V1.RoomView, "show.json", %{hub: hub})
       end)
 
-    {:ok, results}
+    {:ok, {200, results}}
   end
 
   def create(conn, %{"hub" => %{"scene_id" => scene_id}} = params) do

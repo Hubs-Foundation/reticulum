@@ -16,10 +16,10 @@ defmodule RetWeb.ApiHelpers do
     case ExJsonSchema.Validator.validate(schema, params, error_formatter: Ret.JsonSchemaApiErrorFormatter) do
       :ok ->
         case handler.(conn, params) do
-          {:ok, results} ->
+          {:ok, {status, results}} ->
             conn
             |> put_resp_header("content-type", "application/json")
-            |> send_resp(200, results |> Poison.encode!())
+            |> send_resp(status, %{"data" => results} |> Poison.encode!())
 
           {:error, errors} ->
             conn |> send_error_resp(errors)

@@ -4,6 +4,10 @@ defmodule RetWeb.RoomControllerTest do
 
   alias Ret.{Account, Hub, Repo, AccountFavorite}
 
+  defp get_data(response) do
+    response["data"]
+  end
+
   setup _context do
     account_1 = Account.find_or_create_account_for_email("test@mozilla.com")
     account_2 = Account.find_or_create_account_for_email("test2@mozilla.com")
@@ -27,6 +31,7 @@ defmodule RetWeb.RoomControllerTest do
       |> put_auth_header_for_account("test@mozilla.com")
       |> get(api_v1_room_path(conn, :index))
       |> json_response(200)
+      |> get_data()
 
     assert room_id === private_hub.hub_sid
   end
@@ -41,6 +46,7 @@ defmodule RetWeb.RoomControllerTest do
       |> put_auth_header_for_account("test@mozilla.com")
       |> get(api_v1_room_path(conn, :index))
       |> json_response(200)
+      |> get_data()
 
     assert Enum.empty?(rooms)
 
@@ -57,6 +63,7 @@ defmodule RetWeb.RoomControllerTest do
       |> put_auth_header_for_account("test@mozilla.com")
       |> get(api_v1_room_path(conn, :index))
       |> json_response(200)
+      |> get_data()
 
     assert room_id === hub.hub_sid
 
@@ -67,6 +74,7 @@ defmodule RetWeb.RoomControllerTest do
       |> put_auth_header_for_account("test2@mozilla.com")
       |> get(api_v1_room_path(conn, :index))
       |> json_response(200)
+      |> get_data()
 
     assert Enum.empty?(rooms)
   end
@@ -81,6 +89,7 @@ defmodule RetWeb.RoomControllerTest do
       |> put_req_header("content-type", "application/json")
       |> get(api_v1_room_path(conn, :index))
       |> json_response(200)
+      |> get_data()
 
     assert room_id === public_hub.hub_sid
   end
@@ -102,6 +111,7 @@ defmodule RetWeb.RoomControllerTest do
       |> put_auth_header_for_account("test@mozilla.com")
       |> get(api_v1_room_path(conn, :index))
       |> json_response(200)
+      |> get_data()
 
     assert length(rooms) === 2
 
@@ -112,6 +122,7 @@ defmodule RetWeb.RoomControllerTest do
       |> put_auth_header_for_account("test2@mozilla.com")
       |> get(api_v1_room_path(conn, :index))
       |> json_response(200)
+      |> get_data()
 
     assert room_id === public_hub.hub_sid
   end
@@ -125,6 +136,7 @@ defmodule RetWeb.RoomControllerTest do
       |> put_req_header("content-type", "application/json")
       |> get(api_v1_room_path(conn, :index))
       |> json_response(200)
+      |> get_data()
 
     assert length(rooms) === 2
 
@@ -138,6 +150,7 @@ defmodule RetWeb.RoomControllerTest do
       |> put_req_header("content-type", "application/json")
       |> get(api_v1_room_path(conn, :index))
       |> json_response(200)
+      |> get_data()
 
     assert room_id === hub.hub_sid
   end
@@ -152,6 +165,7 @@ defmodule RetWeb.RoomControllerTest do
       |> put_req_header("content-type", "application/json")
       |> get(api_v1_room_path(conn, :index))
       |> json_response(200)
+      |> get_data()
 
     assert length(rooms) === 3
 
@@ -162,6 +176,7 @@ defmodule RetWeb.RoomControllerTest do
         room_ids: [hub.hub_sid, hub2.hub_sid]
       })
       |> json_response(200)
+      |> get_data()
 
     assert length(rooms) === 2
 
@@ -172,6 +187,7 @@ defmodule RetWeb.RoomControllerTest do
         room_ids: [hub.hub_sid]
       })
       |> json_response(200)
+      |> get_data()
 
     assert room_id === hub.hub_sid
   end
@@ -190,6 +206,7 @@ defmodule RetWeb.RoomControllerTest do
         only_favorites: true
       })
       |> json_response(200)
+      |> get_data()
 
     assert room_id === public_hub.hub_sid
 
@@ -202,6 +219,7 @@ defmodule RetWeb.RoomControllerTest do
         only_favorites: true
       })
       |> json_response(200)
+      |> get_data()
 
     assert Enum.empty?(rooms)
   end
