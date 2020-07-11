@@ -56,7 +56,11 @@ defmodule RetWeb.Api.V1.RoomController do
     query
   end
 
-  defp maybe_filter_by_only_favorites(query, account, %{"only_favorites" => true} = _params) do
+  defp maybe_filter_by_only_favorites(query, account, %{"only_favorites" => "true"}) do
+    query |> filter_by_favorite(account)
+  end
+
+  defp maybe_filter_by_only_favorites(query, account, %{"only_favorites" => true}) do
     query |> filter_by_favorite(account)
   end
 
@@ -114,7 +118,7 @@ defmodule RetWeb.Api.V1.RoomController do
       |> filter_by_allow_promotion(true)
       |> Ret.Repo.all()
 
-    rooms = (favorited_rooms ++ created_by_account_rooms ++ public_rooms) |> Enum.uniq()
+    rooms = (favorited_rooms ++ created_by_account_rooms ++ public_rooms) |> Enum.uniq_by(fn room -> room.hub_sid end)
 
     results =
       rooms
