@@ -1,7 +1,7 @@
 defmodule RetWeb.Api.V1.SceneController do
   use RetWeb, :controller
 
-  alias Ret.{Account, Repo, Scene, SceneListing, Storage}
+  alias Ret.{Account, Repo, Scene, SceneListing, Storage, Asset}
 
   plug(RetWeb.Plugs.RateLimit when action in [:create, :update])
 
@@ -131,5 +131,81 @@ defmodule RetWeb.Api.V1.SceneController do
       {:error, :not_allowed} ->
         conn |> send_resp(401, "")
     end
+  end
+
+  # def show() do
+
+  # end
+
+#   {
+#     "id":744131011654189083,
+# "_text_id":"744131011654189083",
+# "scene_sid":"VrnWHHF",
+# "slug":"meetingroom",
+# "name":"meetingroom",
+# "description":null,
+# "account_id":744121974900391938,
+# "model_owned_file_id":744131008298745880,
+# "screenshot_owned_file_id":744131008424575001,
+# "state":"active",
+# "inserted_at":"2020-07-10T20:36:10",
+# "updated_at":"2020-07-10T20:36:10",
+# "attribution":null,
+# "allow_remixing":true,
+# "allow_promotion":true,
+# "scene_owned_file_id":744131011536748570,
+# "attributions":{"content": [], "creator": ""},
+# "reviewed_at":"2020-07-10T20:36:11"}
+#
+#
+# https://hubs.local:4000/api/postgrest/scenes?limit=10&offset=0&order=id.desc
+# [{"id":744131011654189083,
+# "_text_id":"744131011654189083",
+# "scene_sid":"VrnWHHF",
+# "slug":"meetingroom",
+# "name":"meetingroom",
+# "description":null,
+# "account_id":744121974900391938,
+# "model_owned_file_id":744131008298745880,
+# "screenshot_owned_file_id":744131008424575001,
+# "state":"active",
+# "inserted_at":"2020-07-10T20:36:10",
+# "updated_at":"2020-07-10T20:36:10",
+# "attribution":null,
+# "allow_remixing":true,
+# "allow_promotion":true,
+# "scene_owned_file_id":744131011536748570,
+# "attributions":{"content": [], "creator": ""},
+# "reviewed_at":"2020-07-10T20:36:11"}]
+#
+#   def show(conn, %{"id" => scene_sid}) do
+#     IO.puts("test")
+
+#     case scene_sid |> get_scene() do
+#       %t{} = s when t in [Scene, SceneListing] -> conn |> render("show.json", scene: s, account: account)
+#       _ -> conn |> send_resp(404, "not found")
+#     end
+# #     # get dependencies for scene
+# #     # belongs to :parent_scene ( okay to delete )
+# #     # belongs to :account -> check no refs
+# #     # belongs_to :model_owned_file
+# #     # belongs to :scene_owned_file project exists with scene? (has one)
+# #     # scene listing
+# # #     <% collection = %{"List" => ["Item", "Item", "Item"]} %>
+# # # <%= for {key, list} <- collection do %>
+# # #   <%= key %> # List
+# # #   <%= for item <- list do %>
+# # #     <%= item %> # Item
+# # #   <% end %>
+# # # <% end %>
+#   end
+
+  def delete(conn,  %{"id" => _scene_sid} = params) do
+    _account = Guardian.Plug.current_resource(conn)
+
+    IO.inspect(params)
+    # if dependencies
+    #   returns the delete projects
+    #
   end
 end
