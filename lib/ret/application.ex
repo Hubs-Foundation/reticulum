@@ -127,6 +127,19 @@ defmodule Ret.Application do
         id: :discord_api_cache
       ),
 
+      # Slack API cache
+      worker(
+        Cachex,
+        [
+          :slack_api,
+          [
+            expiration: expiration(default: :timer.minutes(1)),
+            fallback: fallback(default: &Ret.SlackClient.api_request/1)
+          ]
+        ],
+        id: :slack_api_cache
+      ),
+
       # App Config cache
       worker(
         Cachex,

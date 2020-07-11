@@ -1,7 +1,7 @@
 defmodule RetWeb.Api.V1.HubController do
   use RetWeb, :controller
 
-  alias Ret.{Hub, Scene, SceneListing, Repo}
+  alias Ret.{Hub, Scene, Repo}
 
   import Canada, only: [can?: 2]
 
@@ -11,19 +11,8 @@ defmodule RetWeb.Api.V1.HubController do
   # Only allow access to remove hubs with secret header
   plug(RetWeb.Plugs.HeaderAuthorization when action in [:delete])
 
-  def create(conn, %{"hub" => %{"scene_id" => scene_id}} = params) do
-    scene = Scene.scene_or_scene_listing_by_sid(scene_id)
-
-    %Hub{}
-    |> Hub.changeset(scene, params["hub"])
-    |> exec_create(conn)
-  end
-
   def create(conn, %{"hub" => _hub_params} = params) do
-    scene_listing = SceneListing.get_random_default_scene_listing()
-
-    %Hub{}
-    |> Hub.changeset(scene_listing, params["hub"])
+    Hub.create_new_room(params["hub"], false)
     |> exec_create(conn)
   end
 

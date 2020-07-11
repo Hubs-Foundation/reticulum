@@ -66,9 +66,7 @@ defmodule RetWeb.HubChannel do
       end
 
     hub_requires_oauth = hub.hub_bindings |> Enum.empty?() |> Kernel.not()
-
     bot_access_key = Application.get_env(:ret, :bot_access_key)
-
     has_valid_bot_access_key = !!(bot_access_key && params["bot_access_key"] == bot_access_key)
 
     account_has_provider_for_hub = account |> Ret.Account.matching_oauth_providers(hub) |> Enum.empty?() |> Kernel.not()
@@ -1042,6 +1040,7 @@ defmodule RetWeb.HubChannel do
     |> Enum.map(
       &case &1 do
         %{type: :discord} -> %{type: :discord, url: Ret.DiscordClient.get_oauth_url(hub_sid)}
+        %{type: :slack} -> %{type: :slack, url: Ret.SlackClient.get_oauth_url(hub_sid)}
       end
     )
   end
