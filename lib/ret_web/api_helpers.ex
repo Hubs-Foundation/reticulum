@@ -17,7 +17,9 @@ defmodule RetWeb.ApiHelpers do
       :ok ->
         case handler.(conn, params) do
           {:ok, results} ->
-            conn |> send_resp(200, results |> Poison.encode!())
+            conn
+            |> put_resp_header("content-type", "application/json")
+            |> send_resp(200, results |> Poison.encode!())
 
           {:error, errors} ->
             conn |> send_error_resp(errors)

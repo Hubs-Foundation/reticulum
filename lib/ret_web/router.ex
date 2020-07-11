@@ -106,6 +106,7 @@ defmodule RetWeb.Router do
     scope "/v1", as: :api_v1 do
       pipe_through([:auth_optional, :forbid_disabled_accounts])
       resources("/hubs", Api.V1.HubController, only: [:create, :delete])
+      resources("/rooms", Api.V1.RoomController, only: [:index])
     end
 
     scope "/v1", as: :api_v1 do
@@ -120,7 +121,6 @@ defmodule RetWeb.Router do
       resources("/scenes", Api.V1.SceneController, only: [:create, :update])
       resources("/avatars", Api.V1.AvatarController, only: [:create, :update, :delete])
       resources("/hubs", Api.V1.HubController, only: [:update])
-      get("/rooms", Api.V1.HubController, :show)
       resources("/assets", Api.V1.AssetsController, only: [:create, :delete])
       post("/twitter/tweets", Api.V1.TwitterController, :tweets)
 
