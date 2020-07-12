@@ -117,26 +117,6 @@ defmodule RetWeb.Api.V1.RoomController do
     query
   end
 
-  # defp filter_by_entry_mode(query, mode) do
-  #   query
-  #   |> where([_], ^[entry_mode: mode])
-  # end
-
-  # defp filter_by_allow_promotion(query, allow) do
-  #   query
-  #   |> where([_], ^[allow_promotion: allow])
-  # end
-
-  # defp filter_by_favorite(query, %Account{} = account) do
-  #   query
-  #   |> join(:inner, [h], f in AccountFavorite, on: f.hub_id == h.hub_id and f.account_id == ^account.account_id)
-  # end
-
-  # defp filter_by_favorite(query, _) do
-  #   query
-  #   |> ensure_query_returns_no_results
-  # end
-
   defp ensure_query_returns_no_results(query) do
     query
     |> Ecto.Query.where([_], false)
