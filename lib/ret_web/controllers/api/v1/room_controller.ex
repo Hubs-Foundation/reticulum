@@ -1,10 +1,9 @@
 defmodule RetWeb.Api.V1.RoomController do
   use RetWeb, :controller
-  import RetWeb.ApiHelpers
+  import RetWeb.ApiHelpers, only: [exec_api_show: 4]
 
-  alias Ret.{Account, AccountFavorite, Hub, Scene, SceneListing, Repo}
+  alias Ret.{Account, AccountFavorite}
 
-  import Canada, only: [can?: 2]
   import Ecto.Query, only: [where: 3, preload: 2, join: 5]
 
   # Limit to 1 TPS
@@ -21,9 +20,9 @@ defmodule RetWeb.Api.V1.RoomController do
                              "items" => %{
                                "type" => "string"
                              },
-                             "only_favorites" => %{
-                               "type" => "bool"
-                             }
+                           },
+                           "only_favorites" => %{
+                             "type" => "boolean"
                            }
                          }
                        }
