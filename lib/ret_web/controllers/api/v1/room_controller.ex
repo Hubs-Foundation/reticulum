@@ -2,9 +2,8 @@ defmodule RetWeb.Api.V1.RoomController do
   use RetWeb, :controller
   import RetWeb.ApiHelpers, only: [exec_api_show: 4]
 
-  alias Ret.{Account, AccountFavorite}
-
-  import Ecto.Query, only: [where: 3, preload: 2, join: 5]
+  require Ecto.Query
+  alias Ret.{Hub}
 
   # Limit to 1 TPS
   plug(RetWeb.Plugs.RateLimit)
@@ -19,7 +18,7 @@ defmodule RetWeb.Api.V1.RoomController do
                              "type" => "array",
                              "items" => %{
                                "type" => "string"
-                             },
+                             }
                            },
                            "only_favorites" => %{
                              "type" => "boolean"
@@ -35,25 +34,26 @@ defmodule RetWeb.Api.V1.RoomController do
   defp render_hub_records(conn, params) do
     account = Guardian.Plug.current_resource(conn)
 
-    favorited_rooms =
-      hub_query(account, params)
-      |> filter_by_favorite(account)
-      |> Ret.Repo.all()
-
-    created_by_account_rooms =
-      hub_query(account, params)
-      |> filter_by_created_by_account(account)
-      |> Ret.Repo.all()
-
     public_rooms =
-      hub_query(account, params)
+      Hub
       |> filter_by_allow_promotion(true)
-      |> Ret.Repo.all()
 
-    rooms = (favorited_rooms ++ created_by_account_rooms ++ public_rooms) |> Enum.uniq_by(fn room -> room.hub_sid end)
+    created_rooms =
+      Hub
+      |> filter_by_creator(account)
+
+    favorite_rooms =
+      Hub
+      |> filter_by_favorite(account)
 
     results =
-      rooms
+      public_rooms
+      |> Ecto.Query.union(^created_rooms)
+      |> Ecto.Query.union(^favorite_rooms)
+      |> filter_by_entry_mode("allow")
+      |> maybe_filter_by_room_ids(params)
+      |> maybe_filter_by_only_favorites(account, params)
+      |> Ret.Repo.all()
       |> Enum.map(fn hub ->
         Phoenix.View.render(RetWeb.Api.V1.RoomView, "show.json", %{hub: hub})
       end)
@@ -61,22 +61,36 @@ defmodule RetWeb.Api.V1.RoomController do
     {:ok, {200, results}}
   end
 
-  defp hub_query(account, params) do
-    Ret.Hub
-    |> filter_by_entry_mode("allow")
-    |> maybe_filter_by_room_ids(params)
-    |> maybe_filter_by_only_favorites(account, params)
+  def filter_by_favorite(query, %Ret.Account{} = account) do
+    query
+    |> Ecto.Query.join(:inner, [h], f in Ret.AccountFavorite,
+      on: f.hub_id == h.hub_id and f.account_id == ^account.account_id
+    )
   end
 
-  defp filter_by_created_by_account(query, %Account{} = account) do
+  def filter_by_favorite(query, _account) do
     query
-    |> preload(:created_by_account)
-    |> where([hub], hub.created_by_account_id == ^account.account_id)
+    |> ensure_query_returns_no_results()
   end
 
-  defp filter_by_created_by_account(query, _params) do
+  def filter_by_creator(query, %Ret.Account{} = account) do
     query
-    |> ensure_query_returns_no_results
+    |> Ecto.Query.where([hub], hub.created_by_account_id == ^account.account_id)
+  end
+
+  def filter_by_creator(query, _account) do
+    query
+    |> ensure_query_returns_no_results()
+  end
+
+  def filter_by_allow_promotion(query, allow) do
+    query
+    |> Ecto.Query.where([_], ^[allow_promotion: allow])
+  end
+
+  def filter_by_entry_mode(query, entry_mode) do
+    query
+    |> Ecto.Query.where([_], ^[entry_mode: entry_mode])
   end
 
   defp maybe_filter_by_room_ids(query, %{"room_ids" => room_ids}) do
@@ -84,7 +98,7 @@ defmodule RetWeb.Api.V1.RoomController do
   end
 
   defp maybe_filter_by_room_ids(query, room_ids) when is_list(room_ids) do
-    query |> where([hub], hub.hub_sid in ^room_ids)
+    query |> Ecto.Query.where([hub], hub.hub_sid in ^room_ids)
   end
 
   defp maybe_filter_by_room_ids(query, _params) do
@@ -99,32 +113,32 @@ defmodule RetWeb.Api.V1.RoomController do
     query |> filter_by_favorite(account)
   end
 
-  defp maybe_filter_by_only_favorites(query, _, _) do
+  defp maybe_filter_by_only_favorites(query, _account, _params) do
     query
   end
 
-  defp filter_by_entry_mode(query, mode) do
-    query
-    |> where([_], ^[entry_mode: mode])
-  end
+  # defp filter_by_entry_mode(query, mode) do
+  #   query
+  #   |> where([_], ^[entry_mode: mode])
+  # end
 
-  defp filter_by_allow_promotion(query, allow) do
-    query
-    |> where([_], ^[allow_promotion: allow])
-  end
+  # defp filter_by_allow_promotion(query, allow) do
+  #   query
+  #   |> where([_], ^[allow_promotion: allow])
+  # end
 
-  defp filter_by_favorite(query, %Account{} = account) do
-    query
-    |> join(:inner, [h], f in AccountFavorite, on: f.hub_id == h.hub_id and f.account_id == ^account.account_id)
-  end
+  # defp filter_by_favorite(query, %Account{} = account) do
+  #   query
+  #   |> join(:inner, [h], f in AccountFavorite, on: f.hub_id == h.hub_id and f.account_id == ^account.account_id)
+  # end
 
-  defp filter_by_favorite(query, _) do
-    query
-    |> ensure_query_returns_no_results
-  end
+  # defp filter_by_favorite(query, _) do
+  #   query
+  #   |> ensure_query_returns_no_results
+  # end
 
   defp ensure_query_returns_no_results(query) do
     query
-    |> where([_], false)
+    |> Ecto.Query.where([_], false)
   end
 end
