@@ -133,9 +133,42 @@ defmodule RetWeb.Api.V1.SceneController do
     end
   end
 
-  # def show() do
+  def show(conn) do
+    # get the scene dependencies
+    %{
+      account_id => "account_id",
+      model_owned_file_id => "model_owned_file_id",
+      scene_owned_file_id => "scene_owned_file_id",
+      screenshot_owned_file_id => "screenshot_owned_file_id"
+     } = scene = get_scene(744131011654189083)
+    IO.inspects(scene)
+    IO.puts(account_id)
+    IO.puts(model_owned_file_id)
+    IO.puts(scene_owned_file_id)
+    IO.puts(screenshot_owned_file_id)
 
-  # end
+    # get the room dependencies
+    # if user says use default scene
+      # set room scene to default scene id
+      # SceneListing.get_random_default_scene_listing()
+      # see hub_controller for how it reassigns hubs scenes
+      # Hub.changeset_for_new_scene(hub, scene (or scenelisting))
+      # ?? is changeset a list of scenes for a hub??
+      # update scene image url for featured image for hub
+    # else
+      # return here with list of room ids
+
+
+    # get each the owned file UUID
+    file = OwnedFile.get_by_uuid_and_account(model_owned_file_id, account_id)
+    IO.inspect(file)
+    # set demote for garbage collection later
+
+    # delete from database
+    # delete from SceneListing
+
+    # return success
+  end
 
 #   {
 #     "id":744131011654189083,
@@ -202,6 +235,7 @@ defmodule RetWeb.Api.V1.SceneController do
 
   def delete(conn,  %{"id" => _scene_sid} = params) do
     _account = Guardian.Plug.current_resource(conn)
+    # Repo.delete(asset)
 
     IO.inspect(params)
     # if dependencies
