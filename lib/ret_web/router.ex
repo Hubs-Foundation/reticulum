@@ -86,6 +86,7 @@ defmodule RetWeb.Router do
 
     scope "/v1", as: :api_v1 do
       get("/meta", Api.V1.MetaController, :show)
+      get("/scenes", Api.V1.SceneController, :show) # TODO robin
       get("/avatars/:id/base.gltf", Api.V1.AvatarController, :show_base_gltf)
       get("/avatars/:id/avatar.gltf", Api.V1.AvatarController, :show_avatar_gltf)
       get("/oauth/:type", Api.V1.OAuthController, :show)

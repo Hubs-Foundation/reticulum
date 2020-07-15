@@ -1,7 +1,7 @@
 defmodule RetWeb.Api.V1.SceneController do
   use RetWeb, :controller
 
-  alias Ret.{Account, Repo, Scene, SceneListing, Storage, Asset}
+  alias Ret.{Account, Repo, Scene, SceneListing, Storage, Asset, OwnedFile, Hub}
 
   plug(RetWeb.Plugs.RateLimit when action in [:create, :update])
 
@@ -19,6 +19,72 @@ defmodule RetWeb.Api.V1.SceneController do
       :account,
       scene: Scene.scene_preloads()
     ])
+  end
+
+  def show(conn, params) do
+    IO.puts("show inside scene_controller")
+    IO.inspect(params)
+    # get the scene dependencies
+    %{
+      # parent_scene_listing: nil,
+      # parent_scene_listing_id: nil,
+
+      account_id: account_id,
+      scene_id: scene_id,
+      model_owned_file: model_owned_file, # Ret.OwnedFile
+      scene_owned_file: scene_owned_file, # Ret.OwnedFile
+      screenshot_owned_file: screenshot_owned_file, # Ret.OwnedFile
+
+      model_owned_file_id: _model_owned_file_id,
+      scene_owned_file_id: _scene_owned_file_id,
+      screenshot_owned_file_id: _screenshot_owned_file_id,
+     } = scene = get_scene("zvzRZT3") # zvzRZT3 Need the scene_sid
+
+     %{
+       scene_listing_id: scene_listing_id
+     } = scene_listing = SceneListing
+     |> Repo.get_by(_scene_id: scene_id)
+     |> Repo.preload()
+     IO.puts(1)
+     IO.puts(scene_listing_id)
+     IO.puts(2)
+
+    # Get Hub Dependencies
+    # if user says use default scene
+      # set room scene to default scene id
+      assign_hub_new_scene = SceneListing.get_random_default_scene_listing() # need to remove our scene listing first or demote it
+      IO.inspect(assign_hub_new_scene)
+      # see hub_controller for how it reassigns hubs scenes
+      # Hub.changeset_for_new_scene(hub, scene (or scenelisting))
+      #  Hub.changeset_for_new_scene(hub, assign_hub_new_scene)
+      # ?? is changeset a list of scenes for a hub??
+      # update scene image url for featured image for hub
+    # else
+      # return here with list of room ids
+      IO.puts(3)
+     maybe_more_than_one_hub = Hub
+     |> Repo.get_by(scene_listing_id: scene_listing_id)
+     |> Repo.preload()
+     IO.puts(4)
+     IO.inspect(maybe_more_than_one_hub)
+     IO.puts(5)
+
+
+     ## START DELETING ##
+
+     # ATOMICALLY how do I atomically do this, if any step fails it reactivates the files?
+      # Demote for being cleaned up by vacuum()
+      # Reset if something goes wrong
+      # model_owned_file.inactive()
+      # scene_owned_file.inactive()
+      # screenshot_owned_file.inactive()
+
+      # delete from database
+      # Repo.delete(scene)
+      # delete from SceneListing
+      # Repo.delete()
+
+    conn |> send_resp(200, "sucessfully deleted")
   end
 
   def show(conn, %{"id" => scene_sid}) do
@@ -65,6 +131,7 @@ defmodule RetWeb.Api.V1.SceneController do
   end
 
   defp get_scene(scene_sid) do
+    IO.puts("scene controller get_scene()")
     case scene_sid |> Scene.scene_or_scene_listing_by_sid() do
       nil -> nil
       scene -> scene |> preload()
@@ -131,43 +198,6 @@ defmodule RetWeb.Api.V1.SceneController do
       {:error, :not_allowed} ->
         conn |> send_resp(401, "")
     end
-  end
-
-  def show(conn) do
-    # get the scene dependencies
-    %{
-      account_id => "account_id",
-      model_owned_file_id => "model_owned_file_id",
-      scene_owned_file_id => "scene_owned_file_id",
-      screenshot_owned_file_id => "screenshot_owned_file_id"
-     } = scene = get_scene(744131011654189083)
-    IO.inspects(scene)
-    IO.puts(account_id)
-    IO.puts(model_owned_file_id)
-    IO.puts(scene_owned_file_id)
-    IO.puts(screenshot_owned_file_id)
-
-    # get the room dependencies
-    # if user says use default scene
-      # set room scene to default scene id
-      # SceneListing.get_random_default_scene_listing()
-      # see hub_controller for how it reassigns hubs scenes
-      # Hub.changeset_for_new_scene(hub, scene (or scenelisting))
-      # ?? is changeset a list of scenes for a hub??
-      # update scene image url for featured image for hub
-    # else
-      # return here with list of room ids
-
-
-    # get each the owned file UUID
-    file = OwnedFile.get_by_uuid_and_account(model_owned_file_id, account_id)
-    IO.inspect(file)
-    # set demote for garbage collection later
-
-    # delete from database
-    # delete from SceneListing
-
-    # return success
   end
 
 #   {

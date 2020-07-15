@@ -55,8 +55,11 @@ defmodule Ret.Scene do
   end
 
   def scene_or_scene_listing_by_sid(sid) do
-    Scene |> Repo.get_by(scene_sid: sid) ||
+    IO.puts(sid)
+    ret = Scene |> Repo.get_by(scene_sid: sid) ||
       SceneListing |> Repo.get_by(scene_listing_sid: sid) |> Repo.preload(scene: Scene.scene_preloads())
+    IO.inspect(ret)
+    ret
   end
 
   def to_sid(nil), do: nil
