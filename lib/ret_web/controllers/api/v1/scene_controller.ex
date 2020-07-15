@@ -1,6 +1,7 @@
 defmodule RetWeb.Api.V1.SceneController do
   use RetWeb, :controller
-
+  import Ecto.Query
+  import Ecto.Changeset
   alias Ret.{Account, Repo, Scene, SceneListing, Storage, Asset, OwnedFile, Hub}
 
   plug(RetWeb.Plugs.RateLimit when action in [:create, :update])
@@ -31,25 +32,49 @@ defmodule RetWeb.Api.V1.SceneController do
 
       account_id: account_id,
       scene_id: scene_id,
-      model_owned_file: model_owned_file, # Ret.OwnedFile
-      scene_owned_file: scene_owned_file, # Ret.OwnedFile
-      screenshot_owned_file: screenshot_owned_file, # Ret.OwnedFile
+      model_owned_file: %{ owned_file_uuid: model_owned_file_uuid }, # Ret.OwnedFile
+      scene_owned_file: %{ owned_file_uuid: scene_owned_file_uuid } , # Ret.OwnedFile
+      screenshot_owned_file: %{ owned_file_uuid: screenshot_owned_file_uuid } , # Ret.OwnedFile
 
       model_owned_file_id: _model_owned_file_id,
       scene_owned_file_id: _scene_owned_file_id,
       screenshot_owned_file_id: _screenshot_owned_file_id,
-     } = scene = get_scene("zvzRZT3") # zvzRZT3 Need the scene_sid
+     } = scene = get_scene("iPkknm3") # conference room zvzRZT3 Need the scene_sid
 
      %{
        scene_listing_id: scene_listing_id
-     } = scene_listing = SceneListing
-     |> Repo.get_by(_scene_id: scene_id)
-     |> Repo.preload()
+     } = scene_listings = SceneListing
+     |> where(scene_listing_id: ^scene_listing_id)
+     |> Repo.all()
+
+    #  |> Repo.get_by(scene_id: scene_id) # could be multiple apparently? bug?
+     # get all scene listings
+    #  |> Repo.preload() I think this updates the db
      IO.puts(1)
      IO.puts(scene_listing_id)
      IO.puts(2)
 
     # Get Hub Dependencies
+    IO.puts(3)
+    maybe_more_than_one_hub = Hub
+    |> where(scene_listing_id: ^scene_listing_id)
+    |> Repo.all()
+    IO.puts(4)
+    IO.inspect(maybe_more_than_one_hub)
+    IO.puts(5)
+
+    if length(maybe_more_than_one_hub) > 0 do
+      # has hub dependencies
+      hub = maybe_more_than_one_hub |> Enum.map(& &1[:id]) |> Enum.at(0)
+      IO.puts(hub)
+
+      # Repo.get_by(SceneListing, scene_listing_sid: scene_listing_sid)
+      # |> Repo.preload(scene: Scene.scene_preloads())
+    else
+      # has no hub dependencies
+      nil
+    end
+
     # if user says use default scene
       # set room scene to default scene id
       assign_hub_new_scene = SceneListing.get_random_default_scene_listing() # need to remove our scene listing first or demote it
@@ -61,13 +86,8 @@ defmodule RetWeb.Api.V1.SceneController do
       # update scene image url for featured image for hub
     # else
       # return here with list of room ids
-      IO.puts(3)
-     maybe_more_than_one_hub = Hub
-     |> Repo.get_by(scene_listing_id: scene_listing_id)
-     |> Repo.preload()
-     IO.puts(4)
-     IO.inspect(maybe_more_than_one_hub)
-     IO.puts(5)
+
+    #  |> Repo.preload() I think this updates the
 
 
      ## START DELETING ##
@@ -75,9 +95,9 @@ defmodule RetWeb.Api.V1.SceneController do
      # ATOMICALLY how do I atomically do this, if any step fails it reactivates the files?
       # Demote for being cleaned up by vacuum()
       # Reset if something goes wrong
-      # model_owned_file.inactive()
-      # scene_owned_file.inactive()
-      # screenshot_owned_file.inactive()
+      # model_owned_file.set_inactive()
+      # scene_owned_file.set_inactive()
+      # screenshot_owned_file.set_inactive()
 
       # delete from database
       # Repo.delete(scene)
