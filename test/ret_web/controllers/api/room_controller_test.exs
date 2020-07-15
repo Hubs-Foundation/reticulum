@@ -224,8 +224,8 @@ defmodule RetWeb.RoomControllerTest do
     assert Enum.empty?(rooms)
   end
 
-  test "The room api paginates results", %{conn: conn, account_1: account_1, scene: scene} do
-    for n <- 1..50 do
+  test "The room api paginates results", %{conn: conn, scene: scene} do
+    for _n <- 1..50 do
       {:ok, _} = create_public_hub(%{scene: scene})
     end
 

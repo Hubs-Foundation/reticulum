@@ -10,7 +10,7 @@ defmodule Ret.RoomSearchResult do
 end
 
 defmodule Ret.RoomSearchResultMeta do
-  # TODO: Should :source exist and be set to "rooms" like Ret.MedaiSearchResultMeta
+  # TODO: Should :source exist and be set to "rooms" like Ret.MediaSearchResultMeta
   # TODO: Resolve this question before deploy
   @derive {Jason.Encoder, only: [:next_cursor]}
   defstruct [:next_cursor]
@@ -22,7 +22,7 @@ defmodule RetWeb.Api.V1.RoomController do
   @page_size 24
 
   import Ecto.Query
-  alias Ret.{Hub, Repo}
+  alias Ret.{Hub}
 
   # Limit to 1 TPS
   plug(RetWeb.Plugs.RateLimit)
@@ -50,33 +50,23 @@ defmodule RetWeb.Api.V1.RoomController do
     exec_api_show(conn, params, @show_request_schema, &render_hub_records/2)
   end
 
-  defp paginate(query, page, size) do
-    from(query,
-      limit: ^size,
-      offset: ^((page - 1) * size)
-    )
-  end
-
   defp render_hub_records(conn, params) do
     account = Guardian.Plug.current_resource(conn)
     page_number = (params["cursor"] || "1") |> to_string |> Integer.parse() |> elem(0)
 
-    conditions =
+    is_visible =
       false
       |> include_public_rooms()
       |> maybe_include_created_rooms(account)
       |> maybe_include_favorite_rooms(account)
 
-    query =
+    results =
       Hub
       |> maybe_join_favorites(account)
-      |> where([_hub, _favorite], ^conditions)
+      |> where([_hub, _favorite], ^is_visible)
       |> filter_by_entry_mode("allow")
       |> maybe_filter_by_only_favorites(params)
       |> maybe_filter_by_room_ids(params)
-
-    results =
-      query
       |> Ret.Repo.paginate(%{page: page_number, page_size: @page_size})
       |> result_for_page(page_number)
 
@@ -87,7 +77,7 @@ defmodule RetWeb.Api.V1.RoomController do
     dynamic([hub], hub.allow_promotion or ^conditions)
   end
 
-  defp maybe_include_favorite_rooms(conditions, %Ret.Account{} = account) do
+  defp maybe_include_favorite_rooms(conditions, %Ret.Account{} = _account) do
     dynamic([hub, favorite], not is_nil(favorite) or ^conditions)
   end
 
