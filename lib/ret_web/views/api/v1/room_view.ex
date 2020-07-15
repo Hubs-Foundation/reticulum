@@ -26,7 +26,7 @@ defmodule RetWeb.Api.V1.RoomView do
 
   def render_with_scene(hub, embeddable) do
     %{
-      #hub_id: hub.hub_sid, # renamed hub_id to room_id
+      # hub_id: hub.hub_sid, # renamed hub_id to room_id
       room_id: hub.hub_sid,
       name: hub.name,
       description: hub.description,
@@ -52,9 +52,9 @@ defmodule RetWeb.Api.V1.RoomView do
     }
   end
 
-  defp render_with_scene_asset(hub, asset_type, asset_url) do
+  defp render_with_scene_asset(hub, _asset_type, _asset_url) do
     %{
-      #hub_id: hub.hub_sid, # renamed hub_id to room_id
+      # hub_id: hub.hub_sid, # renamed hub_id to room_id
       room_id: hub.hub_sid,
       name: hub.name,
       description: hub.description,

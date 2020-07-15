@@ -5,7 +5,7 @@ defmodule RetWeb.RoomControllerTest do
   alias Ret.{Account, Hub, Repo, AccountFavorite}
 
   defp get_data(response) do
-    response["data"]
+    response["data"]["data"]
   end
 
   setup _context do
@@ -222,5 +222,31 @@ defmodule RetWeb.RoomControllerTest do
       |> get_data()
 
     assert Enum.empty?(rooms)
+  end
+
+  test "The room api paginates results", %{conn: conn, account_1: account_1, scene: scene} do
+    for n <- 1..50 do
+      {:ok, _} = create_public_hub(%{scene: scene})
+    end
+
+    response =
+      conn
+      |> put_req_header("content-type", "application/json")
+      |> get(api_v1_room_path(conn, :index))
+      |> json_response(200)
+
+    assert length(response["data"]["data"]) === 24
+    assert response["data"]["meta"]["next_cursor"] === 2
+
+    response =
+      conn
+      |> put_req_header("content-type", "application/json")
+      |> get(api_v1_room_path(conn, :index), %{
+        cursor: 3
+      })
+      |> json_response(200)
+
+    assert length(response["data"]["data"]) === 2
+    assert response["data"]["meta"]["next_cursor"] === nil
   end
 end
