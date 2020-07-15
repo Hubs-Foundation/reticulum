@@ -486,6 +486,12 @@ defmodule Ret.MediaSearch do
     {:commit, results}
   end
 
+  defp filter_by_hub_entry_mode(query, entry_mode) do
+    query
+    |> join(:inner, [favorite], hub in assoc(favorite, :hub))
+    |> where([favorite, hub], hub.entry_mode == ^entry_mode)
+  end
+
   defp favorites_search(cursor, _type, account_id, _query, order \\ [desc: :last_activated_at]) do
     page_number = (cursor || "1") |> Integer.parse() |> elem(0)
 
@@ -494,6 +500,7 @@ defmodule Ret.MediaSearch do
       |> where([a], a.account_id == ^account_id)
       |> preload(hub: [scene: [:screenshot_owned_file], scene_listing: [:scene, :screenshot_owned_file]])
       |> order_by(^order)
+      |> filter_by_hub_entry_mode("allow")
       |> Repo.paginate(%{page: page_number, page_size: @page_size})
       |> result_for_page(page_number, :favorites, &favorite_to_entry/1)
 
