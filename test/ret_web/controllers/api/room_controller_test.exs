@@ -5,7 +5,7 @@ defmodule RetWeb.RoomControllerTest do
   alias Ret.{Account, Hub, Repo, AccountFavorite}
 
   defp get_data(response) do
-    response["data"]["data"]
+    response["data"]
   end
 
   setup _context do
@@ -235,8 +235,8 @@ defmodule RetWeb.RoomControllerTest do
       |> get(api_v1_room_path(conn, :index))
       |> json_response(200)
 
-    assert length(response["data"]["data"]) === 24
-    assert response["data"]["meta"]["next_cursor"] === 2
+    assert length(response["data"]) === 24
+    assert response["meta"]["next_cursor"] === 2
 
     response =
       conn
@@ -246,7 +246,7 @@ defmodule RetWeb.RoomControllerTest do
       })
       |> json_response(200)
 
-    assert length(response["data"]["data"]) === 2
-    assert response["data"]["meta"]["next_cursor"] === nil
+    assert length(response["data"]) === 2
+    assert response["meta"]["next_cursor"] === nil
   end
 end

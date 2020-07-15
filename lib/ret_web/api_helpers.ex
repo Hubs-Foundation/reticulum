@@ -19,7 +19,7 @@ defmodule RetWeb.ApiHelpers do
           {:ok, {status, results}} ->
             conn
             |> put_resp_header("content-type", "application/json")
-            |> send_resp(status, %{"data" => results} |> Poison.encode!())
+            |> send_resp(status, results |> Poison.encode!())
 
           {:error, errors} ->
             conn |> send_error_resp(errors)
