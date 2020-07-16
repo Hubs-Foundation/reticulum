@@ -17,6 +17,8 @@ defmodule RetWeb.Schema.RoomTypes do
 
   object :room_queries do
     field :list_rooms, :room_list do
+      arg(:page, :integer)
+      arg(:page_size, :integer)
       resolve(&Resolvers.RoomResolver.list_rooms/3)
     end
   end
