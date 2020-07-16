@@ -65,6 +65,10 @@ defmodule RetWeb.Router do
     plug(RetWeb.Plugs.RedirectToMainDomain)
   end
 
+  pipeline :graphql do
+    plug RetWeb.Context
+  end
+
   scope "/health", RetWeb do
     get("/", HealthController, :index)
   end
@@ -143,8 +147,7 @@ defmodule RetWeb.Router do
   end
 
   scope "/api/v2", as: :api_v2 do
-    pipe_through([:parsed_body, :api] ++ if(Mix.env() == :prod, do: [:ssl_only], else: []))
-
+    pipe_through([:parsed_body, :api, :auth_optional, :graphql] ++ if(Mix.env() == :prod, do: [:ssl_only], else: []))
     forward "/graphiql", Absinthe.Plug.GraphiQL, schema: RetWeb.Schema
     forward "/", Absinthe.Plug, schema: RetWeb.Schema
   end

@@ -1,7 +1,15 @@
 defmodule RetWeb.Resolvers.RoomResolver do
   alias Ret.Hub
 
-  def list_rooms(_parent, args, _resolutions) do
+  def my_rooms(_parent, args, %{context: %{account: account} }) do
+    {:ok, Hub.get_my_rooms(account, args)}
+  end
+
+  def my_rooms(_parent, args, _resolutions) do
+    {:error, "Not authorized"}
+  end
+
+  def public_rooms(_parent, args, _resolutions) do
     {:ok, Hub.get_public_rooms(args)}
   end
 
