@@ -158,10 +158,10 @@ defmodule Ret.Hub do
 
   def get_public_rooms(page, page_size) do
     Hub
-      |> where([h], h.allow_promotion and h.entry_mode == ^"allow")
-      |> preload(scene: [:screenshot_owned_file], scene_listing: [:scene, :screenshot_owned_file])
-      |> order_by(desc: :inserted_at)
-      |> Repo.paginate(%{page: page, page_size: page_size})
+    |> where([h], h.allow_promotion and h.entry_mode == ^"allow")
+    |> preload(scene: [:screenshot_owned_file], scene_listing: [:scene, :screenshot_owned_file])
+    |> order_by(desc: :inserted_at)
+    |> Repo.paginate(%{page: page, page_size: page_size})
   end
 
   def changeset(%Hub{} = hub, %Scene{} = scene, attrs) do

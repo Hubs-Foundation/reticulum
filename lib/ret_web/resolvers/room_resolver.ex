@@ -2,7 +2,7 @@ defmodule RetWeb.Resolvers.RoomResolver do
   alias Ret.Hub
 
   def list_rooms(_parent, _args, _resolutions) do
-    {:ok, IO.inspect(Hub.get_public_rooms(0, 10))}
+    {:ok, Hub.get_public_rooms(0, 10)}
   end
 
   def create_room(_parent, args, _resolutions) do

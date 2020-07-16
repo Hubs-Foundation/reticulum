@@ -3,8 +3,8 @@ defmodule RetWeb.Schema.RoomTypes do
   alias RetWeb.Resolvers
 
   object :room do
-    field :hub_sid, :id, name: "id"
-    field :name, :string
+    field(:hub_sid, :id, name: "id")
+    field(:name, :string)
   end
 
   object :room_list do
@@ -30,6 +30,6 @@ defmodule RetWeb.Schema.RoomTypes do
   end
 
   object :room_subscriptions do
-    field :room_created, :room
+    field(:room_created, :room)
   end
 end
