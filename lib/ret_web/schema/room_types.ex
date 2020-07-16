@@ -1,6 +1,8 @@
 defmodule RetWeb.Schema.RoomTypes do
   use Absinthe.Schema.Notation
   alias RetWeb.Resolvers
+  alias Ret.Scene
+  import Absinthe.Resolution.Helpers, only: [dataloader: 1]
 
   object :turn_transport do
     field(:port, :integer)
@@ -53,7 +55,7 @@ defmodule RetWeb.Schema.RoomTypes do
       resolve(&Resolvers.RoomResolver.lobby_count/3)
     end
     field(:scene, :scene_or_scene_listing) do
-      resolve(&Resolvers.RoomResolver.scene/3)
+      resolve(dataloader(Scene))
     end
     # TODO: Figure out user_data
   end

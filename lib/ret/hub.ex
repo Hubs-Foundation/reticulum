@@ -160,7 +160,6 @@ defmodule Ret.Hub do
   def get_my_rooms(account, params) do
     Hub
     |> where([h], h.created_by_account_id == ^account.account_id and h.entry_mode == ^"allow")
-    |> preload(scene: [:screenshot_owned_file], scene_listing: [:scene, :screenshot_owned_file])
     |> order_by(desc: :inserted_at)
     |> Repo.paginate(params)
   end
@@ -170,14 +169,12 @@ defmodule Ret.Hub do
     |> where([h], h.entry_mode == ^"allow")
     |> join(:inner, [h], f in AccountFavorite, on: f.hub_id == h.hub_id and f.account_id == ^account.account_id)
     |> order_by([h, f], desc: f.last_activated_at)
-    |> preload(scene: [:screenshot_owned_file], scene_listing: [:scene, :screenshot_owned_file])
     |> Repo.paginate(params)
   end
 
   def get_public_rooms(params) do
     Hub
     |> where([h], h.allow_promotion and h.entry_mode == ^"allow")
-    |> preload(scene: [:screenshot_owned_file], scene_listing: [:scene, :screenshot_owned_file])
     |> order_by(desc: :inserted_at)
     |> Repo.paginate(params)
   end
