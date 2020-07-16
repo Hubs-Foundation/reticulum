@@ -383,6 +383,15 @@ defmodule Ret.Hub do
     hub.room_size || AppConfig.get_cached_config_value("features|default_room_size")
   end
 
+  def scene_or_scene_listing_for(%Hub{} = hub) do
+    case hub.scene || hub.scene_listing do
+      nil -> nil
+      %Scene{state: :removed} -> nil
+      %SceneListing{state: :delisted} -> nil
+      scene -> scene
+    end
+  end
+
   defp changeset_for_new_entry_code(%Hub{} = hub) do
     hub
     |> Ecto.Changeset.change()
@@ -574,6 +583,11 @@ defmodule Ret.Hub do
     hub.member_permissions
     |> BitFieldUtils.permissions_to_map(@member_permissions)
     |> Map.new(fn {k, v} -> {Atom.to_string(k), v} end)
+  end
+
+  def member_permissions_for_hub_as_atoms(%Hub{} = hub) do
+    hub.member_permissions
+    |> BitFieldUtils.permissions_to_map(@member_permissions)
   end
 
   # The account argument here can be a Ret.Account, a Ret.OAuthProvider or nil.

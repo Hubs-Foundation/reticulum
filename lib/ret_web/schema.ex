@@ -8,6 +8,7 @@ defmodule RetWeb.Schema do
 
   import_types(Absinthe.Type.Custom)
   import_types(RetWeb.Schema.RoomTypes)
+  import_types(RetWeb.Schema.SceneTypes)
 
   query do
     import_fields(:room_queries)

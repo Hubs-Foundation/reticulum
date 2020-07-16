@@ -2,9 +2,60 @@ defmodule RetWeb.Schema.RoomTypes do
   use Absinthe.Schema.Notation
   alias RetWeb.Resolvers
 
+  object :turn_transport do
+    field(:port, :integer)
+  end
+
+  object :turn_info do
+    field(:credential, :string)
+    field(:enabled, :boolean)
+    field(:transports, list_of(:turn_transport))
+    field(:username, :string)
+  end
+
+  object :member_permissions do
+    field(:spawn_and_move_media, :boolean)
+    field(:spawn_camera, :boolean)
+    field(:spawn_drawing, :boolean)
+    field(:pin_objects, :boolean)
+    field(:spawn_emoji, :boolean)
+    field(:fly, :boolean)
+  end
+
   object :room do
     field(:hub_sid, :id, name: "id")
     field(:name, :string)
+    field(:slug, :string)
+    field(:description, :string)
+    field(:allow_promotion, :boolean)
+    field(:entry_code, :string)
+    field(:entry_mode, :string)
+    field(:host, :string)
+    field(:port, :integer) do
+      resolve(&Resolvers.RoomResolver.port/3)
+    end
+    field(:turn, :turn_info) do
+      resolve(&Resolvers.RoomResolver.turn/3)
+    end
+    field(:embed_token, :string) do
+      resolve(&Resolvers.RoomResolver.embed_token/3)
+    end
+    field(:member_permissions, :member_permissions) do
+      resolve(&Resolvers.RoomResolver.member_permissions/3)
+    end
+    field(:room_size, :integer) do
+      resolve(&Resolvers.RoomResolver.room_size/3)
+    end
+    field(:member_count, :integer) do
+      resolve(&Resolvers.RoomResolver.member_count/3)
+    end
+    field(:lobby_count, :integer) do
+      resolve(&Resolvers.RoomResolver.lobby_count/3)
+    end
+    field(:scene, :scene_or_scene_listing) do
+      resolve(&Resolvers.RoomResolver.scene/3)
+    end
+    # TODO: Figure out user_data
   end
 
   object :room_list do
