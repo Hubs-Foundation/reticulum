@@ -9,6 +9,14 @@ defmodule RetWeb.Resolvers.RoomResolver do
     {:error, "Not authorized"}
   end
 
+  def favorite_rooms(_parent, args, %{context: %{account: account} }) do
+    {:ok, Hub.get_favorite_rooms(account, args)}
+  end
+
+  def favorite_rooms(_parent, args, _resolutions) do
+    {:error, "Not authorized"}
+  end
+
   def public_rooms(_parent, args, _resolutions) do
     {:ok, Hub.get_public_rooms(args)}
   end

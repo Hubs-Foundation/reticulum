@@ -27,6 +27,12 @@ defmodule RetWeb.Schema.RoomTypes do
       arg(:page_size, :integer)
       resolve(&Resolvers.RoomResolver.public_rooms/3)
     end
+
+    field :favorite_rooms, :room_list do
+      arg(:page, :integer)
+      arg(:page_size, :integer)
+      resolve(&Resolvers.RoomResolver.favorite_rooms/3)
+    end
   end
 
   object :room_mutations do
