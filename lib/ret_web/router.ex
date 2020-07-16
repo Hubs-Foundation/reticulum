@@ -142,6 +142,13 @@ defmodule RetWeb.Router do
     end
   end
 
+  scope "/api/v2", as: :api_v2 do
+    pipe_through([:parsed_body, :api] ++ if(Mix.env() == :prod, do: [:ssl_only], else: []))
+
+    forward "/graphiql", Absinthe.Plug.GraphiQL, schema: RetWeb.Schema
+    forward "/", Absinthe.Plug, schema: RetWeb.Schema
+  end
+
   # Directly accessible APIs.
   # Permit direct file uploads without intermediate ALB/Cloudfront/CDN proxying.
   scope "/api", RetWeb do

@@ -133,6 +133,14 @@ defmodule Ret.Hub do
     |> changeset(scene_or_scene_listing, params)
   end
 
+  def create(params) do
+    scene_or_scene_listing = get_scene_or_scene_listing(params)
+
+    %Hub{}
+    |> changeset(scene_or_scene_listing, params)
+    |> Repo.insert()
+  end
+
   defp get_scene_or_scene_listing(params) do
     if is_nil(params["scene_id"]) do
       SceneListing.get_random_default_scene_listing()
@@ -146,6 +154,14 @@ defmodule Ret.Hub do
       {entry_code, _} -> Hub |> Repo.get_by(entry_code: entry_code)
       _ -> nil
     end
+  end
+
+  def get_public_rooms(page, page_size) do
+    Hub
+      |> where([h], h.allow_promotion and h.entry_mode == ^"allow")
+      |> preload(scene: [:screenshot_owned_file], scene_listing: [:scene, :screenshot_owned_file])
+      |> order_by(desc: :inserted_at)
+      |> Repo.paginate(%{page: page, page_size: page_size})
   end
 
   def changeset(%Hub{} = hub, %Scene{} = scene, attrs) do
