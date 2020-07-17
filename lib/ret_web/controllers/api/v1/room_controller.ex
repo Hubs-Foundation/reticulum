@@ -1,19 +1,12 @@
-# TODO: Should this API be re-using code in media_search.ex?
-# TODO: Resolve this question before deploy
 defmodule Ret.RoomSearchResult do
-  # TODO: Should :data be called :entries like Ret.MediaSearchResult and the scrivener api?
-  # TODO: Should :data be called :rooms because that's "what is being returned"
-  # TODO: Resolve this question before deploy
   @enforce_keys [:meta, :data]
-  @derive {Jason.Encoder, only: [:meta, :data, :suggestions]}
-  defstruct [:meta, :data, :suggestions]
+  @derive {Jason.Encoder, only: [:meta, :data]}
+  defstruct [:meta, :data]
 end
 
 defmodule Ret.RoomSearchResultMeta do
-  # TODO: Should :source exist and be set to "rooms" like Ret.MediaSearchResultMeta
-  # TODO: Resolve this question before deploy
-  @derive {Jason.Encoder, only: [:next_cursor]}
-  defstruct [:next_cursor]
+  @derive {Jason.Encoder, only: [:next_cursor, :total_pages]}
+  defstruct [:next_cursor, :total_pages]
 end
 
 defmodule RetWeb.Api.V1.RoomController do
@@ -140,9 +133,9 @@ defmodule RetWeb.Api.V1.RoomController do
             page_number + 1
           else
             nil
-          end
+          end,
+        total_pages: page.total_pages
       },
-      # TODO: Should data be called entries like the scrivener api
       data:
         page.entries
         |> Enum.map(fn hub ->
