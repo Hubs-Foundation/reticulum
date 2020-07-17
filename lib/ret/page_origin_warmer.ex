@@ -13,6 +13,8 @@ defmodule Ret.PageOriginWarmer do
              avatar.html
              discord.html
              cloud.html
+             signin.html
+             verify.html
              hub.service.js
              schema.toml
            ),
