@@ -76,7 +76,8 @@ defmodule Ret.MediaResolver do
 
       # YouTube returns a 'expire' which has timestamp of expiration.
       resolved_media =
-        with parsed_youtube_query <- URI.decode_query(youtube_query),
+        with youtube_query when is_binary(youtube_query) <- youtube_query,
+             parsed_youtube_query <- URI.decode_query(youtube_query),
              expire when is_binary(expire) <- Map.get(parsed_youtube_query, "expire"),
              {expire_s, _} <- Integer.parse(expire),
              ttl_s <- expire_s - System.system_time(:second) do
