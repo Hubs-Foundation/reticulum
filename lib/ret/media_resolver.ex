@@ -88,7 +88,7 @@ defmodule Ret.MediaResolver do
 
           {:commit, resolved_media}
 
-        # Faild to resolve, fall through as a 404
+        # Failed to resolve, fall through as a 404
         _ ->
           {:commit, nil}
       end
