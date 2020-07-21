@@ -25,7 +25,7 @@ defmodule RetWeb.RoomControllerTest do
     {:ok, hub: _private_hub} = create_hub(%{scene: scene})
     AccountFavorite.ensure_favorited(private_hub, account_1)
 
-    [%{"room_id" => room_id}] =
+    [%{"id" => room_id}] =
       conn
       |> put_req_header("content-type", "application/json")
       |> put_auth_header_for_account("test@mozilla.com")
@@ -57,7 +57,7 @@ defmodule RetWeb.RoomControllerTest do
     |> Repo.update!()
 
     # Account 1 can see the room now
-    [%{"room_id" => room_id}] =
+    [%{"id" => room_id}] =
       conn
       |> put_req_header("content-type", "application/json")
       |> put_auth_header_for_account("test@mozilla.com")
@@ -84,7 +84,7 @@ defmodule RetWeb.RoomControllerTest do
     {:ok, hub: public_hub} = create_public_hub(%{scene: scene})
     assert hub.hub_sid != public_hub.hub_sid
 
-    [%{"room_id" => room_id}] =
+    [%{"id" => room_id}] =
       conn
       |> put_req_header("content-type", "application/json")
       |> get(api_v1_room_path(conn, :index))
@@ -116,7 +116,7 @@ defmodule RetWeb.RoomControllerTest do
     assert length(rooms) === 2
 
     # Account 2 can only see the public room
-    [%{"room_id" => room_id}] =
+    [%{"id" => room_id}] =
       conn
       |> put_req_header("content-type", "application/json")
       |> put_auth_header_for_account("test2@mozilla.com")
@@ -145,7 +145,7 @@ defmodule RetWeb.RoomControllerTest do
     |> Hub.changeset_for_entry_mode(:deny)
     |> Repo.update!()
 
-    [%{"room_id" => room_id}] =
+    [%{"id" => room_id}] =
       conn
       |> put_req_header("content-type", "application/json")
       |> get(api_v1_room_path(conn, :index))
@@ -173,18 +173,18 @@ defmodule RetWeb.RoomControllerTest do
       conn
       |> put_req_header("content-type", "application/json")
       |> get(api_v1_room_path(conn, :index), %{
-        room_ids: [hub.hub_sid, hub2.hub_sid]
+        ids: [hub.hub_sid, hub2.hub_sid]
       })
       |> json_response(200)
       |> get_data()
 
     assert length(rooms) === 2
 
-    [%{"room_id" => room_id}] =
+    [%{"id" => room_id}] =
       conn
       |> put_req_header("content-type", "application/json")
       |> get(api_v1_room_path(conn, :index), %{
-        room_ids: [hub.hub_sid]
+        ids: [hub.hub_sid]
       })
       |> json_response(200)
       |> get_data()
@@ -198,12 +198,12 @@ defmodule RetWeb.RoomControllerTest do
     AccountFavorite.ensure_favorited(public_hub, account_1)
 
     # Account 1 can see its favorites
-    [%{"room_id" => room_id}] =
+    [%{"id" => room_id}] =
       conn
       |> put_req_header("content-type", "application/json")
       |> put_auth_header_for_account("test@mozilla.com")
       |> get(api_v1_room_path(conn, :index), %{
-        only_favorites: true
+        favorites: true
       })
       |> json_response(200)
       |> get_data()
@@ -216,7 +216,7 @@ defmodule RetWeb.RoomControllerTest do
       |> put_req_header("content-type", "application/json")
       |> put_auth_header_for_account("test2@mozilla.com")
       |> get(api_v1_room_path(conn, :index), %{
-        only_favorites: true
+        favorites: true
       })
       |> json_response(200)
       |> get_data()
