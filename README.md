@@ -14,6 +14,7 @@ Windows WSL: https://github.com/michaeltreat/Windows-Subsystem-For-Linux-Setup-G
 
 #### Erlang (v22) + Elixr + Phoenix
 https://elixir-lang.org/install.html
+
 https://hexdocs.pm/phoenix/installation.html
 
 #### Ansible
