@@ -90,6 +90,7 @@ defmodule RetWeb.Api.V1.MediaController do
       version: version
     }
 
+    # Status can be :commit, :ignore, or :error
     case Cachex.fetch(:media_urls, query) do
       {_status, nil} ->
         conn |> send_resp(404, "")
@@ -101,8 +102,8 @@ defmodule RetWeb.Api.V1.MediaController do
 
         render_resolved_media(conn, resolved_media)
 
-      _ ->
-        conn |> send_resp(404, "")
+      {:error, e} ->
+        conn |> send_resp(500, e)
     end
   end
 
