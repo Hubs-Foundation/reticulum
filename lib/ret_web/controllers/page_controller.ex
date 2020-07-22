@@ -223,8 +223,8 @@ defmodule RetWeb.PageController do
   def render_for_path("/hub.service.js", _params, conn),
     do: conn |> render_asset("hub.service.js", :hubs, "hub.service-meta.js")
 
-  def render_for_path("/stream-offline.png", _params, conn),
-    do: conn |> render_static_asset()
+  def render_for_path("/stream-offline.png", _params, conn), do: conn |> render_static_asset()
+  def render_for_path("/quota-error.png", _params, conn), do: conn |> render_static_asset()
 
   def render_for_path("/hubs/schema.toml", _params, conn), do: conn |> render_asset("schema.toml")
 

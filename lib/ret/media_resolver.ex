@@ -103,15 +103,26 @@ defmodule Ret.MediaResolver do
     with ytdl_host when is_binary(ytdl_host) <- module_config(:ytdl_host) do
       case fetch_ytdl_response(query, ytdl_format) do
         %HTTPoison.Response{status_code: 500, body: body} ->
-          if String.contains?(body, "is offline") do
-            {:commit,
-             resolved(query.url, %{
-               expected_content_type: "text/html",
-               media_status: :offline_stream,
-               thumbnail: RetWeb.Endpoint.static_url() <> "/stream-offline.png"
-             })}
-          else
-            resolve_non_video(query, root_host)
+          # youtube-dl returns a 500 error, but includes the underlying error in its body text, search for some special cases
+          cond do
+            String.contains?(body, "is offline") ->
+              {:commit,
+               resolved(query.url, %{
+                 expected_content_type: "text/html",
+                 media_status: :offline_stream,
+                 thumbnail: RetWeb.Endpoint.static_url() <> "/stream-offline.png"
+               })}
+
+            String.contains?(body, "HTTPError 429") ->
+              {:commit,
+               resolved(query.url, %{
+                 expected_content_type: "text/html",
+                 media_status: :rate_limited,
+                 thumbnail: RetWeb.Endpoint.static_url() <> "/quota-error.png"
+               })}
+
+            true ->
+              resolve_non_video(query, root_host)
           end
 
         %HTTPoison.Response{status_code: 302, headers: headers} ->
