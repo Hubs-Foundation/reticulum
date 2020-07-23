@@ -101,8 +101,11 @@ defmodule RetWeb.Api.V1.MediaController do
 
         render_resolved_media(conn, resolved_media)
 
+      {:error, e} ->
+        conn |> send_resp(500, e)
+
       _ ->
-        conn |> send_resp(404, "")
+        conn |> send_resp(500, "Error resolving media")
     end
   end
 

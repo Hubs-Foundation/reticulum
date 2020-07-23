@@ -70,23 +70,28 @@ defmodule Ret.MediaResolver do
   # Also compute ttl here based upon expire, to localize youtube.com specific logic.
   def resolve(%MediaResolverQuery{} = query, "youtube.com" = root_host) do
     rate_limited_resolve(query, root_host, @youtube_rate_limit, fn ->
-      res = resolve_with_ytdl(query, root_host, query |> ytdl_format(root_host))
+      case resolve_with_ytdl(query, root_host, query |> ytdl_format(root_host)) do
+        # resolved either as a youtube video or screenshot url
+        {:commit, %Ret.ResolvedMedia{uri: %URI{query: youtube_query}} = resolved_media} ->
+          # YouTube returns a 'expire' which has timestamp of expiration.
+          resolved_media =
+            with youtube_query when is_binary(youtube_query) <- youtube_query,
+                 parsed_youtube_query <- URI.decode_query(youtube_query),
+                 expire when is_binary(expire) <- Map.get(parsed_youtube_query, "expire"),
+                 {expire_s, _} <- Integer.parse(expire),
+                 ttl_s <- expire_s - System.system_time(:second) do
+              # Expire a minute early
+              resolved_media |> Map.put(:ttl, ttl_s * 1000 - 60000)
+            else
+              _ -> resolved_media
+            end
 
-      {:commit, %Ret.ResolvedMedia{uri: %URI{query: youtube_query}} = resolved_media} = res
+          {:commit, resolved_media}
 
-      # YouTube returns a 'expire' which has timestamp of expiration.
-      resolved_media =
-        with parsed_youtube_query <- URI.decode_query(youtube_query),
-             expire when is_binary(expire) <- Map.get(parsed_youtube_query, "expire"),
-             {expire_s, _} <- Integer.parse(expire),
-             ttl_s <- expire_s - System.system_time(:second) do
-          # Expire a minute early
-          resolved_media |> Map.put(:ttl, ttl_s * 1000 - 60000)
-        else
-          _ -> resolved_media
-        end
-
-      {:commit, resolved_media}
+        # Failed to resolve, fall through as a 404
+        _ ->
+          {:commit, nil}
+      end
     end)
   end
 
