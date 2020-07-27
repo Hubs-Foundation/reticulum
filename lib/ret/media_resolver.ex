@@ -153,7 +153,7 @@ defmodule Ret.MediaResolver do
         end
 
       _ ->
-        {:commit, media_url |> URI.parse() |> resolved(%{})}
+        {:commit, video_url |> URI.parse() |> resolved(%{})}
     end
   end
 
