@@ -118,8 +118,6 @@ defmodule Ret.MediaResolver do
              thumbnail: RetWeb.Endpoint.static_url() <> "/quota-error.png"
            })}
 
-          {:error, _body}
-
         {:ok, media_url} ->
           if query_ytdl_audio?(query) do
             # For 360 video quality types, we fetch the audio track separately since
