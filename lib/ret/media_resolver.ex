@@ -548,10 +548,6 @@ defmodule Ret.MediaResolver do
     host |> String.split(".") |> Enum.slice(-2..-1) |> Enum.join(".")
   end
 
-  defp media_url_from_ytdl_headers(headers) do
-    headers |> Enum.find(fn h -> h |> elem(0) |> String.downcase() === "location" end) |> elem(1)
-  end
-
   defp get_imgur_headers() do
     with client_id when is_binary(client_id) <- module_config(:imgur_client_id),
          api_key when is_binary(api_key) <- module_config(:imgur_mashape_api_key) do
