@@ -41,6 +41,23 @@ defmodule RoomQueryTest do
     }
   """
 
+  @mutation_create_room """
+    mutation MyCooLmutatuon($roomName: String!){
+      createRoom (name: $roomName) {
+        id
+      }
+    }
+  """
+
+  defp do_graphql_action(conn, query, variables \\ %{}) do
+    conn
+    |> post("/api/v2/", %{
+      "query" => "#{query}",
+      "variables" => variables
+    })
+    |> json_response(200)
+  end
+
   setup _context do
     account = create_random_account()
     account2 = create_random_account()
@@ -56,18 +73,10 @@ defmodule RoomQueryTest do
     }
   end
 
-  defp query(conn, query) do
-    conn
-    |> post("/api/v2/", %{
-      "query" => "#{query}"
-    })
-    |> json_response(200)
-  end
-
   test "anyone can query for public rooms", %{conn: conn, public_hub: public_hub} do
     res =
       conn
-      |> query(@query_public_rooms)
+      |> do_graphql_action(@query_public_rooms)
 
     rooms = res["data"]["publicRooms"]["entries"]
     assert List.first(rooms)["id"] == public_hub.hub_sid
@@ -78,7 +87,7 @@ defmodule RoomQueryTest do
 
     res =
       conn
-      |> query(@query_my_rooms)
+      |> do_graphql_action(@query_my_rooms)
 
     assert is_nil(res["data"]["myRooms"])
     error = List.first(res["errors"])
@@ -96,7 +105,7 @@ defmodule RoomQueryTest do
     auth_res =
       conn
       |> put_auth_header_for_account(account)
-      |> query(@query_my_rooms)
+      |> do_graphql_action(@query_my_rooms)
 
     rooms = auth_res["data"]["myRooms"]["entries"]
     assert List.first(rooms)["id"] == hub.hub_sid
@@ -108,7 +117,7 @@ defmodule RoomQueryTest do
     auth_res =
       conn
       |> put_auth_header_for_account(account2)
-      |> query(@query_my_rooms)
+      |> do_graphql_action(@query_my_rooms)
 
     rooms = auth_res["data"]["myRooms"]["entries"]
     assert Enum.empty?(rooms)
@@ -119,7 +128,7 @@ defmodule RoomQueryTest do
 
     res =
       conn
-      |> query(@query_favorite_rooms)
+      |> do_graphql_action(@query_favorite_rooms)
 
     assert is_nil(res["data"]["favoriteRooms"])
     error = List.first(res["errors"])
@@ -133,7 +142,7 @@ defmodule RoomQueryTest do
     res =
       conn
       |> put_auth_header_for_account(account)
-      |> query(@query_favorite_rooms)
+      |> do_graphql_action(@query_favorite_rooms)
 
     rooms = res["data"]["favoriteRooms"]["entries"]
     assert List.first(rooms)["id"] == hub.hub_sid
@@ -150,9 +159,35 @@ defmodule RoomQueryTest do
     res =
       conn
       |> put_auth_header_for_account(account2)
-      |> query(@query_favorite_rooms)
+      |> do_graphql_action(@query_favorite_rooms)
 
     rooms = res["data"]["favoriteRooms"]["entries"]
     assert Enum.empty?(rooms)
+  end
+
+  test "anyone can create a room", %{
+    conn: conn
+  } do
+    res =
+      conn
+      |> do_graphql_action(@mutation_create_room, %{roomName: "my fun room"})
+
+    id = res["data"]["createRoom"]["id"]
+    assert !is_nil(id)
+    hub = Ret.Repo.get_by(Ret.Hub, hub_sid: id)
+    assert hub.name =~ "my fun room"
+  end
+
+  test "Creating a room while authenticated assigns the creator", %{
+    conn: conn,
+    account: account
+  } do
+    res =
+      conn
+      |> put_auth_header_for_account(account)
+      |> do_graphql_action(@mutation_create_room, %{roomName: "my fun room"})
+
+    hub = Ret.Repo.get_by(Ret.Hub, hub_sid: res["data"]["createRoom"]["id"])
+    assert hub.created_by_account_id == account.account_id
   end
 end
