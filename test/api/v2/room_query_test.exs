@@ -44,7 +44,8 @@ defmodule RoomQueryTest do
   @mutation_create_room """
     mutation MyCooLmutatuon($roomName: String!){
       createRoom (name: $roomName) {
-        id
+        id,
+        name
       }
     }
   """
@@ -168,14 +169,16 @@ defmodule RoomQueryTest do
   test "anyone can create a room", %{
     conn: conn
   } do
+    roomName = "my fun room"
     res =
       conn
-      |> do_graphql_action(@mutation_create_room, %{roomName: "my fun room"})
+      |> do_graphql_action(@mutation_create_room, %{roomName: roomName})
 
     id = res["data"]["createRoom"]["id"]
     assert !is_nil(id)
     hub = Ret.Repo.get_by(Ret.Hub, hub_sid: id)
-    assert hub.name =~ "my fun room"
+    assert hub.name == res["data"]["createRoom"]["name"]
+    assert hub.name == roomName
   end
 
   test "Creating a room while authenticated assigns the creator", %{
