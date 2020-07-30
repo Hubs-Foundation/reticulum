@@ -60,8 +60,7 @@ defmodule RoomQueryTest do
     res =
       conn
       |> post("/api/v2/graphiql", %{
-        "query" => @query_public_rooms,
-        "variables" => "{}"
+        "query" => @query_public_rooms
       })
       |> json_response(200)
 
@@ -79,8 +78,7 @@ defmodule RoomQueryTest do
     res =
       conn
       |> post("/api/v2/graphiql", %{
-        "query" => @query_my_rooms,
-        "variables" => "{}"
+        "query" => @query_my_rooms
       })
       |> json_response(200)
 
@@ -106,8 +104,7 @@ defmodule RoomQueryTest do
       conn
       |> Plug.Conn.put_req_header("authorization", "bearer: " <> token)
       |> post("/api/v2/graphiql", %{
-        "query" => @query_my_rooms,
-        "variables" => "{}"
+        "query" => @query_my_rooms
       })
       |> json_response(200)
 
@@ -127,8 +124,7 @@ defmodule RoomQueryTest do
       conn
       |> Plug.Conn.put_req_header("authorization", "bearer: " <> token)
       |> post("/api/v2/graphiql", %{
-        "query" => @query_my_rooms,
-        "variables" => "{}"
+        "query" => @query_my_rooms
       })
       |> json_response(200)
 
@@ -143,8 +139,7 @@ defmodule RoomQueryTest do
     res =
       conn
       |> post("/api/v2/graphiql", %{
-        "query" => @query_favorite_rooms,
-        "variables" => "{}"
+        "query" => @query_favorite_rooms
       })
       |> json_response(200)
 
@@ -164,8 +159,7 @@ defmodule RoomQueryTest do
       conn
       |> Plug.Conn.put_req_header("authorization", "bearer: " <> token)
       |> post("/api/v2/graphiql", %{
-        "query" => @query_favorite_rooms,
-        "variables" => "{}"
+        "query" => @query_favorite_rooms
       })
       |> json_response(200)
 
@@ -187,8 +181,7 @@ defmodule RoomQueryTest do
       conn
       |> Plug.Conn.put_req_header("authorization", "bearer: " <> token)
       |> post("/api/v2/graphiql", %{
-        "query" => @query_favorite_rooms,
-        "variables" => "{}"
+        "query" => @query_favorite_rooms
       })
       |> json_response(200)
 
