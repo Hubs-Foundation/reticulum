@@ -57,7 +57,7 @@ defmodule Ret.Scene do
 
   # Dataloader
   def data(), do: Dataloader.Ecto.new(Repo, query: &query/2)
-  # Guard against loading removed or delested scenes/scene listings
+  # Guard against loading removed scenes or delisted scene listings
   def query(Scene, _), do: from s in Scene, where: s.state != ^:removed
   def query(SceneListing, _), do: from sl in SceneListing, where: sl.state != ^:delisted
 
