@@ -5,6 +5,7 @@ defmodule RetWeb.Schema do
   def middleware(middleware, _field, %{identifier: :mutation}) do
     middleware ++ [RetWeb.Middlewares.HandleChangesetErrors]
   end
+
   def middleware(middleware, _field, _object), do: middleware
 
   import_types(Absinthe.Type.Custom)
@@ -21,14 +22,13 @@ defmodule RetWeb.Schema do
 
   def context(ctx) do
     loader =
-      Dataloader.new
+      Dataloader.new()
       |> Dataloader.add_source(Scene, Scene.data())
-  
+
     Map.put(ctx, :loader, loader)
   end
-  
+
   def plugins do
     [Absinthe.Middleware.Dataloader] ++ Absinthe.Plugin.defaults()
   end
-  
 end

@@ -33,30 +33,39 @@ defmodule RetWeb.Schema.RoomTypes do
     field(:entry_code, :string)
     field(:entry_mode, :string)
     field(:host, :string)
+
     field(:port, :integer) do
       resolve(&Resolvers.RoomResolver.port/3)
     end
+
     field(:turn, :turn_info) do
       resolve(&Resolvers.RoomResolver.turn/3)
     end
+
     field(:embed_token, :string) do
       resolve(&Resolvers.RoomResolver.embed_token/3)
     end
+
     field(:member_permissions, :member_permissions) do
       resolve(&Resolvers.RoomResolver.member_permissions/3)
     end
+
     field(:room_size, :integer) do
       resolve(&Resolvers.RoomResolver.room_size/3)
     end
+
     field(:member_count, :integer) do
       resolve(&Resolvers.RoomResolver.member_count/3)
     end
+
     field(:lobby_count, :integer) do
       resolve(&Resolvers.RoomResolver.lobby_count/3)
     end
+
     field(:scene, :scene_or_scene_listing) do
       resolve(dataloader(Scene))
     end
+
     # TODO: Figure out user_data
   end
 
