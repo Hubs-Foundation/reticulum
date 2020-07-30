@@ -56,13 +56,18 @@ defmodule RoomQueryTest do
     }
   end
 
+  defp query(conn, query) do
+    conn
+    |> post("/api/v2/graphiql", %{
+      "query" => "#{query}"
+    })
+    |> json_response(200)
+  end
+
   test "anyone can query for public rooms", %{conn: conn, public_hub: public_hub} do
     res =
       conn
-      |> post("/api/v2/graphiql", %{
-        "query" => @query_public_rooms
-      })
-      |> json_response(200)
+      |> query(@query_public_rooms)
 
     rooms = res["data"]["publicRooms"]["entries"]
     assert List.first(rooms)["id"] == public_hub.hub_sid
@@ -71,13 +76,9 @@ defmodule RoomQueryTest do
   test "cannot query my rooms without authentication", %{conn: conn, account: account, hub: hub} do
     assign_creator(hub, account)
 
-    # Query without auth header
     res =
       conn
-      |> post("/api/v2/graphiql", %{
-        "query" => @query_my_rooms
-      })
-      |> json_response(200)
+      |> query(@query_my_rooms)
 
     assert is_nil(res["data"]["myRooms"])
     error = List.first(res["errors"])
@@ -95,10 +96,7 @@ defmodule RoomQueryTest do
     auth_res =
       conn
       |> put_auth_header_for_account(account)
-      |> post("/api/v2/graphiql", %{
-        "query" => @query_my_rooms
-      })
-      |> json_response(200)
+      |> query(@query_my_rooms)
 
     rooms = auth_res["data"]["myRooms"]["entries"]
     assert List.first(rooms)["id"] == hub.hub_sid
@@ -110,10 +108,7 @@ defmodule RoomQueryTest do
     auth_res =
       conn
       |> put_auth_header_for_account(account2)
-      |> post("/api/v2/graphiql", %{
-        "query" => @query_my_rooms
-      })
-      |> json_response(200)
+      |> query(@query_my_rooms)
 
     rooms = auth_res["data"]["myRooms"]["entries"]
     assert Enum.empty?(rooms)
@@ -122,13 +117,9 @@ defmodule RoomQueryTest do
   test "cannot query favorite rooms without authentication", %{conn: conn, account: account, hub: hub} do
     Ret.AccountFavorite.ensure_favorited(hub, account)
 
-    # Query without auth header
     res =
       conn
-      |> post("/api/v2/graphiql", %{
-        "query" => @query_favorite_rooms
-      })
-      |> json_response(200)
+      |> query(@query_favorite_rooms)
 
     assert is_nil(res["data"]["favoriteRooms"])
     error = List.first(res["errors"])
@@ -142,10 +133,7 @@ defmodule RoomQueryTest do
     res =
       conn
       |> put_auth_header_for_account(account)
-      |> post("/api/v2/graphiql", %{
-        "query" => @query_favorite_rooms
-      })
-      |> json_response(200)
+      |> query(@query_favorite_rooms)
 
     rooms = res["data"]["favoriteRooms"]["entries"]
     assert List.first(rooms)["id"] == hub.hub_sid
@@ -162,10 +150,7 @@ defmodule RoomQueryTest do
     res =
       conn
       |> put_auth_header_for_account(account2)
-      |> post("/api/v2/graphiql", %{
-        "query" => @query_favorite_rooms
-      })
-      |> json_response(200)
+      |> query(@query_favorite_rooms)
 
     rooms = res["data"]["favoriteRooms"]["entries"]
     assert Enum.empty?(rooms)
