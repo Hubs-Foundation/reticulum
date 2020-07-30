@@ -205,10 +205,11 @@ defmodule Ret.TestHelpers do
   end
 
   def put_auth_header_for_email(conn, email) do
-    {:ok, token, _claims} =
-      email
-      |> Ret.Account.find_or_create_account_for_email()
-      |> Ret.Guardian.encode_and_sign()
+    put_auth_header_for_account(conn, Ret.Account.find_or_create_account_for_email(email))
+  end
+
+  def put_auth_header_for_account(conn, account) do
+    {:ok, token, _claims} = Ret.Guardian.encode_and_sign(account)
 
     conn |> Plug.Conn.put_req_header("authorization", "bearer: " <> token)
   end
@@ -219,5 +220,4 @@ defmodule Ret.TestHelpers do
     |> Ret.Hub.changeset_for_creator_assignment(account, hub.creator_assignment_token)
     |> Ret.Repo.update!()
   end
-
 end

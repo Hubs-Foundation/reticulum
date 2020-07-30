@@ -92,11 +92,9 @@ defmodule RoomQueryTest do
   } do
     assign_creator(hub, account)
 
-    {:ok, token, _claims} = Ret.Guardian.encode_and_sign(account)
-
     auth_res =
       conn
-      |> Plug.Conn.put_req_header("authorization", "bearer: " <> token)
+      |> put_auth_header_for_account(account)
       |> post("/api/v2/graphiql", %{
         "query" => @query_my_rooms
       })
@@ -109,11 +107,9 @@ defmodule RoomQueryTest do
   test "my rooms only returns my own rooms", %{conn: conn, account: account, account2: account2, hub: hub} do
     assign_creator(hub, account)
 
-    {:ok, token, _claims} = Ret.Guardian.encode_and_sign(account2)
-
     auth_res =
       conn
-      |> Plug.Conn.put_req_header("authorization", "bearer: " <> token)
+      |> put_auth_header_for_account(account2)
       |> post("/api/v2/graphiql", %{
         "query" => @query_my_rooms
       })
@@ -143,12 +139,9 @@ defmodule RoomQueryTest do
   test "anyone can query favorite rooms when authenticated", %{conn: conn, account: account, hub: hub} do
     Ret.AccountFavorite.ensure_favorited(hub, account)
 
-    # Query with auth header
-    {:ok, token, _claims} = Ret.Guardian.encode_and_sign(account)
-
     res =
       conn
-      |> Plug.Conn.put_req_header("authorization", "bearer: " <> token)
+      |> put_auth_header_for_account(account)
       |> post("/api/v2/graphiql", %{
         "query" => @query_favorite_rooms
       })
@@ -166,11 +159,9 @@ defmodule RoomQueryTest do
   } do
     Ret.AccountFavorite.ensure_favorited(hub, account)
 
-    {:ok, token, _claims} = Ret.Guardian.encode_and_sign(account2)
-
     res =
       conn
-      |> Plug.Conn.put_req_header("authorization", "bearer: " <> token)
+      |> put_auth_header_for_account(account2)
       |> post("/api/v2/graphiql", %{
         "query" => @query_favorite_rooms
       })
