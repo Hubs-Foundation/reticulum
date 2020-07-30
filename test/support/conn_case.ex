@@ -37,7 +37,7 @@ defmodule RetWeb.ConnCase do
 
     conn =
       if tags[:authenticated] do
-        conn |> Ret.TestHelpers.put_auth_header_for_account("test@mozilla.com")
+        conn |> Ret.TestHelpers.put_auth_header_for_email("test@mozilla.com")
       else
         conn
       end

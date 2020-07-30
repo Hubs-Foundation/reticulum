@@ -204,7 +204,7 @@ defmodule Ret.TestHelpers do
     File.rm_rf(Application.get_env(:ret, Storage)[:storage_path])
   end
 
-  def put_auth_header_for_account(conn, email) do
+  def put_auth_header_for_email(conn, email) do
     {:ok, token, _claims} =
       email
       |> Ret.Account.find_or_create_account_for_email()
