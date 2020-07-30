@@ -58,7 +58,7 @@ defmodule RoomQueryTest do
 
   defp query(conn, query) do
     conn
-    |> post("/api/v2/graphiql", %{
+    |> post("/api/v2/", %{
       "query" => "#{query}"
     })
     |> json_response(200)
