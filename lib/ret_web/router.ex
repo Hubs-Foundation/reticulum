@@ -148,7 +148,7 @@ defmodule RetWeb.Router do
 
   scope "/api/v2", as: :api_v2 do
     pipe_through([:parsed_body, :api, :auth_optional, :graphql] ++ if(Mix.env() == :prod, do: [:ssl_only], else: []))
-    forward "/graphiql", Absinthe.Plug.GraphiQL, schema: RetWeb.Schema
+    forward "/graphiql", Absinthe.Plug.GraphiQL, json_codec: Jason, schema: RetWeb.Schema
     forward "/", Absinthe.Plug, schema: RetWeb.Schema
   end
 
