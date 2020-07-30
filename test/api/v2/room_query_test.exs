@@ -22,11 +22,15 @@ defmodule RoomQueryTest do
   """
 
   @query_my_rooms """
-    query {
-      myRooms {
+    query ($page: Int, $page_size: Int){
+      myRooms (page: $page, page_size: $page_size){
        entries {
          id
        }
+       total_entries
+       total_pages
+       page_number
+       page_size
       }
     }
   """
@@ -42,7 +46,7 @@ defmodule RoomQueryTest do
   """
 
   @mutation_create_room """
-    mutation MyCooLmutatuon($roomName: String!){
+    mutation ($roomName: String!){
       createRoom (name: $roomName) {
         id,
         name
@@ -69,6 +73,7 @@ defmodule RoomQueryTest do
     %{
       account: account,
       account2: account2,
+      scene: scene,
       hub: hub,
       public_hub: public_hub
     }
@@ -169,16 +174,17 @@ defmodule RoomQueryTest do
   test "anyone can create a room", %{
     conn: conn
   } do
-    roomName = "my fun room"
+    room_name = "my fun room"
+
     res =
       conn
-      |> do_graphql_action(@mutation_create_room, %{roomName: roomName})
+      |> do_graphql_action(@mutation_create_room, %{roomName: room_name})
 
     id = res["data"]["createRoom"]["id"]
     assert !is_nil(id)
     hub = Ret.Repo.get_by(Ret.Hub, hub_sid: id)
     assert hub.name == res["data"]["createRoom"]["name"]
-    assert hub.name == roomName
+    assert hub.name == room_name
   end
 
   test "Creating a room while authenticated assigns the creator", %{
@@ -192,5 +198,41 @@ defmodule RoomQueryTest do
 
     hub = Ret.Repo.get_by(Ret.Hub, hub_sid: res["data"]["createRoom"]["id"])
     assert hub.created_by_account_id == account.account_id
+  end
+
+  test "The room query api paginates results", %{
+    conn: conn,
+    scene: scene,
+    account: account
+  } do
+    for _n <- 1..50 do
+      {:ok, hub: hub} = create_hub(%{scene: scene})
+      assign_creator(hub, account)
+    end
+
+    response =
+      conn
+      |> put_auth_header_for_account(account)
+      |> do_graphql_action(@query_my_rooms)
+
+    assert length(response["data"]["myRooms"]["entries"]) === response["data"]["myRooms"]["page_size"]
+  end
+
+  test "The room query api paginates results 2", %{
+    conn: conn,
+    scene: scene,
+    account: account
+  } do
+    for _n <- 1..50 do
+      {:ok, hub: hub} = create_hub(%{scene: scene})
+      assign_creator(hub, account)
+    end
+
+    response =
+      conn
+      |> put_auth_header_for_account(account)
+      |> do_graphql_action(@query_my_rooms, %{page: 3, page_size: 24})
+
+    assert length(response["data"]["myRooms"]["entries"]) === 2
   end
 end
