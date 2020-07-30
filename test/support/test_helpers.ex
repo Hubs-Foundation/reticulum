@@ -212,4 +212,12 @@ defmodule Ret.TestHelpers do
 
     conn |> Plug.Conn.put_req_header("authorization", "bearer: " <> token)
   end
+
+  def assign_creator(hub, account) do
+    hub
+    |> Ret.Repo.preload(created_by_account: [])
+    |> Ret.Hub.changeset_for_creator_assignment(account, hub.creator_assignment_token)
+    |> Ret.Repo.update!()
+  end
+
 end

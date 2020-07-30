@@ -69,10 +69,7 @@ defmodule RoomQueryTest do
   end
 
   test "cannot query my rooms without authentication", %{conn: conn, account: account, hub: hub} do
-    hub
-    |> Ret.Repo.preload(created_by_account: [])
-    |> Ret.Hub.changeset_for_creator_assignment(account, hub.creator_assignment_token)
-    |> Ret.Repo.update!()
+    assign_creator(hub, account)
 
     # Query without auth header
     res =
@@ -93,10 +90,7 @@ defmodule RoomQueryTest do
     account: account,
     hub: hub
   } do
-    hub
-    |> Ret.Repo.preload(created_by_account: [])
-    |> Ret.Hub.changeset_for_creator_assignment(account, hub.creator_assignment_token)
-    |> Ret.Repo.update!()
+    assign_creator(hub, account)
 
     {:ok, token, _claims} = Ret.Guardian.encode_and_sign(account)
 
@@ -113,10 +107,7 @@ defmodule RoomQueryTest do
   end
 
   test "my rooms only returns my own rooms", %{conn: conn, account: account, account2: account2, hub: hub} do
-    hub
-    |> Ret.Repo.preload(created_by_account: [])
-    |> Ret.Hub.changeset_for_creator_assignment(account, hub.creator_assignment_token)
-    |> Ret.Repo.update!()
+    assign_creator(hub, account)
 
     {:ok, token, _claims} = Ret.Guardian.encode_and_sign(account2)
 
