@@ -1,6 +1,5 @@
 defmodule RetWeb.Schema.SceneTypes do
   use Absinthe.Schema.Notation
-  alias RetWeb.Resolvers
   alias Ret.{Scene, SceneListing}
 
   union :scene_or_scene_listing do
