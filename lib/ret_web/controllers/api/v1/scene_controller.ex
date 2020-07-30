@@ -2,7 +2,7 @@ defmodule RetWeb.Api.V1.SceneController do
   use RetWeb, :controller
   import Ecto.Query
   import Ecto.Changeset
-  alias Ret.{Account, Repo, Scene, SceneListing, Storage, Asset, OwnedFile, Hub}
+  alias Ret.{Account, Repo, Scene, SceneListing, Storage, Asset, OwnedFile, Hub, Project}
 
   plug(RetWeb.Plugs.RateLimit when action in [:create, :update])
 
@@ -22,13 +22,17 @@ defmodule RetWeb.Api.V1.SceneController do
     ])
   end
 
+  # def show(conn, params) do
+  #   IO.puts("hit")
+  # end
+
   def show(conn, params) do
     IO.puts("show inside scene_controller")
     IO.inspect(params)
     # get the scene dependencies
     %{
-      # parent_scene_listing: nil,
-      # parent_scene_listing_id: nil,
+      parent_scene_listing: parent_scene_listing,
+      parent_scene_listing_id: parent_scene_listing_id,
 
       account_id: account_id,
       scene_id: scene_id,
@@ -39,41 +43,51 @@ defmodule RetWeb.Api.V1.SceneController do
       model_owned_file_id: _model_owned_file_id,
       scene_owned_file_id: _scene_owned_file_id,
       screenshot_owned_file_id: _screenshot_owned_file_id,
-     } = scene = get_scene("iPkknm3") # conference room zvzRZT3 Need the scene_sid
+     } = scene = get_scene("VrnWHHF") # conference room zvzRZT3 Need the scene_sid
 
-     %{
-       scene_listing_id: scene_listing_id
-     } = scene_listings = SceneListing
-     |> where(scene_listing_id: ^scene_listing_id)
+     # if only one check with the scene
+     # Get scene_listing dependencies
+     scene_listings = SceneListing
+     |> where(scene_id: ^scene_id)
      |> Repo.all()
 
+    #  if (project != nil) do
+    #   projects = Project
+    #   |> where(parent_scene: ^scene_id)
+    #   |> Repo.all
+    #  end
+
+    # if length(scene_listings) > 0 do
+    #   scene_listings
+    #   |> Repo.delete_all()
+    # end
     #  |> Repo.get_by(scene_id: scene_id) # could be multiple apparently? bug?
      # get all scene listings
     #  |> Repo.preload() I think this updates the db
      IO.puts(1)
-     IO.puts(scene_listing_id)
+    #  IO.puts(scene_listing_id)
      IO.puts(2)
 
-    # Get Hub Dependencies
-    IO.puts(3)
-    maybe_more_than_one_hub = Hub
-    |> where(scene_listing_id: ^scene_listing_id)
-    |> Repo.all()
-    IO.puts(4)
-    IO.inspect(maybe_more_than_one_hub)
-    IO.puts(5)
+    #### Get Hub Dependencies
+    # IO.puts(3)
+    # maybe_more_than_one_hub = Hub
+    # |> where(scene_listing_id: ^scene_listing_id)
+    # |> Repo.all()
+    # IO.puts(4)
+    # IO.inspect(maybe_more_than_one_hub)
+    # IO.puts(5)
 
-    if length(maybe_more_than_one_hub) > 0 do
-      # has hub dependencies
-      hub = maybe_more_than_one_hub |> Enum.map(& &1[:id]) |> Enum.at(0)
-      IO.puts(hub)
+    # if length(maybe_more_than_one_hub) > 0 do
+    #   # has hub dependencies
+    #   hub = maybe_more_than_one_hub |> Enum.map(& &1[:hub_sid]) |> Enum.at(0)
+    #   IO.puts(hub)
 
       # Repo.get_by(SceneListing, scene_listing_sid: scene_listing_sid)
       # |> Repo.preload(scene: Scene.scene_preloads())
-    else
-      # has no hub dependencies
-      nil
-    end
+    # else
+    #   # has no hub dependencies
+    #   nil
+    # end
 
     # if user says use default scene
       # set room scene to default scene id
