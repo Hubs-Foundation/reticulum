@@ -24,6 +24,7 @@ defmodule RetWeb do
       alias RetWeb.Router.Helpers, as: Routes
       import RetWeb.Gettext
       import RetWeb.ControllerHelpers
+      import Phoenix.LiveView.Controller
     end
   end
 
@@ -42,6 +43,7 @@ defmodule RetWeb do
       alias RetWeb.Router.Helpers, as: Routes
       import RetWeb.ErrorHelpers
       import RetWeb.Gettext
+      import Phoenix.LiveView.Helpers
     end
   end
 
@@ -50,6 +52,7 @@ defmodule RetWeb do
       use Phoenix.Router
       import Plug.Conn
       import Phoenix.Controller
+      import Phoenix.LiveView.Router
     end
   end
 

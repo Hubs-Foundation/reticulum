@@ -30,7 +30,8 @@ config :ret, RetWeb.Endpoint,
   url: [host: "localhost"],
   secret_key_base: "txlMOtlaY5x3crvOCko4uV5PM29ul3zGo1oBGNO3cDXx+7GHLKqt0gR9qzgThxb5",
   render_errors: [view: RetWeb.ErrorView, accepts: ~w(html json)],
-  pubsub: [name: Ret.PubSub, adapter: Phoenix.PubSub.PG2]
+  pubsub: [name: Ret.PubSub, adapter: Phoenix.PubSub.PG2],
+  live_view: [signing_salt: "0b777554b23c402fc0388418a66bdf2a8dc5e9f4e09622c307da318f89994448"]
 
 # Configures Elixir's Logger
 config :logger, :console,

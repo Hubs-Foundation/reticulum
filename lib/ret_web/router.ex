@@ -3,6 +3,8 @@ defmodule RetWeb.Router do
   use Plug.ErrorHandler
   use Sentry.Plug
 
+  import Phoenix.LiveDashboard.Router
+
   pipeline :secure_headers do
     plug(:put_secure_browser_headers)
     plug(RetWeb.Plugs.AddCSP)
@@ -67,6 +69,11 @@ defmodule RetWeb.Router do
 
   pipeline :graphql do
     plug RetWeb.Context
+  end
+
+  scope "/dashboard", RetWeb do
+    pipe_through([:browser])
+    live_dashboard "/", metrics: RetWeb.Telemetry
   end
 
   scope "/health", RetWeb do
