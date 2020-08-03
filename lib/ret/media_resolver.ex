@@ -16,7 +16,7 @@ defmodule Ret.MediaResolver do
 
   alias Ret.{CachedFile, MediaResolverQuery, Statix}
 
-  @ytdl_valid_status_codes [200, 302, 500]
+  @ytdl_valid_status_codes [200, 500]
 
   @youtube_rate_limit %{scale: 8_000, limit: 1}
   @sketchfab_rate_limit %{scale: 60_000, limit: 15}
@@ -102,43 +102,34 @@ defmodule Ret.MediaResolver do
   def resolve_with_ytdl(%MediaResolverQuery{} = query, root_host, ytdl_format) do
     with ytdl_host when is_binary(ytdl_host) <- module_config(:ytdl_host) do
       case fetch_ytdl_response(query, ytdl_format) do
-        %HTTPoison.Response{status_code: 500, body: body} ->
-          # youtube-dl returns a 500 error, but includes the underlying error in its body text, search for some special cases
-          cond do
-            String.contains?(body, "is offline") ->
-              {:commit,
-               resolved(query.url, %{
-                 expected_content_type: "text/html",
-                 media_status: :offline_stream,
-                 thumbnail: RetWeb.Endpoint.static_url() <> "/stream-offline.png"
-               })}
+        {:offline_stream, _body} ->
+          {:commit,
+           resolved(query.url, %{
+             expected_content_type: "text/html",
+             media_status: :offline_stream,
+             thumbnail: RetWeb.Endpoint.static_url() <> "/stream-offline.png"
+           })}
 
-            String.contains?(body, "HTTPError 429") ->
-              {:commit,
-               resolved(query.url, %{
-                 expected_content_type: "text/html",
-                 media_status: :rate_limited,
-                 thumbnail: RetWeb.Endpoint.static_url() <> "/quota-error.png"
-               })}
+        {:rate_limited, _body} ->
+          {:commit,
+           resolved(query.url, %{
+             expected_content_type: "text/html",
+             media_status: :rate_limited,
+             thumbnail: RetWeb.Endpoint.static_url() <> "/quota-error.png"
+           })}
 
-            true ->
-              resolve_non_video(query, root_host)
-          end
-
-        %HTTPoison.Response{status_code: 302, headers: headers} ->
-          # todo: it would be really nice to return video/* content type here!
-          # but it seems that the way we're using youtube-dl will return a 302 with the
-          # direct URL for various non-video files, e.g. PDFs seem to trigger this, so until
-          # we figure out how to change that behavior or distinguish between them, we can't
-          # be confident that it's video/* in this branch
-          media_url = headers |> media_url_from_ytdl_headers
-
+        {:ok, media_url} ->
           if query_ytdl_audio?(query) do
             # For 360 video quality types, we fetch the audio track separately since
             # YouTube serves up a separate webm for audio.
             resolve_with_ytdl_audio(query, media_url)
           else
-            {:commit, media_url |> URI.parse() |> resolved(%{})}
+            {:commit,
+             media_url
+             |> URI.parse()
+             |> resolved(%{
+               expected_content_type: "video/*"
+             })}
           end
 
         _ ->
@@ -150,19 +141,17 @@ defmodule Ret.MediaResolver do
     end
   end
 
-  def resolve_with_ytdl_audio(%MediaResolverQuery{} = query, media_url) do
+  def resolve_with_ytdl_audio(%MediaResolverQuery{} = query, video_url) do
     case fetch_ytdl_response(query, ytdl_audio_format(query)) do
-      %HTTPoison.Response{status_code: 302, headers: headers} ->
-        audio_url = headers |> media_url_from_ytdl_headers
-
-        if media_url != audio_url do
-          {:commit, media_url |> URI.parse() |> resolved(audio_url |> URI.parse(), %{})}
+      {:ok, audio_url} ->
+        if video_url != audio_url do
+          {:commit, video_url |> URI.parse() |> resolved(audio_url |> URI.parse(), %{})}
         else
-          {:commit, media_url |> URI.parse() |> resolved(%{})}
+          {:commit, video_url |> URI.parse() |> resolved(%{})}
         end
 
       _ ->
-        {:commit, media_url |> URI.parse() |> resolved(%{})}
+        {:commit, video_url |> URI.parse() |> resolved(%{})}
     end
   end
 
@@ -179,7 +168,34 @@ defmodule Ret.MediaResolver do
 
     ytdl_query = URI.encode_query(ytdl_query_args)
 
-    "#{ytdl_host}/api/play?#{ytdl_query}" |> retry_get_until_valid_ytdl_response
+    case "#{ytdl_host}/api/info?#{ytdl_query}" |> retry_get_until_valid_ytdl_response do
+      %HTTPoison.Response{status_code: 200, body: body} ->
+        case body |> Poison.decode() do
+          {:ok, json} ->
+            media_info = Map.get(json, "info")
+            # Prefer "manifest_url" when available so the client can do adaptive bitrate handling
+            {:ok, Map.get(media_info, "manifest_url") || Map.get(media_info, "url")}
+
+          {:error, _} ->
+            {:error, "Invalid response from youtube-dl"}
+        end
+
+      %HTTPoison.Response{status_code: 500, body: body} ->
+        # youtube-dl returns a 500 error, but includes the underlying error in its body text, search for some special cases
+        cond do
+          String.contains?(body, "is offline") ->
+            {:offline_stream, body}
+
+          String.contains?(body, "HTTPError 429") ->
+            {:rate_limited, body}
+
+          true ->
+            {:error, body}
+        end
+
+      %HTTPoison.Response{body: body} ->
+        {:error, body}
+    end
   end
 
   defp ytdl_add_user_agent_for_quality(args, quality) when quality in [:low_360, :high_360] do
@@ -494,8 +510,8 @@ defmodule Ret.MediaResolver do
 
   # Performs a GET until we get response with a valid status code from ytdl.
   #
-  # Oddly, valid status codes are 200, 302, and 500 since that indicates
-  # the server successfully attempted to resolve the video URL(s). If we get
+  # "Valid" here means 200, 400, and 500 since that indicates the server successfully
+  # attempted to resolve the video URL(s), or we gave it invalid input. If we get
   # a different status code, this could indicate an outage or error in the
   # request.
   #
@@ -528,10 +544,6 @@ defmodule Ret.MediaResolver do
   defp get_root_host(host) do
     # Drop subdomains
     host |> String.split(".") |> Enum.slice(-2..-1) |> Enum.join(".")
-  end
-
-  defp media_url_from_ytdl_headers(headers) do
-    headers |> Enum.find(fn h -> h |> elem(0) |> String.downcase() === "location" end) |> elem(1)
   end
 
   defp get_imgur_headers() do
