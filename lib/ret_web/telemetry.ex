@@ -24,6 +24,11 @@ defmodule RetWeb.Telemetry do
         tags: [:route],
         unit: {:native, :millisecond}
       ),
+      #Absinthe Metrics
+      summary("absinthe.execute.operation.stop.duration"),
+      summary("absinthe.resolve.field.stop.duration"),
+      summary("absinthe.middleware.batch.stop.duration"),
+
       # VM Metrics
       summary("vm.memory.total", unit: {:byte, :kilobyte}),
       summary("vm.total_run_queue_lengths.total"),
