@@ -591,3 +591,57 @@ key and add the :pubsub_server key, with the PubSub name:
  [info] Tzdata has updated the release from 2019c to 2020a
  [debug] Tzdata deleting ETS table for version 2019c
  [debug] Tzdata deleting ETS table file for version 2019c
+
+*** I ignored that warning and continued along.
+**** I got this feedback:
+info] GET /dashboard/nonode%40nohost
+[debug] Processing with Phoenix.LiveView.Plug.home/2
+  Parameters: [UNFETCHED]
+  Pipelines: [:browser]
+[info] Sent 200 in 1ms
+[info] CONNECTED TO Phoenix.LiveView.Socket in 118µs
+  Transport: :websocket
+  Serializer: Phoenix.Socket.V2.JSONSerializer
+  Parameters: %{"_csrf_token" => "MTtZFQJEXRtMKRM0VBwnDBADZiY1QRMTzmmzu32D-HRUgEHEHq6hylQR", "_mounts" => "0", "vsn" => "2.0.0"}
+[error] an exception was raised:
+    ** (FunctionClauseError) no function clause matching in Phoenix.LiveView.Channel.start_link/1
+        (phoenix_live_view 0.12.1) lib/phoenix_live_view/channel.ex:12: Phoenix.LiveView.Channel.start_link({RetWeb.Endpoint, {#PID<0.12536.0>, #Reference<0.1111297895.2478833665.188584>}})
+        (elixir 1.10.3) lib/dynamic_supervisor.ex:692: DynamicSupervisor.start_child/3
+        (elixir 1.10.3) lib/dynamic_supervisor.ex:678: DynamicSupervisor.handle_start_child/2
+        (stdlib 3.12.1) gen_server.erl:661: :gen_server.try_handle_call/4
+        (stdlib 3.12.1) gen_server.erl:690: :gen_server.handle_msg/6
+        (stdlib 3.12.1) proc_lib.erl:249: :proc_lib.init_p_do_apply/3
+
+**** The dashboard still wasn't working, so I figured I'd update it:
+#+BEGIN_EXAMPLE diff
+modified   mix.exs
+@@ -47,11 +47,11 @@ defmodule Ret.Mixfile do
+       {:absinthe_phoenix, "~> 2.0"},
+       {:postgrex, ">= 0.0.0"},
+       {:phoenix_html, "~> 2.13"},
+-      {:phoenix_live_view, "~> 0.12"},
++      {:phoenix_live_view, "~> 0.14.4"},
+       {:phoenix_live_reload, "~> 1.2", only: :dev},
+       {:telemetry_metrics, "~> 0.4"},
+       {:telemetry_poller, "~> 0.4"},
+-      {:phoenix_live_dashboard, "~> 0.1"},
++      {:phoenix_live_dashboard, "~> 0.2.7"},
+       {:gettext, "~> 0.17"},
+       {:cowboy, "~> 2.8"},
+       {:plug_cowboy, "~> 2.1"},
+modified   mix.lock
+@@ -58,9 +58,9 @@
+   "phoenix": {:hex, :phoenix, "1.5.4", "0fca9ce7e960f9498d6315e41fcd0c80bfa6fbeb5fa3255b830c67fdfb7e703f", [:mix], [{:jason, "~> 1.0", [hex: :jason, repo: "hexpm", optional: true]}, {:phoenix_html, "~> 2.13", [hex: :phoenix_html, repo: "hexpm", optional: true]}, {:phoenix_pubsub, "~> 2.0", [hex: :phoenix_pubsub, repo: "hexpm", optional: false]}, {:plug, "~> 1.10", [hex: :plug, repo: "hexpm", optional: false]}, {:plug_cowboy, "~> 1.0 or ~> 2.2", [hex: :plug_cowboy, repo: "hexpm", optional: true]}, {:plug_crypto, "~> 1.1.2 or ~> 1.2", [hex: :plug_crypto, repo: "hexpm", optional: false]}, {:telemetry, "~> 0.4", [hex: :telemetry, repo: "hexpm", optional: false]}], "hexpm", "4e516d131fde87b568abd62e1b14aa07ba7d5edfd230bab4e25cc9dedbb39135"},
+   "phoenix_ecto": {:hex, :phoenix_ecto, "4.1.0", "a044d0756d0464c5a541b4a0bf4bcaf89bffcaf92468862408290682c73ae50d", [:mix], [{:ecto, "~> 3.0", [hex: :ecto, repo: "hexpm", optional: false]}, {:phoenix_html, "~> 2.9", [hex: :phoenix_html, repo: "hexpm", optional: true]}, {:plug, "~> 1.0", [hex: :plug, repo: "hexpm", optional: false]}], "hexpm", "c5e666a341ff104d0399d8f0e4ff094559b2fde13a5985d4cb5023b2c2ac558b"},
+   "phoenix_html": {:hex, :phoenix_html, "2.14.2", "b8a3899a72050f3f48a36430da507dd99caf0ac2d06c77529b1646964f3d563e", [:mix], [{:plug, "~> 1.5", [hex: :plug, repo: "hexpm", optional: false]}], "hexpm", "58061c8dfd25da5df1ea0ca47c972f161beb6c875cd293917045b92ffe1bf617"},
+-  "phoenix_live_dashboard": {:hex, :phoenix_live_dashboard, "0.2.4", "3080e8a89bab3ec08d4dd9a6858dfa24af9334464aae78c83e58a2db37c6f983", [:mix], [{:phoenix_html, "~> 2.14.1 or ~> 2.15", [hex: :phoenix_html, repo: "hexpm", optional: false]}, {:phoenix_live_view, "~> 0.12.0 or ~> 0.13.0", [hex: :phoenix_live_view, repo: "hexpm", optional: false]}, {:telemetry_metrics, "~> 0.4.0 or ~> 0.5.0", [hex: :telemetry_metrics, repo: "hexpm", optional: false]}], "hexpm", "1c89595ef60f1b76ac07705e73f001823af451491792a4b0d5b2b2a3789b0a00"},
++  "phoenix_live_dashboard": {:hex, :phoenix_live_dashboard, "0.2.7", "21564144897109ac486518651fecd09403a4d9df4d8432e7dcdf156df6a6a31a", [:mix], [{:phoenix_html, "~> 2.14.1 or ~> 2.15", [hex: :phoenix_html, repo: "hexpm", optional: false]}, {:phoenix_live_view, "~> 0.14.0", [hex: :phoenix_live_view, repo: "hexpm", optional: false]}, {:telemetry_metrics, "~> 0.4.0 or ~> 0.5.0", [hex: :telemetry_metrics, repo: "hexpm", optional: false]}], "hexpm", "2204c2c6755da7b39a21e312253b93d977cc846c85df8a6c0d9f9505cd8bf15b"},
+   "phoenix_live_reload": {:hex, :phoenix_live_reload, "1.2.1", "274a4b07c4adbdd7785d45a8b0bb57634d0b4f45b18d2c508b26c0344bd59b8f", [:mix], [{:file_system, "~> 0.2.1 or ~> 0.3", [hex: :file_system, repo: "hexpm", optional: false]}, {:phoenix, "~> 1.4", [hex: :phoenix, repo: "hexpm", optional: false]}], "hexpm", "41b4103a2fa282cfd747d377233baf213c648fdcc7928f432937676532490eee"},
+-  "phoenix_live_view": {:hex, :phoenix_live_view, "0.12.1", "42f591c781edbf9fab921319076b7ac635d43aa23e6748d2644563326236d7e4", [:mix], [{:jason, "~> 1.0", [hex: :jason, repo: "hexpm", optional: true]}, {:phoenix, "~> 1.4.16 or ~> 1.5.0", [hex: :phoenix, repo: "hexpm", optional: false]}, {:phoenix_html, "~> 2.14", [hex: :phoenix_html, repo: "hexpm", optional: false]}], "hexpm", "585321e98df1cd5943e370b9784e950a37ca073744eb534660c9048967c52ab6"},
++  "phoenix_live_view": {:hex, :phoenix_live_view, "0.14.4", "7286a96287cd29b594ce4a7314249cea7311af04a06c0fa3e50932e188e73996", [:mix], [{:jason, "~> 1.0", [hex: :jason, repo: "hexpm", optional: true]}, {:phoenix, "~> 1.5.3", [hex: :phoenix, repo: "hexpm", optional: false]}, {:phoenix_html, "~> 2.14", [hex: :phoenix_html, repo: "hexpm", optional: false]}, {:telemetry, "~> 0.4.2 or ~> 0.5", [hex: :telemetry, repo: "hexpm", optional: false]}], "hexpm", "fc4f8cf205c784eeccee35de8afbfeb995ce5511ac4839db63d6d67a5ba091d1"},
+   "phoenix_pubsub": {:hex, :phoenix_pubsub, "2.0.0", "a1ae76717bb168cdeb10ec9d92d1480fec99e3080f011402c0a2d68d47395ffb", [:mix], [], "hexpm", "c52d948c4f261577b9c6fa804be91884b381a7f8f18450c5045975435350f771"},
+   "plug": {:hex, :plug, "1.10.3", "c9cebe917637d8db0e759039cc106adca069874e1a9034fd6e3fdd427fd3c283", [:mix], [{:mime, "~> 1.0", [hex: :mime, repo: "hexpm", optional: false]}, {:plug_crypto, "~> 1.1.1 or ~> 1.2", [hex: :plug_crypto, repo: "hexpm", optional: false]}, {:telemetry, "~> 0.4", [hex: :telemetry, repo: "hexpm", optional: false]}], "hexpm", "01f9037a2a1de1d633b5a881101e6a444bcabb1d386ca1e00bb273a1f1d9d939"},
+   "plug_attack": {:hex, :plug_attack, "0.4.2", "0413707429210b890e21758902ac720a4e06c0350453df9954da3d4ca4bac5d8", [:mix], [{:plug, "~> 1.0", [hex: :plug, repo: "hexpm", optional: false]}], "hexpm", "e9a2b1786e1d180d295b5974d337f0952de007eaf081f11d075aa1be65347288"},
+
+   #+END_EXAMPLE
+*** That change seemed to get the dashboard working
