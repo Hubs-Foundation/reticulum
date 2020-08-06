@@ -127,9 +127,13 @@ defmodule Ret.MediaResolver do
             {:commit,
              media_url
              |> URI.parse()
-             |> resolved(%{
-               expected_content_type: "video/*"
-             })}
+             |> resolved(
+               %{
+                 # TODO we would like to return a content type here but need to understand the response
+                 # from youtube-dl better to do so confidently, as it will not always be video
+                 # expected_content_type: "video/*"
+               }
+             )}
           end
 
         _ ->
