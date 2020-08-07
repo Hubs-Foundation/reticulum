@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.22.2">
+    <meta name="project" content="Reticulum v1.0.0">
+    <title>Ret.SessionToken.Plug — Reticulum v1.0.0</title>
+    <link rel="stylesheet" href="dist/elixir-d678dad126d82ddc061f.css" />
+    <script src="dist/sidebar_items-20450bfed8.js"></script>
+      <script src="docs_config.js"></script>
+    <script async src="dist/app-0103364119015b97e56c.js"></script>
+  </head>
+  <body data-type="modules">
+    <script>try { if(localStorage.getItem('night-mode') === 'true') document.body.className += ' night-mode'; } catch (e) { }</script>
+<div class="main">
+
+<button class="sidebar-button sidebar-toggle">
+  <span class="icon-menu" title="Collapse/expand sidebar"></span>
+</button>
+
+<section class="sidebar">
+  <form class="sidebar-search" action="search.html">
+    <button type="submit" class="search-button">
+      <span class="icon-search" aria-hidden="true"></span>
+    </button>
+    <button type="button" tabindex="-1" class="search-close-button">
+      <span class="icon-cross" title="Cancel search"></span>
+    </button>
+    <label class="search-label">
+      <input name="q" type="text" id="search-list" class="search-input" placeholder="Search..." aria-label="Search" autocomplete="off" />
+    </label>
+  </form>
+
+  <div class="autocomplete">
+    <div class="autocomplete-results">
+    </div>
+  </div>
+
+  <div class="sidebar-header">
+    <div class="sidebar-projectDetails">
+      <a href="https://hubs.mozilla.com/" class="sidebar-projectName">
+Reticulum      </a>
+      <h2 class="sidebar-projectVersion">
+        v1.0.0
+      </h2>
+    </div>
+  </div>
+
+  <ul class="sidebar-listNav">
+    <li><a id="extras-list" href="#full-list">Pages</a></li>
+
+      <li><a id="modules-list" href="#full-list">Modules</a></li>
+
+  </ul>
+  <div class="gradient"></div>
+  <ul id="full-list" class="sidebar-fullList"></ul>
+</section>
+
+<section class="content">
+  <div class="content-outer">
+    <div id="content" class="content-inner">
+
+      <h1>
+        <small class="app-vsn">Reticulum v1.0.0</small>
+Ret.SessionToken.Plug          <a href="https://github.com/mozilla/reticulum/blob/master/lib/ret/session_token.ex#L8" title="View Source" class="view-source" rel="help">
+            <span class="icon-code" aria-hidden="true"></span>
+            <span class="sr-only">View Source</span>
+          </a>
+      </h1>
+
+
+
+        <section id="summary" class="details-list">
+          <h1 class="section-heading">
+            <a class="hover-link" href="#summary">
+              <span class="icon-link" aria-hidden="true"></span>
+              <span class="sr-only">Link to this section</span>
+            </a>
+            Summary
+          </h1>
+  <div class="summary-functions summary">
+    <h2>
+      <a href="#functions">Functions</a>
+    </h2>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#authenticated?/2">authenticated?(conn, opts \\ [])</a>
+  </div>
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#clear_remember_me/2">clear_remember_me(conn, opts \\ [])</a>
+  </div>
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#current_claims/2">current_claims(conn, opts \\ [])</a>
+  </div>
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#current_resource/2">current_resource(conn, opts \\ [])</a>
+  </div>
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#current_token/2">current_token(conn, opts \\ [])</a>
+  </div>
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#implementation/0">implementation()</a>
+  </div>
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#put_current_claims/3">put_current_claims(conn, claims, opts \\ [])</a>
+  </div>
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#put_current_resource/3">put_current_resource(conn, resource, opts \\ [])</a>
+  </div>
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#put_current_token/3">put_current_token(conn, token, opts \\ [])</a>
+  </div>
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#put_session_token/3">put_session_token(conn, token, opts \\ [])</a>
+  </div>
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#remember_me/4">remember_me(conn, resource, claims \\ %{}, opts \\ [])</a>
+  </div>
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#remember_me_from_token/4">remember_me_from_token(conn, token, claims \\ %{}, opts \\ [])</a>
+  </div>
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#sign_in/4">sign_in(conn, resource, claims \\ %{}, opts \\ [])</a>
+  </div>
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#sign_out/2">sign_out(conn, opts \\ [])</a>
+  </div>
+</div>
+  </div>
+        </section>
+
+        <section id="functions" class="details-list">
+          <h1 class="section-heading">
+            <a class="hover-link" href="#functions">
+              <span class="icon-link" aria-hidden="true"></span>
+              <span class="sr-only">Link to this section</span>
+            </a>
+Functions          </h1>
+          <div class="functions-list">
+<section class="detail" id="authenticated?/2">
+    <span id="authenticated?/1"></span>
+  <div class="detail-header">
+    <a href="#authenticated?/2" class="detail-link" title="Link to this function">
+      <span class="icon-link" aria-hidden="true"></span>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature">authenticated?(conn, opts \\ [])</h1>
+      <a href="https://github.com/mozilla/reticulum/blob/master/lib/ret/session_token.ex#L8" class="view-source" rel="help" title="View Source">
+       <span class="icon-code" aria-hidden="true"></span>
+       <span class="sr-only">View Source</span>
+     </a>
+  </div>
+
+  <section class="docstring">
+
+  </section>
+</section>
+<section class="detail" id="clear_remember_me/2">
+    <span id="clear_remember_me/1"></span>
+  <div class="detail-header">
+    <a href="#clear_remember_me/2" class="detail-link" title="Link to this function">
+      <span class="icon-link" aria-hidden="true"></span>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature">clear_remember_me(conn, opts \\ [])</h1>
+      <a href="https://github.com/mozilla/reticulum/blob/master/lib/ret/session_token.ex#L8" class="view-source" rel="help" title="View Source">
+       <span class="icon-code" aria-hidden="true"></span>
+       <span class="sr-only">View Source</span>
+     </a>
+  </div>
+
+  <section class="docstring">
+
+  </section>
+</section>
+<section class="detail" id="current_claims/2">
+    <span id="current_claims/1"></span>
+  <div class="detail-header">
+    <a href="#current_claims/2" class="detail-link" title="Link to this function">
+      <span class="icon-link" aria-hidden="true"></span>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature">current_claims(conn, opts \\ [])</h1>
+      <a href="https://github.com/mozilla/reticulum/blob/master/lib/ret/session_token.ex#L8" class="view-source" rel="help" title="View Source">
+       <span class="icon-code" aria-hidden="true"></span>
+       <span class="sr-only">View Source</span>
+     </a>
+  </div>
+
+  <section class="docstring">
+
+  </section>
+</section>
+<section class="detail" id="current_resource/2">
+    <span id="current_resource/1"></span>
+  <div class="detail-header">
+    <a href="#current_resource/2" class="detail-link" title="Link to this function">
+      <span class="icon-link" aria-hidden="true"></span>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature">current_resource(conn, opts \\ [])</h1>
+      <a href="https://github.com/mozilla/reticulum/blob/master/lib/ret/session_token.ex#L8" class="view-source" rel="help" title="View Source">
+       <span class="icon-code" aria-hidden="true"></span>
+       <span class="sr-only">View Source</span>
+     </a>
+  </div>
+
+  <section class="docstring">
+
+  </section>
+</section>
+<section class="detail" id="current_token/2">
+    <span id="current_token/1"></span>
+  <div class="detail-header">
+    <a href="#current_token/2" class="detail-link" title="Link to this function">
+      <span class="icon-link" aria-hidden="true"></span>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature">current_token(conn, opts \\ [])</h1>
+      <a href="https://github.com/mozilla/reticulum/blob/master/lib/ret/session_token.ex#L8" class="view-source" rel="help" title="View Source">
+       <span class="icon-code" aria-hidden="true"></span>
+       <span class="sr-only">View Source</span>
+     </a>
+  </div>
+
+  <section class="docstring">
+
+  </section>
+</section>
+<section class="detail" id="implementation/0">
+  <div class="detail-header">
+    <a href="#implementation/0" class="detail-link" title="Link to this function">
+      <span class="icon-link" aria-hidden="true"></span>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature">implementation()</h1>
+      <a href="https://github.com/mozilla/reticulum/blob/master/lib/ret/session_token.ex#L8" class="view-source" rel="help" title="View Source">
+       <span class="icon-code" aria-hidden="true"></span>
+       <span class="sr-only">View Source</span>
+     </a>
+  </div>
+
+  <section class="docstring">
+      <h2>Specs</h2>
+      <div class="specs">
+          <pre>implementation() :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>()</pre>
+      </div>
+
+  </section>
+</section>
+<section class="detail" id="put_current_claims/3">
+    <span id="put_current_claims/2"></span>
+  <div class="detail-header">
+    <a href="#put_current_claims/3" class="detail-link" title="Link to this function">
+      <span class="icon-link" aria-hidden="true"></span>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature">put_current_claims(conn, claims, opts \\ [])</h1>
+      <a href="https://github.com/mozilla/reticulum/blob/master/lib/ret/session_token.ex#L8" class="view-source" rel="help" title="View Source">
+       <span class="icon-code" aria-hidden="true"></span>
+       <span class="sr-only">View Source</span>
+     </a>
+  </div>
+
+  <section class="docstring">
+
+  </section>
+</section>
+<section class="detail" id="put_current_resource/3">
+    <span id="put_current_resource/2"></span>
+  <div class="detail-header">
+    <a href="#put_current_resource/3" class="detail-link" title="Link to this function">
+      <span class="icon-link" aria-hidden="true"></span>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature">put_current_resource(conn, resource, opts \\ [])</h1>
+      <a href="https://github.com/mozilla/reticulum/blob/master/lib/ret/session_token.ex#L8" class="view-source" rel="help" title="View Source">
+       <span class="icon-code" aria-hidden="true"></span>
+       <span class="sr-only">View Source</span>
+     </a>
+  </div>
+
+  <section class="docstring">
+
+  </section>
+</section>
+<section class="detail" id="put_current_token/3">
+    <span id="put_current_token/2"></span>
+  <div class="detail-header">
+    <a href="#put_current_token/3" class="detail-link" title="Link to this function">
+      <span class="icon-link" aria-hidden="true"></span>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature">put_current_token(conn, token, opts \\ [])</h1>
+      <a href="https://github.com/mozilla/reticulum/blob/master/lib/ret/session_token.ex#L8" class="view-source" rel="help" title="View Source">
+       <span class="icon-code" aria-hidden="true"></span>
+       <span class="sr-only">View Source</span>
+     </a>
+  </div>
+
+  <section class="docstring">
+
+  </section>
+</section>
+<section class="detail" id="put_session_token/3">
+    <span id="put_session_token/2"></span>
+  <div class="detail-header">
+    <a href="#put_session_token/3" class="detail-link" title="Link to this function">
+      <span class="icon-link" aria-hidden="true"></span>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature">put_session_token(conn, token, opts \\ [])</h1>
+      <a href="https://github.com/mozilla/reticulum/blob/master/lib/ret/session_token.ex#L8" class="view-source" rel="help" title="View Source">
+       <span class="icon-code" aria-hidden="true"></span>
+       <span class="sr-only">View Source</span>
+     </a>
+  </div>
+
+  <section class="docstring">
+
+  </section>
+</section>
+<section class="detail" id="remember_me/4">
+    <span id="remember_me/2"></span>
+    <span id="remember_me/3"></span>
+  <div class="detail-header">
+    <a href="#remember_me/4" class="detail-link" title="Link to this function">
+      <span class="icon-link" aria-hidden="true"></span>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature">remember_me(conn, resource, claims \\ %{}, opts \\ [])</h1>
+      <a href="https://github.com/mozilla/reticulum/blob/master/lib/ret/session_token.ex#L8" class="view-source" rel="help" title="View Source">
+       <span class="icon-code" aria-hidden="true"></span>
+       <span class="sr-only">View Source</span>
+     </a>
+  </div>
+
+  <section class="docstring">
+
+  </section>
+</section>
+<section class="detail" id="remember_me_from_token/4">
+    <span id="remember_me_from_token/2"></span>
+    <span id="remember_me_from_token/3"></span>
+  <div class="detail-header">
+    <a href="#remember_me_from_token/4" class="detail-link" title="Link to this function">
+      <span class="icon-link" aria-hidden="true"></span>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature">remember_me_from_token(conn, token, claims \\ %{}, opts \\ [])</h1>
+      <a href="https://github.com/mozilla/reticulum/blob/master/lib/ret/session_token.ex#L8" class="view-source" rel="help" title="View Source">
+       <span class="icon-code" aria-hidden="true"></span>
+       <span class="sr-only">View Source</span>
+     </a>
+  </div>
+
+  <section class="docstring">
+      <h2>Specs</h2>
+      <div class="specs">
+          <pre>remember_me_from_token(
+  <a href="https://hexdocs.pm/plug/Plug.Conn.html#t:t/0">Plug.Conn.t</a>(),
+  <a href="https://hexdocs.pm/guardian/Guardian.Token.html#t:token/0">Guardian.Token.token</a>(),
+  <a href="https://hexdocs.pm/guardian/Guardian.Token.html#t:claims/0">Guardian.Token.claims</a>(),
+  <a href="https://hexdocs.pm/guardian/Guardian.html#t:options/0">Guardian.options</a>()
+) :: <a href="https://hexdocs.pm/plug/Plug.Conn.html#t:t/0">Plug.Conn.t</a>()</pre>
+      </div>
+
+  </section>
+</section>
+<section class="detail" id="sign_in/4">
+    <span id="sign_in/2"></span>
+    <span id="sign_in/3"></span>
+  <div class="detail-header">
+    <a href="#sign_in/4" class="detail-link" title="Link to this function">
+      <span class="icon-link" aria-hidden="true"></span>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature">sign_in(conn, resource, claims \\ %{}, opts \\ [])</h1>
+      <a href="https://github.com/mozilla/reticulum/blob/master/lib/ret/session_token.ex#L8" class="view-source" rel="help" title="View Source">
+       <span class="icon-code" aria-hidden="true"></span>
+       <span class="sr-only">View Source</span>
+     </a>
+  </div>
+
+  <section class="docstring">
+
+  </section>
+</section>
+<section class="detail" id="sign_out/2">
+    <span id="sign_out/1"></span>
+  <div class="detail-header">
+    <a href="#sign_out/2" class="detail-link" title="Link to this function">
+      <span class="icon-link" aria-hidden="true"></span>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature">sign_out(conn, opts \\ [])</h1>
+      <a href="https://github.com/mozilla/reticulum/blob/master/lib/ret/session_token.ex#L8" class="view-source" rel="help" title="View Source">
+       <span class="icon-code" aria-hidden="true"></span>
+       <span class="sr-only">View Source</span>
+     </a>
+  </div>
+
+  <section class="docstring">
+
+  </section>
+</section>
+          </div>
+        </section>
+      <footer class="footer">
+        <p>
+          <span class="line">
+            Built using
+            <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener">ExDoc</a> (v0.22.2),
+          </span>
+          <span class="line">
+            designed by
+            <a href="https://twitter.com/dignifiedquire" target="_blank" rel="noopener" title="@dignifiedquire">Friedel Ziegelmayer</a>.
+          </span>
+        </p>
+        <p>
+          <button class="line footer-button display-shortcuts-help">
+            Display keyboard shortcuts
+          </button>
+          <button class="line footer-button night-mode-toggle">
+            Toggle night mode
+          </button>
+          <button class="line footer-button display-quick-switch">
+            Go to a HexDocs package
+          </button>
+          <button class="line footer-button tooltips-toggle">
+            <span class="tooltips-option-disable">Disable tooltips</span>
+            <span class="tooltips-option-enable">Enable tooltips</span>
+          </button>
+        </p>
+      </footer>
+    </div>
+  </div>
+</section>
+</div>
+  </body>
+</html>

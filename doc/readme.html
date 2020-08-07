@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.22.2">
+    <meta name="project" content="Reticulum v1.0.0">
+    <title>Reticulum — Reticulum v1.0.0</title>
+    <link rel="stylesheet" href="dist/elixir-d678dad126d82ddc061f.css" />
+    <script src="dist/sidebar_items-20450bfed8.js"></script>
+      <script src="docs_config.js"></script>
+    <script async src="dist/app-0103364119015b97e56c.js"></script>
+  </head>
+  <body data-type="extras">
+    <script>try { if(localStorage.getItem('night-mode') === 'true') document.body.className += ' night-mode'; } catch (e) { }</script>
+<div class="main">
+
+<button class="sidebar-button sidebar-toggle">
+  <span class="icon-menu" title="Collapse/expand sidebar"></span>
+</button>
+
+<section class="sidebar">
+  <form class="sidebar-search" action="search.html">
+    <button type="submit" class="search-button">
+      <span class="icon-search" aria-hidden="true"></span>
+    </button>
+    <button type="button" tabindex="-1" class="search-close-button">
+      <span class="icon-cross" title="Cancel search"></span>
+    </button>
+    <label class="search-label">
+      <input name="q" type="text" id="search-list" class="search-input" placeholder="Search..." aria-label="Search" autocomplete="off" />
+    </label>
+  </form>
+
+  <div class="autocomplete">
+    <div class="autocomplete-results">
+    </div>
+  </div>
+
+  <div class="sidebar-header">
+    <div class="sidebar-projectDetails">
+      <a href="https://hubs.mozilla.com/" class="sidebar-projectName">
+Reticulum      </a>
+      <h2 class="sidebar-projectVersion">
+        v1.0.0
+      </h2>
+    </div>
+  </div>
+
+  <ul class="sidebar-listNav">
+    <li><a id="extras-list" href="#full-list">Pages</a></li>
+
+      <li><a id="modules-list" href="#full-list">Modules</a></li>
+
+  </ul>
+  <div class="gradient"></div>
+  <ul id="full-list" class="sidebar-fullList"></ul>
+</section>
+
+<section class="content">
+  <div class="content-outer">
+    <div id="content" class="content-inner">
+
+<h1>Reticulum</h1><p>A hybrid game networking and web API server, focused on Social Mixed Reality.</p><h2 id="development" class="section-heading">
+  <a href="#development" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
+  Development
+</h2>
+<h3 id="1-install-prerequisite-packages" class="section-heading">
+  <a href="#1-install-prerequisite-packages" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
+  1. Install Prerequisite Packages:
+</h3>
+<h4>PostgreSQL (recommended version 11.x):</h4><p>Linux: Use your package manager</p><p>Windows: <a href="https://www.postgresql.org/download/windows/">https://www.postgresql.org/download/windows/</a></p><p>Windows WSL: <a href="https://github.com/michaeltreat/Windows-Subsystem-For-Linux-Setup-Guide/blob/master/readmes/installs/PostgreSQL.md">https://github.com/michaeltreat/Windows-Subsystem-For-Linux-Setup-Guide/blob/master/readmes/installs/PostgreSQL.md</a></p><h4>Elixr + Phoenix</h4><p><a href="https://elixir-lang.org/install.html">https://elixir-lang.org/install.html</a><a href="https://hexdocs.pm/phoenix/installation.html">https://hexdocs.pm/phoenix/installation.html</a></p><h3 id="2-setup-reticulum" class="section-heading">
+  <a href="#2-setup-reticulum" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
+  2. Setup Reticulum:
+</h3>
+<p>Run the following commands at the root of the reticulum directory:</p><ol><li><a href="https://hexdocs.pm/mix/Mix.Tasks.Deps.Get.html"><code class="inline">mix deps.get</code></a></li><li><a href="https://hexdocs.pm/ecto/Mix.Tasks.Ecto.Create.html"><code class="inline">mix ecto.create</code></a><ul><li>If step 2 fails, you may need to change the password for the <code class="inline">postgres</code> role to match the password configured <code class="inline">dev.exs</code>.</li><li>From within the <code class="inline">psql</code> shell, enter <code class="inline">ALTER USER postgres WITH PASSWORD 'postgres';</code></li></ul></li><li>from the <code class="inline">assets</code> directory, <code class="inline">npm install</code></li><li>From the project directory <code class="inline">mkdir -p storage/dev</code></li></ol><h3 id="3-start-reticulum" class="section-heading">
+  <a href="#3-start-reticulum" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
+  3. Start Reticulum
+</h3>
+<p>Run <code class="inline">scripts/run.sh</code> if you have the hubs secret repo cloned. Otherwise <code class="inline">iex -S mix phx.server</code></p><h2 id="run-hubs-against-a-local-reticulum-instance" class="section-heading">
+  <a href="#run-hubs-against-a-local-reticulum-instance" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
+  Run Hubs Against a Local Reticulum Instance
+</h2>
+<h3 id="0-dependencies" class="section-heading">
+  <a href="#0-dependencies" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
+  0. Dependencies
+</h3>
+<p><a href="https://nodejs.org">Install NodeJS</a> if you haven't already. We recommend version 12 or above.</p><h3 id="1-setup-the-hubs-local-hostname" class="section-heading">
+  <a href="#1-setup-the-hubs-local-hostname" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
+  1. Setup the <code class="inline">hubs.local</code> hostname
+</h3>
+<p>When running the full stack for Hubs (which includes Reticulum) locally it is necessary to add a <code class="inline">hosts</code> entry pointing <code class="inline">hubs.local</code> to your local server's IP.
+This will allow the CSP checks to pass that are served up by Reticulum so you can test the whole app. Note that you must also load hubs.local over https.</p><p>Example:</p><pre><code class="nohighlight makeup elixir"><span class="n">hubs</span><span class="o">.</span><span class="n">local</span><span class="w"> </span><span class="mf">127.0</span><span class="o">.</span><span class="mf">0.1</span></code></pre><h3 id="2-setting-up-the-hubs-repository" class="section-heading">
+  <a href="#2-setting-up-the-hubs-repository" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
+  2. Setting up the Hubs Repository
+</h3>
+<p>Clone the Hubs repository and install the npm dependencies.</p><pre><code class="bash">git clone https://github.com/mozilla/hubs.git
+cd hubs
+npm ci</code></pre><h3 id="3-start-the-hubs-webpack-dev-server" class="section-heading">
+  <a href="#3-start-the-hubs-webpack-dev-server" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
+  3. Start the Hubs Webpack Dev Server
+</h3>
+<p>Because we are running Hubs against the local Reticulum client you'll need to use the <code class="inline">npm run local</code> command in the root of the <code class="inline">hubs</code> folder. This will start the development server on port 8080, but configure it to be accessed through Reticulum on port 4000.</p><h3 id="4-navigate-to-the-client-page" class="section-heading">
+  <a href="#4-navigate-to-the-client-page" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
+  4. Navigate To The Client Page
+</h3>
+<p>Once both the Hubs Webpack Dev Server and Reticulum server are both running you can navigate to the client by opening up:</p><p><a href="https://hubs.local:4000?skipadmin">https://hubs.local:4000?skipadmin</a></p><blockquote><p>The <code class="inline">skipadmin</code> is a temporary measure to bypass being redirected to the admin panel. Once you have logged in you will no longer need this.</p></blockquote><h3 id="5-logging-in" class="section-heading">
+  <a href="#5-logging-in" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
+  5. Logging In
+</h3>
+<p>To log into Hubs we use magic links that are sent to your email. When you are running Reticulum locally we do not send those emails. Instead, you'll find the contents of that email in the Reticulum console output.</p><p>With the Hubs landing page open click the Sign In button at the top of the page. Enter an email address and click send.</p><p>Go to the reticulum terminal session and find a url that looks like <a href="https://hubs.local:4000/?auth_origin=hubs">https://hubs.local:4000/?auth_origin=hubs</a>&amp;auth_payload=XXXXX&amp;auth_token=XXXX</p><p>Navigate to that url in your browser to finish signing in.</p><h3 id="6-creating-an-admin-user" class="section-heading">
+  <a href="#6-creating-an-admin-user" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
+  6. Creating an Admin User
+</h3>
+<p>After you've started Reticulum for the first time you'll likely want to create an admin user. Assuming you want to make the first account the admin, this can be done in the iex console using the following code:</p><pre><code class="nohighlight makeup elixir"><span class="nc">Ret.Account</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">Ret.Repo</span><span class="o">.</span><span class="n">all</span><span class="p" data-group-id="4104715895-1">(</span><span class="p" data-group-id="4104715895-1">)</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">Enum</span><span class="o">.</span><span class="n">at</span><span class="p" data-group-id="4104715895-2">(</span><span class="mi">0</span><span class="p" data-group-id="4104715895-2">)</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">Ecto.Changeset</span><span class="o">.</span><span class="n">change</span><span class="p" data-group-id="4104715895-3">(</span><span class="ss">is_admin</span><span class="p">:</span><span class="w"> </span><span class="no">true</span><span class="p" data-group-id="4104715895-3">)</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">Ret.Repo</span><span class="o">.</span><span class="n">update!</span><span class="p" data-group-id="4104715895-4">(</span><span class="p" data-group-id="4104715895-4">)</span></code></pre><h2 id="run-spoke-against-a-local-reticulum-instance" class="section-heading">
+  <a href="#run-spoke-against-a-local-reticulum-instance" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
+  Run Spoke Against a Local Reticulum Instance
+</h2>
+<ol><li>Follow the steps above to setup Hubs</li><li>Clone and start spoke by running <code class="inline">./scripts/run_local_reticulum.sh</code> in the root of the spoke project</li><li>Navigate to <a href="https://hubs.local:4000/spoke">https://hubs.local:4000/spoke</a></li></ol>      <footer class="footer">
+        <p>
+          <span class="line">
+            Built using
+            <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener">ExDoc</a> (v0.22.2),
+          </span>
+          <span class="line">
+            designed by
+            <a href="https://twitter.com/dignifiedquire" target="_blank" rel="noopener" title="@dignifiedquire">Friedel Ziegelmayer</a>.
+          </span>
+        </p>
+        <p>
+          <button class="line footer-button display-shortcuts-help">
+            Display keyboard shortcuts
+          </button>
+          <button class="line footer-button night-mode-toggle">
+            Toggle night mode
+          </button>
+          <button class="line footer-button display-quick-switch">
+            Go to a HexDocs package
+          </button>
+          <button class="line footer-button tooltips-toggle">
+            <span class="tooltips-option-disable">Disable tooltips</span>
+            <span class="tooltips-option-enable">Enable tooltips</span>
+          </button>
+        </p>
+      </footer>
+    </div>
+  </div>
+</section>
+</div>
+  </body>
+</html>
