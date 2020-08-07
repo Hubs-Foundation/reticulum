@@ -1,4 +1,5 @@
 defmodule Ret.AccountTest do
+  @moduledoc false
   use Ret.DataCase
 
   alias Ret.{Account}

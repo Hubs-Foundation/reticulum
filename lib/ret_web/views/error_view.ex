@@ -1,4 +1,5 @@
 defmodule RetWeb.ErrorView do
+  @moduledoc false
   use RetWeb, :view
 
   def render("error.json", %{error: error}) do

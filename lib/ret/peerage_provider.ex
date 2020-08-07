@@ -1,4 +1,5 @@
 defmodule Ret.PeerageProvider do
+  @moduledoc false
   alias Ret.Habitat
 
   def poll do

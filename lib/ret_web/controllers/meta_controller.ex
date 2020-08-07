@@ -1,4 +1,5 @@
 defmodule RetWeb.Api.V1.MetaController do
+  @moduledoc false
   use RetWeb, :controller
 
   def show(conn, params) do

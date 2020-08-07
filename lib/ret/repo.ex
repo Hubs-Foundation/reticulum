@@ -1,4 +1,5 @@
 defmodule Ret.Repo do
+  @moduledoc false
   use Ecto.Repo, otp_app: :ret, adapter: Ecto.Adapters.Postgres
   use Scrivener, page_size: 20, max_page_size: 50
 

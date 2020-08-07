@@ -1,4 +1,5 @@
 defmodule Ret.Repo.Migrations.AddAvatarListingsAccount do
+  @moduledoc false
   use Ecto.Migration
   import Ecto.Query
 

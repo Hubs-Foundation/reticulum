@@ -1,6 +1,7 @@
 # Injects an Authorization header into the conn request headers that has the perms token of the 
 # currently logged in user. This is used during PostgREST proxying.
 defmodule RetWeb.Plugs.RewriteAuthorizationHeaderToPerms do
+  @moduledoc false
   import Plug.Conn
 
   def init([]), do: []

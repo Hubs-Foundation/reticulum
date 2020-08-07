@@ -1,4 +1,5 @@
 defmodule RetWeb.HubControllerTest do
+  @moduledoc false
   use RetWeb.ConnCase
   import Ret.TestHelpers
 

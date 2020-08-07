@@ -1,4 +1,5 @@
 defmodule RetWeb.Schema.SceneTypes do
+  @moduledoc false
   use Absinthe.Schema.Notation
   alias Ret.{Scene, SceneListing}
 

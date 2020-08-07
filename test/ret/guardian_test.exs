@@ -1,4 +1,5 @@
 defmodule Ret.GuardianTest do
+  @moduledoc false
   use Ret.DataCase
 
   alias Ecto.{Changeset}

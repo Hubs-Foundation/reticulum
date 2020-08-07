@@ -1,4 +1,5 @@
 defmodule RetWeb.Canary.AuthorizationErrorHandler do
+  @moduledoc false
   import Plug.Conn
 
   def authorization_error(conn) do

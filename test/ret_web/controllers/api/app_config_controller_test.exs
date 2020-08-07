@@ -1,4 +1,5 @@
 defmodule RetWeb.AppConfigControllerTest do
+  @moduledoc false
   use RetWeb.ConnCase
   import Ret.TestHelpers
 

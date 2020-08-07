@@ -1,4 +1,5 @@
 defmodule Ret.Repo.Migrations.UpdateAvatarConstraints do
+  @moduledoc false
   use Ecto.Migration
 
   def up do

@@ -1,4 +1,5 @@
 defmodule Ret.EncryptedField do
+  @moduledoc false
   use Ecto.Type
   alias Ret.Crypto
 

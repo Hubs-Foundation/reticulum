@@ -1,4 +1,5 @@
 defmodule RetWeb.PageControllerTest do
+  @moduledoc false
   use RetWeb.ConnCase
 
   # TODO, fix, this has HTTP auth behind it now

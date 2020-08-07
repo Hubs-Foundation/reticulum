@@ -1,4 +1,5 @@
 defmodule Ret.RoomAssignerMonitor do
+  @moduledoc false
   use GenServer
 
   def start_link do

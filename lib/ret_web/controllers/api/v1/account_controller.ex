@@ -1,4 +1,5 @@
 defmodule RetWeb.Api.V1.AccountController do
+  @moduledoc false
   use RetWeb, :controller
   import RetWeb.ApiHelpers
 

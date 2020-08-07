@@ -1,4 +1,5 @@
 defmodule Ret.Repo.Migrations.AddImportedFromColumns do
+  @moduledoc false
   use Ecto.Migration
 
   def change do

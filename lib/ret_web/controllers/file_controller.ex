@@ -1,4 +1,5 @@
 defmodule RetWeb.FileController do
+  @moduledoc false
   use RetWeb, :controller
   require Logger
 

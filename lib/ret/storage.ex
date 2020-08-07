@@ -1,4 +1,5 @@
 defmodule Ret.Storage do
+  @moduledoc false
   require Logger
 
   import Ret.HttpUtils

@@ -1,14 +1,17 @@
 defmodule Ret.ResolvedMedia do
+  @moduledoc false
   @enforce_keys [:uri]
   defstruct [:uri, :audio_uri, :meta, :ttl]
 end
 
 defmodule Ret.MediaResolverQuery do
+  @moduledoc false
   @enforce_keys [:url]
   defstruct [:url, supports_webm: true, quality: :high, version: 1]
 end
 
 defmodule Ret.MediaResolver do
+  @moduledoc false
   use Retry
   import Ret.HttpUtils
 

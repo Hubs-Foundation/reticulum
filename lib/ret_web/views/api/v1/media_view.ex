@@ -1,4 +1,5 @@
 defmodule RetWeb.Api.V1.MediaView do
+  @moduledoc false
   use RetWeb, :view
 
   def render("show.json", %{

@@ -1,4 +1,5 @@
 defmodule RetWeb.Api.V1.AppConfigController do
+  @moduledoc false
   use RetWeb, :controller
   alias Ret.{AppConfig}
 

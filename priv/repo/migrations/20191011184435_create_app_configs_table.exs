@@ -1,4 +1,5 @@
 defmodule Ret.Repo.Migrations.CreateAppConfigsTable do
+  @moduledoc false
   use Ecto.Migration
 
   def change do

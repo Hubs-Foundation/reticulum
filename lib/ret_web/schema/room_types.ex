@@ -1,4 +1,5 @@
 defmodule RetWeb.Schema.RoomTypes do
+  @moduledoc false
   use Absinthe.Schema.Notation
   alias RetWeb.Resolvers
   alias Ret.Scene

@@ -1,4 +1,5 @@
 defmodule RetWeb.Api.V1.MediaController do
+  @moduledoc false
   use RetWeb, :controller
   use Retry
 

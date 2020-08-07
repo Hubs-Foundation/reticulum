@@ -1,4 +1,5 @@
 defmodule RetWeb.SessionSocket do
+  @moduledoc false
   use Phoenix.Socket
 
   channel("ret", RetWeb.RetChannel)

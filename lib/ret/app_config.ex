@@ -1,4 +1,5 @@
 defmodule Ret.AppConfig do
+  @moduledoc false
   use Ecto.Schema
   import Ecto.Changeset
 

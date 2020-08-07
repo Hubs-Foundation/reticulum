@@ -1,4 +1,5 @@
 defmodule Ret.JanusLoadStatus do
+  @moduledoc false
   use Cachex.Warmer
   use Retry
 

@@ -1,4 +1,5 @@
 defmodule Ret.Repo.Migrations.AdminSchemaInit do
+  @moduledoc false
   use Ecto.Migration
   @disable_ddl_transaction true
 

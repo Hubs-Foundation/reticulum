@@ -1,4 +1,5 @@
 defmodule RetWeb.Plugs.RedirectToMainDomain do
+  @moduledoc false
   import Plug.Conn
   import Ret.ConnUtils
 

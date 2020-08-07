@@ -1,4 +1,5 @@
 defmodule RetWeb.Api.V1.RetNoticeController do
+  @moduledoc false
   use RetWeb, :controller
 
   # Limit to 1 TPS

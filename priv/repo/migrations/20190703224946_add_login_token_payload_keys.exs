@@ -1,4 +1,5 @@
 defmodule Ret.Repo.Migrations.AddLoginTokenPayloadKeys do
+  @moduledoc false
   use Ecto.Migration
 
   def change do

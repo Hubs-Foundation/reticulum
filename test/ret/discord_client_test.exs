@@ -1,4 +1,5 @@
 defmodule Ret.DiscordClientTest do
+  @moduledoc false
   use Ret.DataCase
 
   alias Ret.DiscordClient

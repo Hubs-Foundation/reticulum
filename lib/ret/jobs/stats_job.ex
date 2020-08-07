@@ -1,4 +1,5 @@
 defmodule Ret.StatsJob do
+  @moduledoc false
   alias Ret.{Repo, NodeStat}
 
   def send_statsd_gauges do

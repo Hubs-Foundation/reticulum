@@ -1,4 +1,5 @@
 defmodule RetWeb.Api.V1.SceneController do
+  @moduledoc false
   use RetWeb, :controller
 
   alias Ret.{Account, Repo, Scene, SceneListing, Storage}

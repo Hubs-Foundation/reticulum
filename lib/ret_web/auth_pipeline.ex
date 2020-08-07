@@ -1,4 +1,5 @@
 defmodule RetWeb.Guardian.AuthPipeline do
+  @moduledoc false
   use Guardian.Plug.Pipeline,
     otp_app: :ret,
     module: Ret.Guardian,

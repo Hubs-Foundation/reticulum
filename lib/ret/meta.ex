@@ -1,4 +1,5 @@
 defmodule Ret.Meta do
+  @moduledoc false
   # Evaluate at build time
   @version Mix.Project.config()[:version]
 

@@ -1,21 +1,25 @@
 defmodule Ret.MediaSearchQuery do
+  @moduledoc false
   @enforce_keys [:source]
   defstruct [:source, :type, :user, :collection, :filter, :q, :similar_to, :cursor, :locale]
 end
 
 defmodule Ret.MediaSearchResult do
+  @moduledoc false
   @enforce_keys [:meta, :entries]
   @derive {Jason.Encoder, only: [:meta, :entries, :suggestions]}
   defstruct [:meta, :entries, :suggestions]
 end
 
 defmodule Ret.MediaSearchResultMeta do
+  @moduledoc false
   @enforce_keys [:source]
   @derive {Jason.Encoder, only: [:source, :next_cursor]}
   defstruct [:source, :next_cursor]
 end
 
 defmodule Ret.MediaSearch do
+  @moduledoc false
   require Logger
 
   import Ret.HttpUtils

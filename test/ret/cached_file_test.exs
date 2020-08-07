@@ -1,4 +1,5 @@
 defmodule Ret.CachedFileTest do
+  @moduledoc false
   use Ret.DataCase
   import Ret.TestHelpers
 

@@ -1,4 +1,5 @@
 defmodule RetWeb.PageController do
+  @moduledoc false
   use RetWeb, :controller
   alias Ret.{Repo, Hub, Scene, SceneListing, Avatar, AppConfig, OwnedFile, AvatarListing, PageOriginWarmer, Storage}
   alias Plug.Conn

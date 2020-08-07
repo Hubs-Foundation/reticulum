@@ -1,4 +1,5 @@
 defmodule Ret.Login do
+  @moduledoc false
   use Ecto.Schema
   import Ecto.Changeset
 

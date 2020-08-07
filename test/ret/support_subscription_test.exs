@@ -1,4 +1,5 @@
 defmodule Ret.SupportSubscriptionTest do
+  @moduledoc false
   use Ret.DataCase
 
   alias Ret.{Support, SupportSubscription}

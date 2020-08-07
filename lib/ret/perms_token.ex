@@ -35,6 +35,7 @@ defmodule Ret.PermsToken do
 end
 
 defmodule Ret.PermsTokenSecretFetcher do
+  @moduledoc false
   def fetch_signing_secret(mod, _opts) do
     {:ok, Application.get_env(:ret, mod)[:perms_key] |> JOSE.JWK.from_pem()}
   end

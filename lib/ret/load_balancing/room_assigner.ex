@@ -1,4 +1,5 @@
 defmodule Ret.RoomAssigner do
+  @moduledoc false
   use GenServer
 
   import Ret.Stats

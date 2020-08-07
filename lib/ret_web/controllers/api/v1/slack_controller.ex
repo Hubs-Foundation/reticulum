@@ -1,4 +1,5 @@
 defmodule RetWeb.Api.V1.SlackController do
+  @moduledoc false
   use RetWeb, :controller
   alias Ret.{Hub, HubBinding}
 

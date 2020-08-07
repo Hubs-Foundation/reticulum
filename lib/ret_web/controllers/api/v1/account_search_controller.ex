@@ -1,4 +1,5 @@
 defmodule RetWeb.Api.V1.AccountSearchController do
+  @moduledoc false
   use RetWeb, :controller
 
   alias Ret.{Account}

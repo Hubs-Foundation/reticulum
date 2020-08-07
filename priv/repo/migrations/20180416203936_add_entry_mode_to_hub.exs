@@ -1,4 +1,5 @@
 defmodule Ret.Repo.Migrations.AddEntryModeToHub do
+  @moduledoc false
   use Ecto.Migration
 
   def up do

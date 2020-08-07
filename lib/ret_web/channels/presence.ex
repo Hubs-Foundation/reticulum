@@ -1,4 +1,5 @@
 defmodule RetWeb.Presence do
+  @moduledoc false
   use Phoenix.Presence,
     otp_app: :ret,
     pubsub_server: Ret.PubSub

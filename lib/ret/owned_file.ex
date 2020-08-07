@@ -1,4 +1,5 @@
 defmodule Ret.OwnedFile do
+  @moduledoc false
   use Ecto.Schema
   import Ecto.Query
   import Ecto.Changeset

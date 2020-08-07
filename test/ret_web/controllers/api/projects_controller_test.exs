@@ -1,4 +1,5 @@
 defmodule RetWeb.ProjectsControllerTest do
+  @moduledoc false
   use RetWeb.ConnCase
   import Ret.TestHelpers
 

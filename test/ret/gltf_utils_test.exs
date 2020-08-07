@@ -1,4 +1,5 @@
 defmodule Ret.GLTFUtilsTest do
+  @moduledoc false
   use Ret.DataCase
   alias Ret.{GLTFUtils, OwnedFile}
   import Ret.TestHelpers

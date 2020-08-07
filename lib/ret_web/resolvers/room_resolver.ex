@@ -1,4 +1,5 @@
 defmodule RetWeb.Resolvers.RoomResolver do
+  @moduledoc false
   alias Ret.Hub
   import Canada, only: [can?: 2]
 

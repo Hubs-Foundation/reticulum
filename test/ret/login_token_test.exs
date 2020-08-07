@@ -1,4 +1,5 @@
 defmodule Ret.LoginTokenTest do
+  @moduledoc false
   use Ret.DataCase
 
   alias Ret.LoginToken

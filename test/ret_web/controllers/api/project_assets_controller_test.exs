@@ -1,4 +1,5 @@
 defmodule RetWeb.ProjectAssetsControllerTest do
+  @moduledoc false
   use RetWeb.ConnCase
   import Ret.TestHelpers
 

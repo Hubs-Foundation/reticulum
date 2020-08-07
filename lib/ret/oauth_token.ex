@@ -40,6 +40,7 @@ defmodule Ret.OAuthToken do
 end
 
 defmodule Ret.OAuthTokenSecretFetcher do
+  @moduledoc false
   def fetch_signing_secret(mod, _opts) do
     {:ok, Application.get_env(:ret, mod)[:oauth_token_key] |> JOSE.JWK.from_oct()}
   end

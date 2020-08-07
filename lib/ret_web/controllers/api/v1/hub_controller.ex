@@ -1,4 +1,5 @@
 defmodule RetWeb.Api.V1.HubController do
+  @moduledoc false
   use RetWeb, :controller
 
   alias Ret.{Hub, Scene, Repo}

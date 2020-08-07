@@ -1,4 +1,5 @@
 defmodule Ret.Support do
+  @moduledoc false
   alias Ret.{Repo, Support, SupportSubscription}
 
   import Ecto.Query

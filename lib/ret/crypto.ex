@@ -1,4 +1,5 @@
 defmodule Ret.Crypto do
+  @moduledoc false
   @header_bytes <<184, 165, 211, 58, 11, 5, 200, 155>>
 
   @chunk_size 1024 * 1024

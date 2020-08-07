@@ -1,4 +1,5 @@
 defmodule Ret.TwitterClient do
+  @moduledoc false
   import Ret.HttpUtils
 
   @twitter_api_base "https://api.twitter.com"

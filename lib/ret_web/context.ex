@@ -1,4 +1,5 @@
 defmodule RetWeb.Context do
+  @moduledoc false
   @behaviour Plug
 
   def init(opts), do: opts

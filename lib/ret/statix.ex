@@ -1,4 +1,5 @@
 defmodule Ret.Statix do
+  @moduledoc false
   use Statix
   @memory_stats ~w(atom binary ets processes system processes_used atom_used ets total)a
 

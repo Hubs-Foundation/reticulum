@@ -1,4 +1,5 @@
 defmodule RetWeb.Plugs.RateLimit do
+  @moduledoc false
   use PlugAttack
 
   if Mix.env() != :test do

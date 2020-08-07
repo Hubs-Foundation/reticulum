@@ -1,4 +1,5 @@
 defmodule RetWeb.HubChannelTest do
+  @moduledoc false
   use RetWeb.ChannelCase
   import Ret.TestHelpers
 

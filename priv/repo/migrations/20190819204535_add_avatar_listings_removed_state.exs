@@ -1,4 +1,5 @@
 defmodule Ret.Repo.Migrations.AddAvatarListingsRemovedState do
+  @moduledoc false
   use Ecto.Migration
   import Ecto.Query
   alias Ret.{AvatarListing}

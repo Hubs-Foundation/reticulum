@@ -1,4 +1,5 @@
 defmodule Ret.HttpUtils do
+  @moduledoc false
   use Retry
 
   def retry_head_until_success(url, headers \\ [], cap_ms \\ 5_000, expiry_ms \\ 10_000),

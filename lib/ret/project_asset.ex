@@ -1,4 +1,5 @@
 defmodule Ret.ProjectAsset do
+  @moduledoc false
   use Ecto.Schema
   import Ecto.Changeset
 

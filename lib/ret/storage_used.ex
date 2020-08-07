@@ -1,4 +1,5 @@
 defmodule Ret.StorageUsed do
+  @moduledoc false
   use Cachex.Warmer
   use Retry
 

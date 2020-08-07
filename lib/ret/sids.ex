@@ -1,4 +1,5 @@
 defmodule Ret.Sids do
+  @moduledoc false
   @num_random_bits_for_sid 32
 
   def generate_sid() do

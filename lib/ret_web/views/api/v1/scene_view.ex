@@ -1,4 +1,5 @@
 defmodule RetWeb.Api.V1.SceneView do
+  @moduledoc false
   use RetWeb, :view
   alias Ret.{OwnedFile, Scene, SceneListing, Project}
 

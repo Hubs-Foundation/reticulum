@@ -1,4 +1,5 @@
 defmodule RetWeb.Plugs.HeaderAuthorization do
+  @moduledoc false
   import Plug.Conn
 
   def init(default), do: default

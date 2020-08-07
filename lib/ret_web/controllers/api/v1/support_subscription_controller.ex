@@ -1,4 +1,5 @@
 defmodule RetWeb.Api.V1.SupportSubscriptionController do
+  @moduledoc false
   use RetWeb, :controller
   import Ecto.Query
 

@@ -2,6 +2,7 @@
 # This API probably can/will be revisited if we have multiple providers that need this kind
 # of interface
 defmodule RetWeb.Api.V1.TwitterController do
+  @moduledoc false
   use RetWeb, :controller
   alias Ret.{TwitterClient}
 

@@ -1,4 +1,5 @@
 defmodule RetWeb.Plugs.AddVary do
+  @moduledoc false
   def init(default), do: default
 
   def call(conn, _options) do

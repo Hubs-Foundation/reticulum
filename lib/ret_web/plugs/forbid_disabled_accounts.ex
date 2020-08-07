@@ -1,4 +1,5 @@
 defmodule RetWeb.Plugs.ForbidDisabledAccounts do
+  @moduledoc false
   import Plug.Conn
 
   def init([]), do: []

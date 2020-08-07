@@ -1,4 +1,5 @@
 defmodule RetWeb.Api.V1.HubView do
+  @moduledoc false
   use RetWeb, :view
   alias Ret.{Hub, Scene, SceneListing}
 

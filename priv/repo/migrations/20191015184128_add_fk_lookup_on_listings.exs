@@ -1,4 +1,5 @@
 defmodule Ret.Repo.Migrations.AddFkLookupOnListings do
+  @moduledoc false
   use Ecto.Migration
 
   def up do

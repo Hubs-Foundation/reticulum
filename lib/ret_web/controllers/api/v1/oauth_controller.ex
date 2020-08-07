@@ -1,4 +1,5 @@
 defmodule RetWeb.Api.V1.OAuthController do
+  @moduledoc false
   use RetWeb, :controller
 
   alias Ret.{Repo, OAuthToken, OAuthProvider, DiscordClient, SlackClient, TwitterClient, Hub, Account, PermsToken}

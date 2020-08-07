@@ -1,4 +1,5 @@
 defmodule Ret.GLTFUtils do
+  @moduledoc false
   alias Ret.{OwnedFile}
 
   @texture_paths %{

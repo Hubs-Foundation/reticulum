@@ -1,4 +1,5 @@
 defmodule RetWeb.ControllerHelpers do
+  @moduledoc false
   import Plug.Conn
   import Phoenix.Controller
   import RetWeb.ErrorHelpers

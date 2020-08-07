@@ -1,4 +1,6 @@
 defmodule RetWeb.Canary.AuthorizationPipeline do
+  @moduledoc false
+
   def init(options), do: options
 
   def call(conn, _opts) do

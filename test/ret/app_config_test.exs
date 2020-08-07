@@ -1,4 +1,5 @@
 defmodule Ret.AppConfigTest do
+  @moduledoc false
   use Ret.DataCase
 
   test "should construct correct app config structure" do

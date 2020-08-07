@@ -1,4 +1,5 @@
 defmodule Ret.DiscordClient do
+  @moduledoc false
   use Bitwise
   alias Ret.{BitFieldUtils}
 

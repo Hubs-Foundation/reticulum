@@ -1,4 +1,5 @@
 defmodule RetWeb.ApiHelpers do
+  @moduledoc false
   import Plug.Conn
 
   # In an API create routine, call this with a handler.

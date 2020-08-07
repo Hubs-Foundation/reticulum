@@ -1,4 +1,5 @@
 defmodule Ret.DbWarmerJob do
+  @moduledoc false
   import Ecto.Query
 
   # Routine run to keep database up when there are any CCU.

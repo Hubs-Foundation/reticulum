@@ -1,4 +1,5 @@
 defmodule Ret.Coturn do
+  @moduledoc false
   # Adds a new secret, and removes secrets older than 15 minutes since a new one is generated every five.
   # Note this is safe to run on a multi-node cluster since coturn respects all secrets in the db.
   def rotate_secrets(force \\ false, repo \\ Ret.Repo) do

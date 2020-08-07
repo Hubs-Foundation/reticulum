@@ -1,4 +1,5 @@
 defmodule Ret.PageOriginWarmer do
+  @moduledoc false
   use Cachex.Warmer
   use Retry
   import Ret.HttpUtils

@@ -1,4 +1,5 @@
 defmodule RetWeb.Api.V1.AccountView do
+  @moduledoc false
   use RetWeb, :view
 
   alias Ret.{Account, Identity}

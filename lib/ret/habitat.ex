@@ -1,4 +1,5 @@
 defmodule Ret.Habitat do
+  @moduledoc false
   def get_service_members(nil) do
     []
   end

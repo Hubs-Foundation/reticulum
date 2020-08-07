@@ -1,4 +1,5 @@
 defmodule Ret.WebPushSubscription do
+  @moduledoc false
   use Ecto.Schema
   import Ecto.Changeset
   import Ecto.Query

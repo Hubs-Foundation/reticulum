@@ -1,4 +1,5 @@
 defmodule RetWeb.Email do
+  @moduledoc false
   use Bamboo.Phoenix, view: RetWeb.EmailView
   alias Ret.{AppConfig}
 

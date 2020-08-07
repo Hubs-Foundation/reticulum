@@ -1,4 +1,5 @@
 defmodule Ret.HubTest do
+  @moduledoc false
   use Ret.DataCase
   import Ret.TestHelpers
 

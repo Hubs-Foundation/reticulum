@@ -31,6 +31,7 @@ defmodule Ret.SessionToken do
 end
 
 defmodule Ret.SessionTokenSecretFetcher do
+  @moduledoc false
   def fetch_signing_secret(_mod, _opts) do
     {:ok, Application.get_env(:ret, Ret.Guardian)[:secret_key] |> JOSE.JWK.from_oct()}
   end

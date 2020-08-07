@@ -1,4 +1,5 @@
 defmodule RetWeb.SceneControllerTest do
+  @moduledoc false
   use RetWeb.ConnCase
   import Ret.TestHelpers
 

@@ -1,4 +1,5 @@
 defmodule Ret.Mixfile do
+  @moduledoc false
   use Mix.Project
 
   def project do
@@ -16,18 +17,22 @@ defmodule Ret.Mixfile do
       name: "Reticulum",
       source_url: "https://github.com/mozilla/reticulum",
       homepage_url: "https://hubs.mozilla.com/",
-      docs: [
-        main: "readme",
-        # logo: "logo.png",
-        extras: extras()
-      ]
+      docs: docs()
+    ]
+  end
+
+  defp docs do
+    [
+      api_reference: false,
+      main: "readme",
+      # logo: "logo.png",
+      extras: extras()
     ]
   end
 
   defp extras do
     [
-      "README.md",
-      "guides/graphql_api.md"
+      "README.md"
     ]
   end
 

@@ -1,4 +1,5 @@
 defmodule RetWeb.Api.V1.ProjectAssetsController do
+  @moduledoc false
   use RetWeb, :controller
 
   alias Ret.{Asset, Project, ProjectAsset, Repo, Storage}

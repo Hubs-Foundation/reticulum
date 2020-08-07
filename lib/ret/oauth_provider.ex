@@ -1,4 +1,5 @@
 defmodule Ret.OAuthProvider do
+  @moduledoc false
   use Ecto.Schema
 
   @schema_prefix "ret0"

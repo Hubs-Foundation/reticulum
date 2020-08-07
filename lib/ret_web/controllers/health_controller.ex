@@ -1,4 +1,5 @@
 defmodule RetWeb.HealthController do
+  @moduledoc false
   use RetWeb, :controller
   import Ecto.Query
 

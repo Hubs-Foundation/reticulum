@@ -1,4 +1,5 @@
 defmodule Ret.Locking do
+  @moduledoc false
   alias Ret.Repo
 
   def exec_if_session_lockable(lock_name, exec) do

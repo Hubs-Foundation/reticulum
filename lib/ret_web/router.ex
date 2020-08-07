@@ -1,4 +1,5 @@
 defmodule RetWeb.Router do
+  @moduledoc false
   use RetWeb, :router
   use Plug.ErrorHandler
   use Sentry.Plug

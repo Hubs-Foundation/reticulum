@@ -1,4 +1,5 @@
 defmodule Ret.WebPushSubscriptionTest do
+  @moduledoc false
   use Ret.DataCase
   import Ret.TestHelpers
 

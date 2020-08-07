@@ -1,4 +1,5 @@
 defmodule RetWeb.Schema do
+  @moduledoc false
   use Absinthe.Schema
   alias Ret.Scene
 

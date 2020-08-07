@@ -1,4 +1,5 @@
 defmodule Ret.Repo.Migrations.AddMinTokenIssuedAtToAccount do
+  @moduledoc false
   use Ecto.Migration
 
   def change do

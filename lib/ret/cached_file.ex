@@ -1,4 +1,5 @@
 defmodule Ret.CachedFile do
+  @moduledoc false
   use Ecto.Schema
   import Ecto.Query
   import Ecto.Changeset

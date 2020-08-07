@@ -1,4 +1,5 @@
 defmodule Ret.Repo.Migrations.AddSceneToHubs do
+  @moduledoc false
   use Ecto.Migration
 
   def change do

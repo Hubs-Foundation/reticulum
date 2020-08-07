@@ -1,4 +1,5 @@
 defmodule Ret.Repo.Migrations.AllowNullSceneOwnedFile do
+  @moduledoc false
   use Ecto.Migration
 
   def up do

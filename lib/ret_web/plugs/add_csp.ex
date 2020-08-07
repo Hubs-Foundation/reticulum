@@ -1,4 +1,5 @@
 defmodule RetWeb.Plugs.AddCSP do
+  @moduledoc false
   @customizable_rule_types [
     :script_src,
     :font_src,

@@ -1,4 +1,5 @@
 defmodule RetWeb.AuthChannelTest do
+  @moduledoc false
   use RetWeb.ChannelCase
   import Ecto.Query
   import Ret.TestHelpers

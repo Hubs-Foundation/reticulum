@@ -1,4 +1,5 @@
 defmodule Ret.Application do
+  @moduledoc false
   use Application
   import Cachex.Spec
 

@@ -1,4 +1,5 @@
 defmodule Ret.Hub.HubSlug do
+  @moduledoc false
   use EctoAutoslugField.Slug, from: :name, to: :slug, always_change: true
 
   def get_sources(_changeset, _opts) do
@@ -7,6 +8,7 @@ defmodule Ret.Hub.HubSlug do
 end
 
 defmodule Ret.Hub do
+  @moduledoc false
   use Ecto.Schema
   use Bitwise
 

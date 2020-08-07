@@ -1,4 +1,5 @@
 defmodule Ret.AvatarListing.AvatarListingSlug do
+  @moduledoc false
   use EctoAutoslugField.Slug, from: :name, to: :slug, always_change: true
 
   def get_sources(_changeset, _opts) do
@@ -7,6 +8,7 @@ defmodule Ret.AvatarListing.AvatarListingSlug do
 end
 
 defmodule Ret.AvatarListing do
+  @moduledoc false
   use Ecto.Schema
   import Ecto.Changeset
 

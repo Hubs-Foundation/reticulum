@@ -1,4 +1,5 @@
 defmodule Ret.Speelycaptor do
+  @moduledoc false
   import Ret.HttpUtils
 
   def convert(%Plug.Upload{path: path, content_type: "video/" <> _tail}, "video/mp4") do

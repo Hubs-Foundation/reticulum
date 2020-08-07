@@ -1,4 +1,5 @@
 defmodule RetWeb.Plugs.BotHeaderAuthorization do
+  @moduledoc false
   import Plug.Conn
   @header_name "x-ret-bot-access-key"
 

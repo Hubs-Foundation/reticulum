@@ -1,5 +1,6 @@
 # Terminates the pipeline if the user is not currently logged in or if they are not an administrator.
 defmodule RetWeb.Plugs.AdminOnly do
+  @moduledoc false
   import Plug.Conn
 
   def init(options), do: options

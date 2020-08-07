@@ -1,4 +1,5 @@
 defmodule Ret.TestHelpers do
+  @moduledoc false
   alias Ret.{Storage, Project, Account, Asset, ProjectAsset, Scene, SceneListing, Repo, Hub, Avatar, AvatarListing}
 
   def generate_temp_owned_file(account) do

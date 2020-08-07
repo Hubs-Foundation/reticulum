@@ -1,4 +1,5 @@
 defmodule Ret.SlackClient do
+  @moduledoc false
   @oauth_scope "identity.basic,identity.email"
   @slack_api_base "https://slack.com/"
 

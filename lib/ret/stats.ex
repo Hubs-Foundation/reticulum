@@ -1,4 +1,5 @@
 defmodule Ret.Stats do
+  @moduledoc false
   # Given a keyword list of symbols to integer weights returns a value according to that distribution
   #
   # Eg weighted_sample(a: 1, b: 10) will sample according to a distribution where b is 10x more likely than a.
