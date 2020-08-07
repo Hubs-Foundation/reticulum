@@ -1,9 +1,10 @@
 defmodule Ret.OAuthToken do
-  @moduledoc """
-  OAuthTokens are used in the "state" parameter in our community integration OAuth flows.
-  They allow us to verify that an incoming OAuth request can be trusted and they contain state used to complete
-  the OAuth flow.
-  """
+  @moduledoc false
+  #"""
+  #OAuthTokens are used in the "state" parameter in our community integration OAuth flows.
+  #They allow us to verify that an incoming OAuth request can be trusted and they contain state used to complete
+  #the OAuth flow.
+  #"""
   use Guardian, otp_app: :ret, secret_fetcher: Ret.OAuthTokenSecretFetcher
 
   def subject_for_token(_, _), do: {:ok, nil}

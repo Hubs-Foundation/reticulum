@@ -1,7 +1,8 @@
 defmodule RoomQueryTest do
-  @moduledoc """
-  Test absinthe queries on rooms
-  """
+  @moduledoc false
+  # """
+  # Test absinthe queries on rooms
+  # """
 
   use ExUnit.Case
   use RetWeb.ConnCase

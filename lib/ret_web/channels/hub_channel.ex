@@ -1,5 +1,6 @@
 defmodule RetWeb.HubChannel do
-  @moduledoc "Ret Web Channel for Hubs"
+  @moduledoc false
+  #"Ret Web Channel for Hubs"
 
   use RetWeb, :channel
 

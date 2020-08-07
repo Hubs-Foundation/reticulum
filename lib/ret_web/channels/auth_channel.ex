@@ -1,5 +1,6 @@
 defmodule RetWeb.AuthChannel do
-  @moduledoc "Ret Web Channel for Authentication"
+  @moduledoc false
+  #"Ret Web Channel for Authentication"
 
   use RetWeb, :channel
   import Canada, only: [can?: 2]

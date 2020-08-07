@@ -1,5 +1,6 @@
 defmodule RetWeb.LinkChannel do
-  @moduledoc "Ret Web Channel for Device links"
+  @moduledoc false
+  #"Ret Web Channel for Device links"
 
   use RetWeb, :channel
 

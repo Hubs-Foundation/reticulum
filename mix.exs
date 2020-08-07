@@ -10,7 +10,24 @@ defmodule Ret.Mixfile do
       compilers: [:phoenix, :gettext] ++ Mix.compilers(),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
-      deps: deps()
+      deps: deps(),
+
+      # docs
+      name: "Reticulum",
+      source_url: "https://github.com/mozilla/reticulum",
+      homepage_url: "https://hubs.mozilla.com/",
+      docs: [
+        main: "readme",
+        # logo: "logo.png",
+        extras: extras()
+      ]
+    ]
+  end
+
+  defp extras do
+    [
+      "README.md",
+      "guides/graphql_api.md"
     ]
   end
 

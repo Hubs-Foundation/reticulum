@@ -1,5 +1,6 @@
 defmodule RetWeb.RetChannel do
-  @moduledoc "Global comms channel for reticulum cluster"
+  @moduledoc false
+  #"Global comms channel for reticulum cluster"
 
   use RetWeb, :channel
 

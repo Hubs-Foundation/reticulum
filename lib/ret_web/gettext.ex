@@ -1,24 +1,25 @@
 defmodule RetWeb.Gettext do
-  @moduledoc """
-  A module providing Internationalization with a gettext-based API.
+  @moduledoc false
+  # """
+  # A module providing Internationalization with a gettext-based API.
 
-  By using [Gettext](https://hexdocs.pm/gettext),
-  your module gains a set of macros for translations, for example:
+  # By using [Gettext](https://hexdocs.pm/gettext),
+  # your module gains a set of macros for translations, for example:
 
-      import RetWeb.Gettext
+  #     import RetWeb.Gettext
 
-      # Simple translation
-      gettext "Here is the string to translate"
+  #     # Simple translation
+  #     gettext "Here is the string to translate"
 
-      # Plural translation
-      ngettext "Here is the string to translate",
-               "Here are the strings to translate",
-               3
+  #     # Plural translation
+  #     ngettext "Here is the string to translate",
+  #              "Here are the strings to translate",
+  #              3
 
-      # Domain-based translation
-      dgettext "errors", "Here is the error message to translate"
+  #     # Domain-based translation
+  #     dgettext "errors", "Here is the error message to translate"
 
-  See the [Gettext Docs](https://hexdocs.pm/gettext) for detailed usage.
-  """
+  # See the [Gettext Docs](https://hexdocs.pm/gettext) for detailed usage.
+  # """
   use Gettext, otp_app: :ret
 end
