@@ -1,6 +1,7 @@
 import EctoEnum
 
-defenum(Ret.Hub.EntryMode, :hub_entry_mode, [:allow, :deny], schema: "ret0")
+defenum(Ret.Hub.EntryMode, :hub_entry_mode, [:allow, :invite, :deny], schema: "ret0")
+defenum(Ret.HubInvite.State, :hub_invite_state, [:active, :revoked], schema: "ret0")
 defenum(Ret.HubBinding.Type, :hub_binding_type, [:discord, :slack], schema: "ret0")
 defenum(Ret.OAuthProvider.Source, :oauth_provider_source, [:discord, :slack, :twitter], schema: "ret0")
 defenum(Ret.OwnedFile.State, :owned_file_state, [:active, :inactive, :removed], schema: "ret0")
