@@ -14,7 +14,7 @@ defmodule Ret.HubInvite do
     timestamps()
   end
 
-  def invite_for_hub(%Hub{} = hub) do
+  def find_or_create_invite_for_hub(%Hub{} = hub) do
     hub_invite = HubInvite |> Repo.get_by(hub_id: hub.hub_id, state: :active)
 
     if hub_invite == nil do

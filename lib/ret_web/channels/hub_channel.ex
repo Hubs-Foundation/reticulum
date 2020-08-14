@@ -436,7 +436,7 @@ defmodule RetWeb.HubChannel do
     account = Guardian.Phoenix.Socket.current_resource(socket)
 
     if account |> can?(update_hub(hub)) do
-      hub_invite = hub |> HubInvite.invite_for_hub()
+      hub_invite = hub |> HubInvite.find_or_create_invite_for_hub()
       {:reply, {:ok, %{hub_invite_id: hub_invite && hub_invite.hub_invite_sid}}, socket}
     else
       {:reply, {:ok, %{}}, socket}
@@ -450,7 +450,7 @@ defmodule RetWeb.HubChannel do
     if account |> can?(update_hub(hub)) do
       HubInvite.revoke_invite(payload["hub_invite_id"])
       # Hubs can only have one invite for now, so we create a new one when the old one was revoked.
-      hub_invite = hub |> HubInvite.invite_for_hub()
+      hub_invite = hub |> HubInvite.find_or_create_invite_for_hub()
       {:reply, {:ok, %{hub_invite_id: hub_invite.hub_invite_sid}}, socket}
     else
       {:reply, {:ok, %{}}, socket}
