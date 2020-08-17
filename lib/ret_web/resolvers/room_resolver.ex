@@ -1,6 +1,7 @@
 defmodule RetWeb.Resolvers.RoomResolver do
-  alias Ret.Hub
+  alias Ret.{Hub, Repo}
   import Canada, only: [can?: 2]
+  import RetWeb.ApiEctoErrorHelpers
 
   def my_rooms(_parent, args, %{context: %{account: account}}) do
     {:ok, Hub.get_my_rooms(account, args)}
@@ -26,9 +27,9 @@ defmodule RetWeb.Resolvers.RoomResolver do
     {:ok, hub} = Hub.create(args)
 
     hub
-    |> Ret.Repo.preload(Hub.hub_preloads())
+    |> Repo.preload(Hub.hub_preloads())
     |> Hub.changeset_for_creator_assignment(account, hub.creator_assignment_token)
-    |> Ret.Repo.update!()
+    |> Repo.update!()
 
     {:ok, hub}
   end
@@ -75,5 +76,49 @@ defmodule RetWeb.Resolvers.RoomResolver do
 
   def scene(hub, _args, _resolutions) do
     {:ok, Hub.scene_or_scene_listing_for(hub)}
+  end
+
+  def update_room(_, %{id: hub_sid} = args, %{context: %{account: account}}) do
+    hub =
+      Hub
+      |> Repo.get_by(hub_sid: hub_sid)
+      |> Repo.preload([:hub_role_memberships, :hub_bindings])
+
+    case hub do
+      nil ->
+        {:error, "Cannot find room with id " <> hub_sid}
+
+      _ ->
+        case can?(account, update_roles(hub)) do
+          false ->
+            {:error, "Account does not have permission to update this hub."}
+
+          true ->
+            changeset =
+              hub
+              |> Hub.add_attrs_to_changeset(args)
+
+            #              |> Hub.add_member_permissions_to_changeset(args)
+            #              |> Hub.maybe_add_promotion_to_changeset(account, hub, args)
+
+            case changeset do
+              %{valid?: false} ->
+                {:error,
+                 %{
+                   message: "Changeset errors occurred",
+                   code: :schema_errors,
+                   errors: to_api_errors(changeset)
+                 }}
+
+              _ ->
+                updated_hub =
+                  changeset
+                  |> Repo.update!()
+                  |> Repo.preload(Hub.hub_preloads())
+
+                {:ok, updated_hub}
+            end
+        end
+    end
   end
 end

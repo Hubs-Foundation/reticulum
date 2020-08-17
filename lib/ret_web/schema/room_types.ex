@@ -103,6 +103,18 @@ defmodule RetWeb.Schema.RoomTypes do
 
       resolve(&Resolvers.RoomResolver.create_room/3)
     end
+    field :update_room, :room do
+      arg(:id, :string)
+      arg(:name, :string)
+      # arg(:description, :string)
+      # arg(:room_size, :integer)
+      # arg(:scene_id, :string)
+      # TODO: promotion
+      # TODO: add/remove owner
+      # TODO: member_permissions
+
+      resolve(&Resolvers.RoomResolver.update_room/3)
+    end
   end
 
   object :room_subscriptions do
