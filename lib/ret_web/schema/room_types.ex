@@ -103,8 +103,9 @@ defmodule RetWeb.Schema.RoomTypes do
 
       resolve(&Resolvers.RoomResolver.create_room/3)
     end
+
     field :update_room, :room do
-      arg(:id, :string)
+      arg(:id, non_null(:string))
       arg(:name, :string)
       arg(:description, :string)
       arg(:room_size, :integer)

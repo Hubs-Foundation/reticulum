@@ -80,57 +80,62 @@ defmodule RetWeb.Resolvers.RoomResolver do
   end
 
   def update_room(_, %{id: hub_sid} = args, %{context: %{account: account}}) do
-    hub =
-      Hub
-      |> Repo.get_by(hub_sid: hub_sid)
-      |> Repo.preload([:hub_role_memberships, :hub_bindings])
+    hub = Hub |> Repo.get_by(hub_sid: hub_sid) |> Repo.preload([:hub_role_memberships, :hub_bindings])
+    update_room_with_account(hub, account, args)
+  end
 
-    case hub do
-      nil ->
-        {:error, "Cannot find room with id " <> hub_sid}
+  defp update_room_with_account(nil, _account, %{id: hub_sid}) do
+    {:error, "Cannot find room with id " <> hub_sid}
+  end
+
+  defp update_room_with_account(hub, account, args) do
+    case can?(account, update_roles(hub)) do
+      false ->
+        {:error, "Account does not have permission to update this hub."}
+
+      true ->
+        # TODO: Member permissions #              |> Hub.add_member_permissions_to_changeset(args)
+        # TODO: Promotions         #              |> Hub.maybe_add_promotion_to_changeset(account, hub, args)
+        try_do_update_room(changeset_for_update_room(hub, args))
+    end
+  end
+
+  defp changeset_for_update_room(hub, %{scene_id: scene_id} = args) do
+    scene_or_scene_listing = Hub.get_scene_or_scene_listing_by_id(scene_id)
+
+    if is_nil(scene_or_scene_listing) do
+      {:error, "Cannot find scene with id " <> scene_id}
+    else
+      Hub.changeset_for_new_scene(hub, scene_or_scene_listing)
+      |> Hub.add_attrs_to_changeset(args)
+    end
+  end
+
+  defp changeset_for_update_room(hub, args) do
+    Hub.add_attrs_to_changeset(change(hub), args)
+  end
+
+  defp try_do_update_room(changeset) do
+    case changeset do
+      {:error, reason} ->
+        {:error, reason}
+
+      %{valid?: false} ->
+        {:error,
+         %{
+           message: "Changeset errors occurred",
+           code: :schema_errors,
+           errors: to_api_errors(changeset)
+         }}
 
       _ ->
-        case can?(account, update_roles(hub)) do
-          false ->
-            {:error, "Account does not have permission to update this hub."}
+        updated_hub =
+          changeset
+          |> Repo.update!()
+          |> Repo.preload(Hub.hub_preloads())
 
-          true ->
-            scene_id = Map.get(args, :scene_id, nil)
-            scene_or_scene_listing = Hub.get_scene_or_scene_listing_by_id(scene_id)
-
-            if scene_id && is_nil(scene_or_scene_listing) do
-              {:error, "Cannot find scene with id " <> scene_id}
-            else
-              changeset =
-                if scene_or_scene_listing,
-                  do: Hub.changeset_for_new_scene(hub, scene_or_scene_listing),
-                  else: change(hub)
-
-              changeset = Hub.add_attrs_to_changeset(changeset, args)
-
-              # TODO: Member permissions #              |> Hub.add_member_permissions_to_changeset(args)
-              # TODO: Promotions         #              |> Hub.maybe_add_promotion_to_changeset(account, hub, args)
-
-              case changeset do
-                %{valid?: false} ->
-                  {:error,
-                   %{
-                     message: "Changeset errors occurred",
-                     code: :schema_errors,
-                     errors: to_api_errors(changeset)
-                   }}
-
-                _ ->
-                  updated_hub =
-                    changeset
-                    |> Repo.update!()
-                    |> Repo.preload(Hub.hub_preloads())
-
-                  # TODO: Broadcast changes on hub_channel so room occupants know about changes
-                  {:ok, updated_hub}
-              end
-            end
-        end
+        # TODO: Broadcast changes on hub_channel so room occupants know about changes
+        {:ok, updated_hub}
     end
   end
 end
