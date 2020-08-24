@@ -598,7 +598,7 @@ defmodule Ret.Hub do
     |> BitFieldUtils.permissions_to_map(@member_permissions)
   end
 
-  def maybe_add_member_permissions(changeset, hub, %{"member_permissions" => member_permissions} = hub_params) do
+  def maybe_add_member_permissions(changeset, hub, %{"member_permissions" => member_permissions}) do
     add_member_permissions_update_to_changeset(
       changeset,
       hub,
@@ -606,7 +606,7 @@ defmodule Ret.Hub do
     )
   end
 
-  def maybe_add_member_permissions(changeset, hub, %{:member_permissions => member_permissions} = hub_params) do
+  def maybe_add_member_permissions(changeset, hub, %{:member_permissions => member_permissions}) do
     add_member_permissions_update_to_changeset(
       changeset,
       hub,

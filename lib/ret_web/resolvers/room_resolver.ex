@@ -1,9 +1,8 @@
 defmodule RetWeb.Resolvers.RoomResolver do
-  alias Ret.{Hub, Repo, Scene, SceneListing}
+  alias Ret.{Hub, Repo}
   alias RetWeb.Api.V1.{HubView}
   import Canada, only: [can?: 2]
   import RetWeb.ApiEctoErrorHelpers
-  import Ecto.Changeset, only: [put_assoc: 3, change: 1]
 
   def my_rooms(_parent, args, %{context: %{account: account}}) do
     {:ok, Hub.get_my_rooms(account, args)}
@@ -102,7 +101,7 @@ defmodule RetWeb.Resolvers.RoomResolver do
           |> Hub.maybe_add_promotion_to_changeset(account, hub, args)
           |> maybe_add_new_scene_to_changeset(args)
 
-        try_do_update_room(hub, changeset, account)
+        try_do_update_room(changeset, account)
     end
   end
 
@@ -120,7 +119,7 @@ defmodule RetWeb.Resolvers.RoomResolver do
     changeset
   end
 
-  defp try_do_update_room(hub, changeset, account) do
+  defp try_do_update_room(changeset, account) do
     case changeset do
       {:error, reason} ->
         {:error, reason}
