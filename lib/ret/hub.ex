@@ -153,6 +153,7 @@ defmodule Ret.Hub do
   def get_scene_or_scene_listing_by_id(nil) do
     SceneListing.get_random_default_scene_listing()
   end
+
   def get_scene_or_scene_listing_by_id(id) do
     Scene.scene_or_scene_listing_by_sid(id)
   end
@@ -230,9 +231,9 @@ defmodule Ret.Hub do
     attrs["member_permissions"] |> Map.new(fn {k, v} -> {String.to_atom(k), v} end) |> member_permissions_to_int
   end
 
-  def add_member_permissions_update_to_changeset(changeset, hub, attrs) do
+  defp add_member_permissions_update_to_changeset(changeset, hub, member_permissions) do
     member_permissions =
-      Map.merge(member_permissions_for_hub(hub), attrs["member_permissions"])
+      Map.merge(member_permissions_for_hub(hub), member_permissions)
       |> Map.new(fn {k, v} -> {String.to_atom(k), v} end)
       |> member_permissions_to_int
 
@@ -596,6 +597,31 @@ defmodule Ret.Hub do
     hub.member_permissions
     |> BitFieldUtils.permissions_to_map(@member_permissions)
   end
+
+  def maybe_add_member_permissions(changeset, hub, %{"member_permissions" => member_permissions} = hub_params) do
+    add_member_permissions_update_to_changeset(
+      changeset,
+      hub,
+      member_permissions
+    )
+  end
+
+  def maybe_add_member_permissions(changeset, hub, %{:member_permissions => member_permissions} = hub_params) do
+    add_member_permissions_update_to_changeset(
+      changeset,
+      hub,
+      Map.new(member_permissions, fn {k, v} -> {Atom.to_string(k), v} end)
+    )
+  end
+
+  def maybe_add_member_permissions(changeset, _hub, _params) do
+    changeset
+  end
+
+  def maybe_add_promotion(changeset, account, hub, %{"allow_promotion" => _} = hub_params),
+    do: changeset |> Hub.maybe_add_promotion_to_changeset(account, hub, hub_params)
+
+  def maybe_add_promotion(changeset, _account, _hub, _), do: changeset
 
   # The account argument here can be a Ret.Account, a Ret.OAuthProvider or nil.
   def perms_for_account(%Ret.Hub{} = hub, account) do

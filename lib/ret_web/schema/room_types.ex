@@ -15,6 +15,15 @@ defmodule RetWeb.Schema.RoomTypes do
     field(:username, :string)
   end
 
+  input_object :input_member_permissions do
+    field(:spawn_and_move_media, :boolean)
+    field(:spawn_camera, :boolean)
+    field(:spawn_drawing, :boolean)
+    field(:pin_objects, :boolean)
+    field(:spawn_emoji, :boolean)
+    field(:fly, :boolean)
+  end
+
   object :member_permissions do
     field(:spawn_and_move_media, :boolean)
     field(:spawn_camera, :boolean)
@@ -110,9 +119,9 @@ defmodule RetWeb.Schema.RoomTypes do
       arg(:description, :string)
       arg(:room_size, :integer)
       arg(:scene_id, :string)
+      arg(:member_permissions, :input_member_permissions)
       # TODO: promotion
       # TODO: add/remove owner
-      # TODO: member_permissions
 
       resolve(&Resolvers.RoomResolver.update_room/3)
     end

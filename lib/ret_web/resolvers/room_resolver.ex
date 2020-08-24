@@ -95,25 +95,29 @@ defmodule RetWeb.Resolvers.RoomResolver do
         {:error, "Account does not have permission to update this hub."}
 
       true ->
-        # TODO: Member permissions #              |> Hub.add_member_permissions_to_changeset(args)
-        # TODO: Promotions         #              |> Hub.maybe_add_promotion_to_changeset(account, hub, args)
-        try_do_update_room(hub, changeset_for_update_room(hub, args), account)
+        changeset =
+          hub
+          |> Hub.add_attrs_to_changeset(args)
+          |> Hub.maybe_add_member_permissions(hub, args)
+          |> Hub.maybe_add_promotion_to_changeset(account, hub, args)
+          |> maybe_add_new_scene_to_changeset(args)
+
+        try_do_update_room(hub, changeset, account)
     end
   end
 
-  defp changeset_for_update_room(hub, %{scene_id: scene_id} = args) do
+  defp maybe_add_new_scene_to_changeset(changeset, %{scene_id: scene_id}) do
     scene_or_scene_listing = Hub.get_scene_or_scene_listing_by_id(scene_id)
 
     if is_nil(scene_or_scene_listing) do
       {:error, "Cannot find scene with id " <> scene_id}
     else
-      Hub.changeset_for_new_scene(hub, scene_or_scene_listing)
-      |> Hub.add_attrs_to_changeset(args)
+      Hub.add_new_scene_to_changeset(changeset, scene_or_scene_listing)
     end
   end
 
-  defp changeset_for_update_room(hub, args) do
-    Hub.add_attrs_to_changeset(change(hub), args)
+  defp maybe_add_new_scene_to_changeset(changeset, _args) do
+    changeset
   end
 
   defp try_do_update_room(hub, changeset, account) do
@@ -135,8 +139,6 @@ defmodule RetWeb.Resolvers.RoomResolver do
           |> Repo.update!()
           |> Repo.preload(Hub.hub_preloads())
 
-        updated_hub = Ret.Repo.preload(updated_hub, Hub.hub_preloads())
-
         response =
           HubView.render("show.json", %{
             hub: updated_hub,
@@ -148,7 +150,8 @@ defmodule RetWeb.Resolvers.RoomResolver do
             "member_permissions",
             "room_size",
             "allow_promotion",
-            "scene"
+            "scene",
+            "member_permissions"
           ])
 
         RetWeb.Endpoint.broadcast!("hub:" <> updated_hub.hub_sid, "hub_refresh_by_api", response)
