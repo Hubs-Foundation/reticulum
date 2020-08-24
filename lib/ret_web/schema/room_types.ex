@@ -106,9 +106,9 @@ defmodule RetWeb.Schema.RoomTypes do
     field :update_room, :room do
       arg(:id, :string)
       arg(:name, :string)
-      # arg(:description, :string)
-      # arg(:room_size, :integer)
-      # arg(:scene_id, :string)
+      arg(:description, :string)
+      arg(:room_size, :integer)
+      arg(:scene_id, :string)
       # TODO: promotion
       # TODO: add/remove owner
       # TODO: member_permissions

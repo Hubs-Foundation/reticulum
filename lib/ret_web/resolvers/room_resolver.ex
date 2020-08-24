@@ -1,7 +1,8 @@
 defmodule RetWeb.Resolvers.RoomResolver do
-  alias Ret.{Hub, Repo}
+  alias Ret.{Hub, Repo, Scene, SceneListing}
   import Canada, only: [can?: 2]
   import RetWeb.ApiEctoErrorHelpers
+  import Ecto.Changeset, only: [put_assoc: 3, change: 1]
 
   def my_rooms(_parent, args, %{context: %{account: account}}) do
     {:ok, Hub.get_my_rooms(account, args)}
@@ -94,29 +95,40 @@ defmodule RetWeb.Resolvers.RoomResolver do
             {:error, "Account does not have permission to update this hub."}
 
           true ->
-            changeset =
-              hub
-              |> Hub.add_attrs_to_changeset(args)
+            scene_id = Map.get(args, :scene_id, nil)
+            scene_or_scene_listing = Hub.get_scene_or_scene_listing_by_id(scene_id)
 
-            #              |> Hub.add_member_permissions_to_changeset(args)
-            #              |> Hub.maybe_add_promotion_to_changeset(account, hub, args)
+            if scene_id && is_nil(scene_or_scene_listing) do
+              {:error, "Cannot find scene with id " <> scene_id}
+            else
+              changeset =
+                if scene_or_scene_listing,
+                  do: Hub.changeset_for_new_scene(hub, scene_or_scene_listing),
+                  else: change(hub)
 
-            case changeset do
-              %{valid?: false} ->
-                {:error,
-                 %{
-                   message: "Changeset errors occurred",
-                   code: :schema_errors,
-                   errors: to_api_errors(changeset)
-                 }}
+              changeset = Hub.add_attrs_to_changeset(changeset, args)
 
-              _ ->
-                updated_hub =
-                  changeset
-                  |> Repo.update!()
-                  |> Repo.preload(Hub.hub_preloads())
+              # TODO: Member permissions #              |> Hub.add_member_permissions_to_changeset(args)
+              # TODO: Promotions         #              |> Hub.maybe_add_promotion_to_changeset(account, hub, args)
 
-                {:ok, updated_hub}
+              case changeset do
+                %{valid?: false} ->
+                  {:error,
+                   %{
+                     message: "Changeset errors occurred",
+                     code: :schema_errors,
+                     errors: to_api_errors(changeset)
+                   }}
+
+                _ ->
+                  updated_hub =
+                    changeset
+                    |> Repo.update!()
+                    |> Repo.preload(Hub.hub_preloads())
+
+                  # TODO: Broadcast changes on hub_channel so room occupants know about changes
+                  {:ok, updated_hub}
+              end
             end
         end
     end

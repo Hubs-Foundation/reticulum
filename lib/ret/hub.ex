@@ -150,6 +150,13 @@ defmodule Ret.Hub do
     end
   end
 
+  def get_scene_or_scene_listing_by_id(nil) do
+    SceneListing.get_random_default_scene_listing()
+  end
+  def get_scene_or_scene_listing_by_id(id) do
+    Scene.scene_or_scene_listing_by_sid(id)
+  end
+
   def get_by_entry_code_string(entry_code_string) when is_binary(entry_code_string) do
     case Integer.parse(entry_code_string) do
       {entry_code, _} -> Hub |> Repo.get_by(entry_code: entry_code)
@@ -161,6 +168,7 @@ defmodule Ret.Hub do
     Hub
     |> where([h], h.created_by_account_id == ^account.account_id and h.entry_mode == ^"allow")
     |> order_by(desc: :inserted_at)
+    |> preload(^Hub.hub_preloads())
     |> Repo.paginate(params)
   end
 
@@ -169,6 +177,7 @@ defmodule Ret.Hub do
     |> where([h], h.entry_mode == ^"allow")
     |> join(:inner, [h], f in AccountFavorite, on: f.hub_id == h.hub_id and f.account_id == ^account.account_id)
     |> order_by([h, f], desc: f.last_activated_at)
+    |> preload(^Hub.hub_preloads())
     |> Repo.paginate(params)
   end
 
@@ -176,6 +185,7 @@ defmodule Ret.Hub do
     Hub
     |> where([h], h.allow_promotion and h.entry_mode == ^"allow")
     |> order_by(desc: :inserted_at)
+    |> preload(^Hub.hub_preloads())
     |> Repo.paginate(params)
   end
 
