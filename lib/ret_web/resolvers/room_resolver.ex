@@ -1,5 +1,6 @@
 defmodule RetWeb.Resolvers.RoomResolver do
   alias Ret.{Hub, Repo, Scene, SceneListing}
+  alias RetWeb.Api.V1.{HubView}
   import Canada, only: [can?: 2]
   import RetWeb.ApiEctoErrorHelpers
   import Ecto.Changeset, only: [put_assoc: 3, change: 1]
@@ -96,7 +97,7 @@ defmodule RetWeb.Resolvers.RoomResolver do
       true ->
         # TODO: Member permissions #              |> Hub.add_member_permissions_to_changeset(args)
         # TODO: Promotions         #              |> Hub.maybe_add_promotion_to_changeset(account, hub, args)
-        try_do_update_room(changeset_for_update_room(hub, args))
+        try_do_update_room(hub, changeset_for_update_room(hub, args), account)
     end
   end
 
@@ -115,7 +116,7 @@ defmodule RetWeb.Resolvers.RoomResolver do
     Hub.add_attrs_to_changeset(change(hub), args)
   end
 
-  defp try_do_update_room(changeset) do
+  defp try_do_update_room(hub, changeset, account) do
     case changeset do
       {:error, reason} ->
         {:error, reason}
@@ -134,7 +135,24 @@ defmodule RetWeb.Resolvers.RoomResolver do
           |> Repo.update!()
           |> Repo.preload(Hub.hub_preloads())
 
-        # TODO: Broadcast changes on hub_channel so room occupants know about changes
+        updated_hub = Ret.Repo.preload(updated_hub, Hub.hub_preloads())
+
+        response =
+          HubView.render("show.json", %{
+            hub: updated_hub,
+            embeddable: account |> can?(embed_hub(updated_hub))
+          })
+          |> Map.put(:stale_fields, [
+            "name",
+            "description",
+            "member_permissions",
+            "room_size",
+            "allow_promotion",
+            "scene"
+          ])
+
+        RetWeb.Endpoint.broadcast!("hub:" <> updated_hub.hub_sid, "hub_refresh_by_api", response)
+
         {:ok, updated_hub}
     end
   end
