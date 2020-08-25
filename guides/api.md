@@ -21,7 +21,7 @@ It is likely that the authentication method will change in future releases of th
 We use a library called [`absinthe`](http://absinthe-graphql.org/) to power the `GraphQL` API. This library automatically converts between `camelCase` (a typical convention in `javascript`) and `snake_case` (a typical convention in `elixir`). For this reason, you will send and receive arguments and values in `camelCase`, but will see the corresponding values in `elixir` code as `snake_case`.
 
 ## Rooms
-The following examples show the capabilities of creating, querying, and modifying rooms. The code for these commands and object types can be found in [`/lib/ret_web/schema/room_types.ex`](./lib/ret_web/schema/room_types.ex)
+The following examples show the capabilities of creating, querying, and modifying rooms. The code for these commands and object types can be found in [`/lib/ret_web/schema/room_types.ex`](../lib/ret_web/schema/room_types.ex)
 
 ### Create a room
 Request:
@@ -201,7 +201,7 @@ mutation {
       fly: true,
       spawnEmoji: true,
       spawnDrawing: true,
-      pin_objects: false,
+      pinObjects: false,
       spawnCamera: false,
       spawnAndMoveMedia: true
     }
@@ -220,11 +220,11 @@ mutation {
     description:"Some description", 
     roomSize:15,
     sceneId: "74VD2Et",
-    #sceneId: "tXkCgJw"
-     memberPermissions: {
+    memberPermissions: {
       fly: true,
       spawnEmoji: true,
       spawnDrawing: true,
+      pinObjects: false,
       spawnCamera: false,
       spawnAndMoveMedia: true
     }
