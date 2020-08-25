@@ -98,7 +98,7 @@ defmodule RetWeb.Resolvers.RoomResolver do
           hub
           |> Hub.add_attrs_to_changeset(args)
           |> Hub.maybe_add_member_permissions(hub, args)
-          |> Hub.maybe_add_promotion_to_changeset(account, hub, args)
+          |> Hub.maybe_add_promotion(account, hub, args)
           |> maybe_add_new_scene_to_changeset(args)
 
         try_do_update_room(changeset, account)

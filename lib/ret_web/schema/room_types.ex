@@ -120,7 +120,7 @@ defmodule RetWeb.Schema.RoomTypes do
       arg(:room_size, :integer)
       arg(:scene_id, :string)
       arg(:member_permissions, :input_member_permissions)
-      # TODO: promotion
+      arg(:allow_promotion, :boolean)
       # TODO: add/remove owner
 
       resolve(&Resolvers.RoomResolver.update_room/3)

@@ -254,7 +254,7 @@ defmodule Ret.Hub do
   end
 
   def add_promotion_to_changeset(changeset, attrs) do
-    changeset |> put_change(:allow_promotion, !!attrs["allow_promotion"])
+    changeset |> put_change(:allow_promotion, !!attrs["allow_promotion"] || !!attrs.allow_promotion)
   end
 
   def changeset_for_new_seen_occupant_count(%Hub{} = hub, occupant_count) do
@@ -619,6 +619,9 @@ defmodule Ret.Hub do
   end
 
   def maybe_add_promotion(changeset, account, hub, %{"allow_promotion" => _} = hub_params),
+    do: changeset |> Hub.maybe_add_promotion_to_changeset(account, hub, hub_params)
+
+  def maybe_add_promotion(changeset, account, hub, %{allow_promotion: _} = hub_params),
     do: changeset |> Hub.maybe_add_promotion_to_changeset(account, hub, hub_params)
 
   def maybe_add_promotion(changeset, _account, _hub, _), do: changeset
