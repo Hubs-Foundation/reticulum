@@ -1,8 +1,10 @@
 defmodule RetWeb.Resolvers.RoomResolver do
+  @moduledoc """
+  Resolvers for room queries and mutations via the graphql API
+  """
   alias Ret.{Hub, Repo}
   alias RetWeb.Api.V1.{HubView}
   import Canada, only: [can?: 2]
-  import RetWeb.ApiEctoErrorHelpers
 
   def my_rooms(_parent, args, %{context: %{account: account}}) do
     {:ok, Hub.get_my_rooms(account, args)}
@@ -25,14 +27,16 @@ defmodule RetWeb.Resolvers.RoomResolver do
   end
 
   def create_room(_parent, args, %{context: %{account: account}}) do
-    {:ok, hub} = Hub.create(args)
+    case Hub.create(args) do
+      {:ok, hub} ->
+        hub
+        |> Repo.preload(Hub.hub_preloads())
+        |> Hub.changeset_for_creator_assignment(account, hub.creator_assignment_token)
+        |> Repo.update()
 
-    hub
-    |> Repo.preload(Hub.hub_preloads())
-    |> Hub.changeset_for_creator_assignment(account, hub.creator_assignment_token)
-    |> Repo.update!()
-
-    {:ok, hub}
+      {:error, reason} ->
+        {:error, reason}
+    end
   end
 
   def create_room(_parent, args, _resolutions) do
@@ -75,9 +79,9 @@ defmodule RetWeb.Resolvers.RoomResolver do
     {:ok, Hub.lobby_count_for(hub)}
   end
 
-  def scene(hub, _args, _resolutions) do
-    {:ok, Hub.scene_or_scene_listing_for(hub)}
-  end
+  # def scene(hub, _args, _resolutions) do
+  #  {:ok, Hub.scene_or_scene_listing_for(hub)}
+  # end
 
   def update_room(_, %{id: hub_sid} = args, %{context: %{account: account}}) do
     hub = Hub |> Repo.get_by(hub_sid: hub_sid) |> Repo.preload([:hub_role_memberships, :hub_bindings])
@@ -119,43 +123,43 @@ defmodule RetWeb.Resolvers.RoomResolver do
     changeset
   end
 
+  defp try_do_update_room({:error, reason}, _) do
+    {:error, reason}
+  end
+
   defp try_do_update_room(changeset, account) do
-    case changeset do
-      {:error, reason} ->
-        {:error, reason}
+    case changeset |> Repo.update() do
+      {:error, changeset} ->
+        {:error, changeset}
 
-      %{valid?: false} ->
-        {:error,
-         %{
-           message: "Changeset errors occurred",
-           code: :schema_errors,
-           errors: to_api_errors(changeset)
-         }}
+      {:ok, hub} ->
+        hub = Repo.preload(hub, Hub.hub_preloads())
 
-      _ ->
-        updated_hub =
-          changeset
-          |> Repo.update!()
-          |> Repo.preload(Hub.hub_preloads())
-
-        response =
-          HubView.render("show.json", %{
-            hub: updated_hub,
-            embeddable: account |> can?(embed_hub(updated_hub))
-          })
-          |> Map.put(:stale_fields, [
-            "name",
-            "description",
-            "member_permissions",
-            "room_size",
-            "allow_promotion",
-            "scene",
-            "member_permissions"
-          ])
-
-        RetWeb.Endpoint.broadcast!("hub:" <> updated_hub.hub_sid, "hub_refresh_by_api", response)
-
-        {:ok, updated_hub}
+        case broadcast_hub_refresh(hub, account) do
+          {:error, reason} -> {:error, reason}
+          :ok -> {:ok, hub}
+        end
     end
+  end
+
+  defp broadcast_hub_refresh(hub, account) do
+    payload =
+      HubView.render("show.json", %{
+        hub: hub,
+        embeddable: account |> can?(embed_hub(hub))
+      })
+      |> Map.put(:stale_fields, [
+        # TODO: Only include fields that have changed in stale_fields
+        "name",
+        "description",
+        "member_permissions",
+        "room_size",
+        "allow_promotion",
+        "scene",
+        "member_permissions"
+      ])
+
+    # TODO: Update client so we can use hub_refresh without socket_id
+    RetWeb.Endpoint.broadcast("hub:" <> hub.hub_sid, "hub_refresh_by_api", payload)
   end
 end
