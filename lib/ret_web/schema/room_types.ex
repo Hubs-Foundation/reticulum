@@ -178,7 +178,17 @@ defmodule RetWeb.Schema.RoomTypes do
     @desc "Create a room with the given properties"
     field :create_room, :room do
       @desc "The room name"
-      arg(:name, non_null(:string))
+      arg(:name, :string)
+      @desc "A description of the room"
+      arg(:description, :string)
+      @desc "The number of participants allowed into the room from the lobby at any given time"
+      arg(:room_size, :integer)
+      @desc "The id of the scene to associate with the room"
+      arg(:scene_id, :string)
+      @desc "The permissions non-admin participants should have in the room"
+      arg(:member_permissions, :input_member_permissions)
+      @desc "Make this room public (while it is open)"
+      arg(:allow_promotion, :boolean)
 
       resolve(&Resolvers.RoomResolver.create_room/3)
     end
