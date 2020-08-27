@@ -191,6 +191,7 @@ defmodule Ret.MediaResolver do
             {:offline_stream, body}
 
           String.contains?(body, "HTTPError 429") ->
+            Statix.increment("ret.media_resolver.ytdl.rate_limited")
             {:rate_limited, body}
 
           true ->
