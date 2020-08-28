@@ -93,6 +93,10 @@ defmodule RetWeb.Resolvers.RoomResolver do
     update_room_with_account(hub, account, args)
   end
 
+  def update_room(_, _, _) do
+    {:error, "Not authorized"}
+  end
+
   defp update_room_with_account(nil, _account, %{id: hub_sid}) do
     {:error, "Cannot find room with id " <> hub_sid}
   end
