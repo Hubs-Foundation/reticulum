@@ -27,17 +27,26 @@ defmodule RetWeb.Resolvers.RoomResolver do
   end
 
   def create_room(_parent, args, %{context: %{account: account}}) do
+    # TODO: Pick random default name
     args = Map.put(args, :name, Map.get(args, :name, "Delightful Cooperative Meetup"))
 
     case Hub.create(args) do
       {:ok, hub} ->
-        hub
-        |> Hub.add_attrs_to_changeset(args)
-        |> Hub.maybe_add_member_permissions(hub, args)
-        |> Hub.maybe_add_promotion(account, hub, args)
-        |> maybe_add_new_scene_to_changeset(args)
-        |> Hub.changeset_for_creator_assignment(account, hub.creator_assignment_token)
-        |> Repo.update()
+        case hub
+             |> Hub.add_attrs_to_changeset(args)
+             |> Hub.maybe_add_member_permissions(hub, args)
+             |> Hub.maybe_add_promotion(account, hub, args)
+             |> maybe_add_new_scene_to_changeset(args)
+             |> Repo.update() do
+          {:ok, hub} ->
+            hub
+            |> Repo.preload(Hub.hub_preloads())
+            |> Hub.changeset_for_creator_assignment(account, hub.creator_assignment_token)
+            |> Repo.update()
+
+          {:error, reason} ->
+            {:error, reason}
+        end
 
       {:error, reason} ->
         {:error, reason}
