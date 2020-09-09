@@ -173,8 +173,7 @@ defmodule RetWeb.Resolvers.RoomResolver do
         "member_permissions",
         "room_size",
         "allow_promotion",
-        "scene",
-        "member_permissions"
+        "scene"
       ])
 
     # TODO: Update client so we can use hub_refresh without socket_id
