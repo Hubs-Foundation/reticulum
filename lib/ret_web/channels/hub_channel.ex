@@ -408,7 +408,8 @@ defmodule RetWeb.HubChannel do
       room_size_changed = hub.room_size != payload["room_size"]
       can_change_promotion = account |> can?(update_hub_promotion(hub))
       promotion_changed = can_change_promotion and hub.allow_promotion != payload["allow_promotion"]
-      entry_mode_changed = hub.entry_mode != payload["entry_mode"]
+      # Older clients may not send an entry_mode in the payload.
+      entry_mode_changed = payload["entry_mode"] !== nil and hub.entry_mode != payload["entry_mode"]
 
       stale_fields = []
       stale_fields = if name_changed, do: ["name" | stale_fields], else: stale_fields
@@ -422,7 +423,7 @@ defmodule RetWeb.HubChannel do
       |> Hub.add_attrs_to_changeset(payload)
       |> Hub.add_member_permissions_to_changeset(payload)
       |> Hub.maybe_add_promotion_to_changeset(account, hub, payload)
-      |> Hub.add_entry_mode_to_changeset(payload)
+      |> Hub.maybe_add_entry_mode_to_changeset(payload)
       |> Repo.update!()
       |> Repo.preload(Hub.hub_preloads())
       |> broadcast_hub_refresh!(socket, stale_fields)
