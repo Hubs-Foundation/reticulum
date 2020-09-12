@@ -216,8 +216,12 @@ defmodule Ret.Hub do
     changeset |> put_change(:allow_promotion, !!attrs["allow_promotion"])
   end
 
-  def add_entry_mode_to_changeset(changeset, attrs) do
-    changeset |> put_change(:entry_mode, attrs["entry_mode"])
+  def maybe_add_entry_mode_to_changeset(changeset, attrs) do
+    if attrs["entry_mode"] === nil do
+      changeset
+    else
+      changeset |> put_change(:entry_mode, attrs["entry_mode"])
+    end
   end
 
   def changeset_for_new_seen_occupant_count(%Hub{} = hub, occupant_count) do
