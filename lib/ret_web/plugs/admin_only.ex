@@ -7,12 +7,14 @@ defmodule RetWeb.Plugs.AdminOnly do
   def call(conn, _opts) do
     # Put account in into assigns for Canary to consume.
     account = Guardian.Plug.current_resource(conn)
+    main_host = RetWeb.Endpoint.config(:url)[:host]
 
     if account && account.is_admin do
       conn
     else
       conn
-      |> put_status(:unauthorized)
+      |> resp(401, "Not authorized")
+      |> send_resp()
       |> halt()
     end
   end
