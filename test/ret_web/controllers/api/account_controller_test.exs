@@ -17,8 +17,11 @@ defmodule RetWeb.AccountControllerTest do
     req = conn |> api_v1_account_path(:create, %{data: %{email: "testapi@mozilla.com"}})
     conn = conn |> post(req)
 
+    exists = Account.exists_for_email?("testapi@mozilla.com")
+
     assert conn.status === 401
-    assert conn.state === :unset
+    assert conn.resp_body === "Not authorized"
+    assert exists === false
   end
 
   test "admins can create accounts", %{conn: conn} do
@@ -128,7 +131,7 @@ defmodule RetWeb.AccountControllerTest do
     conn = conn |> post(req)
 
     assert conn.status === 401
-    assert conn.state === :unset
+    assert conn.resp_body === "Not authorized"
   end
 
   test "should return 404 if no such account exists", %{conn: conn} do
