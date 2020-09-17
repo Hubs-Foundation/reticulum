@@ -12,7 +12,7 @@ defmodule RetWeb.Plugs.AdminOnly do
       conn
     else
       conn
-      |> put_status(:unauthorized)
+      |> send_resp(401, "Not authorized")
       |> halt()
     end
   end
