@@ -12,8 +12,7 @@ defmodule RetWeb.Plugs.AdminOnly do
       conn
     else
       conn
-      |> resp(401, "Not authorized")
-      |> send_resp()
+      |> send_resp(401, "Not authorized")
       |> halt()
     end
   end
