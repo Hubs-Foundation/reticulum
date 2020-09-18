@@ -5,7 +5,9 @@ A hybrid game networking and web API server, focused on Social Mixed Reality.
 ## Development
 
 ### 1. Install Prerequisite Packages:
+
 #### PostgreSQL (recommended version 11.x):
+
 Linux: Use your package manager
 
 Windows: https://www.postgresql.org/download/windows/
@@ -13,23 +15,28 @@ Windows: https://www.postgresql.org/download/windows/
 Windows WSL: https://github.com/michaeltreat/Windows-Subsystem-For-Linux-Setup-Guide/blob/master/readmes/installs/PostgreSQL.md
 
 #### Erlang (v22) + Elixr + Phoenix
+
 https://elixir-lang.org/install.html
 
 https://hexdocs.pm/phoenix/installation.html
 
 #### Ansible
+
 https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html
 
 ### 2. Setup Reticulum:
+
 Run the following commands at the root of the reticulum directory:
+
 1. `mix deps.get`
 2. `mix ecto.create`
-    * If step 2 fails, you may need to change the password for the `postgres` role to match the password configured `dev.exs`.
-    * From within the `psql` shell, enter `ALTER USER postgres WITH PASSWORD 'postgres';`
+   - If step 2 fails, you may need to change the password for the `postgres` role to match the password configured `dev.exs`.
+   - From within the `psql` shell, enter `ALTER USER postgres WITH PASSWORD 'postgres';`
 3. from the `assets` directory, `npm install`
 4. From the project directory `mkdir -p storage/dev`
 
 ### 3. Start Reticulum
+
 Run `scripts/run.sh` if you have the hubs secret repo cloned. Otherwise `iex -S mix phx.server`
 
 ## Run Hubs Against a Local Reticulum Instance
@@ -44,6 +51,7 @@ When running the full stack for Hubs (which includes Reticulum) locally it is ne
 This will allow the CSP checks to pass that are served up by Reticulum so you can test the whole app. Note that you must also load hubs.local over https.
 
 Example:
+
 ```
 hubs.local 127.0.0.1
 ```
@@ -81,6 +89,7 @@ Go to the reticulum terminal session and find a url that looks like https://hubs
 Navigate to that url in your browser to finish signing in.
 
 ### 6. Creating an Admin User
+
 After you've started Reticulum for the first time you'll likely want to create an admin user. Assuming you want to make the first account the admin, this can be done in the iex console using the following code:
 
 ```
@@ -88,6 +97,7 @@ Ret.Account |> Ret.Repo.all() |> Enum.at(0) |> Ecto.Changeset.change(is_admin: t
 ```
 
 ## Run Spoke Against a Local Reticulum Instance
+
 1. Follow the steps above to setup Hubs
 2. Clone and start spoke by running `./scripts/run_local_reticulum.sh` in the root of the spoke project
 3. Navigate to https://hubs.local:4000/spoke
