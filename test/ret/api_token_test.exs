@@ -1,31 +1,56 @@
 defmodule Ret.ApiTokenTest do
   use Ret.DataCase
 
-  # alias Ecto.{Changeset}
-  # alias Ret.{Account, Guardian, Repo}
+  alias Ret.ApiTokenGenerator, as: Generator
 
-  test "Creating a token puts it in the database" do
-    {:ok, token, _claims} = Guardian.encode_and_sign(Ret.ApiToken, %{foo: :bar}, %{aud: "ret", typ: "api"})
-    [%{jwt: jwt}] = Repo.all(from("guardian_tokens", select: [:jti, :aud, :jwt]))
+  defp token_query do
+    from("guardian_tokens", select: [:jti, :aud, :jwt, :claims])
+  end
+
+  test "Generating an api token puts it in the database" do
+    {:ok, token, _claims} = Generator.gen_token()
+    [%{jwt: jwt}] = Repo.all(token_query())
     assert jwt == token
   end
 
-  test "Tokens can be validated" do
-    {:ok, token, claims} = Guardian.encode_and_sign(Ret.ApiToken, %{foo: :bar}, %{aud: "ret", typ: "api"})
-    {:ok, decoded_claims} = Guardian.decode_and_verify(Ret.ApiToken, token)
-
-    Enum.each(["aud", "exp", "iat", "iss", "jti", "nbf", "sub", "typ"], fn x ->
-      assert Map.get(claims, x) === Map.get(decoded_claims, x)
-    end)
-    assert claims === decoded_claims
+  test "Api tokens encode default permissions" do
+    {:ok, token, _claims} = Generator.gen_token()
+    {:ok, claims} = Guardian.decode_and_verify(Ret.ApiToken, token)
+    assert Map.get(claims, "rooms_mutation_create_room")
+    assert Map.get(claims, "rooms_mutation_update_room") === false
   end
 
-  test "Tokens can be revoked" do
-    {:ok, token, _claims} = Guardian.encode_and_sign(Ret.ApiToken, %{foo: :bar}, %{aud: "ret", typ: "api"})
+  test "Api tokens generated with an account encode more permissions" do
+    account = Ret.Account.find_or_create_account_for_email("test@mozilla.com")
+    {:ok, token, _claims} = Generator.gen_token_for_account(account)
+    {:ok, claims} = Guardian.decode_and_verify(Ret.ApiToken, token)
+    assert Map.get(claims, "rooms_mutation_create_room")
+    assert Map.get(claims, "rooms_mutation_update_room")
+  end
+
+  test "Api tokens can be revoked" do
+    {:ok, token, _claims} = Generator.gen_token()
+    [%{jwt: jwt}] = Repo.all(token_query())
+    assert jwt == token
     {:ok, _claims} = Guardian.decode_and_verify(Ret.ApiToken, token)
-    assert Enum.count(Repo.all(from("guardian_tokens", select: [:jti, :aud, :jwt]))) === 1
+
     Guardian.revoke(Ret.ApiToken, token)
-    assert Enum.empty?(Repo.all(from("guardian_tokens", select: [:jti, :aud, :jwt])))
+    assert Enum.empty?(Repo.all(token_query()))
+
     {:error, :token_not_found} = Guardian.decode_and_verify(Ret.ApiToken, token)
+  end
+
+  test "Api tokens can be associated with an account" do
+    account = Ret.Account.find_or_create_account_for_email("test@mozilla.com")
+    {:ok, token, _claims} = Generator.gen_token_for_account(account)
+    {:ok, resource, _claims} = Guardian.resource_from_token(Ret.ApiToken, token)
+    assert resource.account_id === account.account_id
+  end
+
+  test "Revoked tokens cannot recover accounts" do
+    account = Ret.Account.find_or_create_account_for_email("test@mozilla.com")
+    {:ok, token, _claims} = Generator.gen_token_for_account(account)
+    Guardian.revoke(Ret.ApiToken, token)
+    {:error, :token_not_found} = Guardian.resource_from_token(Ret.ApiToken, token)
   end
 end
