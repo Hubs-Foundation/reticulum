@@ -176,7 +176,6 @@ defmodule RetWeb.Resolvers.RoomResolver do
         "scene"
       ])
 
-    # TODO: Update client so we can use hub_refresh without socket_id
-    RetWeb.Endpoint.broadcast("hub:" <> hub.hub_sid, "hub_refresh_by_api", payload)
+    RetWeb.Endpoint.broadcast("hub:" <> hub.hub_sid, "hub_refresh", payload)
   end
 end
