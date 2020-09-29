@@ -2,8 +2,10 @@ defmodule RetWeb.Schema do
   use Absinthe.Schema
   alias Ret.Scene
 
-  def middleware(middleware, _field, %{identifier: :mutation}) do
-    middleware ++ [RetWeb.Middlewares.HandleChangesetErrors]
+  def middleware(middleware, _field, %{identifier: identifier}) do
+    [RetWeb.Middlewares.StartTiming] ++
+      middleware ++
+      [RetWeb.Middlewares.HandleChangesetErrors, RetWeb.Middlewares.EndTiming, RetWeb.Middlewares.InspectTiming]
   end
 
   def middleware(middleware, _field, _object), do: middleware
