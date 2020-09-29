@@ -1,14 +1,45 @@
 defmodule RetWeb.Schema do
+  @moduledoc false
+
   use Absinthe.Schema
   alias Ret.Scene
 
-  def middleware(middleware, _field, %{identifier: identifier}) do
-    [RetWeb.Middlewares.StartTiming] ++
-      middleware ++
-      [RetWeb.Middlewares.HandleChangesetErrors, RetWeb.Middlewares.EndTiming, RetWeb.Middlewares.InspectTiming]
+  alias RetWeb.Middlewares.{HandleChangesetErrors, StartTiming, EndTiming, InspectTiming}
+
+  def middleware(middleware, field, object) do
+    middleware = verify_scopes(middleware, field, object)
+    middleware = maybe_add_handle_changeset_errors(middleware, field, object)
+    middleware = maybe_add_timing(middleware, field, object)
   end
 
-  def middleware(middleware, _field, _object), do: middleware
+  defp verify_scopes(middleware, field, object) do
+    # TODO
+    middleware
+  end
+
+  defp maybe_add_handle_changeset_errors(middleware, _field, %{identifier: :mutation}) do
+    middleware ++ [HandleChangesetErrors]
+  end
+
+  defp maybe_add_handle_changeset_errors(middleware, _field, _object) do
+    middleware
+  end
+
+  @timing_ids [
+    :my_rooms,
+    :public_rooms,
+    :favorite_rooms,
+    :create_room,
+    :update_room
+  ]
+
+  defp maybe_add_timing(middleware, %{identifier: identifier}, _object) when identifier in @timing_ids do
+    [StartTiming] ++ middleware ++ [EndTiming, InspectTiming]
+  end
+
+  defp maybe_add_timing(middleware, _field, _object) do
+    middleware
+  end
 
   import_types(Absinthe.Type.Custom)
   import_types(RetWeb.Schema.RoomTypes)
