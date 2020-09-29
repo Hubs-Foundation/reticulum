@@ -105,6 +105,7 @@ defmodule Ret.Hub do
     belongs_to(:scene_listing, Ret.SceneListing, references: :scene_listing_id)
     has_many(:web_push_subscriptions, Ret.WebPushSubscription, foreign_key: :hub_id)
     belongs_to(:created_by_account, Ret.Account, references: :account_id)
+    has_many(:hub_invites, Ret.HubInvite, foreign_key: :hub_id)
     has_many(:hub_bindings, Ret.HubBinding, foreign_key: :hub_id)
     has_many(:hub_role_memberships, Ret.HubRoleMembership, foreign_key: :hub_id)
 
@@ -256,6 +257,14 @@ defmodule Ret.Hub do
   def add_promotion_to_changeset(changeset, attrs) do
     changeset
     |> put_change(:allow_promotion, Map.get(attrs, "allow_promotion", false) || Map.get(attrs, :allow_promotion, false))
+  end
+
+  def maybe_add_entry_mode_to_changeset(changeset, attrs) do
+    if attrs["entry_mode"] === nil do
+      changeset
+    else
+      changeset |> put_change(:entry_mode, attrs["entry_mode"])
+    end
   end
 
   def changeset_for_new_seen_occupant_count(%Hub{} = hub, occupant_count) do

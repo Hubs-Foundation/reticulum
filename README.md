@@ -12,9 +12,13 @@ Windows: https://www.postgresql.org/download/windows/
 
 Windows WSL: https://github.com/michaeltreat/Windows-Subsystem-For-Linux-Setup-Guide/blob/master/readmes/installs/PostgreSQL.md
 
-#### Elixr + Phoenix
+#### Erlang (v22) + Elixr + Phoenix
 https://elixir-lang.org/install.html
+
 https://hexdocs.pm/phoenix/installation.html
+
+#### Ansible
+https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html
 
 ### 2. Setup Reticulum:
 Run the following commands at the root of the reticulum directory:
