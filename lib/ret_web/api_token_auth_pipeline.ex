@@ -17,6 +17,8 @@ defmodule RetWeb.ApiTokenAuthErrorHandler do
     IO.inspect("token_expired")
     # Need to prevent halting so that we can return these errors in graphql response
     # https://github.com/ueberauth/guardian/issues/401#issuecomment-367756347
+    # Updating Guardian to a release that includes this option
+    # https://github.com/ueberauth/guardian/releases/tag/2.1.0
     opts = Keyword.put(opts, :halt, false)
     conn
   end
