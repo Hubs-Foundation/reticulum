@@ -5,7 +5,7 @@ defmodule RetWeb.ApiTokenAuthPipeline do
     module: Ret.ApiToken,
     error_handler: RetWeb.ApiTokenAuthErrorHandler
 
-  plug(Guardian.Plug.VerifyHeader, realm: "Bearer", claims: %{"typ" => "api"})
+  plug(Guardian.Plug.VerifyHeader, realm: "Bearer", halt: false)
   plug(Guardian.Plug.LoadResource, allow_blank: true)
 end
 
@@ -19,12 +19,10 @@ defmodule RetWeb.ApiTokenAuthErrorHandler do
     # https://github.com/ueberauth/guardian/issues/401#issuecomment-367756347
     # Updating Guardian to a release that includes this option
     # https://github.com/ueberauth/guardian/releases/tag/2.1.0
-    opts = Keyword.put(opts, :halt, false)
     conn
   end
   def auth_error(conn, {type, reason}, _opts) do
-    IO.inspect(type)
-    IO.inspect(reason)
+    # TODO: Write type/reason into conn, to be pulled reported by graphql middleware
     conn
   end
 end

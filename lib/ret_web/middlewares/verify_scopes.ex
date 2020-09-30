@@ -8,6 +8,10 @@ defmodule RetWeb.Middlewares.VerifyScopes do
     action = resolution.definition.schema_node.identifier
 
     case resolution.context do
+      %{claims: nil} ->
+        #TODO write reason from plug
+        Absinthe.Resolution.put_result(resolution, {:error, "unauthorized : no claims"})
+
       %{claims: claims} ->
         if verify_scope(action, claims) do
           resolution
