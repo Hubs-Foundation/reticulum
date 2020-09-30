@@ -56,7 +56,7 @@ defmodule RoomQueryTest do
 
   defp do_graphql_action(conn, query, variables \\ %{}) do
     conn
-    |> post("/api/v2/", %{
+    |> post("/api/v2_alpha/", %{
       "query" => "#{query}",
       "variables" => variables
     })

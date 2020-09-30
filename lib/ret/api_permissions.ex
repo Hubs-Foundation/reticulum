@@ -30,7 +30,6 @@ defmodule Ret.ApiPermissions do
 
   defp scope_rooms_user do
     [
-      :rooms_mutation_create_room,
       :rooms_mutation_update_room,
       :rooms_query_created_rooms,
       :rooms_query_favorite_rooms

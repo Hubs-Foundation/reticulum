@@ -189,7 +189,7 @@ config :ret, Ret.Guardian,
 
 config :ret, Ret.ApiToken,
   secret_key: "sLqNm8eWf4gtzmaZXUyn5qI93levlvBnX4hqCM9HraDM00QMnVvtQGAQ4S56q3fe",
-  ttl: {2, :hours}
+  ttl: {2, :weeks}
 
 config :guardian, Guardian.DB,
   repo: Ret.Repo,

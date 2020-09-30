@@ -27,6 +27,8 @@ defmodule Ret.ApiToken do
   end
 
   def on_verify(claims, token, _options) do
+    IO.inspect("verifying token")
+    IO.inspect(token)
     with {:ok, _} <- Guardian.DB.on_verify(claims, token) do
       {:ok, claims}
     end

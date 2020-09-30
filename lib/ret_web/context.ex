@@ -1,4 +1,5 @@
 defmodule RetWeb.Context do
+  @moduledoc false
   @behaviour Plug
 
   def init(opts), do: opts
@@ -9,12 +10,9 @@ defmodule RetWeb.Context do
   end
 
   def build_context(conn) do
+    claims = Guardian.Plug.current_claims(conn)
     account = Guardian.Plug.current_resource(conn)
 
-    if account do
-      %{account: account}
-    else
-      %{}
-    end
+    %{claims: claims, account: account}
   end
 end

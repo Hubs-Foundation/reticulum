@@ -2,9 +2,9 @@ defmodule RetWeb.Schema do
   @moduledoc false
 
   use Absinthe.Schema
-  alias Ret.Scene
+  alias Ret.{Scene, ApiPermissions}
 
-  alias RetWeb.Middlewares.{HandleChangesetErrors, StartTiming, EndTiming, InspectTiming}
+  alias RetWeb.Middlewares.{VerifyScopes, HandleChangesetErrors, StartTiming, EndTiming, InspectTiming}
 
   def middleware(middleware, field, object) do
     middleware = verify_scopes(middleware, field, object)
@@ -12,8 +12,18 @@ defmodule RetWeb.Schema do
     middleware = maybe_add_timing(middleware, field, object)
   end
 
-  defp verify_scopes(middleware, field, object) do
-    # TODO
+  @auth_fields [
+    :my_rooms,
+    :public_rooms,
+    :favorite_rooms,
+    :create_room,
+    :update_room
+  ]
+
+  defp verify_scopes(middleware, %{identifier: identifier}, _object) when identifier in @auth_fields do
+    [VerifyScopes] ++ middleware
+  end
+  defp verify_scopes(middleware, _field, _object) do
     middleware
   end
 
