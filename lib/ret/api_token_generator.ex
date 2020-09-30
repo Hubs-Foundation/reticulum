@@ -9,7 +9,8 @@ defmodule Ret.ApiTokenGenerator do
   end
 
   defp default_options() do
-    [ttl: {5, :minutes}]
+    # TODO: This should be taken from env -- not overwritten here
+    [ttl: {8, :hours}]
   end
 
   def gen_token() do

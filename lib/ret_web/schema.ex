@@ -7,7 +7,7 @@ defmodule RetWeb.Schema do
   alias RetWeb.Middlewares.{VerifyScopes, HandleChangesetErrors, StartTiming, EndTiming, InspectTiming}
 
   def middleware(middleware, field, object) do
-    middleware = verify_scopes(middleware, field, object)
+    middleware = maybe_verify_scopes(middleware, field, object)
     middleware = maybe_add_handle_changeset_errors(middleware, field, object)
     middleware = maybe_add_timing(middleware, field, object)
   end
@@ -20,10 +20,10 @@ defmodule RetWeb.Schema do
     :update_room
   ]
 
-  defp verify_scopes(middleware, %{identifier: identifier}, _object) when identifier in @auth_fields do
+  defp maybe_verify_scopes(middleware, %{identifier: identifier}, _object) when identifier in @auth_fields do
     [VerifyScopes] ++ middleware
   end
-  defp verify_scopes(middleware, _field, _object) do
+  defp maybe_verify_scopes(middleware, _field, _object) do
     middleware
   end
 

@@ -13,10 +13,16 @@ defmodule RetWeb.ApiTokenAuthErrorHandler do
   @moduledoc false
   import Plug.Conn
 
-  def auth_error(conn, {type, _reason}, _opts) do
-    # TODO
-    IO.inspect("Error")
+  def auth_error(conn, {:invalid_token, :token_expired}, opts) do
+    IO.inspect("token_expired")
+    # Need to prevent halting so that we can return these errors in graphql response
+    # https://github.com/ueberauth/guardian/issues/401#issuecomment-367756347
+    opts = Keyword.put(opts, :halt, false)
+    conn
+  end
+  def auth_error(conn, {type, reason}, _opts) do
     IO.inspect(type)
+    IO.inspect(reason)
     conn
   end
 end
