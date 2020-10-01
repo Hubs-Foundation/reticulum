@@ -10,9 +10,11 @@ defmodule RetWeb.Context do
   end
 
   def build_context(conn) do
-    claims = Guardian.Plug.current_claims(conn)
-    account = Guardian.Plug.current_resource(conn)
-
-    %{claims: claims, account: account}
+    %{
+      auth_error: conn.assigns[:auth_error],
+      claims: Guardian.Plug.current_claims(conn),
+      account: Guardian.Plug.current_resource(conn),
+      token: Guardian.Plug.current_token(conn)
+    }
   end
 end

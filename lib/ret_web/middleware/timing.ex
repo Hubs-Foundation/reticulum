@@ -1,4 +1,4 @@
-defmodule RetWeb.Middlewares.TimingUtil do
+defmodule RetWeb.Middleware.TimingUtil do
   @moduledoc false
   def add_timing_info(%Absinthe.Resolution{private: private} = resolution, identifier, key, value) do
     timing = Map.get(private, :timing) || %{}
@@ -11,32 +11,32 @@ defmodule RetWeb.Middlewares.TimingUtil do
   end
 end
 
-defmodule RetWeb.Middlewares.StartTiming do
+defmodule RetWeb.Middleware.StartTiming do
   @moduledoc false
 
-  import RetWeb.Middlewares.TimingUtil, only: [add_timing_info: 4]
+  import RetWeb.Middleware.TimingUtil, only: [add_timing_info: 4]
 
-  @behavior Absinthe.Middleware
+  @behaviour Absinthe.Middleware
   def call(resolution, _) do
     add_timing_info(resolution, resolution.definition.schema_node.identifier, :started_at, NaiveDateTime.utc_now())
   end
 end
 
-defmodule RetWeb.Middlewares.EndTiming do
+defmodule RetWeb.Middleware.EndTiming do
   @moduledoc false
 
-  import RetWeb.Middlewares.TimingUtil, only: [add_timing_info: 4]
+  import RetWeb.Middleware.TimingUtil, only: [add_timing_info: 4]
 
-  @behavior Absinthe.Middleware
+  @behaviour Absinthe.Middleware
   def call(resolution, _) do
     add_timing_info(resolution, resolution.definition.schema_node.identifier, :ended_at, NaiveDateTime.utc_now())
   end
 end
 
-defmodule RetWeb.Middlewares.InspectTiming do
+defmodule RetWeb.Middleware.InspectTiming do
   @moduledoc false
 
-  @behavior Absinthe.Middleware
+  @behaviour Absinthe.Middleware
   def call(resolution, _) do
     case resolution do
       %{private: %{timing: timing}} ->

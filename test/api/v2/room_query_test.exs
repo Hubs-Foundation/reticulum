@@ -6,6 +6,7 @@ defmodule RoomQueryTest do
   use ExUnit.Case
   use RetWeb.ConnCase
   import Ret.TestHelpers
+  alias Ret.ApiTokenGenerator
 
   setup_all do
     Absinthe.Test.prime(RetWeb.Schema)
@@ -69,141 +70,85 @@ defmodule RoomQueryTest do
     scene = create_scene(account)
     {:ok, hub: hub} = create_hub(%{scene: scene})
     {:ok, hub: public_hub} = create_public_hub(%{scene: scene})
+    {:ok, token, _claims} = ApiTokenGenerator.gen_token_for_account(account)
+    {:ok, limited_token, _claims} = ApiTokenGenerator.gen_token()
 
     %{
       account: account,
       account2: account2,
       scene: scene,
       hub: hub,
-      public_hub: public_hub
+      public_hub: public_hub,
+      token: token,
+      limited_token: limited_token
     }
   end
 
-  test "anyone can query for public rooms", %{conn: conn, public_hub: public_hub} do
+  test "Cannot query without a token", %{conn: conn} do
+    res = conn |> do_graphql_action(@query_public_rooms)
+    assert hd(res["errors"])["type"] === "auth_error_token_is_missing"
+  end
+
+  test "Can query public rooms with limited token", %{conn: conn, public_hub: public_hub, limited_token: limited_token} do
     res =
       conn
+      |> put_auth_header_for_token(limited_token)
       |> do_graphql_action(@query_public_rooms)
 
     rooms = res["data"]["publicRooms"]["entries"]
     assert List.first(rooms)["id"] == public_hub.hub_sid
   end
 
-  test "cannot query my rooms without authentication", %{conn: conn, account: account, hub: hub} do
+  test "Cannot query my rooms with limited token", %{
+    conn: conn,
+    account: account,
+    hub: hub,
+    limited_token: limited_token
+  } do
     assign_creator(hub, account)
 
     res =
       conn
+      |> put_auth_header_for_token(limited_token)
       |> do_graphql_action(@query_my_rooms)
 
-    assert is_nil(res["data"]["myRooms"])
-    error = List.first(res["errors"])
-    assert error["message"] == "Not authorized"
-    assert List.first(error["path"]) == "myRooms"
+    assert hd(res["errors"])["type"] === "unauthorized_scopes"
   end
 
-  test "anyone can query for their own rooms when authenticated", %{
+  test "Can query my rooms with appropriate token", %{
     conn: conn,
     account: account,
-    hub: hub
+    hub: hub,
+    token: token
   } do
     assign_creator(hub, account)
 
     auth_res =
       conn
-      |> put_auth_header_for_account(account)
+      |> put_auth_header_for_token(token)
       |> do_graphql_action(@query_my_rooms)
 
     rooms = auth_res["data"]["myRooms"]["entries"]
     assert List.first(rooms)["id"] == hub.hub_sid
   end
 
-  test "my rooms only returns my own rooms", %{conn: conn, account: account, account2: account2, hub: hub} do
-    assign_creator(hub, account)
+  test "my rooms only returns my own rooms", %{conn: conn, account2: account2, hub: hub, token: token} do
+    assign_creator(hub, account2)
 
     auth_res =
       conn
-      |> put_auth_header_for_account(account2)
+      |> put_auth_header_for_token(token)
       |> do_graphql_action(@query_my_rooms)
 
     rooms = auth_res["data"]["myRooms"]["entries"]
     assert Enum.empty?(rooms)
-  end
-
-  test "cannot query favorite rooms without authentication", %{conn: conn, account: account, hub: hub} do
-    Ret.AccountFavorite.ensure_favorited(hub, account)
-
-    res =
-      conn
-      |> do_graphql_action(@query_favorite_rooms)
-
-    assert is_nil(res["data"]["favoriteRooms"])
-    error = List.first(res["errors"])
-    assert error["message"] == "Not authorized"
-    assert List.first(error["path"]) == "favoriteRooms"
-  end
-
-  test "anyone can query favorite rooms when authenticated", %{conn: conn, account: account, hub: hub} do
-    Ret.AccountFavorite.ensure_favorited(hub, account)
-
-    res =
-      conn
-      |> put_auth_header_for_account(account)
-      |> do_graphql_action(@query_favorite_rooms)
-
-    rooms = res["data"]["favoriteRooms"]["entries"]
-    assert List.first(rooms)["id"] == hub.hub_sid
-  end
-
-  test "favorite rooms only returns your own favorites", %{
-    conn: conn,
-    account: account,
-    account2: account2,
-    hub: hub
-  } do
-    Ret.AccountFavorite.ensure_favorited(hub, account)
-
-    res =
-      conn
-      |> put_auth_header_for_account(account2)
-      |> do_graphql_action(@query_favorite_rooms)
-
-    rooms = res["data"]["favoriteRooms"]["entries"]
-    assert Enum.empty?(rooms)
-  end
-
-  test "anyone can create a room", %{
-    conn: conn
-  } do
-    room_name = "my fun room"
-
-    res =
-      conn
-      |> do_graphql_action(@mutation_create_room, %{roomName: room_name})
-
-    id = res["data"]["createRoom"]["id"]
-    assert !is_nil(id)
-    hub = Ret.Repo.get_by(Ret.Hub, hub_sid: id)
-    assert hub.name == res["data"]["createRoom"]["name"]
-    assert hub.name == room_name
-  end
-
-  test "Creating a room while authenticated assigns the creator", %{
-    conn: conn,
-    account: account
-  } do
-    res =
-      conn
-      |> put_auth_header_for_account(account)
-      |> do_graphql_action(@mutation_create_room, %{roomName: "my fun room"})
-
-    hub = Ret.Repo.get_by(Ret.Hub, hub_sid: res["data"]["createRoom"]["id"])
-    assert hub.created_by_account_id == account.account_id
   end
 
   test "The room query api paginates results", %{
     conn: conn,
     scene: scene,
-    account: account
+    account: account,
+    token: token
   } do
     for _n <- 1..50 do
       {:ok, hub: hub} = create_hub(%{scene: scene})
@@ -212,7 +157,7 @@ defmodule RoomQueryTest do
 
     response =
       conn
-      |> put_auth_header_for_account(account)
+      |> put_auth_header_for_token(token)
       |> do_graphql_action(@query_my_rooms)
 
     assert length(response["data"]["myRooms"]["entries"]) === response["data"]["myRooms"]["page_size"]
@@ -221,7 +166,8 @@ defmodule RoomQueryTest do
   test "The room query api paginates results 2", %{
     conn: conn,
     scene: scene,
-    account: account
+    account: account,
+    token: token
   } do
     for _n <- 1..50 do
       {:ok, hub: hub} = create_hub(%{scene: scene})
@@ -230,7 +176,7 @@ defmodule RoomQueryTest do
 
     response =
       conn
-      |> put_auth_header_for_account(account)
+      |> put_auth_header_for_token(token)
       |> do_graphql_action(@query_my_rooms, %{page: 3, page_size: 24})
 
     assert length(response["data"]["myRooms"]["entries"]) === 2

@@ -23,6 +23,10 @@ defmodule Ret.TestHelpers do
 
   def auth_with_account(conn, account) do
     {:ok, token, _claims} = account |> Ret.Guardian.encode_and_sign()
+    put_auth_header_for_token(conn, token)
+  end
+
+  def put_auth_header_for_token(conn, token) do
     conn |> Plug.Conn.put_req_header("authorization", "bearer: " <> token)
   end
 
