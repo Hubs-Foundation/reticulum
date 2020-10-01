@@ -36,24 +36,24 @@ defmodule RoomQueryTest do
     }
   """
 
-  @query_favorite_rooms """
-    query {
-      favoriteRooms {
-       entries {
-         id
-       }
-      }
-    }
-  """
+  # @query_favorite_rooms """
+  #  query {
+  #    favoriteRooms {
+  #     entries {
+  #       id
+  #     }
+  #    }
+  #  }
+  # """
 
-  @mutation_create_room """
-    mutation ($roomName: String!){
-      createRoom (name: $roomName) {
-        id,
-        name
-      }
-    }
-  """
+  # @mutation_create_room """
+  #  mutation ($roomName: String!){
+  #    createRoom (name: $roomName) {
+  #      id,
+  #      name
+  #    }
+  #  }
+  # """
 
   defp do_graphql_action(conn, query, variables \\ %{}) do
     conn

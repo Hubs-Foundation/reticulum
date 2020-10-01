@@ -13,8 +13,11 @@ defmodule RetWeb.ApiTokenAuthErrorHandler do
   @moduledoc false
   import Plug.Conn
 
+  def auth_error(conn, {failure_type, %ArgumentError{message: reason}}, _opts) do
+    assign(conn, :auth_error, {failure_type, reason})
+  end
+
   def auth_error(conn, {failure_type, reason}, _opts) do
-    conn = assign(conn, :auth_error, {failure_type, reason})
-    conn
+    assign(conn, :auth_error, {failure_type, reason})
   end
 end
