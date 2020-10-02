@@ -37,3 +37,14 @@ defmodule RetWeb.Middleware.VerifyScopes do
     Map.get(claims, Atom.to_string(Map.get(@action_to_permission, action)))
   end
 end
+
+defmodule RetWeb.Middleware.LogMiddleware do
+  @moduledoc false
+
+  @behaviour Absinthe.Middleware
+
+  def call(resolution, _) do
+    IO.inspect(resolution.definition.schema_node.identifier)
+    resolution
+  end
+end

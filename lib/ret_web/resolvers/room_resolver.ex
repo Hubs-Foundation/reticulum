@@ -6,6 +6,9 @@ defmodule RetWeb.Resolvers.RoomResolver do
   alias RetWeb.Api.V1.{HubView}
   import Canada, only: [can?: 2]
 
+  # TODO: Pass account and token. Use a function like, "rooms_for_user(account, token) do
+  # if can? (:do_the_thing)
+  # end"
   def my_rooms(_parent, args, %{context: %{account: account}}) do
     {:ok, Hub.get_my_rooms(account, args)}
   end
@@ -111,6 +114,7 @@ defmodule RetWeb.Resolvers.RoomResolver do
   end
 
   defp update_room_with_account(hub, account, args) do
+    # TODO: Should be update rooms?
     case can?(account, update_roles(hub)) do
       false ->
         {:error, "Account does not have permission to update this hub."}

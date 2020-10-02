@@ -1,3 +1,4 @@
+  # TODO: Naming: Absinthe Context?
 defmodule RetWeb.Context do
   @moduledoc false
   @behaviour Plug
@@ -10,6 +11,7 @@ defmodule RetWeb.Context do
   end
 
   def build_context(conn) do
+    # TODO: Should we be adding to context instead of overwriting?
     %{
       auth_error: conn.assigns[:auth_error],
       claims: Guardian.Plug.current_claims(conn),

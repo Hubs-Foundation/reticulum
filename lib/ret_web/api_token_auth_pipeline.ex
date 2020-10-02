@@ -14,6 +14,7 @@ defmodule RetWeb.ApiTokenAuthErrorHandler do
   import Plug.Conn
 
   def auth_error(conn, {failure_type, %ArgumentError{message: reason}}, _opts) do
+    # TODO: Is assigns the right place for this info?
     assign(conn, :auth_error, {failure_type, reason})
   end
 

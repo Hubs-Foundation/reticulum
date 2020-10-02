@@ -6,6 +6,7 @@ defmodule RetWeb.Middleware.VerifyToken do
   import RetWeb.Middleware.AuthErrorUtil, only: [return_error: 3]
 
   def call(%{context: %{auth_error: {_type, :token_not_found}}} = resolution, _) do
+    # TODO: Maybe not say revoked. Just token not found.
     return_error(resolution, :auth_error_token_was_revoked, "The api token has been revoked.")
   end
 
