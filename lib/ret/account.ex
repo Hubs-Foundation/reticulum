@@ -123,4 +123,8 @@ defmodule Ret.Account do
   defp module_config(key) do
     Application.get_env(:ret, __MODULE__)[key]
   end
+
+  def set_disabled_state!(%Account{} = account, state) do
+    account
+    |> Account.State.changeset_for_new(%{state: })
 end

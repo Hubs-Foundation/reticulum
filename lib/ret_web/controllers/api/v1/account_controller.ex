@@ -63,4 +63,24 @@ defmodule RetWeb.Api.V1.AccountController do
       {:ok, {200, Phoenix.View.render(AccountView, "create.json", account: account, email: email)}}
     end
   end
+
+  defp process_account_create_record(%{"email" => email} = params, source) do
+    if Account.exists_for_email?(email) do
+      {:error, [{:RECORD_EXISTS, "Account with email already exists.", source}]}
+    else
+      account = Account.find_or_create_account_for_email(email)
+
+      account =
+        if params["name"] do
+          account |> Account.set_identity!(params["name"])
+        else
+          account
+        end
+
+      {:ok, {200, Phoenix.View.render(AccountView, "create.json", account: account, email: email)}}
+    end
+  end
+
+  with %Account{} = account <- Account.account_for_email(email) do
+    record = Phoenix.View.render(AccountView, "show.json", account: account)
 end
