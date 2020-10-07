@@ -25,6 +25,19 @@ defmodule RetWeb.Email do
     end
   end
 
+  def get_magic_link_email() do
+    # if custom_email_subject is null or "" use default else use custom_email_subject
+    # if custom_email_message is null or "" use default else use custom_email_message
+    custom_email_subject = Application.get_env(:ret, Ret.Account)[:custom_email_subject]
+    custom_email_message = Application.get_env(:ret, Ret.Account)[:custom_email_message]
+
+    if config do
+
+    else
+
+    end
+  end
+
   def enabled? do
     !!Application.get_env(:ret, Ret.Mailer)[:adapter]
   end
