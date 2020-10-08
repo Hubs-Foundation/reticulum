@@ -6,17 +6,28 @@ defmodule RetWeb.Email do
     app_name = AppConfig.get_cached_config_value("translations|en|app-name")
     app_full_name = AppConfig.get_cached_config_value("translations|en|app-full-name") || app_name
     admin_email = Application.get_env(:ret, Ret.Account)[:admin_email]
+    custom_email_subject = Application.get_env(:ret, Ret.Mailer)[:custom_email_subject]
+    custom_email_message = Application.get_env(:ret, Ret.Mailer)[:custom_email_message]
+
+    email_subject =
+      if string_is_nil_or_empty(custom_email_subject),
+        do: "Your #{app_name} Sign-In Link",
+        else: custom_email_subject
+
+    email_body =
+      if string_is_nil_or_empty(custom_email_message),
+        do:
+          "To sign-in to #{app_name}, please visit the link below. If you did not make this request, please ignore this e-mail.\n\n #{
+            RetWeb.Endpoint.url()
+          }/?#{URI.encode_query(signin_args)}",
+        else: add_magic_link_to_custom_email_body(custom_email_message, signin_args)
 
     email =
       new_email()
       |> to(to_address)
       |> from({app_full_name, from_address()})
-      |> subject("Your #{app_name} Sign-In Link")
-      |> text_body(
-        "To sign-in to #{app_name}, please visit the link below. If you did not make this request, please ignore this e-mail.\n\n #{
-          RetWeb.Endpoint.url()
-        }/?#{URI.encode_query(signin_args)}"
-      )
+      |> subject(email_subject)
+      |> text_body(email_body)
 
     if admin_email do
       email |> put_header("Return-Path", admin_email)
@@ -25,16 +36,15 @@ defmodule RetWeb.Email do
     end
   end
 
-  def get_magic_link_email() do
-    # if custom_email_subject is null or "" use default else use custom_email_subject
-    # if custom_email_message is null or "" use default else use custom_email_message
-    custom_email_subject = Application.get_env(:ret, Ret.Account)[:custom_email_subject]
-    custom_email_message = Application.get_env(:ret, Ret.Account)[:custom_email_message]
+  defp string_is_nil_or_empty(check_string) do
+    check_string == nil || String.length(String.trim(check_string)) == 0
+  end
 
-    if config do
-
+  defp add_magic_link_to_custom_email_body(custom_message, signin_args) do
+    if match?(~r/{{ token }}/, custom_message) do
+      replace?(~r/{{ token }}/, custom_message, "#{RetWeb.Endpoint.url()}/?#{URI.encode_query(signin_args)}")
     else
-
+      custom_message + "\n\n #{RetWeb.Endpoint.url()}/?#{URI.encode_query(signin_args)}"
     end
   end
 
@@ -44,5 +54,9 @@ defmodule RetWeb.Email do
 
   defp from_address do
     Application.get_env(:ret, __MODULE__)[:from]
+  end
+
+  defp module_config(key) do
+    Application.get_env(:ret, __MODULE__)[key]
   end
 end

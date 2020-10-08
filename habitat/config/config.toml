@@ -242,6 +242,8 @@ server = {{ toToml cfg.email.server }}
 port = {{ toToml cfg.email.port }}
 username = {{ toToml cfg.email.username }}
 password = {{ toToml cfg.email.password }}
+custom_email_subject = {{ toToml cfg.email.custom_email_subject }}
+custom_email_message = {{ toToml cfg.email.custom_email_message }}
 
 [ret."Elixir.Ret.Support"]
 slack_webhook_url = "{{ cfg.support.slack_webhook_url }}"
