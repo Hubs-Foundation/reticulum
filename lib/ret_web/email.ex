@@ -6,21 +6,21 @@ defmodule RetWeb.Email do
     app_name = AppConfig.get_cached_config_value("translations|en|app-name")
     app_full_name = AppConfig.get_cached_config_value("translations|en|app-full-name") || app_name
     admin_email = Application.get_env(:ret, Ret.Account)[:admin_email]
-    custom_email_subject = Application.get_env(:ret, Ret.Mailer)[:custom_email_subject]
-    custom_email_message = Application.get_env(:ret, Ret.Mailer)[:custom_email_message]
+    custom_login_subject = AppConfig.get_config_value("email|login-subject")
+    custom_login_body = AppConfig.get_config_value("email|login_body")
 
     email_subject =
-      if string_is_nil_or_empty(custom_email_subject),
+      if string_is_nil_or_empty(custom_login_subject),
         do: "Your #{app_name} Sign-In Link",
-        else: custom_email_subject
+        else: custom_login_subject
 
     email_body =
-      if string_is_nil_or_empty(custom_email_message),
+      if string_is_nil_or_empty(custom_login_body),
         do:
           "To sign-in to #{app_name}, please visit the link below. If you did not make this request, please ignore this e-mail.\n\n #{
             RetWeb.Endpoint.url()
           }/?#{URI.encode_query(signin_args)}",
-        else: add_magic_link_to_custom_email_body(custom_email_message, signin_args)
+        else: add_magic_link_to_custom_login_body(custom_login_body, signin_args)
 
     email =
       new_email()
@@ -40,11 +40,11 @@ defmodule RetWeb.Email do
     check_string == nil || String.length(String.trim(check_string)) == 0
   end
 
-  defp add_magic_link_to_custom_email_body(custom_message, signin_args) do
-    if match?(~r/{{ token }}/, custom_message) do
-      replace?(~r/{{ token }}/, custom_message, "#{RetWeb.Endpoint.url()}/?#{URI.encode_query(signin_args)}")
+  defp add_magic_link_to_custom_login_body(custom_message, signin_args) do
+    if Regex.match?(~r/{{ link }}/, custom_message) do
+      Regex.replace(~r/{{ link }}/, custom_message, "#{RetWeb.Endpoint.url()}/?#{URI.encode_query(signin_args)}")
     else
-      custom_message + "\n\n #{RetWeb.Endpoint.url()}/?#{URI.encode_query(signin_args)}"
+      custom_message <> "\n\n #{RetWeb.Endpoint.url()}/?#{URI.encode_query(signin_args)}"
     end
   end
 
@@ -56,7 +56,4 @@ defmodule RetWeb.Email do
     Application.get_env(:ret, __MODULE__)[:from]
   end
 
-  defp module_config(key) do
-    Application.get_env(:ret, __MODULE__)[key]
-  end
 end
