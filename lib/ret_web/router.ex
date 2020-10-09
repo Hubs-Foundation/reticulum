@@ -67,7 +67,7 @@ defmodule RetWeb.Router do
 
   pipeline :graphql do
     plug RetWeb.ApiTokenAuthPipeline
-    plug RetWeb.Context
+    plug RetWeb.AddAbsintheContext
   end
 
   scope "/health", RetWeb do
