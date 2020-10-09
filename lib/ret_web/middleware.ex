@@ -1,7 +1,7 @@
 defmodule RetWeb.Middleware do
   @moduledoc "Adds absinthe middleware on matching fields/objects"
 
-  alias RetWeb.Middleware.{LogMiddleware, VerifyToken, VerifyScopes, HandleChangesetErrors, StartTiming, EndTiming, InspectTiming}
+  alias RetWeb.Middleware.{VerifyToken, VerifyScopes, HandleChangesetErrors, StartTiming, EndTiming, InspectTiming}
 
   def build_middleware(middleware, field, object) do
     # TODO: Order matters here, and is precarious. Should insert or not insert middleware in a known order as a result of the matches
@@ -29,14 +29,6 @@ defmodule RetWeb.Middleware do
 
   defp maybe_add_verify_token(middleware, _field, _object) do
     middleware
-  end
-
-  @auth_objects [
-    :room
-  ]
-
-  defp maybe_add_verify_scopes(middleware, _field, %{identifier: identifier}) when identifier in @auth_objects do
-    [LogMiddleware] ++ middleware
   end
 
   defp maybe_add_verify_scopes(middleware, %{identifier: identifier}, _object) when identifier in @auth_fields do

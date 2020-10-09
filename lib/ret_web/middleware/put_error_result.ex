@@ -1,5 +1,4 @@
-# TODO: Naming: not really related to auth
-defmodule RetWeb.Middleware.AuthErrorUtil do
+defmodule RetWeb.Middleware.PutErrorResult do
   @moduledoc "Helper for returning auth errors in a uniform way in graphql api"
 
   import Absinthe.Resolution, only: [put_result: 2]

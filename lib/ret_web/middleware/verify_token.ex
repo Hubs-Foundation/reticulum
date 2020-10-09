@@ -3,7 +3,7 @@ defmodule RetWeb.Middleware.VerifyToken do
 
   @behaviour Absinthe.Middleware
 
-  import RetWeb.Middleware.AuthErrorUtil, only: [put_error_result: 3]
+  import RetWeb.Middleware.PutErrorResult, only: [put_error_result: 3]
 
   def call(%{context: %{auth_error: {_type, :token_not_found}}} = resolution, _) do
     # TODO: Maybe not say revoked. Just token not found.

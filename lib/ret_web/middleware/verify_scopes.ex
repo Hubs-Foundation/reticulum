@@ -1,7 +1,7 @@
 defmodule RetWeb.Middleware.VerifyScopes do
   @moduledoc false
 
-  import RetWeb.Middleware.AuthErrorUtil, only: [put_error_result: 3]
+  import RetWeb.Middleware.PutErrorResult, only: [put_error_result: 3]
 
   @action_to_permission %{
     create_room: :rooms_mutation_create_room,
