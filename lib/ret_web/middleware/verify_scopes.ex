@@ -1,7 +1,7 @@
 defmodule RetWeb.Middleware.VerifyScopes do
   @moduledoc false
 
-  import RetWeb.Middleware.AuthErrorUtil, only: [return_error: 3]
+  import RetWeb.Middleware.AuthErrorUtil, only: [put_error_result: 3]
 
   @action_to_permission %{
     create_room: :rooms_mutation_create_room,
@@ -25,11 +25,11 @@ defmodule RetWeb.Middleware.VerifyScopes do
           resolution
         else
           missing_permission = Atom.to_string(Map.get(@action_to_permission, action))
-          return_error(resolution, :unauthorized_scopes, "Token does not have permission: #{missing_permission}.")
+          put_error_result(resolution, :unauthorized_scopes, "Token does not have permission: #{missing_permission}.")
         end
 
       _ ->
-        return_error(resolution, :unauthorized, "Token is missing permissions.")
+        put_error_result(resolution, :unauthorized, "Token is missing permissions.")
     end
   end
 
@@ -44,7 +44,6 @@ defmodule RetWeb.Middleware.LogMiddleware do
   @behaviour Absinthe.Middleware
 
   def call(resolution, _) do
-    IO.inspect(resolution.definition.schema_node.identifier)
     resolution
   end
 end

@@ -5,7 +5,7 @@ defmodule RetWeb.Middleware.AuthErrorUtil do
   import Absinthe.Resolution, only: [put_result: 2]
 
   # TODO: message is not always a string but needs to be. e.g. Authorization: bearer: foo
-  def return_error(resolution, type, message) do
+  def put_error_result(resolution, type, message) do
     put_result(
       resolution,
       {:error, [type: type, message: message]}
