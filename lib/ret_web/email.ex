@@ -6,8 +6,8 @@ defmodule RetWeb.Email do
     app_name = AppConfig.get_cached_config_value("translations|en|app-name")
     app_full_name = AppConfig.get_cached_config_value("translations|en|app-full-name") || app_name
     admin_email = Application.get_env(:ret, Ret.Account)[:admin_email]
-    custom_login_subject = AppConfig.get_config_value("email|login-subject")
-    custom_login_body = AppConfig.get_config_value("email|login_body")
+    custom_login_subject = AppConfig.get_cached_config_value("auth|login_subject")
+    custom_login_body = AppConfig.get_cached_config_value("auth|login_body")
 
     email_subject =
       if string_is_nil_or_empty(custom_login_subject),
@@ -42,7 +42,7 @@ defmodule RetWeb.Email do
 
   defp add_magic_link_to_custom_login_body(custom_message, signin_args) do
     if Regex.match?(~r/{{ link }}/, custom_message) do
-      Regex.replace(~r/{{ link }}/, custom_message, "#{RetWeb.Endpoint.url()}/?#{URI.encode_query(signin_args)}")
+      Regex.replace(~r/{{ link }}/, custom_message, "#{RetWeb.Endpoint.url()}/?#{URI.encode_query(signin_args)}", global: false)
     else
       custom_message <> "\n\n #{RetWeb.Endpoint.url()}/?#{URI.encode_query(signin_args)}"
     end
