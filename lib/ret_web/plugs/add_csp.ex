@@ -82,7 +82,7 @@ defmodule RetWeb.Plugs.AddCSP do
       cors_proxy_url
     } #{storage_url} #{assets_url} 'unsafe-inline'; connect-src #{custom_rules[:connect_src]} 'self' #{cors_proxy_url} #{
       storage_url
-    } #{assets_url} #{link_url} https://dpdb.webvr.rocks #{thumbnail_url} #{ret_direct_connect} https://www.google-analytics.com https://cdn.aframe.io https://www.youtube.com https://api.github.com data: blob:; img-src #{
+    } #{assets_url} #{link_url} https://dpdb.webvr.rocks #{thumbnail_url} #{ret_direct_connect} https://www.google-analytics.com https://cdn.aframe.io https://www.youtube.com https://api.github.com https://bh4d9od16a-3.algolianet.com data: blob:; img-src #{
       custom_rules[:img_src]
     } 'self' https://www.google-analytics.com #{storage_url} #{assets_url} #{cors_proxy_url} #{thumbnail_url} https://cdn.aframe.io https://www.youtube.com https://user-images.githubusercontent.com https://cdn.jsdelivr.net data: blob:; media-src #{
       custom_rules[:media_src]
