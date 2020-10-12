@@ -42,7 +42,9 @@ defmodule RetWeb.Email do
 
   defp add_magic_link_to_custom_login_body(custom_message, signin_args) do
     if Regex.match?(~r/{{ link }}/, custom_message) do
-      Regex.replace(~r/{{ link }}/, custom_message, "#{RetWeb.Endpoint.url()}/?#{URI.encode_query(signin_args)}", global: false)
+      Regex.replace(~r/{{ link }}/, custom_message, "#{RetWeb.Endpoint.url()}/?#{URI.encode_query(signin_args)}",
+        global: false
+      )
     else
       custom_message <> "\n\n #{RetWeb.Endpoint.url()}/?#{URI.encode_query(signin_args)}"
     end
@@ -55,5 +57,4 @@ defmodule RetWeb.Email do
   defp from_address do
     Application.get_env(:ret, __MODULE__)[:from]
   end
-
 end
