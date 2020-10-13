@@ -3,10 +3,29 @@ defmodule Mix.Tasks.GenerateApiToken do
 
   use Mix.Task
 
-  alias Ret.{Account, ApiTokenGenerator}
+  alias Ret.{Account, ApiToken}
 
   @impl Mix.Task
   def run(_) do
+    user_or_app =
+      "Generate user token or app token? [user or app]"
+      |> Mix.shell().prompt()
+      |> String.trim()
+
+    case user_or_app do
+      "user" ->
+        gen_user_token()
+
+      "app" ->
+        gen_app_token()
+
+      _ ->
+        Mix.shell().error("Input not recognized. Type \"user\" or \"app\".")
+        run([])
+    end
+  end
+
+  defp gen_user_token() do
     email =
       "Enter email address of the user whose account will be associated in this token: [foo@bar.com]\n"
       |> Mix.shell().prompt()
@@ -20,11 +39,13 @@ defmodule Mix.Tasks.GenerateApiToken do
 
       account ->
         IO.puts("Account found:")
+
         account
         |> Inspect.Algebra.to_doc(%Inspect.Opts{})
         |> Inspect.Algebra.format(80)
         |> IO.puts()
-        #IO.inspect(account)
+
+        # IO.inspect(account)
 
         if Mix.shell().yes?("Generate token for this account [#{email}]?") do
           gen_token_for_account(account)
@@ -32,8 +53,19 @@ defmodule Mix.Tasks.GenerateApiToken do
     end
   end
 
+  defp gen_app_token() do
+    if Mix.shell().yes?("Are you sure you want to generate an app token?") do
+      Mix.Task.run("app.start")
+
+      case ApiToken.gen_app_token() do
+        {:ok, token, _claims} -> Mix.shell().info("Successfully generated token:\n#{token}")
+        {:error, reason} -> Mix.shell().error("Error: #{reason}")
+      end
+    end
+  end
+
   defp gen_token_for_account(account) do
-    case ApiTokenGenerator.gen_token_for_account(account) do
+    case ApiToken.gen_token_for_account(account) do
       {:ok, token, _claims} -> Mix.shell().info("Successfully generated token:\n#{token}")
       {:error, reason} -> Mix.shell().error("Error: #{reason}")
     end
