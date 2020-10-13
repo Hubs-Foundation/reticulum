@@ -6,19 +6,25 @@ defmodule RetWeb.ApiTokenAuthPipeline do
     error_handler: RetWeb.ApiTokenAuthErrorHandler
 
   plug(Guardian.Plug.VerifyHeader, realm: "Bearer", halt: false)
-  plug(Guardian.Plug.LoadResource, allow_blank: true)
+  plug(Guardian.Plug.LoadResource, allow_blank: true, halt: false)
 end
 
 defmodule RetWeb.ApiTokenAuthErrorHandler do
   @moduledoc false
-  import Plug.Conn
 
   def auth_error(conn, {failure_type, %ArgumentError{message: reason}}, _opts) do
-    # TODO: Is assigns the right place for this info?
-    assign(conn, :auth_error, {failure_type, reason})
+    append_error(conn, failure_type, reason)
   end
 
   def auth_error(conn, {failure_type, reason}, _opts) do
-    assign(conn, :auth_error, {failure_type, reason})
+    append_error(conn, failure_type, reason)
+  end
+
+  defp append_error(conn, failure_type, reason) do
+    Plug.Conn.assign(
+      conn,
+      :api_token_auth_errors,
+      (conn.assigns[:api_token_auth_errors] || []) ++ [{failure_type, reason}]
+    )
   end
 end

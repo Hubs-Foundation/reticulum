@@ -2,31 +2,42 @@ defmodule RetWeb.Resolvers.RoomResolver do
   @moduledoc """
   Resolvers for room queries and mutations via the graphql API
   """
-  alias Ret.{Hub, Repo}
+  alias Ret.{Hub, Account, Repo, RoomAccessApi}
   alias RetWeb.Api.V1.{HubView}
   import Canada, only: [can?: 2]
 
-  # TODO: Pass account and token. Use a function like, "rooms_for_user(account, token) do
-  # if can? (:do_the_thing)
-  # end"
-  def my_rooms(_parent, args, %{context: %{account: account}}) do
-    {:ok, Hub.get_my_rooms(account, args)}
+  def my_rooms(_parent, args, %{context: %{resource: :reticulum_app_token, scopes: scopes}}) do
+    # TODO: Get account from arguments
+    {:error, [type: :not_yet_implemented, message: "Not yet implemented for app tokens"]}
+  end
+
+  def my_rooms(_parent, args, %{context: %{resource: %Account{} = account, scopes: scopes}}) do
+    Ret.Api.Rooms.authed_get_rooms_created_by(account, {account, scopes}, args)
   end
 
   def my_rooms(_parent, _args, _resolutions) do
-    {:error, "Not authorized"}
+    {:error, [type: :unauthorized, message: "Unauthorized access"]}
   end
 
-  def favorite_rooms(_parent, args, %{context: %{account: account}}) do
-    {:ok, Hub.get_favorite_rooms(account, args)}
+  def favorite_rooms(_parent, args, %{context: %{resource: :reticulum_app_token, scopes: scopes}}) do
+    # TODO: Get account from arguments
+    {:error, [type: :not_yet_implemented, message: "Not yet implemented for app tokens"]}
+  end
+
+  def favorite_rooms(_parent, args, %{context: %{resource: %Account{} = account, scopes: scopes}}) do
+    Ret.Api.Rooms.authed_get_favorite_rooms_of(account, {account, scopes}, args)
   end
 
   def favorite_rooms(_parent, _args, _resolutions) do
-    {:error, "Not authorized"}
+    {:error, [type: :unauthorized, message: "Unauthorized access"]}
   end
 
-  def public_rooms(_parent, args, _resolutions) do
-    {:ok, Hub.get_public_rooms(args)}
+  def public_rooms(_parent, args, %{context: %{scopes: scopes}}) do
+    Ret.Api.Rooms.authed_get_public_rooms(scopes, args)
+  end
+
+  def public_rooms(_, _, _) do
+    {:error, [type: :unauthorized, message: "Unauthorized access"]}
   end
 
   def create_room(_parent, args, %{context: %{account: account}}) do

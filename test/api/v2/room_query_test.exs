@@ -71,7 +71,7 @@ defmodule RoomQueryTest do
     {:ok, hub: hub} = create_hub(%{scene: scene})
     {:ok, hub: public_hub} = create_public_hub(%{scene: scene})
     {:ok, token, _claims} = ApiTokenGenerator.gen_token_for_account(account)
-    {:ok, limited_token, _claims} = ApiTokenGenerator.gen_token()
+    {:ok, app_token, _claims} = ApiTokenGenerator.gen_token()
 
     %{
       account: account,
@@ -80,39 +80,40 @@ defmodule RoomQueryTest do
       hub: hub,
       public_hub: public_hub,
       token: token,
-      limited_token: limited_token
+      app_token: app_token
     }
   end
 
   test "Cannot query without a token", %{conn: conn} do
     res = conn |> do_graphql_action(@query_public_rooms)
-    assert hd(res["errors"])["type"] === "auth_error_token_is_missing"
+    assert hd(res["errors"])["type"] === "api_access_token_not_found"
   end
 
-  test "Can query public rooms with limited token", %{conn: conn, public_hub: public_hub, limited_token: limited_token} do
+  test "Can query public rooms with app token", %{conn: conn, public_hub: public_hub, app_token: app_token} do
     res =
       conn
-      |> put_auth_header_for_token(limited_token)
+      |> put_auth_header_for_token(app_token)
       |> do_graphql_action(@query_public_rooms)
 
     rooms = res["data"]["publicRooms"]["entries"]
     assert List.first(rooms)["id"] == public_hub.hub_sid
   end
 
-  test "Cannot query my rooms with limited token", %{
+  test "Cannot query my rooms with app token without specifying account", %{
     conn: conn,
     account: account,
     hub: hub,
-    limited_token: limited_token
+    app_token: app_token
   } do
     assign_creator(hub, account)
 
     res =
       conn
-      |> put_auth_header_for_token(limited_token)
+      |> put_auth_header_for_token(app_token)
       |> do_graphql_action(@query_my_rooms)
 
-    assert hd(res["errors"])["type"] === "unauthorized_scopes"
+    # TODO: Fix this test when implemented
+    assert hd(res["errors"])["type"] === "not_yet_implemented"
   end
 
   test "Can query my rooms with appropriate token", %{

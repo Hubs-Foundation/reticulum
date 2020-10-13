@@ -54,12 +54,13 @@ defmodule RetWeb.Middleware.InspectTiming do
       case item do
         {identifier, %{started_at: started_at, ended_at: ended_at}} ->
           diff = NaiveDateTime.diff(ended_at, started_at, :microsecond)
-          IO.inspect(Atom.to_string(identifier) <> " took #{diff} microseconds to run.")
+          IO.puts("#{Atom.to_string(identifier)} took #{diff} microseconds to run.")
 
         {identifier, _} ->
           IO.puts(
-            "Cannot log diff of identifier because it lacks timing info started_at and ended_at: " <>
+            "Cannot log diff of identifier because it lacks timing info started_at and ended_at: #{
               Atom.to_string(identifier)
+            }"
           )
 
         _ ->

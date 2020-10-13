@@ -5,24 +5,27 @@ defmodule RetWeb.Middleware.VerifyToken do
 
   import RetWeb.Middleware.PutErrorResult, only: [put_error_result: 3]
 
-  def call(%{context: %{auth_error: {_type, :token_not_found}}} = resolution, _) do
-    # TODO: Maybe not say revoked. Just token not found.
-    put_error_result(resolution, :auth_error_token_was_revoked, "The api token has been revoked.")
-  end
-
-  def call(%{context: %{auth_error: {type, reason}}} = resolution, _) do
-    put_error_result(resolution, type, reason)
+  def call(%{state: :resolved} = resolution, _) do
+    resolution
   end
 
   def call(%{context: %{token: nil}} = resolution, _) do
     put_error_result(
       resolution,
-      :auth_error_token_is_missing,
-      "Missing api token in authorization header required for access"
+      :api_access_token_not_found,
+      "No API Access Token was found in an authorization header."
     )
   end
 
-  def call(resolution, _) do
+  def call(%{context: %{token: _token}} = resolution, _) do
     resolution
+  end
+
+  def call(resolution, _) do
+    put_error_result(
+      resolution,
+      :api_access_token_not_found,
+      "No API Access Token was found in an authorization header."
+    )
   end
 end
