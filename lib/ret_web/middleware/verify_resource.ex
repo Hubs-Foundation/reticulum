@@ -1,3 +1,4 @@
+# TODO: This is probably unnecessary
 defmodule RetWeb.Middleware.VerifyResource do
   @moduledoc false
 

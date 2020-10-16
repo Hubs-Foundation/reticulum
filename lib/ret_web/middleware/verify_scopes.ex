@@ -9,7 +9,6 @@ defmodule RetWeb.Middleware.VerifyScopes do
     resolution
   end
 
-  # TODO: Should an :api scope be required to make any requests to the api?
   def call(%{context: %{scopes: scopes}} = resolution, _) when is_list(scopes) do
     resolution
   end

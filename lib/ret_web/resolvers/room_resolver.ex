@@ -11,6 +11,7 @@ defmodule RetWeb.Resolvers.RoomResolver do
     {:error, [type: :not_yet_implemented, message: "Not yet implemented for app tokens"]}
   end
 
+  # TODO: Create a "ResolvedApiToken" struct instead of passing {resource, scopes} tuples
   def my_rooms(_parent, args, %{context: %{resource: %Account{} = account, scopes: scopes}}) do
     Ret.Api.Rooms.authed_get_rooms_created_by(account, {account, scopes}, args)
   end
