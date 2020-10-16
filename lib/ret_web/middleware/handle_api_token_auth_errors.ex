@@ -21,6 +21,7 @@ defmodule RetWeb.Middleware.HandleApiTokenAuthErrors do
     end
   end
 
+  # I ran into this case in testing. TODO: Figure out why (and if) it's still happening and fix
   def call(resolution, _) do
     put_error_result(resolution, :internal_server_error, "The context was built incorrectly")
   end

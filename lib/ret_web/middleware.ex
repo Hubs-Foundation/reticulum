@@ -3,8 +3,6 @@ defmodule RetWeb.Middleware do
 
   alias RetWeb.Middleware.{
     VerifyToken,
-    VerifyResource,
-    VerifyScopes,
     HandleApiTokenAuthErrors,
     HandleChangesetErrors,
     StartTiming,
@@ -26,8 +24,6 @@ defmodule RetWeb.Middleware do
     if(include_timing, do: [StartTiming], else: []) ++
       [HandleApiTokenAuthErrors] ++
       [VerifyToken] ++
-      [VerifyResource] ++
-      [VerifyScopes] ++
       middleware ++
       [HandleChangesetErrors] ++
       if(include_timing, do: [EndTiming], else: []) ++
