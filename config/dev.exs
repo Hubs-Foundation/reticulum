@@ -187,7 +187,7 @@ config :ret, Ret.Guardian,
   secret_key: "47iqPEdWcfE7xRnyaxKDLt9OGEtkQG3SycHBEMOuT2qARmoESnhc76IgCUjaQIwX",
   ttl: {12, :weeks}
 
-config :ret, Ret.ApiToken,
+config :ret, Ret.Api.Token,
   secret_key: "sLqNm8eWf4gtzmaZXUyn5qI93levlvBnX4hqCM9HraDM00QMnVvtQGAQ4S56q3fe",
   ttl: {2, :weeks}
 

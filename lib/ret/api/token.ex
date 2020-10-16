@@ -1,4 +1,4 @@
-defmodule Ret.ApiToken do
+defmodule Ret.Api.Token do
   @moduledoc """
   ApiTokens determine what actions are allowed to be taken via the public API.
   """

@@ -664,8 +664,8 @@ defmodule Ret.Hub do
 end
 
 # # TODO: Canada Can implementation for api token
-# defimpl Canada.Can, for: Ret.ApiToken do
-#   def can?(%Ret.ApiToken{} = token, :view_room, %Hub{} = hub) do
+# defimpl Canada.Can, for: Ret.Api.Token do
+#   def can?(%Ret.Api.Token{} = token, :view_room, %Hub{} = hub) do
 #     hub.entry_mode.public || token.claims.superuser
 #   end
 # end
@@ -817,4 +817,16 @@ defimpl Canada.Can, for: Atom do
   def can?(_, :create_account, _), do: !AppConfig.get_cached_config_value("features|disable_sign_up")
 
   def can?(_, _, _), do: false
+end
+
+defimpl Canada.Can, for: {resource, scopes} do
+  def can?({:reticulum_app_token, scopes}, :update_room, room) do
+    Scopes.ensure_has_scope(scopes, Scopes.write_rooms())
+    && can?(resource, :update_room, room)
+  end
+end
+
+defimpl Canada.Can, for: :reticulum_app_token do
+  def can?(_, :access_admin_panel, _), do: false
+  def can?(_, _, %Hub{}), do: true
 end

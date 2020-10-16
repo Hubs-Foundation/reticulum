@@ -2,7 +2,7 @@ defmodule RetWeb.ApiTokenAuthPipeline do
   @moduledoc false
   use Guardian.Plug.Pipeline,
     otp_app: :ret,
-    module: Ret.ApiToken,
+    module: Ret.Api.Token,
     error_handler: RetWeb.ApiTokenAuthErrorHandler
 
   plug(Guardian.Plug.VerifyHeader, halt: false)
