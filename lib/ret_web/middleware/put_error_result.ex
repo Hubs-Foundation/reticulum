@@ -8,8 +8,8 @@ defmodule RetWeb.Middleware.PutErrorResult do
       resolution,
       {:error,
        [
-         type: :missing_or_invalid_credentials,
-         message: "API access token is missing or invalid. Did you add an authorization: bearer <your_token> header?"
+         type: :api_access_token_invalid_or_not_found,
+         message: "API access token is invalid or missing. Did you add an authorization: bearer <your_token> header?"
        ]}
     )
   end

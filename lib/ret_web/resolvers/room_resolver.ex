@@ -8,7 +8,7 @@ defmodule RetWeb.Resolvers.RoomResolver do
   import Canada, only: [can?: 2]
   import RetWeb.Resolvers.ResolverError, only: [resolver_error: 2]
 
-  def my_rooms(_parent, args, %{
+  def my_rooms(_parent, _args, %{
         context: %{
           credentials: %Credentials{
             resource: :reticulum_app_token
@@ -33,7 +33,7 @@ defmodule RetWeb.Resolvers.RoomResolver do
     resolver_error(:unauthorized, "Unauthorized access")
   end
 
-  def favorite_rooms(_parent, args, %{
+  def favorite_rooms(_parent, _args, %{
         context: %{
           credentials: %Credentials{
             resource: :reticulum_app_token

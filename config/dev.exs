@@ -193,10 +193,8 @@ config :ret, Ret.Api.Token,
 
 config :guardian, Guardian.DB,
   repo: Ret.Repo,
-  schema_name: "guardian_tokens", # Would like to call this api_tokens -- would need to edit the template/migrations
-  token_types: ["api"],
-  sweep_interval: 10
-# TODO: sweep_interval doesn't need configuration if we disable sweep
+  # Would like to call this api_tokens -- would need to edit the template/migrations
+  schema_name: "guardian_tokens"
 
 config :web_push_encryption, :vapid_details,
   subject: "mailto:admin@mozilla.com",

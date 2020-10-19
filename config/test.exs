@@ -47,16 +47,13 @@ config :ret, Ret.Guardian,
   issuer: "ret",
   secret_key: "47iqPEdWcfE7xRnyaxKDLt9OGEtkQG3SycHBEMOuT2qARmoESnhc76IgCUjaQIwX"
 
-config :ret, Ret.ApiToken,
+config :ret, Ret.Api.Token,
   secret_key: "sLqNm8eWf4gtzmaZXUyn5qI93levlvBnX4hqCM9HraDM00QMnVvtQGAQ4S56q3fe",
   ttl: {2, :hours}
 
 config :guardian, Guardian.DB,
   repo: Ret.Repo,
-  schema_name: "guardian_tokens", # Would like to call this api_tokens -- would need to edit the template/migrations
-  token_types: ["api"],
-  sweep_interval: 10
-# TODO: sweep_interval doesn't need configuration if we disable sweep
+  schema_name: "guardian_tokens" # Would like to call this api_tokens -- would need to edit the template/migrations
 
 config :ret, Ret.Storage,
   storage_path: "storage/test",

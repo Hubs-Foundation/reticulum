@@ -7,7 +7,6 @@ defmodule Ret.Api.Token do
   import Ecto.Query
 
   alias Ret.{Account, Repo}
-  alias Ret.Api.Scopes
 
   @app_token_string "reticulum_app_token"
 

@@ -3,7 +3,8 @@ defmodule Mix.Tasks.GenerateApiToken do
 
   use Mix.Task
 
-  alias Ret.{Account, ApiToken}
+  alias Ret.{Account}
+  alias Ret.Api.TokenUtils
 
   @impl Mix.Task
   def run(_) do
@@ -57,7 +58,7 @@ defmodule Mix.Tasks.GenerateApiToken do
     if Mix.shell().yes?("Are you sure you want to generate an app token?") do
       Mix.Task.run("app.start")
 
-      case ApiToken.gen_app_token() do
+      case TokenUtils.gen_app_token() do
         {:ok, token, _claims} -> Mix.shell().info("Successfully generated token:\n#{token}")
         {:error, reason} -> Mix.shell().error("Error: #{reason}")
       end
@@ -65,7 +66,7 @@ defmodule Mix.Tasks.GenerateApiToken do
   end
 
   defp gen_token_for_account(account) do
-    case ApiToken.gen_token_for_account(account) do
+    case TokenUtils.gen_token_for_account(account) do
       {:ok, token, _claims} -> Mix.shell().info("Successfully generated token:\n#{token}")
       {:error, reason} -> Mix.shell().error("Error: #{reason}")
     end
