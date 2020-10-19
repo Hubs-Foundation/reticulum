@@ -6,28 +6,21 @@ defmodule RetWeb.Email do
     app_name = AppConfig.get_cached_config_value("translations|en|app-name")
     app_full_name = AppConfig.get_cached_config_value("translations|en|app-full-name") || app_name
     admin_email = Application.get_env(:ret, Ret.Account)[:admin_email]
+    custom_login_subject = AppConfig.get_cached_config_value("auth|login_subject")
+    custom_login_body = AppConfig.get_cached_config_value("auth|login_body")
 
     email_subject =
-      with custom_login_subject <-
-             AppConfig.get_config_value("auth|login_subject"),
-           false <- string_is_nil_or_empty(custom_login_subject) do
-        custom_login_subject
-      else
-        _ ->
-          "Your #{app_name} Sign-In Link"
-      end
+      if string_is_nil_or_empty(custom_login_subject),
+        do: "Your #{app_name} Sign-In Link",
+        else: custom_login_subject
 
     email_body =
-      with custom_login_body <-
-             AppConfig.get_cached_config_value("auth|login_body"),
-           false <- string_is_nil_or_empty(custom_login_body) do
-        add_magic_link_to_custom_login_body(custom_login_body, signin_args)
-      else
-        _ ->
+      if string_is_nil_or_empty(custom_login_body),
+        do:
           "To sign-in to #{app_name}, please visit the link below. If you did not make this request, please ignore this e-mail.\n\n #{
             RetWeb.Endpoint.url()
-          }/?#{URI.encode_query(signin_args)}"
-      end
+          }/?#{URI.encode_query(signin_args)}",
+        else: add_magic_link_to_custom_login_body(custom_login_body, signin_args)
 
     email =
       new_email()
@@ -51,7 +44,7 @@ defmodule RetWeb.Email do
     magic_link = "#{RetWeb.Endpoint.url()}/?#{URI.encode_query(signin_args)}"
 
     if Regex.match?(~r/{{ link }}/, custom_message) do
-      Regex.replace(~r/{{ link }}/, custom_message, magic_link, global: false)
+      Regex.replace(~r/{{ link }}/, custom_message, magic_link)
     else
       custom_message <> "\n\n" <> magic_link
     end
