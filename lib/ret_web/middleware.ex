@@ -2,7 +2,6 @@ defmodule RetWeb.Middleware do
   @moduledoc "Adds absinthe middleware on matching fields/objects"
 
   alias RetWeb.Middleware.{
-    VerifyToken,
     HandleApiTokenAuthErrors,
     HandleChangesetErrors,
     StartTiming,
@@ -23,7 +22,6 @@ defmodule RetWeb.Middleware do
 
     if(include_timing, do: [StartTiming], else: []) ++
       [HandleApiTokenAuthErrors] ++
-      [VerifyToken] ++
       middleware ++
       [HandleChangesetErrors] ++
       if(include_timing, do: [EndTiming], else: []) ++

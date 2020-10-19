@@ -20,7 +20,7 @@ defmodule RetWeb.ApiTokenAuthErrorHandler do
     append_error(conn, failure_type, reason)
   end
 
-  defp append_error(conn, failure_type, reason) do
+  def append_error(conn, failure_type, reason) do
     Plug.Conn.assign(
       conn,
       :api_token_auth_errors,

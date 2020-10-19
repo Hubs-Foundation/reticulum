@@ -818,15 +818,3 @@ defimpl Canada.Can, for: Atom do
 
   def can?(_, _, _), do: false
 end
-
-defimpl Canada.Can, for: {resource, scopes} do
-  def can?({:reticulum_app_token, scopes}, :update_room, room) do
-    Scopes.ensure_has_scope(scopes, Scopes.write_rooms())
-    && can?(resource, :update_room, room)
-  end
-end
-
-defimpl Canada.Can, for: :reticulum_app_token do
-  def can?(_, :access_admin_panel, _), do: false
-  def can?(_, _, %Hub{}), do: true
-end

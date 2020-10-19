@@ -3,42 +3,71 @@ defmodule RetWeb.Resolvers.RoomResolver do
   Resolvers for room queries and mutations via the graphql API
   """
   alias Ret.{Hub, Account, Repo, RoomAccessApi}
+  alias Ret.Api.Credentials
   alias RetWeb.Api.V1.{HubView}
   import Canada, only: [can?: 2]
+  import RetWeb.Resolvers.ResolverError, only: [resolver_error: 2]
 
-  def my_rooms(_parent, args, %{context: %{resource: :reticulum_app_token, scopes: scopes}}) do
-    # TODO: Get account from arguments
-    {:error, [type: :not_yet_implemented, message: "Not yet implemented for app tokens"]}
+  def my_rooms(_parent, args, %{
+        context: %{
+          credentials: %Credentials{
+            resource: :reticulum_app_token
+          }
+        }
+      }) do
+    resolver_error(:not_implemented, "Not implemented for app tokens")
   end
 
-  # TODO: Create a "ResolvedApiToken" struct instead of passing {resource, scopes} tuples
-  def my_rooms(_parent, args, %{context: %{resource: %Account{} = account, scopes: scopes}}) do
-    Ret.Api.Rooms.authed_get_rooms_created_by(account, {account, scopes}, args)
+  def my_rooms(_parent, args, %{
+        context: %{
+          credentials:
+            %Credentials{
+              resource: %Account{} = account
+            } = credentials
+        }
+      }) do
+    Ret.Api.Rooms.authed_get_rooms_created_by(account, credentials, args)
   end
 
   def my_rooms(_parent, _args, _resolutions) do
-    {:error, [type: :unauthorized, message: "Unauthorized access"]}
+    resolver_error(:unauthorized, "Unauthorized access")
   end
 
-  def favorite_rooms(_parent, args, %{context: %{resource: :reticulum_app_token, scopes: scopes}}) do
-    # TODO: Get account from arguments
-    {:error, [type: :not_yet_implemented, message: "Not yet implemented for app tokens"]}
+  def favorite_rooms(_parent, args, %{
+        context: %{
+          credentials: %Credentials{
+            resource: :reticulum_app_token
+          }
+        }
+      }) do
+    resolver_error(:not_implemented, "Not implemented for app tokens")
   end
 
-  def favorite_rooms(_parent, args, %{context: %{resource: %Account{} = account, scopes: scopes}}) do
-    Ret.Api.Rooms.authed_get_favorite_rooms_of(account, {account, scopes}, args)
+  def favorite_rooms(_parent, args, %{
+        context: %{
+          credentials:
+            %Credentials{
+              resource: %Account{} = account
+            } = credentials
+        }
+      }) do
+    Ret.Api.Rooms.authed_get_favorite_rooms_of(account, credentials, args)
   end
 
   def favorite_rooms(_parent, _args, _resolutions) do
-    {:error, [type: :unauthorized, message: "Unauthorized access"]}
+    resolver_error(:unauthorized, "Unauthorized access")
   end
 
-  def public_rooms(_parent, args, %{context: %{scopes: scopes}}) do
-    Ret.Api.Rooms.authed_get_public_rooms(scopes, args)
+  def public_rooms(_parent, args, %{
+        context: %{
+          credentials: %Credentials{} = credentials
+        }
+      }) do
+    Ret.Api.Rooms.authed_get_public_rooms(credentials, args)
   end
 
   def public_rooms(_, _, _) do
-    {:error, [type: :unauthorized, message: "Unauthorized access"]}
+    resolver_error(:unauthorized, "Unauthorized access")
   end
 
   def create_room(_parent, args, %{context: %{account: account}}) do
