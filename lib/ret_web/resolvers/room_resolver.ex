@@ -71,8 +71,7 @@ defmodule RetWeb.Resolvers.RoomResolver do
   end
 
   def create_room(_parent, args, %{context: %{account: account}}) do
-    # TODO: Pick random default name
-    args = Map.put(args, :name, Map.get(args, :name, "Delightful Cooperative Meetup"))
+    args = Map.put(args, :name, Map.get(args, :name, Ret.RandomRoomNames.generate_room_name()))
 
     case Hub.create(args) do
       {:ok, hub} ->
