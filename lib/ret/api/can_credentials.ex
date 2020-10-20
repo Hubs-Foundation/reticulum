@@ -50,9 +50,6 @@ defimpl Canada.Can, for: Ret.Api.Credentials do
         :update_room,
         %Hub{} = hub
       ) do
-    IO.inspect("Allowed to update this hub?")
-    IO.inspect(:reticulum_app_token)
-    IO.inspect(hub)
     Scopes.read_rooms() in scopes
   end
 
@@ -61,9 +58,6 @@ defimpl Canada.Can, for: Ret.Api.Credentials do
         :update_room,
         %Hub{} = hub
       ) do
-    IO.inspect("Allowed to update this hub?")
-    IO.inspect(account)
-    IO.inspect(hub)
     Scopes.read_rooms() in scopes && can?(account, update_hub(hub))
   end
 
