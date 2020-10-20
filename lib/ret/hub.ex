@@ -267,6 +267,20 @@ defmodule Ret.Hub do
     end
   end
 
+  def maybe_add_new_scene_to_changeset(changeset, %{scene_id: scene_id}) do
+    scene_or_scene_listing = Hub.get_scene_or_scene_listing_by_id(scene_id)
+
+    if is_nil(scene_or_scene_listing) do
+      {:error, "Cannot find scene with id " <> scene_id}
+    else
+      Hub.add_new_scene_to_changeset(changeset, scene_or_scene_listing)
+    end
+  end
+
+  def maybe_add_new_scene_to_changeset(changeset, _args) do
+    changeset
+  end
+
   def changeset_for_new_seen_occupant_count(%Hub{} = hub, occupant_count) do
     new_max_occupant_count = max(hub.max_occupant_count, occupant_count)
 

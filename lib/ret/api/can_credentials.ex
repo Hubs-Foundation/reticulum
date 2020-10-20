@@ -1,5 +1,6 @@
 defimpl Canada.Can, for: Ret.Api.Credentials do
-  alias Ret.{Account}
+  import Canada, only: [can?: 2]
+  alias Ret.{Account, Hub}
   alias Ret.Api.{Credentials, Scopes}
 
   def can?(
@@ -25,8 +26,45 @@ defimpl Canada.Can, for: Ret.Api.Credentials do
         :get_public_rooms,
         _
       ) do
-    IO.inspect("hello world")
     Scopes.read_rooms() in scopes
+  end
+
+  def can?(
+        %Credentials{scopes: scopes},
+        :create_room,
+        _
+      ) do
+    Scopes.write_rooms() in scopes
+  end
+
+  def can?(%Credentials{resource: :reticulum_app_token, scopes: scopes}, :embed_hub, %Hub{} = hub) do
+    Scopes.read_rooms() in scopes
+  end
+
+  def can?(%Credentials{resource: %Account{} = account, scopes: scopes}, :embed_hub, %Hub{} = hub) do
+    Scopes.read_rooms() in scopes && can?(account, embed_hub(hub))
+  end
+
+  def can?(
+        %Credentials{resource: :reticulum_app_token, scopes: scopes},
+        :update_room,
+        %Hub{} = hub
+      ) do
+    IO.inspect("Allowed to update this hub?")
+    IO.inspect(:reticulum_app_token)
+    IO.inspect(hub)
+    Scopes.read_rooms() in scopes
+  end
+
+  def can?(
+        %Credentials{resource: %Account{} = account, scopes: scopes},
+        :update_room,
+        %Hub{} = hub
+      ) do
+    IO.inspect("Allowed to update this hub?")
+    IO.inspect(account)
+    IO.inspect(hub)
+    Scopes.read_rooms() in scopes && can?(account, update_hub(hub))
   end
 
   def can?(_, _, _), do: false

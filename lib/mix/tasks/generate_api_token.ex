@@ -46,8 +46,6 @@ defmodule Mix.Tasks.GenerateApiToken do
         |> Inspect.Algebra.format(80)
         |> IO.puts()
 
-        # IO.inspect(account)
-
         if Mix.shell().yes?("Generate token for this account [#{email}]?") do
           gen_token_for_account(account)
         end

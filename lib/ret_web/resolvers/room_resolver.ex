@@ -4,7 +4,6 @@ defmodule RetWeb.Resolvers.RoomResolver do
   """
   alias Ret.{Hub, Account, Repo, RoomAccessApi}
   alias Ret.Api.Credentials
-  alias RetWeb.Api.V1.{HubView}
   import Canada, only: [can?: 2]
   import RetWeb.Resolvers.ResolverError, only: [resolver_error: 2]
 
@@ -70,46 +69,28 @@ defmodule RetWeb.Resolvers.RoomResolver do
     resolver_error(:unauthorized, "Unauthorized access")
   end
 
-  def create_room(_parent, args, %{context: %{account: account}}) do
-    args = Map.put(args, :name, Map.get(args, :name, Ret.RandomRoomNames.generate_room_name()))
-
-    case Hub.create(args) do
-      {:ok, hub} ->
-        case hub
-             |> Hub.add_attrs_to_changeset(args)
-             |> Hub.maybe_add_member_permissions(hub, args)
-             |> Hub.maybe_add_promotion(account, hub, args)
-             |> maybe_add_new_scene_to_changeset(args)
-             |> Repo.update() do
-          {:ok, hub} ->
-            hub
-            |> Repo.preload(Hub.hub_preloads())
-            |> Hub.changeset_for_creator_assignment(account, hub.creator_assignment_token)
-            |> Repo.update()
-
-          {:error, reason} ->
-            {:error, reason}
-        end
-
-      {:error, reason} ->
-        {:error, reason}
-    end
+  def create_room(_parent, args, %{
+        context: %{
+          credentials: %Credentials{} = credentials
+        }
+      }) do
+    Ret.Api.Rooms.authed_create_room(credentials, args)
   end
 
-  def create_room(_parent, args, _resolutions) do
-    Hub.create(args)
+  def create_room(_parent, _args, _resolutions) do
+    resolver_error(:unauthorized, "Unauthorized access")
   end
 
-  def embed_token(hub, _args, %{context: %{account: account}}) do
-    if account |> can?(embed_hub(hub)) do
-      {:ok, hub.embed_token}
-    else
-      {:ok, nil}
-    end
+  def embed_token(hub, _args, %{
+        context: %{
+          credentials: %Credentials{} = credentials
+        }
+      }) do
+    Ret.Api.Rooms.authed_get_embed_token(credentials, hub)
   end
 
   def embed_token(_hub, _args, _resolutions) do
-    {:ok, nil}
+    resolver_error(:unauthorized, "Unauthorized access")
   end
 
   def port(_hub, _args, _resolutions) do
@@ -140,86 +121,29 @@ defmodule RetWeb.Resolvers.RoomResolver do
   #  {:ok, Hub.scene_or_scene_listing_for(hub)}
   # end
 
-  def update_room(_, %{id: hub_sid} = args, %{context: %{account: account}}) do
+  def update_room(_parent, %{id: hub_sid} = args, %{
+        context: %{
+          credentials: %Credentials{} = credentials
+        }
+      }) do
     hub = Hub |> Repo.get_by(hub_sid: hub_sid) |> Repo.preload([:hub_role_memberships, :hub_bindings])
-    update_room_with_account(hub, account, args)
-  end
 
-  def update_room(_, _, _) do
-    {:error, "Not authorized"}
-  end
-
-  defp update_room_with_account(nil, _account, %{id: hub_sid}) do
-    {:error, "Cannot find room with id " <> hub_sid}
-  end
-
-  defp update_room_with_account(hub, account, args) do
-    # TODO: Should be update rooms?
-    case can?(account, update_roles(hub)) do
-      false ->
-        {:error, "Account does not have permission to update this hub."}
-
-      true ->
-        changeset =
-          hub
-          |> Hub.add_attrs_to_changeset(args)
-          |> Hub.maybe_add_member_permissions(hub, args)
-          |> Hub.maybe_add_promotion(account, hub, args)
-          |> maybe_add_new_scene_to_changeset(args)
-
-        try_do_update_room(changeset, account)
-    end
-  end
-
-  defp maybe_add_new_scene_to_changeset(changeset, %{scene_id: scene_id}) do
-    scene_or_scene_listing = Hub.get_scene_or_scene_listing_by_id(scene_id)
-
-    if is_nil(scene_or_scene_listing) do
-      {:error, "Cannot find scene with id " <> scene_id}
+    if is_nil(hub) do
+      {:error, "Cannot find room with id: " <> hub_sid}
     else
-      Hub.add_new_scene_to_changeset(changeset, scene_or_scene_listing)
+      Ret.Api.Rooms.authed_update_room(hub, credentials, args)
     end
   end
 
-  defp maybe_add_new_scene_to_changeset(changeset, _args) do
-    changeset
+  def update_room(_parent, _args, %{
+        context: %{
+          credentials: %Credentials{} = credentials
+        }
+      }) do
+    {:error, :did_not_specify_room_id}
   end
 
-  defp try_do_update_room({:error, reason}, _) do
-    {:error, reason}
-  end
-
-  defp try_do_update_room(changeset, account) do
-    case changeset |> Repo.update() do
-      {:error, changeset} ->
-        {:error, changeset}
-
-      {:ok, hub} ->
-        hub = Repo.preload(hub, Hub.hub_preloads())
-
-        case broadcast_hub_refresh(hub, account) do
-          {:error, reason} -> {:error, reason}
-          :ok -> {:ok, hub}
-        end
-    end
-  end
-
-  defp broadcast_hub_refresh(hub, account) do
-    payload =
-      HubView.render("show.json", %{
-        hub: hub,
-        embeddable: account |> can?(embed_hub(hub))
-      })
-      |> Map.put(:stale_fields, [
-        # TODO: Only include fields that have changed in stale_fields
-        "name",
-        "description",
-        "member_permissions",
-        "room_size",
-        "allow_promotion",
-        "scene"
-      ])
-
-    RetWeb.Endpoint.broadcast("hub:" <> hub.hub_sid, "hub_refresh", payload)
+  def update_room(_parent, _args, _resolutions) do
+    resolver_error(:unauthorized, "Unauthorized access")
   end
 end
