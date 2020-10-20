@@ -677,13 +677,6 @@ defmodule Ret.Hub do
     do: %{owner: hub |> is_owner?(account.account_id), creator: hub |> is_creator?(account.account_id), signed_in: true}
 end
 
-# # TODO: Canada Can implementation for api token
-# defimpl Canada.Can, for: Ret.Api.Token do
-#   def can?(%Ret.Api.Token{} = token, :view_room, %Hub{} = hub) do
-#     hub.entry_mode.public || token.claims.superuser
-#   end
-# end
-
 defimpl Canada.Can, for: Ret.Account do
   alias Ret.{Hub, AppConfig}
 
