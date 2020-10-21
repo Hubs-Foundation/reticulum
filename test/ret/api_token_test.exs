@@ -13,21 +13,6 @@ defmodule Ret.ApiTokenTest do
     assert jwt == token
   end
 
-  test "Api tokens encode default permissions" do
-    {:ok, token, _claims} = TokenUtils.gen_app_token()
-    {:ok, claims} = Guardian.decode_and_verify(Ret.Api.Token, token)
-    assert Map.get(claims, "rooms_mutation_create_room")
-    assert Map.get(claims, "rooms_mutation_update_room") === false
-  end
-
-  test "Api tokens generated with an account encode more permissions" do
-    account = Ret.Account.find_or_create_account_for_email("test@mozilla.com")
-    {:ok, token, _claims} = TokenUtils.gen_token_for_account(account)
-    {:ok, claims} = Guardian.decode_and_verify(Ret.Api.Token, token)
-    assert Map.get(claims, "rooms_mutation_create_room")
-    assert Map.get(claims, "rooms_mutation_update_room")
-  end
-
   test "Api tokens can be revoked" do
     {:ok, token, _claims} = TokenUtils.gen_app_token()
     [%{jwt: jwt}] = Repo.all(token_query())
