@@ -57,16 +57,24 @@ defmodule Mix.Tasks.GenerateApiToken do
       Mix.Task.run("app.start")
 
       case TokenUtils.gen_app_token() do
-        {:ok, token, _claims} -> Mix.shell().info("Successfully generated token:\n#{token}")
-        {:error, reason} -> Mix.shell().error("Error: #{reason}")
+        {:ok, token, _claims} ->
+          Mix.shell().info("Successfully generated token:\n#{token}")
+          :os.cmd('echo #{token} | xclip')
+
+        {:error, reason} ->
+          Mix.shell().error("Error: #{reason}")
       end
     end
   end
 
   defp gen_token_for_account(account) do
     case TokenUtils.gen_token_for_account(account) do
-      {:ok, token, _claims} -> Mix.shell().info("Successfully generated token:\n#{token}")
-      {:error, reason} -> Mix.shell().error("Error: #{reason}")
+      {:ok, token, _claims} ->
+        Mix.shell().info("Successfully generated token:\n#{token}")
+        :os.cmd('echo #{token} | xclip')
+
+      {:error, reason} ->
+        Mix.shell().error("Error: #{reason}")
     end
   end
 end
