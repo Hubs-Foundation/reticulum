@@ -134,15 +134,6 @@ defmodule RetWeb.Resolvers.RoomResolver do
     end
   end
 
-  def update_room(_parent, _args, %{
-        context: %{
-          credentials: %Credentials{}
-        }
-      }) do
-    # TODO: This should be handled via non_null requirement
-    resolver_error(:missing_room_id, "You must specify a room id.")
-  end
-
   def update_room(_parent, _args, _resolutions) do
     resolver_error(:unauthorized, "Unauthorized access")
   end
