@@ -756,6 +756,8 @@ defimpl Canada.Can, for: Ret.Account do
   # Allow accounts to access their own rooms
   def can?(%Ret.Account{} = account, action, account) when action in @self_allowed_actions, do: true
 
+  def can?(%Ret.Account{} = account, :get_public_rooms, _), do: true
+
   # Create hubs
   def can?(%Ret.Account{is_admin: true}, :create_hub, _), do: true
 

@@ -20,11 +20,11 @@ defimpl Canada.Can, for: Ret.Api.Credentials do
   end
 
   def can?(
-        %Credentials{scopes: scopes},
+        %Credentials{resource: resource, scopes: scopes},
         :get_public_rooms,
         _
       ) do
-    Scopes.read_rooms() in scopes
+    Scopes.read_rooms() in scopes and can?(resource, get_public_rooms(nil))
   end
 
   def can?(
