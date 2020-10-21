@@ -37,7 +37,7 @@ defimpl Canada.Can, for: Ret.Api.Credentials do
     Scopes.write_rooms() in scopes
   end
 
-  def can?(%Credentials{resource: :reticulum_app_token, scopes: scopes}, :embed_hub, %Hub{} = hub) do
+  def can?(%Credentials{resource: :reticulum_app_token, scopes: scopes}, :embed_hub, %Hub{}) do
     Scopes.read_rooms() in scopes
   end
 
@@ -48,7 +48,7 @@ defimpl Canada.Can, for: Ret.Api.Credentials do
   def can?(
         %Credentials{resource: :reticulum_app_token, scopes: scopes},
         :update_room,
-        %Hub{} = hub
+        %Hub{}
       ) do
     Scopes.read_rooms() in scopes
   end

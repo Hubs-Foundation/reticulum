@@ -2,9 +2,8 @@ defmodule RetWeb.Resolvers.RoomResolver do
   @moduledoc """
   Resolvers for room queries and mutations via the graphql API
   """
-  alias Ret.{Hub, Account, Repo, RoomAccessApi}
+  alias Ret.{Hub, Account, Repo}
   alias Ret.Api.Credentials
-  import Canada, only: [can?: 2]
   import RetWeb.Resolvers.ResolverError, only: [resolver_error: 2]
 
   def my_rooms(_parent, _args, %{
@@ -137,10 +136,11 @@ defmodule RetWeb.Resolvers.RoomResolver do
 
   def update_room(_parent, _args, %{
         context: %{
-          credentials: %Credentials{} = credentials
+          credentials: %Credentials{}
         }
       }) do
-    {:error, :did_not_specify_room_id}
+    # TODO: This should be handled via non_null requirement
+    resolver_error(:missing_room_id, "You must specify a room id.")
   end
 
   def update_room(_parent, _args, _resolutions) do
