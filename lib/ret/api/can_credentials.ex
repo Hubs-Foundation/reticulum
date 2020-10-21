@@ -4,21 +4,19 @@ defimpl Canada.Can, for: Ret.Api.Credentials do
   alias Ret.Api.{Credentials, Scopes}
 
   def can?(
-        %Credentials{resource: :reticulum_app_token, scopes: scopes},
-        action,
-        %Account{}
-      )
-      when action in [:get_rooms_created_by, :get_favorite_rooms_of] do
-    Scopes.read_rooms() in scopes
+        %Credentials{resource: resource, scopes: scopes},
+        :get_rooms_created_by,
+        %Account{} = account
+      ) do
+    Scopes.read_rooms() in scopes and can?(resource, get_rooms_created_by(account))
   end
 
   def can?(
-        %Credentials{resource: %Account{} = account, scopes: scopes},
-        action,
+        %Credentials{resource: resource, scopes: scopes},
+        :get_favorite_rooms_of,
         %Account{} = account
-      )
-      when action in [:get_rooms_created_by, :get_favorite_rooms_of] do
-    Scopes.read_rooms() in scopes
+      ) do
+    Scopes.read_rooms() in scopes and can?(resource, get_favorite_rooms_of(account))
   end
 
   def can?(
@@ -30,35 +28,23 @@ defimpl Canada.Can, for: Ret.Api.Credentials do
   end
 
   def can?(
-        %Credentials{scopes: scopes},
+        %Credentials{resource: resource, scopes: scopes},
         :create_room,
         _
       ) do
-    Scopes.write_rooms() in scopes
+    Scopes.write_rooms() in scopes && can?(resource, create_hub(nil))
   end
 
-  def can?(%Credentials{resource: :reticulum_app_token, scopes: scopes}, :embed_hub, %Hub{}) do
-    Scopes.read_rooms() in scopes
-  end
-
-  def can?(%Credentials{resource: %Account{} = account, scopes: scopes}, :embed_hub, %Hub{} = hub) do
-    Scopes.read_rooms() in scopes && can?(account, embed_hub(hub))
+  def can?(%Credentials{resource: resource, scopes: scopes}, :embed_hub, %Hub{} = hub) do
+    Scopes.read_rooms() in scopes && can?(resource, embed_hub(hub))
   end
 
   def can?(
-        %Credentials{resource: :reticulum_app_token, scopes: scopes},
-        :update_room,
-        %Hub{}
-      ) do
-    Scopes.read_rooms() in scopes
-  end
-
-  def can?(
-        %Credentials{resource: %Account{} = account, scopes: scopes},
+        %Credentials{resource: resource, scopes: scopes},
         :update_room,
         %Hub{} = hub
       ) do
-    Scopes.read_rooms() in scopes && can?(account, update_hub(hub))
+    Scopes.read_rooms() in scopes && can?(resource, update_hub(hub))
   end
 
   def can?(_, _, _), do: false

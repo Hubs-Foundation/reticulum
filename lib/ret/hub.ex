@@ -752,6 +752,10 @@ defimpl Canada.Can, for: Ret.Account do
     hub |> Hub.has_member_permission?(action) or hub |> Ret.Hub.is_owner?(account_id)
   end
 
+  @self_allowed_actions [:get_rooms_created_by, :get_favorite_rooms_of]
+  # Allow accounts to access their own rooms
+  def can?(%Ret.Account{} = account, action, account) when action in @self_allowed_actions, do: true
+
   # Create hubs
   def can?(%Ret.Account{is_admin: true}, :create_hub, _), do: true
 
@@ -802,7 +806,19 @@ end
 defimpl Canada.Can, for: Atom do
   alias Ret.{AppConfig, Hub}
 
-  @object_actions [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects, :spawn_emoji, :fly]
+  @api_actions [
+    :get_rooms_created_by,
+    :get_favorite_rooms_of,
+    :get_public_rooms,
+    :create_hub,
+    :update_hub,
+    :embed_hub
+  ]
+  def can?(:reticulum_app_token, action, _) when action in @api_actions do
+    true
+  end
+
+  def can?(:reticulum_app_token, _, _), do: false
 
   # Always deny access to non-enterable hubs
   def can?(_, :join_hub, %Ret.Hub{entry_mode: :deny}), do: false
@@ -811,6 +827,7 @@ defimpl Canada.Can, for: Atom do
   def can?(_, :join_hub, %Ret.Hub{hub_bindings: []}),
     do: !AppConfig.get_cached_config_value("features|require_account_for_join")
 
+  @object_actions [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects, :spawn_emoji, :fly]
   # Object permissions for anonymous users are based on member permission settings
   def can?(_account, action, hub) when action in @object_actions do
     hub |> Hub.has_member_permission?(action)
