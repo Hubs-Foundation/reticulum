@@ -93,26 +93,32 @@ defmodule RetWeb.Resolvers.RoomResolver do
   end
 
   def port(_hub, _args, _resolutions) do
+    # No permission check needed
     {:ok, Hub.janus_port()}
   end
 
   def turn(_hub, _args, _resolutions) do
+    # No permission check needed
     {:ok, Hub.generate_turn_info()}
   end
 
   def member_permissions(hub, _args, _resolutions) do
+    # No permission check needed
     {:ok, Hub.member_permissions_for_hub_as_atoms(hub)}
   end
 
   def room_size(hub, _args, _resolutions) do
+    # No permission check needed
     {:ok, Hub.room_size_for(hub)}
   end
 
   def member_count(hub, _args, _resolutions) do
+    # No permission check needed
     {:ok, Hub.member_count_for(hub)}
   end
 
   def lobby_count(hub, _args, _resolutions) do
+    # No permission check needed
     {:ok, Hub.lobby_count_for(hub)}
   end
 
@@ -125,6 +131,7 @@ defmodule RetWeb.Resolvers.RoomResolver do
           credentials: %Credentials{} = credentials
         }
       }) do
+    # TODO: Move hub lookup into api/rooms.ex
     hub = Hub |> Repo.get_by(hub_sid: hub_sid) |> Repo.preload([:hub_role_memberships, :hub_bindings])
 
     if is_nil(hub) do

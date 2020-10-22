@@ -754,7 +754,8 @@ defimpl Canada.Can, for: Ret.Account do
 
   @self_allowed_actions [:get_rooms_created_by, :get_favorite_rooms_of]
   # Allow accounts to access their own rooms
-  def can?(%Ret.Account{} = account, action, account) when action in @self_allowed_actions, do: true
+  def can?(%Ret.Account{} = a, action, %Ret.Account{} = b) when action in @self_allowed_actions,
+    do: a.account_id == b.account_id
 
   def can?(%Ret.Account{}, :get_public_rooms, _), do: true
 
@@ -806,8 +807,6 @@ end
 
 # Permissions for un-authenticated clients
 defimpl Canada.Can, for: Atom do
-  alias Ret.{AppConfig, Hub}
-
   @api_actions [
     :get_rooms_created_by,
     :get_favorite_rooms_of,
@@ -821,6 +820,8 @@ defimpl Canada.Can, for: Atom do
   end
 
   def can?(:reticulum_app_token, _, _), do: false
+
+  alias Ret.{AppConfig, Hub}
 
   # Always deny access to non-enterable hubs
   def can?(_, :join_hub, %Ret.Hub{entry_mode: :deny}), do: false
