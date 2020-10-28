@@ -5,7 +5,6 @@ defmodule Ret.Api.Credentials do
   alias Ret.Api.Credentials
 
   alias Ret.Account
-  alias Ret.Api.Scopes
 
   use Ecto.Schema
   import Ecto.Query, only: [from: 2]
