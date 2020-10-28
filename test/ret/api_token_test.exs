@@ -1,41 +1,39 @@
 defmodule Ret.ApiTokenTest do
   use Ret.DataCase
 
-  alias Ret.Api.TokenUtils
-
-  defp token_query do
-    from("guardian_tokens", select: [:jti, :aud, :jwt, :claims])
-  end
+  alias Ret.{Crypto, Repo}
+  alias Ret.Api.{TokenUtils, Credentials}
 
   test "Generating an api token puts it in the database" do
     {:ok, token, _claims} = TokenUtils.gen_app_token()
-    [%{jwt: jwt}] = Repo.all(token_query())
-    assert jwt == token
+    expected_hash = Crypto.hash(token)
+
+    %Credentials{token_hash: token_hash} =
+      Repo.one(Credentials.query() |> Credentials.where_token_hash_is(expected_hash))
+
+    assert expected_hash == token_hash
   end
 
   test "Api tokens can be revoked" do
     {:ok, token, _claims} = TokenUtils.gen_app_token()
-    [%{jwt: jwt}] = Repo.all(token_query())
-    assert jwt == token
-    {:ok, _claims} = Guardian.decode_and_verify(Ret.Api.Token, token)
+    expected_hash = Crypto.hash(token)
 
-    Guardian.revoke(Ret.Api.Token, token)
-    assert Enum.empty?(Repo.all(token_query()))
+    {:ok, %Credentials{token_hash: token_hash, is_revoked: is_revoked}} =
+      Guardian.decode_and_verify(Ret.Api.Token, token)
 
-    {:error, :token_not_found} = Guardian.decode_and_verify(Ret.Api.Token, token)
+    assert expected_hash == token_hash
+    assert is_revoked == false
+
+    Ret.Api.Token.revoke(token)
+
+    {:ok, %Credentials{is_revoked: is_revoked_2}} = Guardian.decode_and_verify(Ret.Api.Token, token)
+    assert is_revoked_2 == true
   end
 
   test "Api tokens can be associated with an account" do
     account = Ret.Account.find_or_create_account_for_email("test@mozilla.com")
     {:ok, token, _claims} = TokenUtils.gen_token_for_account(account)
-    {:ok, resource, _claims} = Guardian.resource_from_token(Ret.Api.Token, token)
-    assert resource.account_id === account.account_id
-  end
-
-  test "Revoked tokens cannot recover accounts" do
-    account = Ret.Account.find_or_create_account_for_email("test@mozilla.com")
-    {:ok, token, _claims} = TokenUtils.gen_token_for_account(account)
-    Guardian.revoke(Ret.Api.Token, token)
-    {:error, :token_not_found} = Guardian.resource_from_token(Ret.Api.Token, token)
+    {:ok, credentials, _claims} = Guardian.resource_from_token(Ret.Api.Token, token)
+    assert credentials.account_id === account.account_id
   end
 end

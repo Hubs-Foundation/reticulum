@@ -9,6 +9,10 @@ defmodule Ret.Api.Token do
   def subject_for_token(_, _), do: {:ok, nil}
 
   def resource_from_claims(%Credentials{} = credentials) do
-    credentials
+    {:ok, credentials}
+  end
+
+  def resource_from_claims(_) do
+    {:error, :invalid_token}
   end
 end

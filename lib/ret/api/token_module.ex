@@ -9,9 +9,15 @@ defmodule Ret.Api.TokenModule do
   @behaviour Guardian.Token
 
   @doc """
-  Cannot peek API Tokens
+  No concept of validating signature so we just decode the token
   """
-  def peek(_mod, _token), do: nil
+  def peek(mod, token) do
+    case decode_token(mod, token) do
+      {:ok, %Credentials{} = credentials} -> %{claims: credentials}
+      {:ok, {:error, _reason}} -> nil
+      _ -> nil
+    end
+  end
 
   @doc """
   Do not need to generate a token_id here
@@ -89,8 +95,8 @@ defmodule Ret.Api.TokenModule do
   @doc """
   Revoke a token
   """
-  def revoke(_mod, %Credentials{} = claims, _token, _options) do
-    Ret.Api.Credentials.revoke(claims)
+  def revoke(_mod, %Credentials{} = credentials, _token, _options) do
+    Ret.Api.Credentials.revoke(credentials)
   end
 
   @doc """

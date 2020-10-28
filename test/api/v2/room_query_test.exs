@@ -86,7 +86,7 @@ defmodule RoomQueryTest do
 
   test "Cannot query without a token", %{conn: conn} do
     res = conn |> do_graphql_action(@query_public_rooms)
-    assert hd(res["errors"])["type"] === "api_access_token_invalid_or_not_found"
+    assert hd(res["errors"])["type"] === "api_access_token_not_found"
   end
 
   test "Can query public rooms with app token", %{conn: conn, public_hub: public_hub, app_token: app_token} do
