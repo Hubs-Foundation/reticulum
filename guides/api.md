@@ -24,7 +24,7 @@ There are two types of API Access Tokens:
 When generating API Access Tokens, you specify which `scopes` to grant that token. Scopes allow the token to be used to perform specific actions.
 
 | Scope | Allowed Token Types | API Actions |
-| :-:            | :-:        |         --- |      
+| --:            | :-:        |         --- |      
 | `read_rooms` | `account`, `app` | `myRooms`, `favoriteRooms`, `publicRooms` |
 | `write_rooms` | `account`, `app` | `createRoom`, `updateRoom` |
 | `create_accounts` | `app` | `createAccount` (not yet implemented) |
