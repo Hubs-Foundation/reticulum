@@ -112,7 +112,6 @@ defmodule RoomQueryTest do
       |> put_auth_header_for_token(app_token)
       |> do_graphql_action(@query_my_rooms)
 
-    # TODO: Fix this test when implemented
     assert hd(res["errors"])["type"] === "not_implemented"
   end
 
