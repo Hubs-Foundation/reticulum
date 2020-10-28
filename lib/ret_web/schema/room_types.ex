@@ -1,4 +1,6 @@
 defmodule RetWeb.Schema.RoomTypes do
+  @moduledoc "GraphQL Schema"
+
   use Absinthe.Schema.Notation
   alias RetWeb.Resolvers
   alias Ret.Scene

@@ -72,7 +72,9 @@ defmodule Ret.Api.TokenModule do
     case Credentials.query()
          |> Credentials.where_token_hash_is(Ret.Crypto.hash(token))
          |> Ret.Repo.one() do
-      nil -> {:error, :credentials_not_found}
+      # Don't want to return the error at this level,
+      # so we pass it along for graphql to handle
+      nil -> {:ok, {:error, :invalid_token}}
       credentials -> {:ok, credentials}
     end
   end

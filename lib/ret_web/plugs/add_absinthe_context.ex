@@ -12,10 +12,16 @@ defmodule RetWeb.AddAbsintheContext do
 
   defp build_context(conn) do
     auth_errors = conn.assigns[:api_token_auth_errors] || []
-    credentials = Guardian.Plug.current_claims(conn)
-    %{
-      api_token_auth_errors: auth_errors,
-      credentials: credentials
-    }
+
+    case Guardian.Plug.current_claims(conn) do
+      {:error, :invalid_token} ->
+        %{api_token_auth_errors: [{:invalid_token, "Invalid token error. Could not find credentials."}] ++ auth_errors}
+
+      credentials ->
+        %{
+          api_token_auth_errors: auth_errors,
+          credentials: credentials
+        }
+    end
   end
 end
