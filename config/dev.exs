@@ -191,11 +191,6 @@ config :ret, Ret.Api.Token,
   secret_key: "sLqNm8eWf4gtzmaZXUyn5qI93levlvBnX4hqCM9HraDM00QMnVvtQGAQ4S56q3fe",
   ttl: {2, :weeks}
 
-config :guardian, Guardian.DB,
-  repo: Ret.Repo,
-  # Would like to call this api_tokens -- would need to edit the template/migrations
-  schema_name: "guardian_tokens"
-
 config :web_push_encryption, :vapid_details,
   subject: "mailto:admin@mozilla.com",
   public_key: "BAb03820kHYuqIvtP6QuCKZRshvv_zp5eDtqkuwCUAxASBZMQbFZXzv8kjYOuLGF16A3k8qYnIN10_4asB-Aw7w",

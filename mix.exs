@@ -71,7 +71,6 @@ defmodule Ret.Mixfile do
       {:bamboo_smtp, "~> 1.7"},
       {:guardian, "~> 2.1.1"},
       {:guardian_phoenix, "~> 2.0"},
-      {:guardian_db, "~> 2.0"},
       {:canary, "~> 1.1.1"},
       {:temp, "~> 0.4"},
       {:timex, "~> 3.6"},

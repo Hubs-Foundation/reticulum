@@ -51,10 +51,6 @@ config :ret, Ret.Api.Token,
   secret_key: "sLqNm8eWf4gtzmaZXUyn5qI93levlvBnX4hqCM9HraDM00QMnVvtQGAQ4S56q3fe",
   ttl: {2, :hours}
 
-config :guardian, Guardian.DB,
-  repo: Ret.Repo,
-  schema_name: "guardian_tokens" # Would like to call this api_tokens -- would need to edit the template/migrations
-
 config :ret, Ret.Storage,
   storage_path: "storage/test",
   ttl: 60 * 60 * 24
