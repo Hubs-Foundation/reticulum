@@ -39,7 +39,7 @@ defmodule Ret.Api.Rooms do
     end
   end
 
-  defp do_create_room(%Account{} = account, params) do
+  defp do_create_room(%Credentials{subject_type: :account, account: account}, params) do
     random_name = Ret.RandomRoomNames.generate_room_name()
     params = Map.put(params, :name, Map.get(params, :name, random_name))
 
@@ -58,7 +58,7 @@ defmodule Ret.Api.Rooms do
     end
   end
 
-  defp do_create_room(:reticulum_app_token, params) do
+  defp do_create_room(%Credentials{subject_type: :app}, params) do
     params = Map.put(params, :name, Map.get(params, :name, Ret.RandomRoomNames.generate_room_name()))
 
     with {:ok, hub} <- Hub.create(params) do
@@ -70,28 +70,29 @@ defmodule Ret.Api.Rooms do
     end
   end
 
-  def authed_create_room(%Credentials{resource: resource} = credentials, params) do
+  def authed_create_room(%Credentials{} = credentials, params) do
     if can?(credentials, create_room(nil)) do
-      do_create_room(resource, params)
+      do_create_room(credentials, params)
     else
       {:error, :invalid_credentials}
     end
   end
 
-  def authed_update_room(hub, %Credentials{resource: resource} = credentials, params) do
-    if can?(credentials, update_room(hub)) do
-      do_update_room(hub, resource, params)
+  def authed_update_room(hub_sid, %Credentials{} = credentials, params) do
+    hub = Hub |> Repo.get_by(hub_sid: hub_sid) |> Repo.preload([:hub_role_memberships, :hub_bindings])
+
+    if is_nil(hub) do
+      {:error, "Cannot find room with id: " <> hub_sid}
     else
-      {:error, :invalid_credentials}
+      if can?(credentials, update_room(hub)) do
+        do_update_room(hub, credentials, params)
+      else
+        {:error, :invalid_credentials}
+      end
     end
   end
 
-  defp do_update_room(hub, resource, params) do
-    update_room_with_resource(hub, resource, params)
-  end
-
-  # TODO: DRY up the update_room flow
-  defp update_room_with_resource(hub, :reticulum_app_token, params) do
+  defp do_update_room(hub, %Credentials{subject_type: :app}, params) do
     hub
     |> Hub.add_attrs_to_changeset(params)
     |> Hub.maybe_add_member_permissions(hub, params)
@@ -99,7 +100,7 @@ defmodule Ret.Api.Rooms do
     |> try_do_update_room(:reticulum_app_token)
   end
 
-  defp update_room_with_resource(hub, %Account{} = account, params) do
+  defp do_update_room(hub, %Credentials{subject_type: :account, account: account}, params) do
     hub
     |> Hub.add_attrs_to_changeset(params)
     |> Hub.maybe_add_member_permissions(hub, params)

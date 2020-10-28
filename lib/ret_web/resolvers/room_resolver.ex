@@ -9,7 +9,7 @@ defmodule RetWeb.Resolvers.RoomResolver do
   def my_rooms(_parent, _args, %{
         context: %{
           credentials: %Credentials{
-            resource: :reticulum_app_token
+            subject_type: :app
           }
         }
       }) do
@@ -20,7 +20,8 @@ defmodule RetWeb.Resolvers.RoomResolver do
         context: %{
           credentials:
             %Credentials{
-              resource: %Account{} = account
+              subject_type: :account,
+              account: account
             } = credentials
         }
       }) do
@@ -34,7 +35,7 @@ defmodule RetWeb.Resolvers.RoomResolver do
   def favorite_rooms(_parent, _args, %{
         context: %{
           credentials: %Credentials{
-            resource: :reticulum_app_token
+            subject_type: :app
           }
         }
       }) do
@@ -45,7 +46,8 @@ defmodule RetWeb.Resolvers.RoomResolver do
         context: %{
           credentials:
             %Credentials{
-              resource: %Account{} = account
+              subject_type: :account,
+              account: account
             } = credentials
         }
       }) do
@@ -131,14 +133,7 @@ defmodule RetWeb.Resolvers.RoomResolver do
           credentials: %Credentials{} = credentials
         }
       }) do
-    # TODO: Move hub lookup into api/rooms.ex
-    hub = Hub |> Repo.get_by(hub_sid: hub_sid) |> Repo.preload([:hub_role_memberships, :hub_bindings])
-
-    if is_nil(hub) do
-      {:error, "Cannot find room with id: " <> hub_sid}
-    else
-      Ret.Api.Rooms.authed_update_room(hub, credentials, args)
-    end
+    Ret.Api.Rooms.authed_update_room(hub_sid, credentials, args)
   end
 
   def update_room(_parent, _args, _resolutions) do

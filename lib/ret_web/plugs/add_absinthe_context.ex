@@ -7,25 +7,15 @@ defmodule RetWeb.AddAbsintheContext do
   def init(opts), do: opts
 
   def call(conn, _) do
+    Absinthe.Plug.put_options(conn, context: build_context(conn))
+  end
+
+  defp build_context(conn) do
     auth_errors = conn.assigns[:api_token_auth_errors] || []
-
-    context =
-      case Credentials.from_resource_and_claims(
-             Guardian.Plug.current_resource(conn),
-             Guardian.Plug.current_claims(conn)
-           ) do
-        {:ok, credentials} ->
-          %{
-            api_token_auth_errors: auth_errors,
-            credentials: credentials
-          }
-
-        {:error, reason} ->
-          %{
-            api_token_auth_errors: auth_errors ++ [{:invalid_credentials, reason}]
-          }
-      end
-
-    Absinthe.Plug.put_options(conn, context: context)
+    credentials = Guardian.Plug.current_claims(conn)
+    %{
+      api_token_auth_errors: auth_errors,
+      credentials: credentials
+    }
   end
 end
