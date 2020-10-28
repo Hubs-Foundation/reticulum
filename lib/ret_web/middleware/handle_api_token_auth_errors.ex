@@ -10,22 +10,13 @@ defmodule RetWeb.Middleware.HandleApiTokenAuthErrors do
   end
 
   # Don't enforce tokens on introspection queries
-  @graphql_inspection_types [
-    :__schema,
-    :__type,
-    :__directive,
-    :__directivelocation,
-    :__enumvalue,
-    :__field,
-    :__inputvalue,
-    :__typekind
-  ]
-  def call(%{parent_type: %{identifier: identifier}} = resolution, _) when identifier in @graphql_inspection_types do
+  # Source: Absinthe.Introspection.type?
+  # https://github.com/absinthe-graphql/absinthe/blob/cdb8c39beb6a79b03a5095fffbe761e0dd9918ac/lib/absinthe/introspection.ex#L106
+  def call(%{parent_type: %{name: "__" <> _}} = resolution, _) do
     resolution
   end
 
   def call(%{context: %{api_token_auth_errors: errors}} = resolution, _) when is_list(errors) and length(errors) > 0 do
-    IO.inspect(errors)
     {type, reason} = Enum.at(errors, 0)
     put_error_result(resolution, type, reason)
   end
