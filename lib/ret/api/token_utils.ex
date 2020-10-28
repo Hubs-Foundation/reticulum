@@ -2,10 +2,6 @@ defmodule Ret.Api.TokenUtils do
   @moduledoc """
   Utility functions for generating API access tokens.
   """
-  @default_claims %{aud: "ret", iss: "ret", typ: "access", scopes: []}
-  # TODO: When should tokens expire?
-  @default_options [ttl: {8, :weeks}]
-
   alias Ret.Account
   alias Ret.Api.{Token, Scopes}
 

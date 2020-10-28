@@ -4,6 +4,14 @@ defimpl Canada.Can, for: Ret.Api.Credentials do
   alias Ret.Api.{Credentials, Scopes}
 
   def can?(
+        %Credentials{is_revoked: true},
+        _action,
+        _resource
+      ) do
+    false
+  end
+
+  def can?(
         %Credentials{subject_type: :app, scopes: scopes},
         :get_rooms_created_by,
         %Account{} = account

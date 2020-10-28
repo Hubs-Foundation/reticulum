@@ -87,7 +87,9 @@ defmodule Ret.Api.TokenModule do
   @doc """
   Revoke a token
   """
-  def revoke(_mod, claims, _token, _options), do: {:ok, claims}
+  def revoke(_mod, %Credentials{} = claims, _token, _options) do
+    Ret.Api.Credentials.revoke(claims)
+  end
 
   @doc """
   Refresh the token

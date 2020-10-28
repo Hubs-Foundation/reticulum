@@ -84,6 +84,13 @@ defmodule Ret.Api.Credentials do
     put_change(changeset, :account_id, account_id)
   end
 
+  def revoke(credentials) do
+    credentials
+    |> change()
+    |> add_is_revoked_to_changeset(true)
+    |> Ret.Repo.update()
+  end
+
   def query do
     from(c in Credentials, left_join: a in Account, on: c.account_id == a.account_id, preload: [account: a])
   end
