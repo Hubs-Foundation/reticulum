@@ -187,10 +187,6 @@ config :ret, Ret.Guardian,
   secret_key: "47iqPEdWcfE7xRnyaxKDLt9OGEtkQG3SycHBEMOuT2qARmoESnhc76IgCUjaQIwX",
   ttl: {12, :weeks}
 
-config :ret, Ret.Api.Token,
-  secret_key: "sLqNm8eWf4gtzmaZXUyn5qI93levlvBnX4hqCM9HraDM00QMnVvtQGAQ4S56q3fe",
-  ttl: {2, :weeks}
-
 config :web_push_encryption, :vapid_details,
   subject: "mailto:admin@mozilla.com",
   public_key: "BAb03820kHYuqIvtP6QuCKZRshvv_zp5eDtqkuwCUAxASBZMQbFZXzv8kjYOuLGF16A3k8qYnIN10_4asB-Aw7w",
