@@ -1,237 +1,42 @@
 # Overview
-Reticulum includes a [GraphQL](https://graphql.org/) API to better allow you to customize the app to your specific needs. 
+Reticulum includes a [GraphQL](https://graphql.org/) API to better allow you to write plugins or customize the app to your needs. 
 
 ## Accessing the API
-The API can be accessed by sending `GET` or `POST` requests to `/api/v2/`.
-Requests can be sent in code with an `HTTP` client library, on the command line with a tool like `curl`, with a GraphQL-specific client library, or any other tool that speaks `HTTP`. There is also an interactive GUI for accessing the API available at `/api/v2/graphiql`. 
+The API can be accessed by sending `GET` or `POST` requests to `/api/v2_alpha/` with a valid GraphQL document in the request body. Note: This path is subject to change as we get out of early testing.
 
-## Authenticating requests
-Most requests sent to the API need to be authenticated. To authenticate a request, add the http header `Authorization` with value `Bearer: <your API token>`. Currently, your API token is the same as your account token, which you can find with the following steps:
-- Navigate to the homepage
-- Sign in
-- Open the developer console of your browser. (
-Instructions for opening the console in firefox: https://developer.mozilla.org/en-US/docs/Tools/Web_Console#Opening_the_Web_Console
-Instructions for chrome: https://developers.google.com/web/tools/chrome-devtools/open)
-- Type `window.APP.store.state.credentials.token` into the console and press enter.
-- Your token should be returned surrounded by quotations marks (`"<your API token here>"`)
+Requests can be sent by a variety of standard tools:
+- an `HTTP` client library, 
+- a command line tool like `curl`, 
+- a GraphQL-specific client library, 
+- any other tool that speaks `HTTP`. 
 
-It is likely that the authentication method will change in future releases of the API to include something like API tokens whose permissions can be limited to specific scopes, so that people are not encouraged to share admin account tokens. Sharing account tokens is dangerous - don't do it.
+Reticulum ships with [GraphiQL](https://github.com/graphql/graphiql/tree/main/packages/graphiql#graphiql), a graphical interactive in-browser GraphQL IDE that makes it easy to test and learn the API. It can be accessed by navigating to `<your_hubs_cloud_endpoint>/api/v2_alpha/graphiql`. [This example workspace](../test/api/v2/graphiql-workspace-2020-10-28-15-28-39.json) demonstrates several queries and can be loaded into the GraphiQL interface. You will have to generate and supply your own API access tokens.
 
-## Passing arguments
-We use a library called [`absinthe`](http://absinthe-graphql.org/) to power the `GraphQL` API. This library automatically converts between `camelCase` (a typical convention in `javascript`) and `snake_case` (a typical convention in `elixir`). For this reason, you will send and receive arguments and values in `camelCase`, but will see the corresponding values in `elixir` code as `snake_case`.
+## Authentication and Authorization
+Most requests require an API Access Token for authentication and authorization. 
 
-## Rooms
-The following examples show the capabilities of creating, querying, and modifying rooms. The code for these commands and object types can be found in [`/lib/ret_web/schema/room_types.ex`](../lib/ret_web/schema/room_types.ex)
+### API Access Token Types
+There are two types of API Access Tokens: 
+- `:account` tokens act on behalf of a specific user
+- `:app` tokens act on behalf of the hubs cloud itself
 
-### Create a room
-Request:
-```
-mutation {
-  createRoom(name:"My Fun Get-Together"){
-    id
-  }
-}
-```
-Response:
-```js
-{
-  "data": {
-    "createRoom": {
-      "id": "3FqxixG"
-    }
-  }
-}
-```
+### Scopes
+When generating API Access Tokens, you specify which `scopes` to grant that token. Scopes allow the token to be used to perform specific actions.
 
-### Querying Rooms
-Room queries return a `RoomList` object, which paginates responses. For a specific page or page size, pass the `page` or `pageSize` arguments along with  the request. 
+| Scope | API Action | Allowed Token Types | 
+| ---            | :--        |         :-: |      
+| `read_rooms` | `myRooms` | `account` |
+| `read_rooms` | `favoriteRooms` | `account` |
+| `read_rooms` | `publicRooms` | `account`, `app` |
+| `write_rooms` | `createRoom` | `account`, `app` |
+| `write_rooms` | `updateRoom` | `account`, `app` |
 
-#### My rooms
-Request:
-```
-query {
-  myRooms(page: 1, pageSize: 10) {
-    entries {
-      name,
-      id,
-      scene {
-        ... on Scene {
-          id,
-          name
-        }
-        ... on SceneListing{
-          id,
-          name
-        }
-      }
-    }
-  }
-}
-```
-Response:
-```js
-{
-  "data": {
-    "myRooms": {
-      "entries": [
-        {
-          "id": "3FqxixG",
-          "name": "My Fun Get-Together",
-          "scene": null
-        },
-        {
-          "id": "FmNKVjL",
-          "name": "Foo",
-          "scene": {
-            "id": "tXkCgJw",
-            "name": "Crater 2"
-          }
-        },
-        "scene": {
-          "id": "74VD2Et",
-          "name": "Crater"
-        }
-      ]
-    }
-  }
-}
-```
+Scopes, actions, and token types are expected to expand over time.
 
-#### Query my favorite rooms
-Request:
-```
-query {
-  myFavorites {
-    entries {
-      name,
-      id
-    }
-  }
-}
-```
-Response:
-```js
-{
-  "data": {
-    "favoriteRooms": {
-      "entries": [
-        {
-          "id": "4jByd2w",
-          "name": "Uniform Ready Social"
-        },
-        {
-          "id": "5wQhhbG",
-          "name": "Angelic Vibrant Spot"
-        },
-        {
-          "id": "RmNv2k2",
-          "name": "Golden Perfect Volume"
-        },
-      ]
-    }
-  }
-}
-```
+Tokens can be generated in the interface at `/api`. (TODO: Build interface.)
 
+### Using API Access Tokens
 
-#### Query public rooms
-Request:
-```
-query {
-  publicRooms {
-    entries {
-      name,
-      id
-    }
-  }
-}
-```
-Response:
-```js
-{
-  "data": {
-    "publicRooms": {
-      "entries": [
-        {
-          "id": "z7LQiNi",
-          "name": "Big Time Room"
-        },
-        {
-          "id": "SVnhCWq",
-          "name": "sdafasdf"
-        }
-      ]
-    }
-  }
-}
-```
-
-### Updating rooms
-#### Set room properties like `name`, `description`, and `roomSize`
-```
-mutation {
-  updateRoom(
-    id:"FmNKVjL", 
-    name:"Foo bar baz", 
-    description:"Some description", 
-    roomSize:15,
-  ) {
-    id
-  }
-}
-```
-#### Change the scene of a given room:
-```
-mutation {
-  updateRoom(
-    id:"FmNKVjL", 
-    sceneId: "74VD2Et",
-  ) {
-    id
-  }
-}
-```
-
-#### Change member permissions in the room:
-```
-mutation {
-  updateRoom(
-    id:"FmNKVjL", 
-    memberPermissions: {
-      fly: true,
-      spawnEmoji: true,
-      spawnDrawing: true,
-      pinObjects: false,
-      spawnCamera: false,
-      spawnAndMoveMedia: true
-    }
-  ) {
-    id
-  }
-}
-```
-### Change everything all in one go:
-
-```
-mutation {
-  updateRoom(
-    id:"FmNKVjL", 
-    name:"Foo bar baz", 
-    description:"Some description", 
-    roomSize:15,
-    sceneId: "74VD2Et",
-    memberPermissions: {
-      fly: true,
-      spawnEmoji: true,
-      spawnDrawing: true,
-      pinObjects: false,
-      spawnCamera: false,
-      spawnAndMoveMedia: true
-    }
-  ) {
-    id
-  }
-}
-```
+To attach an API Access Token to a request, add the `HTTP` header `Authorization` with value `Bearer: <your API token>`. 
 
 
