@@ -106,8 +106,4 @@ defmodule Ret.Api.Credentials do
       where: credential.account_id == ^id
     )
   end
-
-  def from_resource_and_claims(_, _) do
-    {:error, "not implemented"}
-  end
 end
