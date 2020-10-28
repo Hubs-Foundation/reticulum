@@ -2,7 +2,7 @@ defmodule RetWeb.Resolvers.RoomResolver do
   @moduledoc """
   Resolvers for room queries and mutations via the graphql API
   """
-  alias Ret.{Hub, Account, Repo}
+  alias Ret.Hub
   alias Ret.Api.Credentials
   import RetWeb.Resolvers.ResolverError, only: [resolver_error: 2]
 

@@ -2,8 +2,6 @@ defmodule RetWeb.AddAbsintheContext do
   @moduledoc false
   @behaviour Plug
 
-  alias Ret.Api.Credentials
-
   def init(opts), do: opts
 
   def call(conn, _) do

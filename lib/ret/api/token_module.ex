@@ -21,7 +21,7 @@ defmodule Ret.Api.TokenModule do
   @doc """
   Builds the default claims for API tokens.
   """
-  def build_claims(mod, resource, sub, claims \\ %{}, options \\ []) do
+  def build_claims(_mod, _resource, _sub, claims \\ %{}, _options \\ []) do
     {:ok, claims}
   end
 
@@ -56,11 +56,11 @@ defmodule Ret.Api.TokenModule do
                account: account_or_nil,
                token_hash: Ret.Crypto.hash(token)
              }) do
-          {:ok, credentials} -> {:ok, token}
+          {:ok, _credentials} -> {:ok, token}
           _ -> {:error, "Failed to create token for claims."}
         end
 
-      {:error, reason} ->
+      {:error, _reason} ->
         {:error, "Failed to create token for claims."}
     end
   end
@@ -82,7 +82,7 @@ defmodule Ret.Api.TokenModule do
   @doc """
   Verifies the claims.
   """
-  def verify_claims(mod, claims, options) do
+  def verify_claims(_mod, claims, _options) do
     {:ok, claims}
   end
 
