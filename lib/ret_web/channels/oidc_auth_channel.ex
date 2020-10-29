@@ -1,10 +1,10 @@
 defmodule RetWeb.OIDCAuthChannel do
-  @moduledoc "Ret Web Channel for OIDC Authentication"
+  @moduledoc "Ret Web Channel for OpenID Connect Authentication"
 
   use RetWeb, :channel
   import Canada, only: [can?: 2]
 
-  alias Ret.{Statix, Account, OAuthToken}
+  alias Ret.{Statix, Account, OAuthToken, RemoteOIDCToken}
 
   intercept(["auth_credentials"])
 
@@ -65,84 +65,66 @@ defmodule RetWeb.OIDCAuthChannel do
     "oidc:" <> expected_topic_key = socket.topic
 
     # TODO since we already have session_id secured by a token on the other end using a JWT for state may be overkill
-    case OAuthToken.decode_and_verify(state) do
-      {:ok,
-       %{
-         "topic_key" => topic_key,
-         "session_id" => session_id,
-         "aud" => "ret_oidc"
-       }}
-      when topic_key == expected_topic_key ->
-        %{
-          "access_token" => access_token,
-          "id_token" => raw_id_token
-        } = fetch_oidc_access_token(code)
+    with {:ok,
+          %{
+            "topic_key" => topic_key,
+            "session_id" => session_id,
+            "aud" => "ret_oidc"
+          }}
+         when topic_key == expected_topic_key <- OAuthToken.decode_and_verify(state),
+         {:ok,
+          %{
+            "access_token" => access_token,
+            "id_token" => raw_id_token
+          }} <- fetch_oidc_tokens(code),
+         {:ok,
+          %{
+            "aud" => _aud,
+            "nonce" => nonce,
+            "preferred_username" => remote_username,
+            "sub" => remote_user_id
+          }} <- RemoteOIDCToken.decode_and_verify(raw_id_token) do
+      # TODO we may want to verify some more fields like issuer and expiration time
 
-        # TODO lookup pubkey by kid in header
-        %JOSE.JWS{fields: %{"kid" => kid}} = JOSE.JWT.peek_protected(raw_id_token)
-        IO.inspect(kid)
+      broadcast_credentials_and_payload(
+        remote_user_id,
+        %{email: remote_username},
+        %{session_id: session_id, nonce: nonce},
+        socket
+      )
 
-        pub_key = module_config(:verification_key) |> JOSE.JWK.from_pem()
-
-        case JOSE.JWT.verify_strict(pub_key, module_config(:allowed_algos), raw_id_token)
-             |> IO.inspect() do
-          {true,
-           %JOSE.JWT{
-             fields: %{
-               "aud" => _aud,
-               "nonce" => nonce,
-               "preferred_username" => remote_username,
-               "sub" => remote_user_id
-             }
-           }, _jws} ->
-            # TODO we may want to verify some more fields like issuer and expiration time
-
-            # %{"sub" => remote_user_id, "preferred_username" => remote_username} =
-            #   fetch_oidc_user_info(access_token) |> IO.inspect()
-
-            broadcast_credentials_and_payload(
-              remote_user_id,
-              %{email: remote_username},
-              %{session_id: session_id, nonce: nonce},
-              socket
-            )
-
-            {:reply, :ok, socket}
-
-          {false, _jwt, _jws} ->
-            {:reply, {:error, %{msg: "invalid OIDC token from endpoint"}}, socket}
-
-          {:error, _} ->
-            {:reply, {:error, %{msg: "error verifying token"}}, socket}
-        end
-
-      # TODO we may want to be less specific about errors
-      {:ok, _} ->
-        {:reply, {:error, %{msg: "Invalid topic key"}}, socket}
-
+      {:reply, :ok, socket}
+    else
+      # TODO we may want to be less specific about errors and or immediatly disconnect to prevent abuse
       {:error, error} ->
+        # GenServer.cast(self(), :close)
         {:reply, {:error, error}, socket}
+
+      v ->
+        # GenServer.cast(self(), :close)
+        IO.inspect(v)
+        {:reply, {:error, %{msg: "error fetching or verifying token"}}, socket}
     end
   end
 
-  def fetch_oidc_access_token(oauth_code) do
-    body = {
-      :form,
-      [
-        client_id: module_config(:client_id),
-        client_secret: module_config(:client_secret),
-        grant_type: "authorization_code",
-        redirect_uri: get_redirect_uri(),
-        code: oauth_code,
-        scope: module_config(:scopes)
-      ]
-    }
+  def fetch_oidc_tokens(oauth_code) do
+    body =
+      {:form,
+       [
+         client_id: module_config(:client_id),
+         client_secret: module_config(:client_secret),
+         grant_type: "authorization_code",
+         redirect_uri: get_redirect_uri(),
+         code: oauth_code,
+         scope: module_config(:scopes)
+       ]}
 
-    # todo handle error response
-    "#{module_config(:endpoint)}token"
-    |> Ret.HttpUtils.retry_post_until_success(body, [{"content-type", "application/x-www-form-urlencoded"}])
-    |> Map.get(:body)
-    |> Poison.decode!()
+    headers = [{"content-type", "application/x-www-form-urlencoded"}]
+
+    case Ret.HttpUtils.retry_post_until_success("#{module_config(:endpoint)}token", body, headers) do
+      %HTTPoison.Response{body: body} -> body |> Poison.decode()
+      _ -> {:error, "Failed to fetch tokens"}
+    end
   end
 
   # def fetch_oidc_user_info(access_token) do
@@ -167,6 +149,7 @@ defmodule RetWeb.OIDCAuthChannel do
     {:noreply, socket}
   end
 
+  # Only send creddentials back down to the original socket that started the request
   def handle_out(
         "auth_credentials" = event,
         %{credentials: credentials, user_info: user_info, verification_info: verification_info},
@@ -189,7 +172,7 @@ defmodule RetWeb.OIDCAuthChannel do
   defp broadcast_credentials_and_payload(nil, _user_info, _verification_info, _socket), do: nil
 
   defp broadcast_credentials_and_payload(identifier_hash, user_info, verification_info, socket) do
-    account_creation_enabled = can?(nil, create_account())
+    account_creation_enabled = can?(nil, create_account(nil))
     account = identifier_hash |> Account.account_for_login_identifier_hash(account_creation_enabled)
     credentials = account |> Account.credentials_for_account()
 
