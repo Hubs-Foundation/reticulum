@@ -2,7 +2,6 @@ defmodule RetWeb.Schema do
   @moduledoc false
 
   use Absinthe.Schema
-  alias Ret.Scene
 
   import RetWeb.Middleware, only: [build_middleware: 3]
 
@@ -25,7 +24,7 @@ defmodule RetWeb.Schema do
   def context(ctx) do
     loader =
       Dataloader.new()
-      |> Dataloader.add_source(Scene, Scene.data())
+      |> Dataloader.add_source(:db, Ret.Api.Dataloader.source())
 
     Map.put(ctx, :loader, loader)
   end

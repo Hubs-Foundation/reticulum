@@ -9,7 +9,6 @@ end
 defmodule Ret.Scene do
   use Ecto.Schema
   import Ecto.Changeset
-  import Ecto.Query
 
   alias Ret.{Repo, Scene, SceneListing, Project, Storage}
   alias Ret.Scene.{SceneSlug}
@@ -54,12 +53,6 @@ defmodule Ret.Scene do
 
     timestamps()
   end
-
-  # Dataloader
-  def data(), do: Dataloader.Ecto.new(Repo, query: &query/2)
-  # Guard against loading removed scenes or delisted scene listings
-  def query(Scene, _), do: from(s in Scene, where: s.state != ^:removed)
-  def query(SceneListing, _), do: from(sl in SceneListing, where: sl.state != ^:delisted)
 
   def scene_or_scene_listing_by_sid(sid) do
     Scene |> Repo.get_by(scene_sid: sid) ||
