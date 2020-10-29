@@ -1,4 +1,4 @@
-# Overview
+# Hubs Server API
 Reticulum includes a [GraphQL](https://graphql.org/) API to better allow you to write plugins or customize the app to your needs. 
 
 ## Accessing the API
