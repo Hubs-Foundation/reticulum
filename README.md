@@ -101,3 +101,22 @@ Ret.Account |> Ret.Repo.all() |> Enum.at(0) |> Ecto.Changeset.change(is_admin: t
 1. Follow the steps above to setup Hubs
 2. Clone and start spoke by running `./scripts/run_local_reticulum.sh` in the root of the spoke project
 3. Navigate to https://hubs.local:4000/spoke
+
+## Run Reticulum against a local Dialog instance
+
+1. Update the Janus host in `dev.exs`: 
+```
+dev_janus_host = "hubs.local"
+```
+1. Update the Janus port in `dev.exs`:
+```
+config :ret, Ret.JanusLoadStatus, default_janus_host: dev_janus_host, janus_port: 4443
+```
+3. Add the Dialog meta endpoint to the CSP rules in `add_csp.ex`: 
+
+```
+default_janus_csp_rule =
+   if default_janus_host,
+      do: "wss://#{default_janus_host}:#{janus_port} https://#{default_janus_host}:#{janus_port} https://#{default_janus_host}:#{janus_port}/meta",
+      else: ""
+```
