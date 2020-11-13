@@ -26,7 +26,7 @@ defmodule RetWeb.OIDCAuthChannel do
   defp get_redirect_uri(), do: RetWeb.Endpoint.url() <> "/verify"
 
   defp get_authorize_url(state, nonce) do
-    "#{module_config(:endpoint)}authorize?" <>
+    "#{module_config(:auth_endpoint)}?" <>
       URI.encode_query(%{
         response_type: "code",
         response_mode: "query",
@@ -121,14 +121,14 @@ defmodule RetWeb.OIDCAuthChannel do
 
     headers = [{"content-type", "application/x-www-form-urlencoded"}]
 
-    case Ret.HttpUtils.retry_post_until_success("#{module_config(:endpoint)}token", body, headers) do
+    case Ret.HttpUtils.retry_post_until_success("#{module_config(:token_endpoint)}", body, headers) do
       %HTTPoison.Response{body: body} -> body |> Poison.decode()
       _ -> {:error, "Failed to fetch tokens"}
     end
   end
 
   # def fetch_oidc_user_info(access_token) do
-  #   "#{module_config(:endpoint)}userinfo"
+  #   "#{module_config(:userinfo_endpoint)}"
   #   |> Ret.HttpUtils.retry_get_until_success([{"authorization", "Bearer #{access_token}"}])
   #   |> Map.get(:body)
   #   |> Poison.decode!()
