@@ -81,14 +81,20 @@ defmodule RetWeb.OIDCAuthChannel do
           %{
             "aud" => _aud,
             "nonce" => nonce,
-            "preferred_username" => remote_username,
             "sub" => remote_user_id
-          }} <- RemoteOIDCToken.decode_and_verify(raw_id_token) do
+          } = id_token} <- RemoteOIDCToken.decode_and_verify(raw_id_token) do
       # TODO we may want to verify some more fields like issuer and expiration time
+
+      displayname =
+        id_token
+        |> Map.get(
+          "preferred_username",
+          id_token |> Map.get("name", remote_user_id)
+        )
 
       broadcast_credentials_and_payload(
         remote_user_id,
-        %{email: remote_username},
+        %{displayName: displayname},
         %{session_id: session_id, nonce: nonce},
         socket
       )
@@ -98,12 +104,12 @@ defmodule RetWeb.OIDCAuthChannel do
       # TODO we may want to be less specific about errors and or immediatly disconnect to prevent abuse
       {:error, error} ->
         # GenServer.cast(self(), :close)
-        {:reply, {:error, error}, socket}
+        {:reply, {:error, %{message: error}}, socket}
 
       v ->
         # GenServer.cast(self(), :close)
         IO.inspect(v)
-        {:reply, {:error, %{msg: "error fetching or verifying token"}}, socket}
+        {:reply, {:error, %{message: "error fetching or verifying token"}}, socket}
     end
   end
 
