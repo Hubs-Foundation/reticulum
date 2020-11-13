@@ -1,7 +1,7 @@
 defmodule Ret.RemoteOIDCToken do
   @moduledoc """
   This represents an OpenID Connect token returned from a remote service.
-  The public keys will be configured by an admin for a particular setup.
+  These tokens are never created locally, only ever provided externally and verified locally.
   """
   use Guardian,
     otp_app: :ret,
@@ -12,14 +12,27 @@ defmodule Ret.RemoteOIDCToken do
 end
 
 defmodule Ret.RemoteOIDCTokenSecretsFetcher do
+  @moduledoc """
+  This represents the public keys for an OpenID Connect endpoint used to verify tokens.
+  The public keys will be configured by an admin for a particular setup. These can not be used for signing.
+  """
+
   def fetch_signing_secret(_mod, _opts) do
     {:error, :not_implemented}
   end
 
-  def fetch_verifying_secret(mod, token_headers, _opts) do
-    IO.inspect(token_headers)
+  def fetch_verifying_secret(mod, %{"kid" => kid, "typ" => "JWT"}, _opts) do
+    # TODO implement read through cache that hits discovery endpoint instead of hardcoding keys in config
+    case Application.get_env(:ret, mod)[:verification_jwks]
+         |> Poison.decode!()
+         |> Map.get("keys")
+         |> Enum.find(&(Map.get(&1, "kid") == kid)) do
+      nil -> {:error, :invalid_key_id}
+      key -> {:ok, key |> JOSE.JWK.from_map()}
+    end
+  end
 
-    # TODO use KID to look up the key. Do we want to bake it into the config at setup time? Fetch and cache? Should it be optional?
-    {:ok, Application.get_env(:ret, mod)[:verification_key] |> JOSE.JWK.from_pem()} |> IO.inspect()
+  def fetch_verifying_secret(_mod, _token_headers_, _optss) do
+    {:error, :invalid_token}
   end
 end
