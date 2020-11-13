@@ -23,15 +23,14 @@ There are two types of API Access Tokens:
 ### Scopes
 When generating API Access Tokens, you specify which `scopes` to grant that token. Scopes allow the token to be used to perform specific actions.
 
-| Scope | Allowed Token Types | API Actions |
-| --:            | :-:        |         --- |      
-| `read_rooms` | `account`, `app` | `myRooms`, `favoriteRooms`, `publicRooms` |
-| `write_rooms` | `account`, `app` | `createRoom`, `updateRoom` |
-| `create_accounts` | `app` | `createAccount` (not yet implemented) |
+| Scope | API Actions |
+| --:            |         --- |      
+| `read_rooms` | `myRooms`, `favoriteRooms`, `publicRooms` |
+| `write_rooms` | `createRoom`, `updateRoom` |
 
 Scopes, actions, and token types are expected to expand over time.
 
-Tokens can be generated in the interface at `/api`. (TODO: Build interface.)
+Tokens can be generated on the command line with `mix generate_api_token`. Soon this method will be replaced with a web API and interface.
 
 ### Using API Access Tokens
 
