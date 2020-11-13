@@ -147,7 +147,7 @@ defmodule Ret.Api.Rooms do
     payload =
       HubView.render("show.json", %{
         hub: hub,
-        embeddable: true
+        embeddable: can?(:reticulum_app_token, embed_hub(hub))
       })
       |> Map.put(:stale_fields, [
         # TODO: Only include fields that have changed in stale_fields

@@ -807,17 +807,26 @@ end
 
 # Permissions for un-authenticated clients
 defimpl Canada.Can, for: Atom do
-  @api_actions [
+  @allowed_app_token_actions [
     :get_rooms_created_by,
     :get_favorite_rooms_of,
     :get_public_rooms,
     :create_hub,
     :update_hub,
-    :embed_hub
   ]
-  def can?(:reticulum_app_token, action, _) when action in @api_actions do
+  def can?(:reticulum_app_token, action, _) when action in @allowed_app_token_actions do
     true
   end
+
+  # Bound hubs - Always prevent embedding and role assignment (since it's dictated by binding)
+  def can?(:reticulum_app_token, action, %Ret.Hub{hub_bindings: hub_bindings})
+      when hub_bindings |> length > 0 and action in [:embed_hub, :update_roles],
+      do: false
+
+  # Allow app tokens to act like owners/creators if the room has no bindings
+  def can?(:reticulum_app_token, action, %Ret.Hub{hub_bindings: hub_bindings})
+      when action in [:embed_hub, :update_roles],
+      do: true
 
   def can?(:reticulum_app_token, _, _), do: false
 
