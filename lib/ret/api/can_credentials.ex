@@ -88,7 +88,7 @@ defimpl Canada.Can, for: Ret.Api.Credentials do
         :update_room,
         %Hub{} = hub
       ) do
-    Scopes.read_rooms() in scopes && can?(:reticulum_app_token, update_hub(hub))
+    Scopes.write_rooms() in scopes && can?(:reticulum_app_token, update_hub(hub))
   end
 
   def can?(
@@ -96,7 +96,7 @@ defimpl Canada.Can, for: Ret.Api.Credentials do
         :update_room,
         %Hub{} = hub
       ) do
-    Scopes.read_rooms() in scopes && can?(subject, update_hub(hub))
+    Scopes.write_rooms() in scopes && can?(subject, update_hub(hub))
   end
 
   def can?(_, _, _), do: false
