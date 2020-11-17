@@ -30,13 +30,16 @@ defmodule Ret.Api.Credentials do
   @permitted_keys @required_keys
 
   def generate_credentials(%{subject_type: _st, scopes: _sc, account_or_nil: account_or_nil} = params) do
+    sid = Ret.Sids.generate_sid()
+
     # Use 18 bytes (not 16, the default) to avoid having all tokens end in "09"
     # See https://github.com/patricksrobertson/secure_random.ex/issues/11
-    token = SecureRandom.urlsafe_base64(18)
+    # Prefix the sid to the rest of the token for ease of management
+    token = "#{sid}_#{SecureRandom.urlsafe_base64(18)}"
 
     params =
       Map.merge(params, %{
-        api_credentials_sid: Ret.Sids.generate_sid(),
+        api_credentials_sid: sid,
         token_hash: Ret.Crypto.hash(token),
         issued_at: Timex.now() |> DateTime.truncate(:second),
         is_revoked: false
