@@ -151,11 +151,11 @@ defmodule Ret.Hub do
     end
   end
 
-  def get_scene_or_scene_listing_by_id(nil) do
+  defp get_scene_or_scene_listing_by_id(nil) do
     SceneListing.get_random_default_scene_listing()
   end
 
-  def get_scene_or_scene_listing_by_id(id) do
+  defp get_scene_or_scene_listing_by_id(id) do
     Scene.scene_or_scene_listing_by_sid(id)
   end
 
