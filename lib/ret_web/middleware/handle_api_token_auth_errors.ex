@@ -5,12 +5,14 @@ defmodule RetWeb.Middleware.HandleApiTokenAuthErrors do
 
   import RetWeb.Middleware.PutErrorResult, only: [put_error_result: 3]
 
+  alias Ret.Api.Credentials
+
   def call(%{state: :resolved} = resolution, _) do
     resolution
   end
 
-  # Don't enforce tokens on introspection queries
-  # Source: Absinthe.Introspection.type?
+  # Don't enforce authentication on introspection queries
+  # See Absinthe.Introspection.type?
   # https://github.com/absinthe-graphql/absinthe/blob/cdb8c39beb6a79b03a5095fffbe761e0dd9918ac/lib/absinthe/introspection.ex#L106
   def call(%{parent_type: %{name: "__" <> _}} = resolution, _) do
     resolution
@@ -29,20 +31,11 @@ defmodule RetWeb.Middleware.HandleApiTokenAuthErrors do
     )
   end
 
-  def call(%{context: %{credentials: %Ret.Api.Credentials{is_revoked: true}}} = resolution, _) do
+  def call(%{context: %{credentials: %Credentials{is_revoked: true}}} = resolution, _) do
     put_error_result(resolution, :invalid_credentials, "Token is revoked")
   end
 
-  def call(%{context: %{credentials: %Ret.Api.Credentials{expires_at: expires_at}}} = resolution, _) do
-    if Timex.before?(expires_at, Timex.now()) do
-      put_error_result(resolution, :token_expired, "Token expired")
-    else
-      resolution
-    end
+  def call(%{context: %{credentials: %Credentials{}}} = resolution, _) do
+    resolution
   end
-
-  # # TODO: Remove
-  # def call(resolution, _) do
-  #   put_error_result(resolution, :unknown_server_error, "Could not validate token/credentials")
-  # end
 end

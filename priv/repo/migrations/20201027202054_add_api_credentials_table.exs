@@ -10,7 +10,6 @@ defmodule Ret.Repo.Migrations.AddApiCredentialsTable do
       add(:token_hash, :string)
       add(:api_credentials_sid, :string)
       add(:issued_at, :utc_datetime)
-      add(:expires_at, :utc_datetime)
       add(:is_revoked, :boolean)
       add(:scopes, {:array, :api_scope_type})
       add(:subject_type, :api_token_subject_type)

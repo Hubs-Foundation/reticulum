@@ -18,7 +18,6 @@ defmodule Ret.Api.Credentials do
     field(:token_hash, :string)
     field(:subject_type, Ret.Api.TokenSubjectType)
     field(:issued_at, :utc_datetime)
-    field(:expires_at, :utc_datetime)
     field(:is_revoked, :boolean)
     field(:scopes, {:array, Ret.Api.ScopeType})
 
@@ -44,7 +43,6 @@ defmodule Ret.Api.Credentials do
     |> add_token_hash_to_changeset(token_hash)
     |> add_subject_type_to_changeset(subject_type)
     |> add_issued_at_to_changeset(Timex.now() |> DateTime.truncate(:second))
-    |> add_expires_at_to_changeset(Timex.now() |> Timex.shift(years: 1) |> DateTime.truncate(:second))
     |> add_is_revoked_to_changeset(false)
     |> add_scopes_to_changeset(scopes)
     |> add_account_id_to_changeset((account && account.account_id) || nil)
@@ -66,10 +64,6 @@ defmodule Ret.Api.Credentials do
 
   defp add_issued_at_to_changeset(changeset, issued_at) do
     put_change(changeset, :issued_at, issued_at)
-  end
-
-  defp add_expires_at_to_changeset(changeset, expires_at) do
-    put_change(changeset, :expires_at, expires_at)
   end
 
   defp add_is_revoked_to_changeset(changeset, is_revoked) do
