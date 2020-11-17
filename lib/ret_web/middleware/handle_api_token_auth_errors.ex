@@ -32,7 +32,7 @@ defmodule RetWeb.Middleware.HandleApiTokenAuthErrors do
   end
 
   def call(%{context: %{credentials: %Credentials{is_revoked: true}}} = resolution, _) do
-    put_error_result(resolution, :invalid_credentials, "Token is revoked")
+    put_error_result(resolution, :token_revoked, "Token is revoked")
   end
 
   def call(%{context: %{credentials: %Credentials{}}} = resolution, _) do
