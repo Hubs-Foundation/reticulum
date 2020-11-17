@@ -20,7 +20,7 @@ defmodule RetWeb.Schema.SceneTypes do
     field(:name, :string)
   end
 
-  @desc "A scene listing (which allows the creator to change the underlying scene assets"
+  @desc "A scene listing (which allows the creator to change the underlying scene assets)"
   object :scene_listing do
     @desc "The scene listing id"
     field(:scene_listing_sid, :id, name: "id")
