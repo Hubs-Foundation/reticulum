@@ -268,7 +268,7 @@ defmodule Ret.Hub do
   end
 
   def maybe_add_new_scene_to_changeset(changeset, %{scene_id: scene_id}) do
-    scene_or_scene_listing = Hub.get_scene_or_scene_listing_by_id(scene_id)
+    scene_or_scene_listing = get_scene_or_scene_listing_by_id(scene_id)
 
     if is_nil(scene_or_scene_listing) do
       {:error, "Cannot find scene with id " <> scene_id}
