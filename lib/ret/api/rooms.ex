@@ -25,7 +25,7 @@ defmodule Ret.Api.Rooms do
 
   def authed_get_favorite_rooms_of(%Account{} = account, %Credentials{} = credentials, params) do
     if can?(credentials, get_favorite_rooms_of(account)) do
-      {:ok, Hub.get_my_rooms(account, params)}
+      {:ok, Hub.get_favorite_rooms(account, params)}
     else
       {:error, :invalid_credentials}
     end
