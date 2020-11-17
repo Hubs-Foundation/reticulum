@@ -805,7 +805,7 @@ defimpl Canada.Can, for: Ret.OAuthProvider do
   def can?(_, _, _), do: false
 end
 
-# Permissions for un-authenticated clients
+# Permissions for app tokens and un-authenticated clients
 defimpl Canada.Can, for: Atom do
   @allowed_app_token_actions [
     :get_rooms_created_by,
