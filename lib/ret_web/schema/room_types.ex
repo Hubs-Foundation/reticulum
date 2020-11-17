@@ -66,11 +66,11 @@ defmodule RetWeb.Schema.RoomTypes do
     field(:slug, :string)
     @desc "A description of the room"
     field(:description, :string)
-    @desc "Makes this room public, while it is still open"
+    @desc "Makes this room as public (while it is still open)"
     field(:allow_promotion, :boolean)
     @desc "Temporary entry code"
     field(:entry_code, :string)
-    @desc "Whether the room is open or closed"
+    @desc "Determines if entry is allowed, denied, or by-invite-only. (Values are \"allow\", \"deny\", or \"invite\".)"
     field(:entry_mode, :string)
     @desc "The host server associated with this room via the load balancer"
     field(:host, :string)

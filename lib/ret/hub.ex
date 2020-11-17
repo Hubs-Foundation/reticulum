@@ -168,7 +168,7 @@ defmodule Ret.Hub do
 
   def get_my_rooms(account, params) do
     Hub
-    |> where([h], h.created_by_account_id == ^account.account_id and h.entry_mode == ^"allow")
+    |> where([h], h.created_by_account_id == ^account.account_id and h.entry_mode in ^["allow", "invite"])
     |> order_by(desc: :inserted_at)
     |> preload(^Hub.hub_preloads())
     |> Repo.paginate(params)
@@ -176,7 +176,7 @@ defmodule Ret.Hub do
 
   def get_favorite_rooms(account, params) do
     Hub
-    |> where([h], h.entry_mode == ^"allow")
+    |> where([h], h.entry_mode in ^["allow", "invite"])
     |> join(:inner, [h], f in AccountFavorite, on: f.hub_id == h.hub_id and f.account_id == ^account.account_id)
     |> order_by([h, f], desc: f.last_activated_at)
     |> preload(^Hub.hub_preloads())
@@ -185,7 +185,7 @@ defmodule Ret.Hub do
 
   def get_public_rooms(params) do
     Hub
-    |> where([h], h.allow_promotion and h.entry_mode == ^"allow")
+    |> where([h], h.allow_promotion and h.entry_mode in ^["allow", "invite"])
     |> order_by(desc: :inserted_at)
     |> preload(^Hub.hub_preloads())
     |> Repo.paginate(params)
@@ -812,7 +812,7 @@ defimpl Canada.Can, for: Atom do
     :get_favorite_rooms_of,
     :get_public_rooms,
     :create_hub,
-    :update_hub,
+    :update_hub
   ]
   def can?(:reticulum_app_token, action, _) when action in @allowed_app_token_actions do
     true
