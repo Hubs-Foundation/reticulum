@@ -820,11 +820,11 @@ defimpl Canada.Can, for: Atom do
 
   # Bound hubs - Always prevent embedding and role assignment (since it's dictated by binding)
   def can?(:reticulum_app_token, action, %Ret.Hub{hub_bindings: hub_bindings})
-      when hub_bindings |> length > 0 and action in [:embed_hub, :update_roles],
+      when length(hub_bindings) > 0 and action in [:embed_hub, :update_roles],
       do: false
 
   # Allow app tokens to act like owners/creators if the room has no bindings
-  def can?(:reticulum_app_token, action, %Ret.Hub{hub_bindings: hub_bindings})
+  def can?(:reticulum_app_token, action, %Ret.Hub{})
       when action in [:embed_hub, :update_roles],
       do: true
 

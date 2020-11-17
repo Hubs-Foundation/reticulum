@@ -3,8 +3,8 @@ defmodule RetWeb.Schema.RoomTypes do
 
   use Absinthe.Schema.Notation
   alias RetWeb.Resolvers
-  alias Ret.Scene
-  import Absinthe.Resolution.Helpers, only: [dataloader: 1]
+
+  import_types(RetWeb.Schema.Types.Custom.JSON)
 
   @desc "Public TLS port number used for TURN"
   object :turn_transport do
@@ -118,7 +118,8 @@ defmodule RetWeb.Schema.RoomTypes do
       resolve(&Resolvers.RoomResolver.scene/3)
     end
 
-    # TODO: Figure out user_data
+    @desc "Arbitrary json data associated with the room"
+    field(:user_data, :json)
   end
 
   @desc """
@@ -191,6 +192,8 @@ defmodule RetWeb.Schema.RoomTypes do
       arg(:member_permissions, :input_member_permissions)
       @desc "Make this room public (while it is open)"
       arg(:allow_promotion, :boolean)
+      @desc "Arbitrary json data associated with this room"
+      arg(:user_data, :json)
 
       resolve(&Resolvers.RoomResolver.create_room/3)
     end
@@ -211,6 +214,8 @@ defmodule RetWeb.Schema.RoomTypes do
       arg(:member_permissions, :input_member_permissions)
       @desc "Make this room public (while it is open)"
       arg(:allow_promotion, :boolean)
+      @desc "Arbitrary json data associated with this room"
+      arg(:user_data, :json)
       # TODO: add/remove owner
 
       resolve(&Resolvers.RoomResolver.update_room/3)
