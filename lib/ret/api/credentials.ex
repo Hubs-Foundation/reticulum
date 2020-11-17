@@ -30,7 +30,9 @@ defmodule Ret.Api.Credentials do
   @permitted_keys @required_keys
 
   def generate_credentials(%{subject_type: _st, scopes: _sc, account_or_nil: account_or_nil} = params) do
-    token = SecureRandom.urlsafe_base64()
+    # Use 18 bytes (not 16, the default) to avoid having all tokens end in "09"
+    # See https://github.com/patricksrobertson/secure_random.ex/issues/11
+    token = SecureRandom.urlsafe_base64(18)
 
     params =
       Map.merge(params, %{
