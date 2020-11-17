@@ -124,9 +124,10 @@ defmodule RetWeb.Resolvers.RoomResolver do
     {:ok, Hub.lobby_count_for(hub)}
   end
 
-  # def scene(hub, _args, _resolutions) do
-  #  {:ok, Hub.scene_or_scene_listing_for(hub)}
-  # end
+  def scene(hub, _args, _resolutions) do
+    # No permission check needed
+    {:ok, Hub.scene_or_scene_listing_for(hub)}
+  end
 
   def update_room(_parent, %{id: hub_sid} = args, %{
         context: %{

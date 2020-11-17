@@ -115,7 +115,7 @@ defmodule RetWeb.Schema.RoomTypes do
 
     @desc "Scene currently associated with the room"
     field(:scene, :scene_or_scene_listing) do
-      resolve(dataloader(Scene))
+      resolve(&Resolvers.RoomResolver.scene/3)
     end
 
     # TODO: Figure out user_data
