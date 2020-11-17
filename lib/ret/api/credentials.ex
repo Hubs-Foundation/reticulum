@@ -9,6 +9,7 @@ defmodule Ret.Api.Credentials do
   use Ecto.Schema
   import Ecto.Query, only: [from: 2]
   import Ecto.Changeset
+  alias Ret.Api.{TokenSubjectType, ScopeType}
 
   @schema_prefix "ret0"
   @primary_key {:api_credentials_id, :id, autogenerate: true}
@@ -16,72 +17,83 @@ defmodule Ret.Api.Credentials do
   schema "api_credentials" do
     field(:api_credentials_sid, :string)
     field(:token_hash, :string)
-    field(:subject_type, Ret.Api.TokenSubjectType)
+    field(:subject_type, TokenSubjectType)
     field(:issued_at, :utc_datetime)
     field(:is_revoked, :boolean)
-    field(:scopes, {:array, Ret.Api.ScopeType})
+    field(:scopes, {:array, ScopeType})
 
     belongs_to(:account, Account, references: :account_id)
     timestamps()
   end
 
-  def create_new_api_credentials(options) do
-    %Credentials{}
-    |> changeset(options)
-    |> Ret.Repo.insert()
+  @required_keys [:api_credentials_sid, :token_hash, :subject_type, :issued_at, :is_revoked, :scopes]
+  @permitted_keys @required_keys
+
+  def generate_credentials(%{subject_type: _st, scopes: _sc, account_or_nil: account_or_nil} = params) do
+    token = SecureRandom.urlsafe_base64()
+
+    params =
+      Map.merge(params, %{
+        api_credentials_sid: Ret.Sids.generate_sid(),
+        token_hash: Ret.Crypto.hash(token),
+        issued_at: Timex.now() |> DateTime.truncate(:second),
+        is_revoked: false
+      })
+
+    case %Credentials{}
+         |> change()
+         |> cast(params, @permitted_keys)
+         |> maybe_put_assoc_account(account_or_nil)
+         |> validate_required(@required_keys)
+         |> validate_change(:subject_type, &validate_subject_type/2)
+         |> validate_change(:scopes, &validate_scopes_type/2)
+         |> unique_constraint(:api_credentials_sid)
+         |> unique_constraint(:token_hash)
+         # TODO: We can pass multiple fields to unique_contraint when we update ecto
+         # https://github.com/elixir-ecto/ecto/pull/3276
+         |> Ret.Repo.insert() do
+      {:ok, credentials} ->
+        {:ok, token, credentials}
+
+      {:error, reason} ->
+        {:error, reason}
+    end
   end
 
-  defp changeset(%Credentials{} = credentials, %{
-         token_hash: token_hash,
-         subject_type: subject_type,
-         scopes: scopes,
-         account: account
-       }) do
-    credentials
-    |> change()
-    |> add_api_credentials_sid_to_changeset
-    |> add_token_hash_to_changeset(token_hash)
-    |> add_subject_type_to_changeset(subject_type)
-    |> add_issued_at_to_changeset(Timex.now() |> DateTime.truncate(:second))
-    |> add_is_revoked_to_changeset(false)
-    |> add_scopes_to_changeset(scopes)
-    |> add_account_id_to_changeset((account && account.account_id) || nil)
-    |> unique_constraint(:api_credentials_sid)
-    |> unique_constraint(:token_hash)
+  defp maybe_put_assoc_account(changeset, %Account{} = account) do
+    put_assoc(changeset, :account, account)
   end
 
-  defp add_api_credentials_sid_to_changeset(changeset) do
-    put_change(changeset, :api_credentials_sid, Ret.Sids.generate_sid())
+  defp maybe_put_assoc_account(changeset, nil) do
+    changeset
   end
 
-  defp add_token_hash_to_changeset(changeset, token_hash) do
-    put_change(changeset, :token_hash, token_hash)
+  defp validate_scopes_type(:scopes, scopes) do
+    Enum.reduce(scopes, [], fn scope, errors ->
+      errors ++ validate_single_scope_type(scope)
+    end)
   end
 
-  defp add_subject_type_to_changeset(changeset, subject_type) do
-    put_change(changeset, :subject_type, subject_type)
+  defp validate_single_scope_type(scope) do
+    if ScopeType.valid_value?(scope) do
+      []
+    else
+      [invalid_scope: "Unrecognized scope type. Got #{scope}."]
+    end
   end
 
-  defp add_issued_at_to_changeset(changeset, issued_at) do
-    put_change(changeset, :issued_at, issued_at)
-  end
-
-  defp add_is_revoked_to_changeset(changeset, is_revoked) do
-    put_change(changeset, :is_revoked, is_revoked)
-  end
-
-  defp add_scopes_to_changeset(changeset, scopes) do
-    put_change(changeset, :scopes, scopes)
-  end
-
-  defp add_account_id_to_changeset(changeset, account_id) do
-    put_change(changeset, :account_id, account_id)
+  defp validate_subject_type(:subject_type, subject_type) do
+    if TokenSubjectType.valid_value?(subject_type) do
+      []
+    else
+      [subject_type: "Unrecognized subject type. Must be app or account. Got #{subject_type}."]
+    end
   end
 
   def revoke(credentials) do
     credentials
     |> change()
-    |> add_is_revoked_to_changeset(true)
+    |> put_change(:is_revoked, true)
     |> Ret.Repo.update()
   end
 

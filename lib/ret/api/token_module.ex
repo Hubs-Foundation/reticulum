@@ -51,18 +51,16 @@ defmodule Ret.Api.TokenModule do
   Create a token.
   """
   def create_token(_mod, claims, _options \\ []) do
-    token = SecureRandom.urlsafe_base64()
     account_id = Map.get(claims, "account_id", nil)
 
     case get_account(account_id) do
       {:ok, account_or_nil} ->
-        case Ret.Api.Credentials.create_new_api_credentials(%{
+        case Ret.Api.Credentials.generate_credentials(%{
                subject_type: ensure_atom(Map.get(claims, "subject_type")),
                scopes: Map.get(claims, "scopes"),
-               account: account_or_nil,
-               token_hash: Ret.Crypto.hash(token)
+               account_or_nil: account_or_nil
              }) do
-          {:ok, _credentials} -> {:ok, token}
+          {:ok, token, _credentials} -> {:ok, token}
           _ -> {:error, "Failed to create token for claims."}
         end
 
