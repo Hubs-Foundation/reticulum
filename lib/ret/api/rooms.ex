@@ -39,40 +39,9 @@ defmodule Ret.Api.Rooms do
     end
   end
 
-  defp do_create_room(%Credentials{subject_type: :account, account: account}, params) do
-    random_name = Ret.RandomRoomNames.generate_room_name()
-    params = Map.put(params, :name, Map.get(params, :name, random_name))
-
-    with {:ok, hub} <- Hub.create(params),
-         {:ok, hub} <-
-           hub
-           |> Hub.add_attrs_to_changeset(params)
-           |> Hub.maybe_add_member_permissions(hub, params)
-           |> Hub.maybe_add_promotion(account, hub, params)
-           |> Hub.maybe_add_new_scene_to_changeset(params)
-           |> Repo.update() do
-      hub
-      |> Repo.preload(Hub.hub_preloads())
-      |> Hub.changeset_for_creator_assignment(account, hub.creator_assignment_token)
-      |> Repo.update()
-    end
-  end
-
-  defp do_create_room(%Credentials{subject_type: :app}, params) do
-    params = Map.put(params, :name, Map.get(params, :name, Ret.RandomRoomNames.generate_room_name()))
-
-    with {:ok, hub} <- Hub.create(params) do
-      hub
-      |> Hub.add_attrs_to_changeset(params)
-      |> Hub.maybe_add_member_permissions(hub, params)
-      |> Hub.maybe_add_new_scene_to_changeset(params)
-      |> Repo.update()
-    end
-  end
-
   def authed_create_room(%Credentials{} = credentials, params) do
     if can?(credentials, create_room(nil)) do
-      do_create_room(credentials, params)
+      Hub.create_room(params, credentials.account)
     else
       {:error, :invalid_credentials}
     end

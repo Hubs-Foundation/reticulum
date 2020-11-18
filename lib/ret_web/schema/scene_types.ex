@@ -9,6 +9,7 @@ defmodule RetWeb.Schema.SceneTypes do
     resolve_type(fn
       %Scene{}, _ -> :scene
       %SceneListing{}, _ -> :scene_listing
+      _, _ -> nil
     end)
   end
 

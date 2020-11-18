@@ -3,7 +3,6 @@ defmodule RetWeb.Schema.RoomTypes do
 
   use Absinthe.Schema.Notation
   alias RetWeb.Resolvers
-
   import_types(RetWeb.Schema.Types.Custom.JSON)
 
   @desc "Public TLS port number used for TURN"
@@ -93,6 +92,11 @@ defmodule RetWeb.Schema.RoomTypes do
       resolve(&Resolvers.RoomResolver.embed_token/3)
     end
 
+    @desc """
+    Can be used to assign the room creator. (It will be blank if the room creator is already assigned.)
+    """
+    field(:creator_assignment_token, :string)
+
     @desc "Permissions for participants in the room"
     field(:member_permissions, :member_permissions) do
       resolve(&Resolvers.RoomResolver.member_permissions/3)
@@ -117,6 +121,9 @@ defmodule RetWeb.Schema.RoomTypes do
     field(:scene, :scene_or_scene_listing) do
       resolve(&Resolvers.RoomResolver.scene/3)
     end
+
+    @desc "Default environment gltf bundle url associated with the room (instead of a scene or scene listing)"
+    field(:default_environment_gltf_bundle_url, :string)
 
     @desc "Arbitrary json data associated with the room"
     field(:user_data, :json)
@@ -188,6 +195,8 @@ defmodule RetWeb.Schema.RoomTypes do
       arg(:room_size, :integer)
       @desc "The id of the scene to associate with the room"
       arg(:scene_id, :string)
+      @desc "The url of the scene to associate with the room"
+      arg(:scene_url, :string)
       @desc "The permissions non-admin participants should have in the room"
       arg(:member_permissions, :input_member_permissions)
       @desc "Make this room public (while it is open)"
@@ -210,6 +219,8 @@ defmodule RetWeb.Schema.RoomTypes do
       arg(:room_size, :integer)
       @desc "The id of the scene to associate with the room"
       arg(:scene_id, :string)
+      @desc "The url of the scene to associate with the room"
+      arg(:scene_url, :string)
       @desc "The permissions non-admin participants should have in the room"
       arg(:member_permissions, :input_member_permissions)
       @desc "Make this room public (while it is open)"

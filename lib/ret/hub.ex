@@ -116,6 +116,149 @@ defmodule Ret.Hub do
     timestamps()
   end
 
+  @required_keys [
+    :name,
+    :hub_sid,
+    :host,
+    :entry_code,
+    :entry_code_expires_at,
+    :embed_token,
+    :embedded,
+    :member_permissions,
+    :max_occupant_count,
+    :spawned_object_types,
+    :entry_mode,
+    :allow_promotion,
+    :room_size
+  ]
+  @permitted_keys [
+    :creator_assignment_token,
+    :description,
+    :default_environment_gltf_bundle_url,
+    :user_data,
+    :last_active_at | @required_keys
+  ]
+
+  # TODO: This function was created for use in the public API.
+  #       It would be good to revisit this and the alternatives below
+  #       so that there did not need to be as many variations.
+  def create_room(params, account) do
+    params =
+      Map.merge(
+        %{
+          name: Ret.RandomRoomNames.generate_room_name(),
+          hub_sid: Ret.Sids.generate_sid(),
+          host: RoomAssigner.get_available_host(nil),
+          entry_code: generate_entry_code!(),
+          entry_code_expires_at:
+            Timex.now()
+            |> Timex.shift(hours: @entry_code_expiration_hours)
+            |> DateTime.truncate(:second),
+          creator_assignment_token: SecureRandom.hex(),
+          embed_token: SecureRandom.hex(),
+          embedded: false,
+          member_permissions:
+            if Ret.AppConfig.get_config_bool("features|permissive_rooms") do
+              member_permissions_to_int(@default_member_permissions)
+            else
+              member_permissions_to_int(@default_restrictive_member_permissions)
+            end,
+          default_environment_gltf_bundle_url: nil,
+          entry_mode: :allow,
+          allow_promotion: false,
+          room_size: AppConfig.get_cached_config_value("features|default_room_size")
+        },
+        params
+      )
+
+    result =
+      %Hub{}
+      |> change()
+      |> cast(params, @permitted_keys)
+      |> add_account_to_changeset(account)
+      |> maybe_add_scene_info(params)
+      |> HubSlug.maybe_generate_slug()
+      |> validate_required(@required_keys)
+      |> validate_length(:name, max: 64)
+      |> validate_length(:description, max: 64_000)
+      |> validate_number(:room_size,
+        greater_than_or_equal_to: 0,
+        less_than_or_equal_to: AppConfig.get_cached_config_value("features|max_room_size")
+      )
+      |> unique_constraint(:hub_sid)
+      |> unique_constraint(:entry_code)
+      |> Repo.insert()
+
+    case result do
+      {:ok, hub} ->
+        {:ok, Repo.preload(hub, hub_preloads())}
+
+      _ ->
+        result
+    end
+  end
+
+  defp maybe_add_scene_info(changeset, params) do
+    case try_get_scene_from_params(params) do
+      {:ok, %{default_environment_gltf_bundle_url: url}} ->
+        changeset
+        |> cast(%{default_environment_gltf_bundle_url: url}, [:default_environment_gltf_bundle_url])
+        # TODO: Should we validate the format of the URL?
+        |> validate_required([:default_environment_gltf_bundle_url])
+
+      {:ok, %{scene_or_scene_listing: nil}} ->
+        # No default scene listing to fallback to. Leave it blank.
+        changeset
+
+      {:ok, %{scene_or_scene_listing: scene_or_scene_listing}} ->
+        add_new_scene_assoc_to_changeset(changeset, scene_or_scene_listing)
+
+      {:error, %{key: key, message: message}} ->
+        add_error(changeset, key, message)
+    end
+  end
+
+  # Helper for finding the scene, scene_listing, or environment_gltf_bundle_url
+  defp try_get_scene_from_params(%{scene_id: _id, scene_url: _url}) do
+    {:error,
+     %{key: :scene_id, message: "Cannot specify both scene_id and scene_url. Choose one or the other (or neither)."}}
+  end
+
+  defp try_get_scene_from_params(%{scene_url: url}) do
+    endpoint_host = RetWeb.Endpoint.host()
+
+    case url |> URI.parse() do
+      %URI{host: ^endpoint_host, path: "/scenes/" <> scene_path} ->
+        scene_or_scene_listing = scene_path |> String.split("/") |> Enum.at(0) |> Scene.scene_or_scene_listing_by_sid()
+
+        if is_nil(scene_or_scene_listing) do
+          {:error, %{key: :scene_url, message: "Cannot find scene with url: " <> url}}
+        else
+          {:ok, %{scene_or_scene_listing: scene_or_scene_listing}}
+        end
+
+      _ ->
+        {:ok, %{default_environment_gltf_bundle_url: url}}
+    end
+  end
+
+  defp try_get_scene_from_params(%{scene_id: id}) do
+    scene_or_scene_listing = Scene.scene_or_scene_listing_by_sid(id)
+
+    if is_nil(scene_or_scene_listing) do
+      {:error, %{key: :scene_id, message: "Cannot find scene with id: " <> id}}
+    else
+      {:ok, %{scene_or_scene_listing: scene_or_scene_listing}}
+    end
+  end
+
+  defp try_get_scene_from_params(_params) do
+    case SceneListing.get_random_default_scene_listing() do
+      nil -> {:ok, %{scene_or_scene_listing: nil}}
+      scene_listing -> {:ok, %{scene_or_scene_listing: scene_listing}}
+    end
+  end
+
   # Create new room, inserts into db
   # returns newly created %Hub
   def create_new_room(%{"name" => _name} = params, true = _add_to_db) do
@@ -310,6 +453,16 @@ defmodule Ret.Hub do
     |> add_new_scene_to_changeset(scene_listing)
   end
 
+  def add_new_scene_assoc_to_changeset(changeset, %Scene{} = scene) do
+    changeset
+    |> put_assoc(:scene, scene)
+  end
+
+  def add_new_scene_assoc_to_changeset(changeset, %SceneListing{} = scene_listing) do
+    changeset
+    |> put_assoc(:scene_listing, scene_listing)
+  end
+
   def add_new_scene_to_changeset(changeset, %Scene{} = scene) do
     changeset
     |> put_change(:scene_id, scene.scene_id)
@@ -420,7 +573,7 @@ defmodule Ret.Hub do
       nil -> nil
       %Scene{state: :removed} -> nil
       %SceneListing{state: :delisted} -> nil
-      scene -> scene
+      scene_or_scene_listing -> scene_or_scene_listing
     end
   end
 
