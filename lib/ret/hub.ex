@@ -795,13 +795,13 @@ defmodule Ret.Hub do
 
     if invalid_member_permissions |> Enum.count() > 0 do
       {ArgumentError, "Invalid permissions #{invalid_member_permissions |> Enum.join(", ")}"}
+    else
+      {:ok,
+       @member_permissions
+       |> Enum.reduce(0, fn {val, member_permission}, acc ->
+         if(member_permissions[member_permission], do: val, else: 0) + acc
+       end)}
     end
-
-    {:ok,
-     @member_permissions
-     |> Enum.reduce(0, fn {val, member_permission}, acc ->
-       if(member_permissions[member_permission], do: val, else: 0) + acc
-     end)}
   end
 
   # TODO: Rename (lenient_)member_permissions_to_int
@@ -809,8 +809,11 @@ defmodule Ret.Hub do
   # to indicate possibly raising an error
   def member_permissions_to_int(%{} = member_permissions) do
     case lenient_member_permissions_to_int(member_permissions) do
-      {ArgumentError, e} -> raise ArgumentError, e
-      {:ok, int} -> int
+      {:ok, int} ->
+        int
+
+      {ArgumentError, e} ->
+        raise ArgumentError, e
     end
   end
 
