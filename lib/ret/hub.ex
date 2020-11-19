@@ -101,8 +101,8 @@ defmodule Ret.Hub do
     field(:spawned_object_types, :integer, default: 0)
     field(:entry_mode, Ret.Hub.EntryMode)
     field(:user_data, :map)
-    belongs_to(:scene, Ret.Scene, references: :scene_id)
-    belongs_to(:scene_listing, Ret.SceneListing, references: :scene_listing_id)
+    belongs_to(:scene, Ret.Scene, references: :scene_id, on_replace: :nilify)
+    belongs_to(:scene_listing, Ret.SceneListing, references: :scene_listing_id, on_replace: :nilify)
     has_many(:web_push_subscriptions, Ret.WebPushSubscription, foreign_key: :hub_id)
     belongs_to(:created_by_account, Ret.Account, references: :account_id)
     has_many(:hub_invites, Ret.HubInvite, foreign_key: :hub_id)
@@ -123,108 +123,124 @@ defmodule Ret.Hub do
     :entry_code,
     :entry_code_expires_at,
     :embed_token,
-    :embedded,
     :member_permissions,
     :max_occupant_count,
     :spawned_object_types,
-    :entry_mode,
-    :allow_promotion,
     :room_size
   ]
   @permitted_keys [
     :creator_assignment_token,
     :description,
+    :embedded,
     :default_environment_gltf_bundle_url,
     :user_data,
-    :last_active_at | @required_keys
+    :last_active_at,
+    :entry_mode,
+    :allow_promotion | @required_keys
   ]
 
   # TODO: This function was created for use in the public API.
   #       It would be good to revisit this and the alternatives below
   #       so that there did not need to be as many variations.
-  def create_room(params, account) do
-    params =
-      Map.merge(
-        %{
-          name: Ret.RandomRoomNames.generate_room_name(),
-          hub_sid: Ret.Sids.generate_sid(),
-          host: RoomAssigner.get_available_host(nil),
-          entry_code: generate_entry_code!(),
-          entry_code_expires_at:
-            Timex.now()
-            |> Timex.shift(hours: @entry_code_expiration_hours)
-            |> DateTime.truncate(:second),
-          creator_assignment_token: SecureRandom.hex(),
-          embed_token: SecureRandom.hex(),
-          embedded: false,
-          member_permissions:
-            if Ret.AppConfig.get_config_bool("features|permissive_rooms") do
-              member_permissions_to_int(@default_member_permissions)
-            else
-              member_permissions_to_int(@default_restrictive_member_permissions)
-            end,
-          default_environment_gltf_bundle_url: nil,
-          entry_mode: :allow,
-          allow_promotion: false,
-          room_size: AppConfig.get_cached_config_value("features|default_room_size")
-        },
-        params
-      )
+  def create_room(params, account_or_nil) do
+    with {:ok, params} <- parse_member_permissions(params) do
+      params =
+        Map.merge(
+          %{
+            name: Ret.RandomRoomNames.generate_room_name(),
+            hub_sid: Ret.Sids.generate_sid(),
+            host: RoomAssigner.get_available_host(nil),
+            entry_code: generate_entry_code!(),
+            entry_code_expires_at:
+              Timex.now()
+              |> Timex.shift(hours: @entry_code_expiration_hours)
+              |> DateTime.truncate(:second),
+            creator_assignment_token: SecureRandom.hex(),
+            embed_token: SecureRandom.hex(),
+            member_permissions: default_member_permissions(),
+            room_size: AppConfig.get_cached_config_value("features|default_room_size")
+          },
+          params
+        )
 
-    result =
-      %Hub{}
-      |> change()
-      |> cast(params, @permitted_keys)
-      |> add_account_to_changeset(account)
-      |> maybe_add_scene_info(params)
-      |> HubSlug.maybe_generate_slug()
-      |> validate_required(@required_keys)
-      |> validate_length(:name, max: 64)
-      |> validate_length(:description, max: 64_000)
-      |> validate_number(:room_size,
-        greater_than_or_equal_to: 0,
-        less_than_or_equal_to: AppConfig.get_cached_config_value("features|max_room_size")
-      )
-      |> unique_constraint(:hub_sid)
-      |> unique_constraint(:entry_code)
-      |> Repo.insert()
+      result =
+        %Hub{}
+        |> change()
+        |> cast(params, @permitted_keys)
+        |> add_account_to_changeset(account_or_nil)
+        |> add_scene_changes_to_changeset(params)
+        |> HubSlug.maybe_generate_slug()
+        |> validate_required(@required_keys)
+        |> validate_length(:name, max: 64)
+        |> validate_length(:description, max: 64_000)
+        |> validate_number(:room_size,
+          greater_than_or_equal_to: 0,
+          less_than_or_equal_to: AppConfig.get_cached_config_value("features|max_room_size")
+        )
+        |> unique_constraint(:hub_sid)
+        |> unique_constraint(:entry_code)
+        |> Repo.insert()
 
-    case result do
-      {:ok, hub} ->
-        {:ok, Repo.preload(hub, hub_preloads())}
+      case result do
+        {:ok, hub} ->
+          {:ok, Repo.preload(hub, hub_preloads())}
 
-      _ ->
-        result
+        _ ->
+          result
+      end
     end
   end
 
-  defp maybe_add_scene_info(changeset, params) do
-    case try_get_scene_from_params(params) do
-      {:ok, %{default_environment_gltf_bundle_url: url}} ->
-        changeset
-        |> cast(%{default_environment_gltf_bundle_url: url}, [:default_environment_gltf_bundle_url])
-        # TODO: Should we validate the format of the URL?
-        |> validate_required([:default_environment_gltf_bundle_url])
+  # TODO: Clean up handling of member_permissions so that it is
+  # clear everywhere whether we are dealing with a map or an int
+  defp parse_member_permissions(%{member_permissions: map} = params) when is_map(map) do
+    case Hub.lenient_member_permissions_to_int(map) do
+      {:ok, member_permissions} ->
+        {:ok, %{params | member_permissions: member_permissions}}
 
-      {:ok, %{scene_or_scene_listing: nil}} ->
-        # No default scene listing to fallback to. Leave it blank.
-        changeset
-
-      {:ok, %{scene_or_scene_listing: scene_or_scene_listing}} ->
-        add_new_scene_assoc_to_changeset(changeset, scene_or_scene_listing)
-
-      {:error, %{key: key, message: message}} ->
-        add_error(changeset, key, message)
+      {ArgumentError, e} ->
+        {:error, e}
     end
   end
 
-  # Helper for finding the scene, scene_listing, or environment_gltf_bundle_url
-  defp try_get_scene_from_params(%{scene_id: _id, scene_url: _url}) do
+  defp parse_member_permissions(%{member_permissions: nil} = params) do
+    {:ok, Map.delete(params, :member_permissions)}
+  end
+
+  defp parse_member_permissions(params) do
+    {:ok, params}
+  end
+
+  defp default_member_permissions() do
+    if Ret.AppConfig.get_config_bool("features|permissive_rooms") do
+      member_permissions_to_int(@default_member_permissions)
+    else
+      member_permissions_to_int(@default_restrictive_member_permissions)
+    end
+  end
+
+  def add_scene_changes_to_changeset(changeset, %{} = params) do
+    add_scene_changes(changeset, scene_change_from_params(params))
+  end
+
+  defp scene_change_from_params(%{scene_id: nil, scene_url: nil}) do
+    :nilify
+  end
+
+  defp scene_change_from_params(%{scene_id: _id, scene_url: _url}) do
     {:error,
      %{key: :scene_id, message: "Cannot specify both scene_id and scene_url. Choose one or the other (or neither)."}}
   end
 
-  defp try_get_scene_from_params(%{scene_url: url}) do
+  defp scene_change_from_params(%{scene_url: nil}) do
+    :nilify
+  end
+
+  defp scene_change_from_params(%{scene_id: nil}) do
+    :nilify
+  end
+
+  defp scene_change_from_params(%{scene_url: url}) do
     endpoint_host = RetWeb.Endpoint.host()
 
     case url |> URI.parse() do
@@ -234,29 +250,66 @@ defmodule Ret.Hub do
         if is_nil(scene_or_scene_listing) do
           {:error, %{key: :scene_url, message: "Cannot find scene with url: " <> url}}
         else
-          {:ok, %{scene_or_scene_listing: scene_or_scene_listing}}
+          scene_or_scene_listing
         end
 
       _ ->
-        {:ok, %{default_environment_gltf_bundle_url: url}}
+        url
     end
   end
 
-  defp try_get_scene_from_params(%{scene_id: id}) do
+  defp scene_change_from_params(%{scene_id: id}) do
     scene_or_scene_listing = Scene.scene_or_scene_listing_by_sid(id)
 
     if is_nil(scene_or_scene_listing) do
       {:error, %{key: :scene_id, message: "Cannot find scene with id: " <> id}}
     else
-      {:ok, %{scene_or_scene_listing: scene_or_scene_listing}}
+      scene_or_scene_listing
     end
   end
 
-  defp try_get_scene_from_params(_params) do
-    case SceneListing.get_random_default_scene_listing() do
-      nil -> {:ok, %{scene_or_scene_listing: nil}}
-      scene_listing -> {:ok, %{scene_or_scene_listing: scene_listing}}
-    end
+  defp scene_change_from_params(_params) do
+    nil
+  end
+
+  defp add_scene_changes(changeset, {:error, %{key: key, message: message}}) do
+    add_error(changeset, key, message)
+  end
+
+  defp add_scene_changes(changeset, nil) do
+    # No scene info in params. Leave unchanged
+    changeset
+  end
+
+  defp add_scene_changes(changeset, :nilify) do
+    # Clear scene info
+    changeset
+    |> put_change(:default_environment_gltf_bundle_url, nil)
+    |> put_assoc(:scene, nil)
+    |> put_assoc(:scene_listing, nil)
+  end
+
+  defp add_scene_changes(changeset, %Scene{} = scene) do
+    changeset
+    |> put_assoc(:scene, scene)
+    |> put_assoc(:scene_listing, nil)
+    |> put_change(:default_environment_gltf_bundle_url, nil)
+  end
+
+  defp add_scene_changes(changeset, %SceneListing{} = scene_listing) do
+    changeset
+    |> put_assoc(:scene, nil)
+    |> put_assoc(:scene_listing, scene_listing)
+    |> put_change(:default_environment_gltf_bundle_url, nil)
+  end
+
+  defp add_scene_changes(changeset, url) do
+    changeset
+    |> cast(%{default_environment_gltf_bundle_url: url}, [:default_environment_gltf_bundle_url])
+    # TODO: Should we validate the format of the URL?
+    |> validate_required([:default_environment_gltf_bundle_url])
+    |> put_assoc(:scene, nil)
+    |> put_assoc(:scene_listing, nil)
   end
 
   # Create new room, inserts into db
@@ -451,16 +504,6 @@ defmodule Ret.Hub do
     hub
     |> change()
     |> add_new_scene_to_changeset(scene_listing)
-  end
-
-  def add_new_scene_assoc_to_changeset(changeset, %Scene{} = scene) do
-    changeset
-    |> put_assoc(:scene, scene)
-  end
-
-  def add_new_scene_assoc_to_changeset(changeset, %SceneListing{} = scene_listing) do
-    changeset
-    |> put_assoc(:scene_listing, scene_listing)
   end
 
   def add_new_scene_to_changeset(changeset, %Scene{} = scene) do
@@ -743,17 +786,32 @@ defmodule Ret.Hub do
     is_creator?(hub, account_id) || hub_role_memberships |> Enum.any?(&(&1.account_id === account_id))
   end
 
-  def member_permissions_to_int(%{} = member_permissions) do
+  @doc """
+  Lenient version of member permissions conversion
+  Does not throw on invalid permissions
+  """
+  def lenient_member_permissions_to_int(%{} = member_permissions) do
     invalid_member_permissions = member_permissions |> Map.drop(@member_permissions_keys) |> Map.keys()
 
     if invalid_member_permissions |> Enum.count() > 0 do
-      raise ArgumentError, "Invalid permissions #{invalid_member_permissions |> Enum.join(", ")}"
+      {ArgumentError, "Invalid permissions #{invalid_member_permissions |> Enum.join(", ")}"}
     end
 
-    @member_permissions
-    |> Enum.reduce(0, fn {val, member_permission}, acc ->
-      if(member_permissions[member_permission], do: val, else: 0) + acc
-    end)
+    {:ok,
+     @member_permissions
+     |> Enum.reduce(0, fn {val, member_permission}, acc ->
+       if(member_permissions[member_permission], do: val, else: 0) + acc
+     end)}
+  end
+
+  # TODO: Rename (lenient_)member_permissions_to_int
+  # to follow the elixir pattern of using an exclamation mark (!)
+  # to indicate possibly raising an error
+  def member_permissions_to_int(%{} = member_permissions) do
+    case lenient_member_permissions_to_int(member_permissions) do
+      {ArgumentError, e} -> raise ArgumentError, e
+      {:ok, int} -> int
+    end
   end
 
   def has_member_permission?(%Hub{} = hub, member_permission) do
@@ -781,6 +839,10 @@ defmodule Ret.Hub do
       hub,
       member_permissions
     )
+  end
+
+  def maybe_add_member_permissions(changeset, _hub, %{:member_permissions => nil}) do
+    changeset
   end
 
   def maybe_add_member_permissions(changeset, hub, %{:member_permissions => member_permissions}) do

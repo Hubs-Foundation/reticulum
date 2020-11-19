@@ -63,18 +63,20 @@ defmodule Ret.Api.Rooms do
 
   defp do_update_room(hub, %Credentials{subject_type: :app}, params) do
     hub
+    |> Repo.preload(Hub.hub_preloads())
     |> Hub.add_attrs_to_changeset(params)
     |> Hub.maybe_add_member_permissions(hub, params)
-    |> Hub.maybe_add_new_scene_to_changeset(params)
+    |> Hub.add_scene_changes_to_changeset(params)
     |> try_do_update_room(:reticulum_app_token)
   end
 
   defp do_update_room(hub, %Credentials{subject_type: :account, account: account}, params) do
     hub
+    |> Repo.preload(Hub.hub_preloads())
     |> Hub.add_attrs_to_changeset(params)
     |> Hub.maybe_add_member_permissions(hub, params)
     |> Hub.maybe_add_promotion(account, hub, params)
-    |> Hub.maybe_add_new_scene_to_changeset(params)
+    |> Hub.add_scene_changes_to_changeset(params)
     |> try_do_update_room(account)
   end
 
@@ -82,7 +84,7 @@ defmodule Ret.Api.Rooms do
     {:error, reason}
   end
 
-  defp try_do_update_room(changeset, :reticulum_app_token) do
+  defp try_do_update_room(changeset, subject) do
     case changeset |> Repo.update() do
       {:error, changeset} ->
         {:error, changeset}
@@ -90,62 +92,20 @@ defmodule Ret.Api.Rooms do
       {:ok, hub} ->
         hub = Repo.preload(hub, Hub.hub_preloads())
 
-        case broadcast_hub_refresh(hub, :reticulum_app_token) do
+        case broadcast_hub_refresh(hub, subject, Map.keys(changeset.changes) |> Enum.map(&Atom.to_string(&1))) do
           {:error, reason} -> {:error, reason}
           :ok -> {:ok, hub}
         end
     end
   end
 
-  defp try_do_update_room(changeset, account) do
-    case changeset |> Repo.update() do
-      {:error, changeset} ->
-        {:error, changeset}
-
-      {:ok, hub} ->
-        hub = Repo.preload(hub, Hub.hub_preloads())
-
-        case broadcast_hub_refresh(hub, account) do
-          {:error, reason} -> {:error, reason}
-          :ok -> {:ok, hub}
-        end
-    end
-  end
-
-  defp broadcast_hub_refresh(hub, :reticulum_app_token) do
+  defp broadcast_hub_refresh(hub, subject, stale_fields) do
     payload =
       HubView.render("show.json", %{
         hub: hub,
-        embeddable: can?(:reticulum_app_token, embed_hub(hub))
+        embeddable: subject |> can?(embed_hub(hub))
       })
-      |> Map.put(:stale_fields, [
-        # TODO: Only include fields that have changed in stale_fields
-        "name",
-        "description",
-        "member_permissions",
-        "room_size",
-        "allow_promotion",
-        "scene"
-      ])
-
-    RetWeb.Endpoint.broadcast("hub:" <> hub.hub_sid, "hub_refresh", payload)
-  end
-
-  defp broadcast_hub_refresh(hub, %Account{} = account) do
-    payload =
-      HubView.render("show.json", %{
-        hub: hub,
-        embeddable: account |> can?(embed_hub(hub))
-      })
-      |> Map.put(:stale_fields, [
-        # TODO: Only include fields that have changed in stale_fields
-        "name",
-        "description",
-        "member_permissions",
-        "room_size",
-        "allow_promotion",
-        "scene"
-      ])
+      |> Map.put(:stale_fields, stale_fields)
 
     RetWeb.Endpoint.broadcast("hub:" <> hub.hub_sid, "hub_refresh", payload)
   end
