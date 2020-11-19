@@ -36,25 +36,6 @@ defmodule RoomQueryTest do
     }
   """
 
-  # @query_favorite_rooms """
-  #  query {
-  #    favoriteRooms {
-  #     entries {
-  #       id
-  #     }
-  #    }
-  #  }
-  # """
-
-  # @mutation_create_room """
-  #  mutation ($roomName: String!){
-  #    createRoom (name: $roomName) {
-  #      id,
-  #      name
-  #    }
-  #  }
-  # """
-
   defp do_graphql_action(conn, query, variables \\ %{}) do
     conn
     |> post("/api/v2_alpha/", %{
