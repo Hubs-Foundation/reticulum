@@ -302,15 +302,17 @@ public_tls_ports = "{{ cfg.turn.public_tls_ports }}"
 {{#if cfg.oidc }}
 {{#with cfg.oidc }}
 [ret."Elixir.RetWeb.OIDCAuthChannel"]
-{{ toToml auth_endpoint }}
-{{ toToml token_endpoint }}
-{{ toToml scopes }}
-{{ toToml client_id }}
-{{ toToml client_secret }}
+auth_endpoint = {{ toToml auth_endpoint }}
+token_endpoint = {{ toToml token_endpoint }}
+scopes = {{ toToml scopes }}
+client_id = {{ toToml client_id }}
+client_secret = {{ toToml client_secret }}
 
 [ret."Elixir.Ret.RemoteOIDCToken"]
-{{ toToml allowed_algos }}
-{{ toToml verification_secret_jwk_set }}
+allowed_algos = {{ toToml allowed_algos }}
+verification_secret_jwk_set = """
+{{ verification_secret_jwk_set }}
+"""
 {{/with}}
 {{/if}}
 
