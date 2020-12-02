@@ -74,7 +74,7 @@ defmodule RetWeb.OIDCAuthChannel do
          when topic_key == expected_topic_key <- OAuthToken.decode_and_verify(state),
          {:ok,
           %{
-            "access_token" => access_token,
+            "access_token" => _access_token,
             "id_token" => raw_id_token
           }} <- fetch_oidc_tokens(code),
          {:ok,
@@ -113,6 +113,10 @@ defmodule RetWeb.OIDCAuthChannel do
     end
   end
 
+  def handle_in(_event, _payload, socket) do
+    {:noreply, socket}
+  end
+
   def fetch_oidc_tokens(oauth_code) do
     body =
       {:form,
@@ -140,10 +144,6 @@ defmodule RetWeb.OIDCAuthChannel do
   #   |> Poison.decode!()
   #   |> IO.inspect()
   # end
-
-  def handle_in(_event, _payload, socket) do
-    {:noreply, socket}
-  end
 
   def handle_info(:close_channel, socket) do
     GenServer.cast(self(), :close)
