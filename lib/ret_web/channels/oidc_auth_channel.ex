@@ -49,7 +49,6 @@ defmodule RetWeb.OIDCAuthChannel do
 
       socket = socket |> assign(:nonce, nonce)
 
-      IO.inspect("Started oauth flow with oidc_state #{oidc_state}, authorize_url: #{authorize_url}")
       {:reply, {:ok, %{authorize_url: authorize_url}}, socket}
     end
   end
@@ -57,14 +56,11 @@ defmodule RetWeb.OIDCAuthChannel do
   def handle_in("auth_verified", %{"token" => code, "payload" => state}, socket) do
     Process.send_after(self(), :close_channel, 1000 * 5)
 
-    IO.inspect("Verify OIDC auth!!!!!")
-
-    # Slow down token guessing
+    # Slow down any brute force attacks
     :timer.sleep(500)
 
     "oidc:" <> expected_topic_key = socket.topic
 
-    # TODO since we already have session_id secured by a token on the other end using a JWT for state may be overkill
     with {:ok,
           %{
             "topic_key" => topic_key,
@@ -101,14 +97,11 @@ defmodule RetWeb.OIDCAuthChannel do
 
       {:reply, :ok, socket}
     else
-      # TODO we may want to be less specific about errors and or immediatly disconnect to prevent abuse
-      {:error, error} ->
-        # GenServer.cast(self(), :close)
-        {:reply, {:error, %{message: error}}, socket}
+      # intentionally not exposing the nature of the error, can uncomment this to return more details to the client
+      # {:error, error} ->
+      #   {:reply, {:error, %{message: error}}, socket}
 
       v ->
-        # GenServer.cast(self(), :close)
-        IO.inspect(v)
         {:reply, {:error, %{message: "error fetching or verifying token"}}, socket}
     end
   end
@@ -137,14 +130,6 @@ defmodule RetWeb.OIDCAuthChannel do
     end
   end
 
-  # def fetch_oidc_user_info(access_token) do
-  #   "#{module_config(:userinfo_endpoint)}"
-  #   |> Ret.HttpUtils.retry_get_until_success([{"authorization", "Bearer #{access_token}"}])
-  #   |> Map.get(:body)
-  #   |> Poison.decode!()
-  #   |> IO.inspect()
-  # end
-
   def handle_info(:close_channel, socket) do
     GenServer.cast(self(), :close)
     {:noreply, socket}
@@ -162,13 +147,9 @@ defmodule RetWeb.OIDCAuthChannel do
         socket
       ) do
     Process.send_after(self(), :close_channel, 1000 * 5)
-    IO.inspect("checking creds")
-    IO.inspect(socket)
-    IO.inspect(verification_info)
 
     if Map.get(socket.assigns, :session_id) == Map.get(verification_info, :session_id) and
          Map.get(socket.assigns, :nonce) == Map.get(verification_info, :nonce) do
-      IO.inspect("sending creds")
       push(socket, event, %{credentials: credentials, user_info: user_info})
     end
 
