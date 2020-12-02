@@ -31,7 +31,7 @@ defmodule RetWeb.OIDCAuthChannel do
         response_type: "code",
         response_mode: "query",
         client_id: module_config(:client_id),
-        scope: module_config(:scopes),
+        scope: "openid profile",
         state: state,
         nonce: nonce,
         redirect_uri: get_redirect_uri()
@@ -119,7 +119,7 @@ defmodule RetWeb.OIDCAuthChannel do
          grant_type: "authorization_code",
          redirect_uri: get_redirect_uri(),
          code: oauth_code,
-         scope: module_config(:scopes)
+         scope: "openid profile"
        ]}
 
     headers = [{"content-type", "application/x-www-form-urlencoded"}]
