@@ -101,7 +101,7 @@ defmodule RetWeb.OIDCAuthChannel do
       # {:error, error} ->
       #   {:reply, {:error, %{message: error}}, socket}
 
-      v ->
+      _ ->
         {:reply, {:error, %{message: "error fetching or verifying token"}}, socket}
     end
   end
