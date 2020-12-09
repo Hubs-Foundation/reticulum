@@ -121,7 +121,7 @@ default_janus_csp_rule =
       else: ""
 ```
 
-4. Edit the Dialog ocnfiguration file *turnserver.conf* and update the PosgreSQL database connection string to use the *coturn* schema from the Reticulum database:
+4. Edit the Dialog configuration file *turnserver.conf* and update the PostgreSQL database connection string to use the *coturn* schema from the Reticulum database:
 ```
    psql-userdb="host=hubs.local dbname=ret_dev user=postgres password=postgres options='-c search_path=coturn' connect_timeout=30"
 ```
