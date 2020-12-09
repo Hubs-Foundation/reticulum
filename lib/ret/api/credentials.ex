@@ -71,7 +71,7 @@ defmodule Ret.Api.Credentials do
     changeset
   end
 
-  defp validate_scopes_type(:scopes, scopes) do
+  def validate_scopes_type(:scopes, scopes) do
     Enum.reduce(scopes, [], fn scope, errors ->
       errors ++ validate_single_scope_type(scope)
     end)
@@ -85,11 +85,11 @@ defmodule Ret.Api.Credentials do
     end
   end
 
-  defp validate_subject_type(:subject_type, subject_type) do
+  def validate_subject_type(:subject_type, subject_type) do
     if TokenSubjectType.valid_value?(subject_type) do
       []
     else
-      [subject_type: "Unrecognized subject type. Must be app or account. Got #{subject_type}."]
+      [invalid_subject_type: "Unrecognized subject type. Must be app or account. Got #{subject_type}."]
     end
   end
 
@@ -120,5 +120,9 @@ defmodule Ret.Api.Credentials do
     from([credential, _account] in query,
       where: credential.account_id == ^id
     )
+  end
+
+  def app_token_query() do
+    from(c in Credentials, where: c.subject_type == ^:app)
   end
 end
