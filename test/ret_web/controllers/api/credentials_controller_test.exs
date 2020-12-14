@@ -1,11 +1,14 @@
 defmodule RetWeb.CredentialsControllerTest do
   use RetWeb.ConnCase
   import Ret.TestHelpers, only: [create_account: 2, put_auth_header_for_account: 2]
+  alias Ret.AppConfig
   alias Ret.Api.Scopes
 
   @endpoint RetWeb.Endpoint
 
   setup %{conn: conn} do
+    AppConfig.set_config_value("features|public_api_access", true)
+
     {
       :ok,
       conn: conn,
@@ -295,5 +298,25 @@ defmodule RetWeb.CredentialsControllerTest do
            |> Map.get("credentials")
            |> hd()
            |> Map.get("is_revoked")
+  end
+
+  test "Public API Access has to be enabled on the server", %{
+    account: account,
+    conn: conn,
+    list: list
+  } do
+    AppConfig.set_config_value("features|public_api_access", false)
+
+    conn
+    |> put_auth_header_for_account(account)
+    |> get(list)
+    |> response(404)
+
+    AppConfig.set_config_value("features|public_api_access", true)
+
+    conn
+    |> put_auth_header_for_account(account)
+    |> get(list)
+    |> json_response(200)
   end
 end

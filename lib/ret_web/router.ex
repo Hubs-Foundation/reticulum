@@ -32,6 +32,10 @@ defmodule RetWeb.Router do
     plug(:accepts, ["json"])
   end
 
+  pipeline :public_api_access do
+    plug(RetWeb.Plugs.RequirePublicApiAccess)
+  end
+
   pipeline :proxy_api do
     plug(:accepts, ["json"])
     plug(RetWeb.Plugs.RewriteAuthorizationHeaderToPerms)
@@ -149,7 +153,7 @@ defmodule RetWeb.Router do
 
   scope "/api/v2_alpha", RetWeb do
     pipe_through(
-      [:secure_headers, :parsed_body, :api, :auth_required] ++
+      [:secure_headers, :parsed_body, :api, :public_api_access, :auth_required] ++
         if(Mix.env() == :prod, do: [:ssl_only, :canonicalize_domain], else: [])
     )
 
@@ -157,7 +161,7 @@ defmodule RetWeb.Router do
   end
 
   scope "/api/v2_alpha", as: :api_v2_alpha do
-    pipe_through([:parsed_body, :api, :graphql] ++ if(Mix.env() == :prod, do: [:ssl_only], else: []))
+    pipe_through([:parsed_body, :api, :public_api_access, :graphql] ++ if(Mix.env() == :prod, do: [:ssl_only], else: []))
     forward "/graphiql", Absinthe.Plug.GraphiQL, json_codec: Jason, schema: RetWeb.Schema
     forward "/", Absinthe.Plug, json_codec: Jason, schema: RetWeb.Schema
   end
