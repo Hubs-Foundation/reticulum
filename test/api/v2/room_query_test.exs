@@ -7,6 +7,7 @@ defmodule RoomQueryTest do
   use RetWeb.ConnCase
   import Ret.TestHelpers
   alias Ret.Api.TokenUtils
+  alias Ret.AppConfig
 
   setup_all do
     Absinthe.Test.prime(RetWeb.Schema)
@@ -46,6 +47,8 @@ defmodule RoomQueryTest do
   end
 
   setup _context do
+    AppConfig.set_config_value("features|public_api_access", true)
+
     account = create_random_account()
     account2 = create_random_account()
     scene = create_scene(account)
@@ -161,5 +164,26 @@ defmodule RoomQueryTest do
       |> do_graphql_action(@query_my_rooms, %{page: 3, page_size: 24})
 
     assert length(response["data"]["myRooms"]["entries"]) === 2
+  end
+
+  test "Public API Access has to be enabled on the server", %{conn: conn, public_hub: public_hub, app_token: app_token} do
+    AppConfig.set_config_value("features|public_api_access", false)
+
+    conn
+    |> put_auth_header_for_token(app_token)
+    |> post("/api/v2_alpha/", %{
+      "query" => "#{@query_public_rooms}"
+    })
+    |> response(404)
+
+    AppConfig.set_config_value("features|public_api_access", true)
+
+    res =
+      conn
+      |> put_auth_header_for_token(app_token)
+      |> do_graphql_action(@query_public_rooms)
+
+    rooms = res["data"]["publicRooms"]["entries"]
+    assert List.first(rooms)["id"] == public_hub.hub_sid
   end
 end

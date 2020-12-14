@@ -897,6 +897,36 @@ end
 
 defimpl Canada.Can, for: Ret.Account do
   alias Ret.{Hub, AppConfig}
+  alias Ret.Api.Credentials
+
+  def can?(%Ret.Account{is_admin: is_admin}, :create_credentials, _params) do
+    is_admin
+  end
+
+  def can?(%Ret.Account{is_admin: is_admin}, :list_credentials, :app) do
+    is_admin
+  end
+
+  def can?(%Ret.Account{}, :list_credentials, :account) do
+    # TODO: Allow admins to disable this in config
+    true
+  end
+
+  def can?(%Ret.Account{}, :list_credentials, _subject_type) do
+    false
+  end
+
+  def can?(%Ret.Account{account_id: account_id}, :revoke_credentials, %Credentials{account_id: account_id}) do
+    true
+  end
+
+  def can?(%Ret.Account{is_admin: true}, :revoke_credentials, %Credentials{}) do
+    true
+  end
+
+  def can?(%Ret.Account{}, :revoke_credentials, %Credentials{}) do
+    false
+  end
 
   @owner_actions [:update_hub, :close_hub, :embed_hub, :kick_users, :mute_users]
   @object_actions [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects, :spawn_emoji, :fly]

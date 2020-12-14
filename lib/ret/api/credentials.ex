@@ -48,8 +48,8 @@ defmodule Ret.Api.Credentials do
          |> cast(params, @permitted_keys)
          |> maybe_put_assoc_account(account_or_nil)
          |> validate_required(@required_keys)
-         |> validate_change(:subject_type, &validate_subject_type/2)
-         |> validate_change(:scopes, &validate_scopes_type/2)
+         |> validate_change(:subject_type, &validate_field/2)
+         |> validate_change(:scopes, &validate_field/2)
          |> unique_constraint(:api_credentials_sid)
          |> unique_constraint(:token_hash)
          # TODO: We can pass multiple fields to unique_contraint when we update ecto
@@ -71,12 +71,6 @@ defmodule Ret.Api.Credentials do
     changeset
   end
 
-  defp validate_scopes_type(:scopes, scopes) do
-    Enum.reduce(scopes, [], fn scope, errors ->
-      errors ++ validate_single_scope_type(scope)
-    end)
-  end
-
   defp validate_single_scope_type(scope) do
     if ScopeType.valid_value?(scope) do
       []
@@ -85,11 +79,17 @@ defmodule Ret.Api.Credentials do
     end
   end
 
-  defp validate_subject_type(:subject_type, subject_type) do
+  def validate_field(:scopes, scopes) do
+    Enum.reduce(scopes, [], fn scope, errors ->
+      errors ++ validate_single_scope_type(scope)
+    end)
+  end
+
+  def validate_field(:subject_type, subject_type) do
     if TokenSubjectType.valid_value?(subject_type) do
       []
     else
-      [subject_type: "Unrecognized subject type. Must be app or account. Got #{subject_type}."]
+      [invalid_subject_type: "Unrecognized subject type. Must be app or account. Got #{subject_type}."]
     end
   end
 
@@ -120,5 +120,9 @@ defmodule Ret.Api.Credentials do
     from([credential, _account] in query,
       where: credential.account_id == ^id
     )
+  end
+
+  def app_token_query() do
+    from(c in Credentials, where: c.subject_type == ^:app)
   end
 end
