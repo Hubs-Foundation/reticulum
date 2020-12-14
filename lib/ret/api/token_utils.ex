@@ -7,7 +7,7 @@ defmodule Ret.Api.TokenUtils do
 
   import Canada, only: [can?: 2]
 
-  def gen_app_token(scopes \\ [Scopes.read_rooms(), Scopes.write_rooms(), Scopes.create_accounts()]) do
+  def gen_app_token(scopes \\ [Scopes.read_rooms(), Scopes.write_rooms()]) do
     Token.encode_and_sign(nil, %{
       subject_type: :app,
       scopes: scopes,

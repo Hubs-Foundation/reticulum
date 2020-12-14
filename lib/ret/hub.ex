@@ -905,15 +905,13 @@ defimpl Canada.Can, for: Ret.Account do
         scopes: scopes,
         account_id: account_id
       }) do
-    # TODO: Is it correct to disallow the create_accounts scope for account type tokens?
-    # If so, why? Do we need to enforce this everywhere?
-    Scopes.create_accounts() not in scopes
+    true
   end
 
   # Admin accounts can create tokens on behalf of other users
   # TODO: Should we even allow this?
   def can?(%Ret.Account{is_admin: true}, :create_credentials, %{subject_type: :account, scopes: scopes}) do
-    Scopes.create_accounts() not in scopes
+    true
   end
 
   def can?(%Ret.Account{is_admin: is_admin}, :create_credentials, %{subject_type: :app}) do

@@ -20,10 +20,6 @@ defmodule RetWeb.CredentialsControllerTest do
     [Scopes.read_rooms(), Scopes.write_rooms()]
   end
 
-  defp app_only_scopes() do
-    [Scopes.read_rooms(), Scopes.write_rooms(), Scopes.create_accounts()]
-  end
-
   defp params(scopes, subject_type) do
     [scopes: scopes, subject_type: subject_type]
   end
@@ -183,27 +179,6 @@ defmodule RetWeb.CredentialsControllerTest do
     |> put_auth_header_for_account(admin_account)
     |> post(create, params(valid_scopes(), :app))
     |> json_response(200)
-  end
-
-  test "Certain scopes are only valid for account tokens", %{
-    admin_account: admin_account,
-    conn: conn,
-    create: create
-  } do
-    assert conn
-           |> put_auth_header_for_account(admin_account)
-           |> post(create, params(app_only_scopes(), :account))
-           |> json_response(401)
-           |> Map.get("errors")
-           |> hd()
-           |> Map.get("failure_type") === "unauthorized"
-
-    assert conn
-           |> put_auth_header_for_account(admin_account)
-           |> post(create, params(app_only_scopes(), :app))
-           |> json_response(200)
-           |> Map.get("credentials")
-           |> Enum.count() === 1
   end
 
   test "Scopes and subject types must be valid", %{
