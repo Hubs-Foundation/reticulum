@@ -24,8 +24,18 @@ defmodule RetWeb.CredentialsControllerTest do
     [scopes: scopes, subject_type: subject_type]
   end
 
+  defp count_credentials(conn, account) do
+    conn
+    |> put_auth_header_for_account(account)
+    |> get(credentials_path(conn, :index, []))
+    |> json_response(200)
+    |> Map.get("credentials")
+    |> Enum.count()
+  end
+
   test "Accounts must authenticate to access credentials API.", %{
     account: account,
+    admin_account: admin_account,
     conn: conn,
     list: list,
     create: create
@@ -51,27 +61,16 @@ defmodule RetWeb.CredentialsControllerTest do
     list: list,
     create: create
   } do
-    assert conn
-           |> put_auth_header_for_account(account)
-           |> get(list)
-           |> json_response(200)
-           |> Map.get("credentials")
-           |> Enum.count() === 0
+    assert count_credentials(conn, account) === 0
 
     conn
     |> put_auth_header_for_account(account)
     |> post(create, params(valid_scopes(), :account))
     |> json_response(200)
 
-    assert conn
-           |> put_auth_header_for_account(account)
-           |> get(list)
-           |> json_response(200)
-           |> Map.get("credentials")
-           |> Enum.count() === 1
+    assert count_credentials(conn, account) === 1
   end
 
-  # TODO: Should this be allowed?
   test "Admins accounts can create credentials on behalf of other accounts", %{
     account: account,
     admin_account: admin_account,
@@ -79,24 +78,14 @@ defmodule RetWeb.CredentialsControllerTest do
     list: list,
     create: create
   } do
-    assert conn
-           |> put_auth_header_for_account(account)
-           |> get(list)
-           |> json_response(200)
-           |> Map.get("credentials")
-           |> Enum.count() === 0
+    assert count_credentials(conn, account) === 0
 
     conn
     |> put_auth_header_for_account(admin_account)
     |> post(create, params(valid_scopes(), :account) ++ [account_id: account.account_id])
     |> json_response(200)
 
-    assert conn
-           |> put_auth_header_for_account(account)
-           |> get(list)
-           |> json_response(200)
-           |> Map.get("credentials")
-           |> Enum.count() === 1
+    assert count_credentials(conn, account) === 1
   end
 
   test "Non-admins cannot create credentials on behalf of other accounts", %{
@@ -107,24 +96,14 @@ defmodule RetWeb.CredentialsControllerTest do
   } do
     another_account = create_account("another_account", false)
 
-    assert conn
-           |> put_auth_header_for_account(another_account)
-           |> get(list)
-           |> json_response(200)
-           |> Map.get("credentials")
-           |> Enum.count() === 0
+    assert count_credentials(conn, another_account) === 0
 
     conn
     |> put_auth_header_for_account(account)
     |> post(create, params(valid_scopes(), :account) ++ [account_id: another_account.account_id])
     |> json_response(401)
 
-    assert conn
-           |> put_auth_header_for_account(another_account)
-           |> get(list)
-           |> json_response(200)
-           |> Map.get("credentials")
-           |> Enum.count() === 0
+    assert count_credentials(conn, another_account) === 0
   end
 
   test "App credentials can be created and listed", %{
@@ -133,24 +112,14 @@ defmodule RetWeb.CredentialsControllerTest do
     list: list,
     create: create
   } do
-    assert conn
-           |> put_auth_header_for_account(admin_account)
-           |> get(list, app: true)
-           |> json_response(200)
-           |> Map.get("credentials")
-           |> Enum.count() === 0
+    assert count_credentials(conn, admin_account) === 0
 
     conn
     |> put_auth_header_for_account(admin_account)
     |> post(create, params(valid_scopes(), :app))
     |> json_response(200)
 
-    assert conn
-           |> put_auth_header_for_account(admin_account)
-           |> get(list, app: true)
-           |> json_response(200)
-           |> Map.get("credentials")
-           |> Enum.count() === 1
+    assert count_credentials(conn, admin_account) === 1
   end
 
   test "Account must be admin to manage app credentials", %{
