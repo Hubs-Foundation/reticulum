@@ -26,57 +26,55 @@ defmodule Ret.Api.TokenUtils do
   defp ensure_atom(x) when is_atom(x), do: x
   defp ensure_atom(x) when is_binary(x), do: String.to_atom(x)
 
-  # TODO Should we permit the creation of tokens
-  # on behalf of other accounts like this?
   defp account_id_from_args(%Account{}, %{"account_id" => account_id}) do
+    # This account wants to create credentials on behalf of another account
     account_id
   end
 
   defp account_id_from_args(%Account{} = account, _params) do
+    # This account wants to create credentials for itself
     account.account_id
   end
 
   defp validate_account_id(%Account{account_id: account_id}, account_id) do
+    # Skip a trip to the DB if account is creating credentials for itself
     []
   end
 
   defp validate_account_id(%Account{}, account_id) do
-    case Account.query()
-         |> Account.where_account_id_is(account_id)
-         |> Repo.one() do
-      %Account{} ->
-        []
+    # Make sure the given account_id refers to an account that actually exists
+    validate_field(:account_id, account_id)
+  end
 
-      nil ->
-        [account_id: "Invalid account id #{account_id}"]
+  defp validate_field(:account_id, account_id) do
+    if Account.query()
+       |> Account.where_account_id_is(account_id)
+       |> Repo.exists?() do
+      []
+    else
+      [account_id: "Invalid account id #{account_id}"]
     end
   end
 
   def to_claims(%Account{} = account, %{"subject_type" => subject_type, "scopes" => scopes} = params) do
-    account_id = account_id_from_args(account, params)
+    account_id_for_claims = account_id_from_args(account, params)
 
-    case to_claims(account, account_id, scopes, subject_type) do
-      errors when is_list(errors) ->
-        {:error, errors}
+    case validate_account_id(account, account_id_for_claims) ++
+           Credentials.validate_field(:scopes, scopes) ++
+           Credentials.validate_field(:subject_type, subject_type) do
+      [] ->
+        # It is safe to cast user-provided strings to atoms here
+        # because we validated that the strings match our atoms
+        # (with &valid_value?/1 from ecto_enum)
+        {:ok,
+         %{
+           account_id: account_id_for_claims,
+           subject_type: ensure_atom(subject_type),
+           scopes: Enum.map(scopes, &ensure_atom/1)
+         }}
 
-      claims ->
-        {:ok, claims}
-    end
-  end
-
-  defp to_claims(%Account{} = account, account_id, scopes, subject_type) do
-    with [] <-
-           validate_account_id(account, account_id) ++
-             Credentials.validate_scopes_type(:scopes, scopes) ++
-             Credentials.validate_subject_type(:subject_type, subject_type) do
-      # It is safe to cast user-provided strings to atoms here
-      # because we validated that the strings match our atoms
-      # (i.e. with &valid_value?/1 from ecto_enum's defenum )
-      %{
-        account_id: account_id,
-        subject_type: ensure_atom(subject_type),
-        scopes: Enum.map(scopes, &ensure_atom/1)
-      }
+      error_list ->
+        {:error, error_list}
     end
   end
 

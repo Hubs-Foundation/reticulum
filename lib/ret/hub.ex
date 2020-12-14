@@ -897,29 +897,10 @@ end
 
 defimpl Canada.Can, for: Ret.Account do
   alias Ret.{Hub, AppConfig}
-  alias Ret.Api.{Scopes, Credentials}
+  alias Ret.Api.Credentials
 
-  # Non-admin accounts can create their own account tokens
-  def can?(%Ret.Account{account_id: account_id}, :create_credentials, %{
-        subject_type: :account,
-        scopes: scopes,
-        account_id: account_id
-      }) do
-    true
-  end
-
-  # Admin accounts can create tokens on behalf of other users
-  # TODO: Should we even allow this?
-  def can?(%Ret.Account{is_admin: true}, :create_credentials, %{subject_type: :account, scopes: scopes}) do
-    true
-  end
-
-  def can?(%Ret.Account{is_admin: is_admin}, :create_credentials, %{subject_type: :app}) do
+  def can?(%Ret.Account{is_admin: is_admin}, :create_credentials, _params) do
     is_admin
-  end
-
-  def can?(%Ret.Account{}, :create_credentials, _params) do
-    false
   end
 
   def can?(%Ret.Account{is_admin: is_admin}, :list_credentials, :app) do

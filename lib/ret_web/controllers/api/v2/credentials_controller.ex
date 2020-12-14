@@ -9,7 +9,6 @@ defmodule RetWeb.Api.V2.CredentialsController do
     only: [to_claims: 2, authed_create_credentials: 2, authed_list_credentials: 2, authed_revoke_credentials: 2]
 
   # Limit to 1 TPS
-  # TODO : I copied this from other controllers. Is this an appropriate limit? -John
   plug(RetWeb.Plugs.RateLimit when action in [:create, :update])
 
   def index(conn, %{"app" => _anything} = _params) do
@@ -21,9 +20,7 @@ defmodule RetWeb.Api.V2.CredentialsController do
   end
 
   def show(conn, %{"id" => credentials_sid}) do
-    case Credentials.query()
-         |> Credentials.where_sid_is(credentials_sid)
-         |> Repo.one() do
+    case Repo.get_by(Credentials, api_credentials_sid: credentials_sid) do
       nil ->
         render_errors(conn, 400, {:error, "Invalid request"})
 
@@ -42,8 +39,8 @@ defmodule RetWeb.Api.V2.CredentialsController do
       {:ok, claims} ->
         handle_create_credentials_result(conn, authed_create_credentials(account, claims))
 
-      {:error, reason} ->
-        render_errors(conn, 400, reason)
+      {:error, error_list} ->
+        render_errors(conn, 400, error_list)
     end
   end
 
