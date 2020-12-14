@@ -40,7 +40,8 @@ defmodule RetWeb.Middleware.InspectTiming do
   def call(resolution, _) do
     case resolution do
       %{private: %{timing: timing}} ->
-        inspect_timing_info(timing)
+        log_timing_info(timing)
+        nil
 
       _ ->
         nil
@@ -49,23 +50,19 @@ defmodule RetWeb.Middleware.InspectTiming do
     resolution
   end
 
-  defp inspect_timing_info(timing) do
-    Enum.each(timing, fn item ->
-      case item do
-        {identifier, %{started_at: started_at, ended_at: ended_at}} ->
-          diff = NaiveDateTime.diff(ended_at, started_at, :microsecond)
-          IO.puts("#{Atom.to_string(identifier)} took #{diff} microseconds to run.")
-
-        {identifier, _} ->
-          IO.puts(
-            "Cannot log diff of identifier because it lacks timing info started_at and ended_at: #{
-              Atom.to_string(identifier)
-            }"
-          )
-
-        _ ->
-          nil
-      end
-    end)
+  defp log_timing_info(_timing) do
+    nil
   end
+
+  # # TODO: Log these metrics with something like :telemetry or Statix
+  # defp log_timing_info(timing) do
+  #   Enum.each(timing, fn
+  #     {identifier, %{started_at: started_at, ended_at: ended_at}} ->
+  #       diff = NaiveDateTime.diff(ended_at, started_at, :microsecond)
+  #       IO.puts("#{Atom.to_string(identifier)} took #{diff} microseconds to run.")
+
+  #     _ ->
+  #       nil
+  #   end)
+  # end
 end

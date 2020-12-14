@@ -35,7 +35,7 @@ defmodule Ret.Api.Credentials do
     # Use 18 bytes (not 16, the default) to avoid having all tokens end in "09"
     # See https://github.com/patricksrobertson/secure_random.ex/issues/11
     # Prefix the sid to the rest of the token for ease of management
-    token = "#{sid}_#{SecureRandom.urlsafe_base64(18)}"
+    token = "#{sid}.#{SecureRandom.urlsafe_base64(18)}"
 
     params =
       Map.merge(params, %{
