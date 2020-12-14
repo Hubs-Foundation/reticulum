@@ -9,7 +9,6 @@ defmodule Ret.Repo.Migrations.AddApiCredentialsTable do
       add(:api_credentials_id, :bigint, default: fragment("ret0.next_id()"), primary_key: true)
       add(:token_hash, :string, null: false)
       add(:api_credentials_sid, :string, null: false)
-      add(:issued_at, :utc_datetime, null: false)
       add(:is_revoked, :boolean, null: false)
       add(:scopes, {:array, :api_scope_type}, null: false)
       add(:subject_type, :api_token_subject_type, null: false)

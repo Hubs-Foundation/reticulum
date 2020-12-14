@@ -18,7 +18,6 @@ defmodule Ret.Api.Credentials do
     field(:api_credentials_sid, :string)
     field(:token_hash, :string)
     field(:subject_type, TokenSubjectType)
-    field(:issued_at, :utc_datetime)
     field(:is_revoked, :boolean)
     field(:scopes, {:array, ScopeType})
 
@@ -26,7 +25,7 @@ defmodule Ret.Api.Credentials do
     timestamps()
   end
 
-  @required_keys [:api_credentials_sid, :token_hash, :subject_type, :issued_at, :is_revoked, :scopes]
+  @required_keys [:api_credentials_sid, :token_hash, :subject_type, :is_revoked, :scopes]
   @permitted_keys @required_keys
 
   def generate_credentials(%{subject_type: _st, scopes: _sc, account_or_nil: account_or_nil} = params) do
@@ -41,7 +40,6 @@ defmodule Ret.Api.Credentials do
       Map.merge(params, %{
         api_credentials_sid: sid,
         token_hash: Ret.Crypto.hash(token),
-        issued_at: Timex.now() |> DateTime.truncate(:second),
         is_revoked: false
       })
 
