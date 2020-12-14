@@ -68,8 +68,8 @@ defmodule RetWeb.Api.V1.HubController do
       hub
       |> Hub.add_attrs_to_changeset(hub_params)
       |> maybe_add_new_scene(scene)
-      |> maybe_add_member_permissions(hub, hub_params)
-      |> maybe_add_promotion(account, hub, hub_params)
+      |> Hub.maybe_add_member_permissions(hub, hub_params)
+      |> Hub.maybe_add_promotion(account, hub, hub_params)
 
     hub = changeset |> Repo.update!() |> Repo.preload(Hub.hub_preloads())
 
@@ -79,16 +79,6 @@ defmodule RetWeb.Api.V1.HubController do
   defp maybe_add_new_scene(changeset, nil), do: changeset
 
   defp maybe_add_new_scene(changeset, scene), do: changeset |> Hub.add_new_scene_to_changeset(scene)
-
-  defp maybe_add_member_permissions(changeset, hub, %{"member_permissions" => %{}} = hub_params),
-    do: changeset |> Hub.add_member_permissions_update_to_changeset(hub, hub_params)
-
-  defp maybe_add_member_permissions(changeset, _hub, _), do: changeset
-
-  defp maybe_add_promotion(changeset, account, hub, %{"allow_promotion" => _} = hub_params),
-    do: changeset |> Hub.maybe_add_promotion_to_changeset(account, hub, hub_params)
-
-  defp maybe_add_promotion(changeset, _account, _hub, _), do: changeset
 
   def delete(conn, %{"id" => hub_sid}) do
     Hub

@@ -24,6 +24,14 @@ defmodule Ret.Account do
     timestamps()
   end
 
+  def query do
+    from(account in Account)
+  end
+
+  def where_account_id_is(query, id) do
+    from(account in query, where: account.account_id == ^id)
+  end
+
   def has_accounts?(), do: from(a in Account, limit: 1) |> Repo.exists?()
   def has_admin_accounts?(), do: from(a in Account, limit: 1) |> where(is_admin: true) |> Repo.exists?()
   def exists_for_email?(email), do: account_for_email(email) != nil

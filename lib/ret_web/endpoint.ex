@@ -1,6 +1,7 @@
 defmodule RetWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :ret
   use Sentry.Phoenix.Endpoint
+  use Absinthe.Phoenix.Endpoint
 
   socket("/socket", RetWeb.SessionSocket, websocket: [check_origin: {RetWeb.Endpoint, :allowed_origin?, []}])
 

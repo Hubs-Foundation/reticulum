@@ -1,0 +1,739 @@
+{
+  "key": "graphiql",
+  "lastId": 11,
+  "tabIds": [
+    "tab1",
+    "tab2",
+    "tab4",
+    "tab5",
+    "tab6",
+    "tab7",
+    "tab8",
+    "tab9",
+    "tab10"
+  ],
+  "closedTabs": [
+    {
+      "id": "tab11",
+      "name": "Query 10",
+      "url": "https://localhost:4000/api/v2/graphiql",
+      "websocketUrl": "",
+      "proxy": false,
+      "headers": [],
+      "collapsed": false,
+      "maxHistory": 20,
+      "history": [],
+      "graphiql:query": "",
+      "graphiql:variables": "",
+      "graphiql:editorFlex": 1,
+      "graphiql:variableEditorHeight": 200,
+      "graphiql:docExplorerWidth": 350
+    },
+    {
+      "id": "tab3",
+      "name": "No Token",
+      "url": "https://localhost:4000/api/v2_alpha/graphiql",
+      "websocketUrl": "",
+      "proxy": false,
+      "headers": [],
+      "collapsed": false,
+      "maxHistory": 20,
+      "history": [
+        {
+          "query": "query {\n  myRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n  \n  favoriteRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n  \n   publicRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "query {\n  myRooms(page: 2, pageSize: 5) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "query {\n  myRooms(page: 2, pageSize: 5) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }",
+          "variables": null
+        }
+      ],
+      "graphiql:query": "query {\n  myRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n  \n  favoriteRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n  \n   publicRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n}",
+      "graphiql:docExplorerWidth": 350,
+      "graphiql:queries": "{\"queries\":[{\"query\":\"query {\\n  myRooms(page: 2, pageSize: 5) {\\n    entries {\\n      name,\\n      id,\\n      memberPermissions{\\n        fly\\n      }\\n    }\\n  }\\n}\",\"variables\":\"\"},{\"query\":\"query {\\n  myRooms(page: 1, pageSize: 3) {\\n    entries {\\n      name,\\n      id,\\n      memberPermissions{\\n        fly\\n      }\\n    }\\n  }\\n  \\n  favoriteRooms(page: 1, pageSize: 3) {\\n    entries {\\n      name,\\n      id,\\n      memberPermissions{\\n        fly\\n      }\\n    }\\n  }\\n  \\n   publicRooms(page: 1, pageSize: 3) {\\n    entries {\\n      name,\\n      id,\\n      memberPermissions{\\n        fly\\n      }\\n    }\\n  }\\n}\"}]}",
+      "graphiql:variableEditorHeight": 200,
+      "graphiql:editorFlex": 1
+    }
+  ],
+  "defaultUrl": "https://localhost:4000/api/v2/graphiql",
+  "defaultWebsocketUrl": "",
+  "defaultQuery": "",
+  "defaultVariables": "",
+  "defaultProxy": false,
+  "defaultHeaders": [],
+  "usedUrls": [
+    "https://hubs.local:4000/api/v2_alpha/graphiql",
+    "https://localhost:4000/api/v2_alpha/graphiql",
+    "https://localhost:4000/api/v2alpha/graphiql",
+    "https://localhost:4000/api/v2/graphiql"
+  ],
+  "recentHeaders": [
+    {
+      "name": "Authorization",
+      "value": "Bearer 3u3Tz8U_UFhEdUNZT3dUUmRxc2JPQW05N0JVVW9O"
+    },
+    {
+      "name": "Authorization",
+      "value": "Bearer 7usAt24_bjJhR2ZLd1RpRzdnbGlBMDF0UThOMDg3"
+    },
+    {
+      "name": "Authorization",
+      "value": "Bearer 7usAt24_bjJhR2ZLd1RpRzdnbGlBMDF0UThOMDg"
+    },
+    {
+      "name": "Authorization",
+      "value": "Bearer fsaf"
+    },
+    {
+      "name": "Authorization",
+      "value": "Bearer c2FxcWtyTUNNOVVzd1VMVGZGeExSZz09"
+    },
+    {
+      "name": "Authorization",
+      "value": "Bearer NHhKdGRUQWpRTzVPTzJ5Y0Q0UC9nZz09"
+    },
+    {
+      "name": "Authorization",
+      "value": "Bearer cm5KbU8zbHEwOS83VitNaGVWall3UT09"
+    },
+    {
+      "name": "Authorization",
+      "value": "Bearer U0NhWUozNVF4TEpRTTJtTGNGa01jUT09"
+    },
+    {
+      "name": "Authorization",
+      "value": "Bearer eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJyZXQiLCJleHAiOjE2MDg2Njc3OTYsImlhdCI6MTYwMzgyOTM5NiwiaXNzIjoiIiwianRpIjoiNzBmODI1MWMtZjE2YS00YThlLTg2MDYtNTZkNDE5ZjU4NzljIiwibmJmIjoxNjAzODI5Mzk1LCJzY29wZXMiOlsicmVhZF9yb29tcyIsIndyaXRlX3Jvb21zIl0sInN1YiI6IjczMTAzODUxODcxMjcyOTY0MCIsInR5cCI6ImFjY2VzcyJ9.YGfqokwxtIQsmnNT21uOKoLAqlHx6cpI3mYrkQIxSniGIOewL84ckwfGcF9v54ZHkNR4bY8Cd_fqE2DfZKEO2g"
+    },
+    {
+      "name": "Authorization",
+      "value": "Bearer eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJyZXQiLCJleHAiOjE2MDg2Njc3NTQsImlhdCI6MTYwMzgyOTM1NCwiaXNzIjoiIiwianRpIjoiZTQ3MDA2NGQtYmFhNy00M2YzLTllNDgtZGU3MDg0MGRkMDU1IiwibmJmIjoxNjAzODI5MzUzLCJzY29wZXMiOlsicmVhZF9yb29tcyIsIndyaXRlX3Jvb21zIiwiY3JlYXRlX2FjY291bnRzIl0sInN1YiI6InJldGljdWx1bV9hcHBfdG9rZW4iLCJ0eXAiOiJhY2Nlc3MifQ.kbzMkcxbMGoyh95cbS3QvgGx8ikgVCSeeMfeX3FJhLml8cBp_1apNT_CxOEQlSgRkm-Rppck975cVoqWVnR9_Q"
+    },
+    {
+      "name": "Authorization",
+      "value": "Bearer eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJyZXQiLCJleHAiOjE2MDM0Mzk0ODIsImlhdCI6MTYwMzQxMDY4MiwiaXNzIjoiIiwianRpIjoiMmE2NTRlNDMtOGUyNi00NzRhLTlhN2UtZjBjMWFjZTJkOWU1IiwibmJmIjoxNjAzNDEwNjgxLCJzY29wZXMiOlsicmVhZF9yb29tcyIsIndyaXRlX3Jvb21zIiwiY3JlYXRlX2FjY291bnRzIl0sInN1YiI6InJldGljdWx1bV9hcHBfdG9rZW4iLCJ0eXAiOiJhY2Nlc3MifQ.9RaT1l8c5nK7nhd1EUWUgiOd01wDCMseUmRrK-AleGvwbgfm9Vp2rjc18ifg0cwPJfpPuDyrxGY8E3WWgqpVFA"
+    },
+    {
+      "name": "Authorization",
+      "value": "Bearer eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJyZXQiLCJleHAiOjE2MDM0MzkzMTcsImlhdCI6MTYwMzQxMDUxNywiaXNzIjoiIiwianRpIjoiZjVkOTU0ODYtYmZhNS00ZTI5LWExYzgtMGUwMmE1MmYxZjllIiwibmJmIjoxNjAzNDEwNTE2LCJzY29wZXMiOlsicmVhZF9yb29tcyIsIndyaXRlX3Jvb21zIl0sInN1YiI6IjYzNDAyOTgyNzk3NTgwNjk4MCIsInR5cCI6ImFjY2VzcyJ9.dRKjTCYaPP-ogwLnCDfor4G90kn2vkaqGsjflxfRbwNwfHl0KNt4W99RWMomAtlxtegULOHDI08hrz6rsPjN_g"
+    },
+    {
+      "name": "Authorization",
+      "value": "Bearer eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJyZXQiLCJleHAiOjE2MDM0Mjc2NzQsImlhdCI6MTYwMzM5ODg3NCwiaXNzIjoiIiwianRpIjoiMzJkZGU0NWUtZjkxNS00NWJmLTk4NTktZGIyYmUzZDEyZmQ1IiwibmJmIjoxNjAzMzk4ODczLCJzY29wZXMiOlsicmVhZF9yb29tcyIsIndyaXRlX3Jvb21zIiwiY3JlYXRlX2FjY291bnRzIl0sInN1YiI6InJldGljdWx1bV9hcHBfdG9rZW4iLCJ0eXAiOiJhY2Nlc3MifQ.9bzlZkoKnvFsf9Qm9Vmw-Prl3vPlNFku3S2S0J3owi18kjIhO_baIIGTkASG_yNL1aofnfFMCOjUFxhM80PrFw"
+    },
+    {
+      "name": "Authorization",
+      "value": "Bearer   # def can?(%Ret.Account{} = account, action, account) when action in @self_allowed_actions, do: true"
+    },
+    {
+      "name": "Authorization",
+      "value": "Bearer foo"
+    },
+    {
+      "name": "Authorization",
+      "value": "Bearer eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJyZXQiLCJleHAiOjE2MDMzMjg3NzAsImlhdCI6MTYwMzI5OTk3MCwiaXNzIjoiIiwianRpIjoiOTQyZmViN2MtN2YwOS00YWQ0LWExMmEtYjkyNTVjMDY3NDExIiwibmJmIjoxNjAzMjk5OTY5LCJzY29wZXMiOlsicmVhZF9yb29tcyIsIndyaXRlX3Jvb21zIiwiY3JlYXRlX2FjY291bnRzIl0sInN1YiI6InJldGljdWx1bV9hcHBfdG9rZW4iLCJ0eXAiOiJhY2Nlc3MifQ.maRV8uXxt3a66E0e7muIkKYNVFERWMzYmmZg7JY1NQ0-UbjVSmC64RqbBz7IuJ5OUckAGAHCjYU7QbML3hILjg"
+    },
+    {
+      "name": "Authorization",
+      "value": "Bearer eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJyZXQiLCJleHAiOjE2MDMzMjg3MzIsImlhdCI6MTYwMzI5OTkzMiwiaXNzIjoiIiwianRpIjoiYjlmYjAzZGYtMGU2Yi00ZjlhLWFkYTgtZmZiNjk1MmI2ODgyIiwibmJmIjoxNjAzMjk5OTMxLCJzY29wZXMiOlsicmVhZF9yb29tcyIsIndyaXRlX3Jvb21zIl0sInN1YiI6IjYzNDAyOTgyNzk3NTgwNjk4MCIsInR5cCI6ImFjY2VzcyJ9.Ot-jOYrb6Fl-SD7BDmSUZT248JqOLOCsvDmeXb0jbJCheOTXi5WWu__Tnb-uGDVbXSM9LyCSA_1KJ_s_tH96yQ"
+    },
+    {
+      "name": "authorization",
+      "value": "bearer: eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJyZXQiLCJleHAiOjE2MDMzMjg1NDcsImlhdCI6MTYwMzI5OTc0NywiaXNzIjoiIiwianRpIjoiZjIxYjc1MzYtMDkxYi00MjEzLTllODgtNjQ2NmFlY2IyYzY0IiwibmJmIjoxNjAzMjk5NzQ2LCJzY29wZXMiOlsicmVhZF9yb29tcyIsIndyaXRlX3Jvb21zIiwiY3JlYXRlX2FjY291bnRzIl0sInN1YiI6InJldGljdWx1bV9hcHBfdG9rZW4iLCJ0eXAiOiJhY2Nlc3MifQ.pHeNOxSTyaSabHepEJr6oe9FwhopHpp21Q0yb5KQ8ENk3mcGLSjZGlFe2L81u5TFgazvWE9eCV8_jqdXhFAS9w"
+    },
+    {
+      "name": "authorization",
+      "value": "bearer: eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJyZXQiLCJleHAiOjE2MDMzMjg0NTIsImlhdCI6MTYwMzI5OTY1MiwiaXNzIjoiIiwianRpIjoiOTNjZjk3MzQtNWVkYy00OTQ4LWI1NjctNjQ2MmQxNGFkMjFiIiwibmJmIjoxNjAzMjk5NjUxLCJzY29wZXMiOlsicmVhZF9yb29tcyIsIndyaXRlX3Jvb21zIl0sInN1YiI6IjYzNDAyOTgyNzk3NTgwNjk4MCIsInR5cCI6ImFjY2VzcyJ9.47dOWjFahvS-rR-2pHqs_8ufHzFO1BNTNYP4x_AsHmzB_KfAnTEIgSgVL2ory9qsmgCtfMbsAFwZ4dpUXoOItw"
+    },
+    {
+      "name": "authorization",
+      "value": "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJyZXQiLCJleHAiOjE2MDMzMjg0NTIsImlhdCI6MTYwMzI5OTY1MiwiaXNzIjoiIiwianRpIjoiOTNjZjk3MzQtNWVkYy00OTQ4LWI1NjctNjQ2MmQxNGFkMjFiIiwibmJmIjoxNjAzMjk5NjUxLCJzY29wZXMiOlsicmVhZF9yb29tcyIsIndyaXRlX3Jvb21zIl0sInN1YiI6IjYzNDAyOTgyNzk3NTgwNjk4MCIsInR5cCI6ImFjY2VzcyJ9.47dOWjFahvS-rR-2pHqs_8ufHzFO1BNTNYP4x_AsHmzB_KfAnTEIgSgVL2ory9qsmgCtfMbsAFwZ4dpUXoOItw"
+    }
+  ],
+  "maxTabHistory": 20,
+  "maxUrlHistory": 20,
+  "maxHistory": 20,
+  "savedQueries": [
+    {
+      "query": "mutation {\n  updateRoom(\n    id: \"7VkWtfB\", \n    name:\"hello world!!!\", \n    description: \"A  room with a USER view\",\n    allowPromotion: true, \n    sceneId:null,\n    memberPermissions: {\n      fly: false\n    }\n    #sceneUrl:\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\"\n  ) {\n    description,\n    id,\n    name,\n    defaultEnvironmentGltfBundleUrl,\n    allowPromotion,\n    memberPermissions{\n      fly\n    },\n    embedToken,\n    scene {\n      ... on Scene{\n        name,\n        id\n      }\n    }\n\n  }\n}",
+      "variables": ""
+    },
+    {
+      "query": "mutation {\n  updateRoom(id: \"7VkWtfB\", name:\"hello world!!!\", description: \"A  room with a USER view\", allowPromotion: true, sceneId:\"tXkCgJw\", sceneUrl:\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\") {\n    description,\n    id,\n    name,\n    defaultEnvironmentGltfBundleUrl,\n    allowPromotion,\n    memberPermissions{\n      fly\n    },\n    embedToken,\n    scene {\n      ... on Scene{\n        name,\n        id\n      }\n    }\n\n  }\n}",
+      "variables": ""
+    },
+    {
+      "query": "mutation {\n  updateRoom(id: \"7VkWtfB\", name:\"hello world!!!\", description: \"A  room with a USER view\", allowPromotion: true, sceneId:\"tXkCgJw\", sceneUrl:\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\") {\n    description,\n    id,\n    name,\n    allowPromotion,\n    memberPermissions{\n      fly\n    },\n    embedToken,\n    scene {\n      ... on Scene{\n        name,\n        id\n      }\n    }\n  }\n}",
+      "variables": ""
+    },
+    {
+      "query": "mutation {\n  createRoom(description: \"A room with a view\", sceneUrl:\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\") {\n    id,\n    name,\n    allowPromotion,\n    memberPermissions{\n      fly\n    },\n    embedToken,\n    defaultEnvironmentGltfBundleUrl,\n    creatorAssignmentToken,\n    scene {\n      ... on Scene {\n        name,\n        id\n      }\n      ... on SceneListing{\n        name,\n        id\n      }\n    }\n  }\n}",
+      "variables": ""
+    },
+    {
+      "query": "mutation {\n  createRoom(description: \"A room with a view\", sceneId:\"tXkCgJw\") {\n    id,\n    name,\n    allowPromotion,\n    memberPermissions{\n      fly\n    },\n    embedToken,\n    defaultEnvironmentGltfBundleUrl,\n    creatorAssignmentToken,\n    scene {\n      ... on Scene {\n        name,\n        id\n      }\n      ... on SceneListing{\n        name,\n        id\n      }\n    }\n  }\n}",
+      "variables": ""
+    },
+    {
+      "query": "mutation {\n  createRoom(description: \"A room with a view\", sceneUrl:\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\") {\n    id,\n    name,\n    allowPromotion,\n    memberPermissions{\n      fly\n    },\n    embedToken,\n    defaultEnvironmentGltfBundleUrl,\n    scene {\n      ... on Scene {\n        name,\n        id\n      }\n      ... on SceneListing{\n        name,\n        id\n      }\n    }\n  }\n}",
+      "variables": ""
+    },
+    {
+      "query": "mutation {\n  createRoom(description: \"A room with a view\", sceneId:\"tXkCgJw\") {\n    id,\n    name,\n    allowPromotion,\n    memberPermissions{\n      fly\n    },\n    embedToken,\n    defaultEnvironmentGltfBundleUrl,\n    scene {\n      ... on Scene {\n        name,\n        id\n      }\n      ... on SceneListing{\n        name,\n        id\n      }\n    }\n  }\n}",
+      "variables": ""
+    },
+    {
+      "query": "mutation {\n  createRoom(description: \"A room with a view\") {\n    id,\n    name,\n    allowPromotion,\n    memberPermissions{\n      fly\n    },\n    embedToken,\n    defaultEnvironmentGltfBundleUrl,\n    scene {\n      ... on Scene {\n        name,\n        id\n      }\n      ... on SceneListing{\n        name,\n        id\n      }\n    }\n  }\n}",
+      "variables": ""
+    },
+    {
+      "query": "mutation {\n  createRoom(description: \"A room with a view\", sceneId:\"tXkCgJw\") {\n    id,\n    name,\n    allowPromotion,\n    memberPermissions{\n      fly\n    },\n    embedToken,\n    scene {\n      ... on Scene {\n        name,\n        id\n      }\n    }\n  }\n}",
+      "variables": ""
+    }
+  ],
+  "activeId": "tab9",
+  "tabs": [
+    {
+      "id": "tab1",
+      "name": "[app] queries",
+      "url": "https://localhost:4000/api/v2_alpha/graphiql",
+      "websocketUrl": "",
+      "proxy": false,
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer 3u3Tz8U_UFhEdUNZT3dUUmRxc2JPQW05N0JVVW9O"
+        }
+      ],
+      "collapsed": false,
+      "maxHistory": 20,
+      "history": [
+        {
+          "query": "query {\n  \n  myRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n  \n  favoriteRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n  \n   publicRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      description,\n      id,\n      memberPermissions{\n        fly\n      },\n      creatorAssignmentToken,\n      defaultEnvironmentGltfBundleUrl,\n      scene {\n        ... on Scene {\n          name,\n          id\n        }\n        ... on SceneListing {\n          name,\n          id\n        }\n      }\n    }\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "query {\n  \n  myRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n  \n  favoriteRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n  \n   publicRooms(page: 1, pageSize: 3) {\n    entries {\n name,\n      description,\n      id,\n      memberPermissions{\n        fly\n      },\n      creatorAssignmentToken,\n    defaultEnvironmentGltfBundleUrl,\n    scene {\n      ... on Scene {\n        name,\n        id\n      }\n      ... on SceneListing{\n        name,\n        id\n      }\n    }\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "query {\n  \n  myRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n  \n  favoriteRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n  \n   publicRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "\nquery {\n  \n  myRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n  \n  favoriteRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n  \n   publicRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "query {\n  myRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n  \n  favoriteRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n  \n   publicRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "query {\n  myRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n    favoriteRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n  \n   publicRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "query {\n  myRooms(page: 2, pageSize: 5) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n  \n   publicRooms(page: 1, pageSize: 5) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "query {\n  myRooms(page: 2, pageSize: 5) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "query {\n  myRooms {\n    entries (page: 2) {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "query {\n  myRooms {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "query {\n  publicRooms {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "query {\n  myRooms {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "query {\n  publicRooms {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  createRoom(name:\"foo\"){\n    id,\n    description,\n    slug\n  }\n  \n  \n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  updateRoom(id:\"2M6Poe2\", name:\"foo\") {\n    id,\n    name\n  },\n  \n  \n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  updateRoom(id:\"2M6Poe2f\", name:\"foo\") {\n    id,\n    name\n  },\n  \n  \n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  foo: updateRoom(id:\"2M6Po2\", name:\"foo\") {\n    id,\n    name\n  },\n  \n  updateRoom(id:\"2M6Poe2\", name:\"bar\") {\n    id,\n    name\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  foo: updateRoom(id:\"2M6Poe2\", name:\"foo\") {\n    id,\n    name\n  },\n  \n  updateRoom(id:\"2M6Poe2\", name:\"bar\") {\n    id,\n    name\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  updateRoom(id:\"2M6Poe2\", name:\"foo\") {\n    id,\n    name\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  updateRoom(id:\"TkpzrAS\", name:\"bfffar\") {\n    id,\n    name\n  }\n}",
+          "variables": null
+        }
+      ],
+      "graphiql:query": "query {\n  \n  myRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n  \n  favoriteRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n  \n   publicRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      description,\n      id,\n      memberPermissions{\n        fly\n      },\n      creatorAssignmentToken,\n      defaultEnvironmentGltfBundleUrl,\n      scene {\n        ... on Scene {\n          name,\n          id\n        }\n        ... on SceneListing {\n          name,\n          id\n        }\n      }\n    }\n  }\n}",
+      "graphiql:queries": "{\"queries\":[{\"query\":\"mutation {\\n  updateRoom(id:\\\"TkpzrAS\\\", name:\\\"bar\\\") {\\n    id,\\n    name\\n  }\\n}\"},{\"query\":\"mutation {\\n  updateRoom(id:\\\"TkpzrAS\\\", name:\\\"bfffar\\\") {\\n    id,\\n    name\\n  }\\n}\"},{\"query\":\"mutation {\\n  updateRoom(id:\\\"2M6Poe2\\\", name:\\\"foo\\\") {\\n    id,\\n    name\\n  }\\n}\"},{\"query\":\"mutation {\\n  foo: updateRoom(id:\\\"2M6Poe2\\\", name:\\\"foo\\\") {\\n    id,\\n    name\\n  },\\n  \\n  updateRoom(id:\\\"2M6Poe2\\\", name:\\\"bar\\\") {\\n    id,\\n    name\\n  }\\n}\"},{\"query\":\"mutation {\\n  foo: updateRoom(id:\\\"2M6Po2\\\", name:\\\"foo\\\") {\\n    id,\\n    name\\n  },\\n  \\n  updateRoom(id:\\\"2M6Poe2\\\", name:\\\"bar\\\") {\\n    id,\\n    name\\n  }\\n}\"},{\"query\":\"mutation {\\n  updateRoom(id:\\\"2M6Poe2f\\\", name:\\\"foo\\\") {\\n    id,\\n    name\\n  },\\n  \\n  \\n}\"},{\"query\":\"mutation {\\n  updateRoom(id:\\\"2M6Poe2\\\", name:\\\"foo\\\") {\\n    id,\\n    name\\n  },\\n  \\n  \\n}\"},{\"query\":\"mutation {\\n  createRoom(name:\\\"foo\\\"){\\n    id,\\n    description,\\n    slug\\n  }\\n  \\n  \\n}\"},{\"query\":\"query {\\n  publicRooms {\\n    entries {\\n      name,\\n      id,\\n      memberPermissions{\\n        fly\\n      }\\n    }\\n  }\\n}\"},{\"query\":\"query {\\n  myRooms {\\n    entries {\\n      name,\\n      id,\\n      memberPermissions{\\n        fly\\n      }\\n    }\\n  }\\n}\"},{\"query\":\"query {\\n  publicRooms {\\n    entries {\\n      name,\\n      id,\\n      memberPermissions{\\n        fly\\n      }\\n    }\\n  }\\n}\"},{\"query\":\"query {\\n  myRooms {\\n    entries {\\n      name,\\n      id,\\n      memberPermissions{\\n        fly\\n      }\\n    }\\n  }\\n}\"},{\"query\":\"query {\\n  myRooms {\\n    entries (page: 2) {\\n      name,\\n      id,\\n      memberPermissions{\\n        fly\\n      }\\n    }\\n  }\\n}\"},{\"query\":\"query {\\n  myRooms(page: 2, pageSize: 5) {\\n    entries {\\n      name,\\n      id,\\n      memberPermissions{\\n        fly\\n      }\\n    }\\n  }\\n}\"},{\"query\":\"query {\\n  myRooms(page: 2, pageSize: 5) {\\n    entries {\\n      name,\\n      id,\\n      memberPermissions{\\n        fly\\n      }\\n    }\\n  }\\n  \\n   publicRooms(page: 1, pageSize: 5) {\\n    entries {\\n      name,\\n      id,\\n      memberPermissions{\\n        fly\\n      }\\n    }\\n  }\\n}\"},{\"query\":\"query {\\n  myRooms(page: 1, pageSize: 3) {\\n    entries {\\n      name,\\n      id,\\n      memberPermissions{\\n        fly\\n      }\\n    }\\n  }\\n    favoriteRooms(page: 1, pageSize: 3) {\\n    entries {\\n      name,\\n      id,\\n      memberPermissions{\\n        fly\\n      }\\n    }\\n  }\\n  \\n   publicRooms(page: 1, pageSize: 3) {\\n    entries {\\n      name,\\n      id,\\n      memberPermissions{\\n        fly\\n      }\\n    }\\n  }\\n}\"},{\"query\":\"query {\\n  myRooms(page: 1, pageSize: 3) {\\n    entries {\\n      name,\\n      id,\\n      memberPermissions{\\n        fly\\n      }\\n    }\\n  }\\n  \\n  favoriteRooms(page: 1, pageSize: 3) {\\n    entries {\\n      name,\\n      id,\\n      memberPermissions{\\n        fly\\n      }\\n    }\\n  }\\n  \\n   publicRooms(page: 1, pageSize: 3) {\\n    entries {\\n      name,\\n      id,\\n      memberPermissions{\\n        fly\\n      }\\n    }\\n  }\\n}\"},{\"query\":\"\\nquery {\\n  \\n  myRooms(page: 1, pageSize: 3) {\\n    entries {\\n      name,\\n      id,\\n      memberPermissions{\\n        fly\\n      }\\n    }\\n  }\\n  \\n  favoriteRooms(page: 1, pageSize: 3) {\\n    entries {\\n      name,\\n      id,\\n      memberPermissions{\\n        fly\\n      }\\n    }\\n  }\\n  \\n   publicRooms(page: 1, pageSize: 3) {\\n    entries {\\n      name,\\n      id,\\n      memberPermissions{\\n        fly\\n      }\\n    }\\n  }\\n}\"},{\"query\":\"query {\\n  \\n  myRooms(page: 1, pageSize: 3) {\\n    entries {\\n      name,\\n      id,\\n      memberPermissions{\\n        fly\\n      }\\n    }\\n  }\\n  \\n  favoriteRooms(page: 1, pageSize: 3) {\\n    entries {\\n      name,\\n      id,\\n      memberPermissions{\\n        fly\\n      }\\n    }\\n  }\\n  \\n   publicRooms(page: 1, pageSize: 3) {\\n    entries {\\n      name,\\n      id,\\n      memberPermissions{\\n        fly\\n      }\\n    }\\n  }\\n}\"},{\"query\":\"query {\\n  \\n  myRooms(page: 1, pageSize: 3) {\\n    entries {\\n      name,\\n      id,\\n      memberPermissions{\\n        fly\\n      }\\n    }\\n  }\\n  \\n  favoriteRooms(page: 1, pageSize: 3) {\\n    entries {\\n      name,\\n      id,\\n      memberPermissions{\\n        fly\\n      }\\n    }\\n  }\\n  \\n   publicRooms(page: 1, pageSize: 3) {\\n    entries {\\n      name,\\n      description,\\n      id,\\n      memberPermissions{\\n        fly\\n      },\\n      creatorAssignmentToken,\\n      defaultEnvironmentGltfBundleUrl,\\n      scene {\\n        ... on Scene {\\n          name,\\n          id\\n        }\\n        ... on SceneListing {\\n          name,\\n          id\\n        }\\n      }\\n    }\\n  }\\n}\"}]}",
+      "graphiql:editorFlex": 1,
+      "graphiql:variableEditorHeight": 200,
+      "graphiql:docExplorerWidth": 350
+    },
+    {
+      "id": "tab2",
+      "name": "[user] queries",
+      "url": "https://hubs.local:4000/api/v2_alpha/graphiql",
+      "websocketUrl": "",
+      "proxy": false,
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer 7usAt24_bjJhR2ZLd1RpRzdnbGlBMDF0UThOMDg3"
+        }
+      ],
+      "collapsed": false,
+      "maxHistory": 20,
+      "history": [
+        {
+          "query": "query {\n  myRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      description,\n      id,\n      memberPermissions{\n        fly\n      },\n      creatorAssignmentToken,\n    defaultEnvironmentGltfBundleUrl,\n    scene {\n      ... on Scene {\n        name,\n        id\n      }\n      ... on SceneListing{\n        name,\n        id\n      }\n    }\n    }\n  }\n  \n  favoriteRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n          defaultEnvironmentGltfBundleUrl,\n    scene {\n      ... on Scene {\n        name,\n        id\n      }\n      ... on SceneListing{\n        name,\n        id\n      }\n    }\n    }\n  }\n  \n   publicRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n          defaultEnvironmentGltfBundleUrl,\n    scene {\n      ... on Scene {\n        name,\n        id\n      }\n      ... on SceneListing{\n        name,\n        id\n      }\n    }\n    }\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "query {\n  myRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      description,\n      id,\n      memberPermissions{\n        fly\n      },\n    defaultEnvironmentGltfBundleUrl,\n    scene {\n      ... on Scene {\n        name,\n        id\n      }\n      ... on SceneListing{\n        name,\n        id\n      }\n    }\n    }\n  }\n  \n  favoriteRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n          defaultEnvironmentGltfBundleUrl,\n    scene {\n      ... on Scene {\n        name,\n        id\n      }\n      ... on SceneListing{\n        name,\n        id\n      }\n    }\n    }\n  }\n  \n   publicRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n          defaultEnvironmentGltfBundleUrl,\n    scene {\n      ... on Scene {\n        name,\n        id\n      }\n      ... on SceneListing{\n        name,\n        id\n      }\n    }\n    }\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "query {\n  myRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      description,\n      id,\n      memberPermissions{\n        fly\n      },\n      scene {\n        ...on Scene {\n          name,\n          id\n        }\n      }\n    }\n  }\n  \n  favoriteRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n  \n   publicRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "query {\n  myRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      description,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n  \n  favoriteRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n  \n   publicRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "query {\n  myRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n  \n  favoriteRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n  \n   publicRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "query {\n publicRooms(page: 1, pageSize: 5) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "query {\n publicRooms(page: 2, pageSize: 5) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "query {\n  myRooms(page: 2, pageSize: 5) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n}",
+          "variables": null
+        }
+      ],
+      "graphiql:query": "query {\n  myRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      description,\n      id,\n      memberPermissions{\n        fly\n      },\n      creatorAssignmentToken,\n    defaultEnvironmentGltfBundleUrl,\n    scene {\n      ... on Scene {\n        name,\n        id\n      }\n      ... on SceneListing{\n        name,\n        id\n      }\n    }\n    }\n  }\n  \n  favoriteRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n          defaultEnvironmentGltfBundleUrl,\n    scene {\n      ... on Scene {\n        name,\n        id\n      }\n      ... on SceneListing{\n        name,\n        id\n      }\n    }\n    }\n  }\n  \n   publicRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n          defaultEnvironmentGltfBundleUrl,\n    scene {\n      ... on Scene {\n        name,\n        id\n      }\n      ... on SceneListing{\n        name,\n        id\n      }\n    }\n    }\n  }\n}",
+      "graphiql:queries": "{\"queries\":[{\"query\":\"query {\\n  myRooms(page: 2, pageSize: 5) {\\n    entries {\\n      name,\\n      id,\\n      memberPermissions{\\n        fly\\n      }\\n    }\\n  }\\n}\",\"variables\":\"\"},{\"query\":\"query {\\n publicRooms(page: 2, pageSize: 5) {\\n    entries {\\n      name,\\n      id,\\n      memberPermissions{\\n        fly\\n      }\\n    }\\n  }\\n}\"},{\"query\":\"query {\\n publicRooms(page: 1, pageSize: 5) {\\n    entries {\\n      name,\\n      id,\\n      memberPermissions{\\n        fly\\n      }\\n    }\\n  }\\n}\"},{\"query\":\"query {\\n  myRooms(page: 1, pageSize: 3) {\\n    entries {\\n      name,\\n      id,\\n      memberPermissions{\\n        fly\\n      }\\n    }\\n  }\\n  \\n  favoriteRooms(page: 1, pageSize: 3) {\\n    entries {\\n      name,\\n      id,\\n      memberPermissions{\\n        fly\\n      }\\n    }\\n  }\\n  \\n   publicRooms(page: 1, pageSize: 3) {\\n    entries {\\n      name,\\n      id,\\n      memberPermissions{\\n        fly\\n      }\\n    }\\n  }\\n}\"},{\"query\":\"query {\\n  myRooms(page: 1, pageSize: 3) {\\n    entries {\\n      name,\\n      description,\\n      id,\\n      memberPermissions{\\n        fly\\n      }\\n    }\\n  }\\n  \\n  favoriteRooms(page: 1, pageSize: 3) {\\n    entries {\\n      name,\\n      id,\\n      memberPermissions{\\n        fly\\n      }\\n    }\\n  }\\n  \\n   publicRooms(page: 1, pageSize: 3) {\\n    entries {\\n      name,\\n      id,\\n      memberPermissions{\\n        fly\\n      }\\n    }\\n  }\\n}\"},{\"query\":\"query {\\n  myRooms(page: 1, pageSize: 3) {\\n    entries {\\n      name,\\n      description,\\n      id,\\n      memberPermissions{\\n        fly\\n      },\\n      scene {\\n        ...on Scene {\\n          name,\\n          id\\n        }\\n      }\\n    }\\n  }\\n  \\n  favoriteRooms(page: 1, pageSize: 3) {\\n    entries {\\n      name,\\n      id,\\n      memberPermissions{\\n        fly\\n      }\\n    }\\n  }\\n  \\n   publicRooms(page: 1, pageSize: 3) {\\n    entries {\\n      name,\\n      id,\\n      memberPermissions{\\n        fly\\n      }\\n    }\\n  }\\n}\"},{\"query\":\"query {\\n  myRooms(page: 1, pageSize: 3) {\\n    entries {\\n      name,\\n      description,\\n      id,\\n      memberPermissions{\\n        fly\\n      },\\n    defaultEnvironmentGltfBundleUrl,\\n    scene {\\n      ... on Scene {\\n        name,\\n        id\\n      }\\n      ... on SceneListing{\\n        name,\\n        id\\n      }\\n    }\\n    }\\n  }\\n  \\n  favoriteRooms(page: 1, pageSize: 3) {\\n    entries {\\n      name,\\n      id,\\n      memberPermissions{\\n        fly\\n      }\\n          defaultEnvironmentGltfBundleUrl,\\n    scene {\\n      ... on Scene {\\n        name,\\n        id\\n      }\\n      ... on SceneListing{\\n        name,\\n        id\\n      }\\n    }\\n    }\\n  }\\n  \\n   publicRooms(page: 1, pageSize: 3) {\\n    entries {\\n      name,\\n      id,\\n      memberPermissions{\\n        fly\\n      }\\n          defaultEnvironmentGltfBundleUrl,\\n    scene {\\n      ... on Scene {\\n        name,\\n        id\\n      }\\n      ... on SceneListing{\\n        name,\\n        id\\n      }\\n    }\\n    }\\n  }\\n}\"},{\"query\":\"query {\\n  myRooms(page: 1, pageSize: 3) {\\n    entries {\\n      name,\\n      description,\\n      id,\\n      memberPermissions{\\n        fly\\n      },\\n      creatorAssignmentToken,\\n    defaultEnvironmentGltfBundleUrl,\\n    scene {\\n      ... on Scene {\\n        name,\\n        id\\n      }\\n      ... on SceneListing{\\n        name,\\n        id\\n      }\\n    }\\n    }\\n  }\\n  \\n  favoriteRooms(page: 1, pageSize: 3) {\\n    entries {\\n      name,\\n      id,\\n      memberPermissions{\\n        fly\\n      }\\n          defaultEnvironmentGltfBundleUrl,\\n    scene {\\n      ... on Scene {\\n        name,\\n        id\\n      }\\n      ... on SceneListing{\\n        name,\\n        id\\n      }\\n    }\\n    }\\n  }\\n  \\n   publicRooms(page: 1, pageSize: 3) {\\n    entries {\\n      name,\\n      id,\\n      memberPermissions{\\n        fly\\n      }\\n          defaultEnvironmentGltfBundleUrl,\\n    scene {\\n      ... on Scene {\\n        name,\\n        id\\n      }\\n      ... on SceneListing{\\n        name,\\n        id\\n      }\\n    }\\n    }\\n  }\\n}\"}]}",
+      "graphiql:docExplorerWidth": 350,
+      "graphiql:variableEditorHeight": 200,
+      "graphiql:editorFlex": 1
+    },
+    {
+      "id": "tab4",
+      "name": "[app] createRoom",
+      "url": "https://localhost:4000/api/v2_alpha/graphiql",
+      "websocketUrl": "",
+      "proxy": false,
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer 3u3Tz8U_UFhEdUNZT3dUUmRxc2JPQW05N0JVVW9O"
+        }
+      ],
+      "collapsed": false,
+      "maxHistory": 20,
+      "history": [
+        {
+          "query": "mutation {\n  createRoom(description: \"A room with a view\", allowPromotion:true) {\n    id,\n    name,\n    allowPromotion,\n    memberPermissions{\n      fly\n    },\n    embedToken,\n    creatorAssignmentToken,\n    roomSize\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  createRoom(description: \"A room with a view\", allowPromotion:true) {\n    id,\n    name,\n    allowPromotion,\n    memberPermissions{\n      fly\n    },\n    embedToken,\n    creatorAssignmentToken\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  createRoom(description: \"A room with a view\", allowPromotion:true) {\n    id,\n    name,\n    allowPromotion,\n    memberPermissions{\n      fly\n    },\n    embedToken\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  createRoom(description: \"A room with a view\") {\n    id,\n    name,\n    allowPromotion,\n    memberPermissions{\n      fly\n    },\n    embedToken\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  createRoom(description: \"A room with a view\") {\n    id,\n    name,\n    allowPromotion,\n    memberPermissions{\n      fly\n    }\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  createRoom(description: \"A room with a view\") {\n    id,\n    name,\n    allowPromotion,\n    memberPermissions\n      fly\n    }\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  createRoom(description: \"A room with a view\") {\n    id,\n    name\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  createRoom(description: \"A room with a view\") {\n    id\n  }\n}",
+          "variables": null
+        }
+      ],
+      "graphiql:query": "mutation {\n  createRoom(description: \"A room with a view\", allowPromotion:true) {\n    id,\n    name,\n    allowPromotion,\n    memberPermissions{\n      fly\n    },\n    embedToken,\n    creatorAssignmentToken,\n    roomSize\n  }\n}",
+      "graphiql:queries": "{\"queries\":[{\"query\":\"mutation {\\n  createRoom(description: \\\"A room with a view\\\") {\\n    id\\n  }\\n}\",\"variables\":\"\"},{\"query\":\"mutation {\\n  createRoom(description: \\\"A room with a view\\\") {\\n    id,\\n    name\\n  }\\n}\",\"variables\":\"\"},{\"query\":\"mutation {\\n  createRoom(description: \\\"A room with a view\\\") {\\n    id,\\n    name,\\n    allowPromotion,\\n    memberPermissions{\\n      fly\\n    }\\n  }\\n}\"},{\"query\":\"mutation {\\n  createRoom(description: \\\"A room with a view\\\") {\\n    id,\\n    name,\\n    allowPromotion,\\n    memberPermissions{\\n      fly\\n    },\\n    embedToken\\n  }\\n}\"},{\"query\":\"mutation {\\n  createRoom(description: \\\"A room with a view\\\", allowPromotion:true) {\\n    id,\\n    name,\\n    allowPromotion,\\n    memberPermissions{\\n      fly\\n    },\\n    embedToken\\n  }\\n}\"},{\"query\":\"mutation {\\n  createRoom(description: \\\"A room with a view\\\", allowPromotion:true) {\\n    id,\\n    name,\\n    allowPromotion,\\n    memberPermissions{\\n      fly\\n    },\\n    embedToken,\\n    creatorAssignmentToken\\n  }\\n}\"},{\"query\":\"mutation {\\n  createRoom(description: \\\"A room with a view\\\", allowPromotion:true) {\\n    id,\\n    name,\\n    allowPromotion,\\n    memberPermissions{\\n      fly\\n    },\\n    embedToken,\\n    creatorAssignmentToken,\\n    roomSize\\n  }\\n}\"}]}",
+      "graphiql:variableEditorHeight": 200,
+      "graphiql:editorFlex": 1,
+      "graphiql:docExplorerWidth": 350
+    },
+    {
+      "id": "tab5",
+      "name": "[user] createRoom",
+      "url": "https://localhost:4000/api/v2_alpha/graphiql",
+      "websocketUrl": "",
+      "proxy": false,
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer 7usAt24_bjJhR2ZLd1RpRzdnbGlBMDF0UThOMDg3"
+        }
+      ],
+      "collapsed": false,
+      "maxHistory": 20,
+      "history": [
+        {
+          "query": "mutation {\n  createRoom(\n    name:\"hello world!!!\", \n    description: \"A  room with a USER view\",\n    allowPromotion: true, \n    sceneId:null,\n    memberPermissions: {\n      fly: true,\n      spawnEmoji:true\n    }\n    #sceneUrl:\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\"\n  ) {\n    id,\n    name,\n    allowPromotion,\n    memberPermissions{\n      fly,\n      spawnEmoji\n    },\n    embedToken,\n    defaultEnvironmentGltfBundleUrl,\n    creatorAssignmentToken,\n    scene {\n      ... on Scene {\n        name,\n        id\n      }\n      ... on SceneListing{\n        name,\n        id\n      }\n    }\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  createRoom(\n    name:\"hello world!!!\", \n    description: \"A  room with a USER view\",\n    allowPromotion: true, \n    sceneId:null,\n    memberPermissions: {\n      fly: \"hi\",\n      spawnEmoji:true\n    }\n    #sceneUrl:\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\"\n  ) {\n    id,\n    name,\n    allowPromotion,\n    memberPermissions{\n      fly,\n      spawnEmoji\n    },\n    embedToken,\n    defaultEnvironmentGltfBundleUrl,\n    creatorAssignmentToken,\n    scene {\n      ... on Scene {\n        name,\n        id\n      }\n      ... on SceneListing{\n        name,\n        id\n      }\n    }\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  createRoom(\n    name:\"hello world!!!\", \n    description: \"A  room with a USER view\",\n    allowPromotion: true, \n    sceneId:null,\n    memberPermissions: {\n      fly: nil,\n      spawnEmoji:true\n    }\n    #sceneUrl:\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\"\n  ) {\n    id,\n    name,\n    allowPromotion,\n    memberPermissions{\n      fly,\n      spawnEmoji\n    },\n    embedToken,\n    defaultEnvironmentGltfBundleUrl,\n    creatorAssignmentToken,\n    scene {\n      ... on Scene {\n        name,\n        id\n      }\n      ... on SceneListing{\n        name,\n        id\n      }\n    }\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  createRoom(\n    name:\"hello world!!!\", \n    description: \"A  room with a USER view\",\n    allowPromotion: true, \n    sceneId:null,\n    memberPermissions: {\n      fly: false,\n      foo: true,\n      spawnEmoji:true\n    }\n    #sceneUrl:\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\"\n  ) {\n    id,\n    name,\n    allowPromotion,\n    memberPermissions{\n      fly,\n      spawnEmoji\n    },\n    embedToken,\n    defaultEnvironmentGltfBundleUrl,\n    creatorAssignmentToken,\n    scene {\n      ... on Scene {\n        name,\n        id\n      }\n      ... on SceneListing{\n        name,\n        id\n      }\n    }\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  createRoom(\n    name:\"hello world!!!\", \n    description: \"A  room with a USER view\",\n    allowPromotion: true, \n    sceneId:null,\n    memberPermissions: {\n      fly: false,\n      spawnEmoji:true\n    }\n    #sceneUrl:\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\"\n  ) {\n    id,\n    name,\n    allowPromotion,\n    memberPermissions{\n      fly,\n      spawnEmoji\n    },\n    embedToken,\n    defaultEnvironmentGltfBundleUrl,\n    creatorAssignmentToken,\n    scene {\n      ... on Scene {\n        name,\n        id\n      }\n      ... on SceneListing{\n        name,\n        id\n      }\n    }\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  createRoom(\n    name:\"hello world!!!\", \n    description: \"A  room with a USER view\",\n    allowPromotion: true, \n    sceneId:null,\n    memberPermissions: {\n      fly: false\n    }\n    #sceneUrl:\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\"\n  ) {\n    id,\n    name,\n    allowPromotion,\n    memberPermissions{\n      fly\n    },\n    embedToken,\n    defaultEnvironmentGltfBundleUrl,\n    creatorAssignmentToken,\n    scene {\n      ... on Scene {\n        name,\n        id\n      }\n      ... on SceneListing{\n        name,\n        id\n      }\n    }\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  createRoom(description: \"A room with a view\", sceneUrl:\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\") {\n    id,\n    name,\n    allowPromotion,\n    memberPermissions{\n      fly\n    },\n    embedToken,\n    defaultEnvironmentGltfBundleUrl,\n    creatorAssignmentToken,\n    scene {\n      ... on Scene {\n        name,\n        id\n      }\n      ... on SceneListing{\n        name,\n        id\n      }\n    }\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  createRoom(description: \"A room with a view\", sceneId:\"tXkCgJw\") {\n    id,\n    name,\n    allowPromotion,\n    memberPermissions{\n      fly\n    },\n    embedToken,\n    defaultEnvironmentGltfBundleUrl,\n    creatorAssignmentToken,\n    scene {\n      ... on Scene {\n        name,\n        id\n      }\n      ... on SceneListing{\n        name,\n        id\n      }\n    }\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  createRoom(description: \"A room with a view\", sceneId:\"tXkCgJw\") {\n    id,\n    name,\n    allowPromotion,\n    memberPermissions{\n      fly\n    },\n    embedToken,\n    defaultEnvironmentGltfBundleUrl,\n    scene {\n      ... on Scene {\n        name,\n        id\n      }\n      ... on SceneListing{\n        name,\n        id\n      }\n    }\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  createRoom(description: \"A room with a view\", sceneUrl:\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\") {\n    id,\n    name,\n    allowPromotion,\n    memberPermissions{\n      fly\n    },\n    embedToken,\n    defaultEnvironmentGltfBundleUrl,\n    scene {\n      ... on Scene {\n        name,\n        id\n      }\n      ... on SceneListing{\n        name,\n        id\n      }\n    }\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  createRoom(description: \"A room with a view\", sceneUrl:\"https://hubs.local:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\") {\n    id,\n    name,\n    allowPromotion,\n    memberPermissions{\n      fly\n    },\n    embedToken,\n    defaultEnvironmentGltfBundleUrl,\n    scene {\n      ... on Scene {\n        name,\n        id\n      }\n      ... on SceneListing{\n        name,\n        id\n      }\n    }\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  createRoom(description: \"A room with a view\") {\n    id,\n    name,\n    allowPromotion,\n    memberPermissions{\n      fly\n    },\n    embedToken,\n    defaultEnvironmentGltfBundleUrl,\n    scene {\n      ... on Scene {\n        name,\n        id\n      }\n      ... on SceneListing{\n        name,\n        id\n      }\n    }\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  createRoom(description: \"A room with a view\", sceneUrl:\"foo\") {\n    id,\n    name,\n    allowPromotion,\n    memberPermissions{\n      fly\n    },\n    embedToken,\n    defaultEnvironmentGltfBundleUrl,\n    scene {\n      ... on Scene {\n        name,\n        id\n      }\n      ... on SceneListing{\n        name,\n        id\n      }\n    }\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  createRoom(description: \"A room with a view\", sceneId:\"tXkCgJw\") {\n    id,\n    name,\n    allowPromotion,\n    memberPermissions{\n      fly\n    },\n    embedToken,\n    defaultEnvironmentGltfBundleUrl,\n    scene {\n      ... on Scene {\n        name,\n        id\n      }\n      ... on SceneListing{\n        name,\n        id\n      }\n    }\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  createRoom(description: \"A room with a view\", sceneId:\"tXkCgJw\") {\n    id,\n    name,\n    allowPromotion,\n    memberPermissions{\n      fly\n    },\n    embedToken,\n    scene {\n      ... on Scene {\n        name,\n        id\n      }\n    }\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  createRoom(description: \"A room with a view\") {\n    id,\n    name,\n    allowPromotion,\n    memberPermissions{\n      fly\n    },\n    embedToken,\n    defaultEnvironmentGltfBundleUrl,\n    scene {\n      ... on Scene {\n        name,\n        id\n      }\n      ... on SceneListing{\n        name,\n        id\n      }\n    }\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  createRoom(description: \"A room with a view\", sceneId:\"foo\") {\n    id,\n    name,\n    allowPromotion,\n    memberPermissions{\n      fly\n    },\n    embedToken,\n    defaultEnvironmentGltfBundleUrl,\n    scene {\n      ... on Scene {\n        name,\n        id\n      }\n      ... on SceneListing{\n        name,\n        id\n      }\n    }\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  createRoom(description: \"A room with a view\", sceneUrl:\"foo\") {\n    id,\n    name,\n    allowPromotion,\n    memberPermissions{\n      fly\n    },\n    embedToken,\n    defaultEnvironmentGltfBundleUrl,\n    scene {\n      ... on Scene {\n        name,\n        id\n      }\n      ... on SceneListing{\n        name,\n        id\n      }\n    }\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  createRoom(description: \"A room with a view\") {\n    id,\n    name,\n    allowPromotion,\n    memberPermissions{\n      fly\n    },\n    embedToken,\n    defaultEnvironmentGltfBundleUrl,\n    scene {\n      ... on Scene {\n        name,\n        id\n      }\n      ... on SceneListing{\n        name,\n        id\n      }\n    }\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  createRoom(description: \"A room with a view\", sceneUrl: \"localhost:4000/foo/bar/\") {\n    id,\n    name,\n    allowPromotion,\n    memberPermissions{\n      fly\n    },\n    embedToken,\n    defaultEnvironmentGltfBundleUrl,\n    scene {\n      ... on Scene {\n        name,\n        id\n      }\n      ... on SceneListing{\n        name,\n        id\n      }\n    }\n  }\n}",
+          "variables": null
+        }
+      ],
+      "graphiql:query": "mutation {\n  createRoom(\n    name:\"hello world!!!\", \n    description: \"A  room with a USER view\",\n    allowPromotion: true, \n    sceneId:null,\n    memberPermissions: {\n      fly: true,\n      spawnEmoji:true\n    }\n    #sceneUrl:\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\"\n  ) {\n    id,\n    name,\n    allowPromotion,\n    memberPermissions{\n      fly,\n      spawnEmoji\n    },\n    embedToken,\n    defaultEnvironmentGltfBundleUrl,\n    creatorAssignmentToken,\n    scene {\n      ... on Scene {\n        name,\n        id\n      }\n      ... on SceneListing{\n        name,\n        id\n      }\n    }\n  }\n}",
+      "graphiql:queries": "{\"queries\":[{\"query\":\"mutation {\\n  createRoom(description: \\\"A room with a view\\\", sceneUrl: \\\"localhost:4000/foo/bar/\\\") {\\n    id,\\n    name,\\n    allowPromotion,\\n    memberPermissions{\\n      fly\\n    },\\n    embedToken,\\n    defaultEnvironmentGltfBundleUrl,\\n    scene {\\n      ... on Scene {\\n        name,\\n        id\\n      }\\n      ... on SceneListing{\\n        name,\\n        id\\n      }\\n    }\\n  }\\n}\"},{\"query\":\"mutation {\\n  createRoom(description: \\\"A room with a view\\\") {\\n    id,\\n    name,\\n    allowPromotion,\\n    memberPermissions{\\n      fly\\n    },\\n    embedToken,\\n    defaultEnvironmentGltfBundleUrl,\\n    scene {\\n      ... on Scene {\\n        name,\\n        id\\n      }\\n      ... on SceneListing{\\n        name,\\n        id\\n      }\\n    }\\n  }\\n}\"},{\"query\":\"mutation {\\n  createRoom(description: \\\"A room with a view\\\", sceneUrl:\\\"foo\\\") {\\n    id,\\n    name,\\n    allowPromotion,\\n    memberPermissions{\\n      fly\\n    },\\n    embedToken,\\n    defaultEnvironmentGltfBundleUrl,\\n    scene {\\n      ... on Scene {\\n        name,\\n        id\\n      }\\n      ... on SceneListing{\\n        name,\\n        id\\n      }\\n    }\\n  }\\n}\"},{\"query\":\"mutation {\\n  createRoom(description: \\\"A room with a view\\\", sceneId:\\\"foo\\\") {\\n    id,\\n    name,\\n    allowPromotion,\\n    memberPermissions{\\n      fly\\n    },\\n    embedToken,\\n    defaultEnvironmentGltfBundleUrl,\\n    scene {\\n      ... on Scene {\\n        name,\\n        id\\n      }\\n      ... on SceneListing{\\n        name,\\n        id\\n      }\\n    }\\n  }\\n}\"},{\"query\":\"mutation {\\n  createRoom(description: \\\"A room with a view\\\") {\\n    id,\\n    name,\\n    allowPromotion,\\n    memberPermissions{\\n      fly\\n    },\\n    embedToken,\\n    defaultEnvironmentGltfBundleUrl,\\n    scene {\\n      ... on Scene {\\n        name,\\n        id\\n      }\\n      ... on SceneListing{\\n        name,\\n        id\\n      }\\n    }\\n  }\\n}\"},{\"query\":\"mutation {\\n  createRoom(description: \\\"A room with a view\\\", sceneId:\\\"tXkCgJw\\\") {\\n    id,\\n    name,\\n    allowPromotion,\\n    memberPermissions{\\n      fly\\n    },\\n    embedToken,\\n    scene {\\n      ... on Scene {\\n        name,\\n        id\\n      }\\n    }\\n  }\\n}\",\"variables\":\"\"},{\"query\":\"mutation {\\n  createRoom(description: \\\"A room with a view\\\", sceneId:\\\"tXkCgJw\\\") {\\n    id,\\n    name,\\n    allowPromotion,\\n    memberPermissions{\\n      fly\\n    },\\n    embedToken,\\n    defaultEnvironmentGltfBundleUrl,\\n    scene {\\n      ... on Scene {\\n        name,\\n        id\\n      }\\n      ... on SceneListing{\\n        name,\\n        id\\n      }\\n    }\\n  }\\n}\",\"variables\":\"\"},{\"query\":\"mutation {\\n  createRoom(description: \\\"A room with a view\\\", sceneUrl:\\\"foo\\\") {\\n    id,\\n    name,\\n    allowPromotion,\\n    memberPermissions{\\n      fly\\n    },\\n    embedToken,\\n    defaultEnvironmentGltfBundleUrl,\\n    scene {\\n      ... on Scene {\\n        name,\\n        id\\n      }\\n      ... on SceneListing{\\n        name,\\n        id\\n      }\\n    }\\n  }\\n}\",\"variables\":\"\"},{\"query\":\"mutation {\\n  createRoom(description: \\\"A room with a view\\\") {\\n    id,\\n    name,\\n    allowPromotion,\\n    memberPermissions{\\n      fly\\n    },\\n    embedToken,\\n    defaultEnvironmentGltfBundleUrl,\\n    scene {\\n      ... on Scene {\\n        name,\\n        id\\n      }\\n      ... on SceneListing{\\n        name,\\n        id\\n      }\\n    }\\n  }\\n}\"},{\"query\":\"mutation {\\n  createRoom(description: \\\"A room with a view\\\", sceneUrl:\\\"https://hubs.local:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\\\") {\\n    id,\\n    name,\\n    allowPromotion,\\n    memberPermissions{\\n      fly\\n    },\\n    embedToken,\\n    defaultEnvironmentGltfBundleUrl,\\n    scene {\\n      ... on Scene {\\n        name,\\n        id\\n      }\\n      ... on SceneListing{\\n        name,\\n        id\\n      }\\n    }\\n  }\\n}\"},{\"query\":\"mutation {\\n  createRoom(description: \\\"A room with a view\\\", sceneUrl:\\\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\\\") {\\n    id,\\n    name,\\n    allowPromotion,\\n    memberPermissions{\\n      fly\\n    },\\n    embedToken,\\n    defaultEnvironmentGltfBundleUrl,\\n    scene {\\n      ... on Scene {\\n        name,\\n        id\\n      }\\n      ... on SceneListing{\\n        name,\\n        id\\n      }\\n    }\\n  }\\n}\"},{\"query\":\"mutation {\\n  createRoom(description: \\\"A room with a view\\\", sceneId:\\\"tXkCgJw\\\") {\\n    id,\\n    name,\\n    allowPromotion,\\n    memberPermissions{\\n      fly\\n    },\\n    embedToken,\\n    defaultEnvironmentGltfBundleUrl,\\n    scene {\\n      ... on Scene {\\n        name,\\n        id\\n      }\\n      ... on SceneListing{\\n        name,\\n        id\\n      }\\n    }\\n  }\\n}\",\"variables\":\"\"},{\"query\":\"mutation {\\n  createRoom(description: \\\"A room with a view\\\", sceneId:\\\"tXkCgJw\\\") {\\n    id,\\n    name,\\n    allowPromotion,\\n    memberPermissions{\\n      fly\\n    },\\n    embedToken,\\n    defaultEnvironmentGltfBundleUrl,\\n    creatorAssignmentToken,\\n    scene {\\n      ... on Scene {\\n        name,\\n        id\\n      }\\n      ... on SceneListing{\\n        name,\\n        id\\n      }\\n    }\\n  }\\n}\"},{\"query\":\"mutation {\\n  createRoom(description: \\\"A room with a view\\\", sceneUrl:\\\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\\\") {\\n    id,\\n    name,\\n    allowPromotion,\\n    memberPermissions{\\n      fly\\n    },\\n    embedToken,\\n    defaultEnvironmentGltfBundleUrl,\\n    creatorAssignmentToken,\\n    scene {\\n      ... on Scene {\\n        name,\\n        id\\n      }\\n      ... on SceneListing{\\n        name,\\n        id\\n      }\\n    }\\n  }\\n}\"},{\"query\":\"mutation {\\n  createRoom(\\n    name:\\\"hello world!!!\\\", \\n    description: \\\"A  room with a USER view\\\",\\n    allowPromotion: true, \\n    sceneId:null,\\n    memberPermissions: {\\n      fly: false\\n    }\\n    #sceneUrl:\\\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\\\"\\n  ) {\\n    id,\\n    name,\\n    allowPromotion,\\n    memberPermissions{\\n      fly\\n    },\\n    embedToken,\\n    defaultEnvironmentGltfBundleUrl,\\n    creatorAssignmentToken,\\n    scene {\\n      ... on Scene {\\n        name,\\n        id\\n      }\\n      ... on SceneListing{\\n        name,\\n        id\\n      }\\n    }\\n  }\\n}\"},{\"query\":\"mutation {\\n  createRoom(\\n    name:\\\"hello world!!!\\\", \\n    description: \\\"A  room with a USER view\\\",\\n    allowPromotion: true, \\n    sceneId:null,\\n    memberPermissions: {\\n      fly: false,\\n      spawnEmoji:true\\n    }\\n    #sceneUrl:\\\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\\\"\\n  ) {\\n    id,\\n    name,\\n    allowPromotion,\\n    memberPermissions{\\n      fly,\\n      spawnEmoji\\n    },\\n    embedToken,\\n    defaultEnvironmentGltfBundleUrl,\\n    creatorAssignmentToken,\\n    scene {\\n      ... on Scene {\\n        name,\\n        id\\n      }\\n      ... on SceneListing{\\n        name,\\n        id\\n      }\\n    }\\n  }\\n}\"},{\"query\":\"mutation {\\n  createRoom(\\n    name:\\\"hello world!!!\\\", \\n    description: \\\"A  room with a USER view\\\",\\n    allowPromotion: true, \\n    sceneId:null,\\n    memberPermissions: {\\n      fly: false,\\n      foo: true,\\n      spawnEmoji:true\\n    }\\n    #sceneUrl:\\\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\\\"\\n  ) {\\n    id,\\n    name,\\n    allowPromotion,\\n    memberPermissions{\\n      fly,\\n      spawnEmoji\\n    },\\n    embedToken,\\n    defaultEnvironmentGltfBundleUrl,\\n    creatorAssignmentToken,\\n    scene {\\n      ... on Scene {\\n        name,\\n        id\\n      }\\n      ... on SceneListing{\\n        name,\\n        id\\n      }\\n    }\\n  }\\n}\"},{\"query\":\"mutation {\\n  createRoom(\\n    name:\\\"hello world!!!\\\", \\n    description: \\\"A  room with a USER view\\\",\\n    allowPromotion: true, \\n    sceneId:null,\\n    memberPermissions: {\\n      fly: nil,\\n      spawnEmoji:true\\n    }\\n    #sceneUrl:\\\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\\\"\\n  ) {\\n    id,\\n    name,\\n    allowPromotion,\\n    memberPermissions{\\n      fly,\\n      spawnEmoji\\n    },\\n    embedToken,\\n    defaultEnvironmentGltfBundleUrl,\\n    creatorAssignmentToken,\\n    scene {\\n      ... on Scene {\\n        name,\\n        id\\n      }\\n      ... on SceneListing{\\n        name,\\n        id\\n      }\\n    }\\n  }\\n}\"},{\"query\":\"mutation {\\n  createRoom(\\n    name:\\\"hello world!!!\\\", \\n    description: \\\"A  room with a USER view\\\",\\n    allowPromotion: true, \\n    sceneId:null,\\n    memberPermissions: {\\n      fly: \\\"hi\\\",\\n      spawnEmoji:true\\n    }\\n    #sceneUrl:\\\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\\\"\\n  ) {\\n    id,\\n    name,\\n    allowPromotion,\\n    memberPermissions{\\n      fly,\\n      spawnEmoji\\n    },\\n    embedToken,\\n    defaultEnvironmentGltfBundleUrl,\\n    creatorAssignmentToken,\\n    scene {\\n      ... on Scene {\\n        name,\\n        id\\n      }\\n      ... on SceneListing{\\n        name,\\n        id\\n      }\\n    }\\n  }\\n}\"},{\"query\":\"mutation {\\n  createRoom(\\n    name:\\\"hello world!!!\\\", \\n    description: \\\"A  room with a USER view\\\",\\n    allowPromotion: true, \\n    sceneId:null,\\n    memberPermissions: {\\n      fly: true,\\n      spawnEmoji:true\\n    }\\n    #sceneUrl:\\\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\\\"\\n  ) {\\n    id,\\n    name,\\n    allowPromotion,\\n    memberPermissions{\\n      fly,\\n      spawnEmoji\\n    },\\n    embedToken,\\n    defaultEnvironmentGltfBundleUrl,\\n    creatorAssignmentToken,\\n    scene {\\n      ... on Scene {\\n        name,\\n        id\\n      }\\n      ... on SceneListing{\\n        name,\\n        id\\n      }\\n    }\\n  }\\n}\"}]}",
+      "graphiql:editorFlex": 1,
+      "graphiql:variableEditorHeight": 200,
+      "graphiql:docExplorerWidth": 350
+    },
+    {
+      "id": "tab6",
+      "name": "[app] updateRoom",
+      "url": "https://localhost:4000/api/v2_alpha/graphiql",
+      "websocketUrl": "",
+      "proxy": false,
+      "headers": [],
+      "collapsed": false,
+      "maxHistory": 20,
+      "history": [
+        {
+          "query": "mutation {\n  updateRoom(id: \"7VkWtfB\", description: \"A room with an APP view\") {\n    description,\n    id,\n    name,\n    allowPromotion,\n    memberPermissions{\n      fly\n    },\n    embedToken\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  updateRoom(id: \"maJCnRD\", description: \"A room with an APP view\") {\n    description,\n    id,\n    name,\n    allowPromotion,\n    memberPermissions{\n      fly\n    },\n    embedToken\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  updateRoom(id: \"maJCnRD\", description: \"fggggg view\") {\n    description,\n    id,\n    name,\n    allowPromotion,\n    memberPermissions{\n      fly\n    },\n    embedToken\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  updateRoom(id: \"maJCnRD\", description: \"fffff view\") {\n    description,\n    id,\n    name,\n    allowPromotion,\n    memberPermissions{\n      fly\n    },\n    embedToken\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  updateRoom(id: \"maJCnRD\", description: \"Aasddas view\") {\n    description,\n    id,\n    name,\n    allowPromotion,\n    memberPermissions{\n      fly\n    },\n    embedToken\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  updateRoom(id: \"EzqydXp\", description: \"Aasddas view\") {\n    description,\n    id,\n    name,\n    allowPromotion,\n    memberPermissions{\n      fly\n    },\n    embedToken\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  createRoom(description: \"A room with a view\") {\n    id,\n    name,\n    allowPromotion,\n    memberPermissions{\n      fly\n    },\n    embedToken\n  }\n}",
+          "variables": null
+        }
+      ],
+      "graphiql:query": "mutation {\n  updateRoom(id: \"7VkWtfB\", description: \"A room with an APP view\") {\n    description,\n    id,\n    name,\n    allowPromotion,\n    memberPermissions{\n      fly\n    },\n    embedToken\n  }\n}",
+      "graphiql:variableEditorHeight": 200,
+      "graphiql:editorFlex": 1,
+      "graphiql:queries": "{\"queries\":[{\"query\":\"mutation {\\n  createRoom(description: \\\"A room with a view\\\") {\\n    id,\\n    name,\\n    allowPromotion,\\n    memberPermissions{\\n      fly\\n    },\\n    embedToken\\n  }\\n}\",\"variables\":\"\"},{\"query\":\"mutation {\\n  updateRoom(id: \\\"EzqydXp\\\", description: \\\"Aasddas view\\\") {\\n    description,\\n    id,\\n    name,\\n    allowPromotion,\\n    memberPermissions{\\n      fly\\n    },\\n    embedToken\\n  }\\n}\",\"variables\":\"\"},{\"query\":\"mutation {\\n  updateRoom(id: \\\"maJCnRD\\\", description: \\\"Aasddas view\\\") {\\n    description,\\n    id,\\n    name,\\n    allowPromotion,\\n    memberPermissions{\\n      fly\\n    },\\n    embedToken\\n  }\\n}\",\"variables\":\"\"},{\"query\":\"mutation {\\n  updateRoom(id: \\\"maJCnRD\\\", description: \\\"fffff view\\\") {\\n    description,\\n    id,\\n    name,\\n    allowPromotion,\\n    memberPermissions{\\n      fly\\n    },\\n    embedToken\\n  }\\n}\",\"variables\":\"\"},{\"query\":\"mutation {\\n  updateRoom(id: \\\"maJCnRD\\\", description: \\\"fggggg view\\\") {\\n    description,\\n    id,\\n    name,\\n    allowPromotion,\\n    memberPermissions{\\n      fly\\n    },\\n    embedToken\\n  }\\n}\",\"variables\":\"\"},{\"query\":\"mutation {\\n  updateRoom(id: \\\"maJCnRD\\\", description: \\\"A room with an APP view\\\") {\\n    description,\\n    id,\\n    name,\\n    allowPromotion,\\n    memberPermissions{\\n      fly\\n    },\\n    embedToken\\n  }\\n}\"},{\"query\":\"mutation {\\n  updateRoom(id: \\\"7VkWtfB\\\", description: \\\"A room with an APP view\\\") {\\n    description,\\n    id,\\n    name,\\n    allowPromotion,\\n    memberPermissions{\\n      fly\\n    },\\n    embedToken\\n  }\\n}\"}]}",
+      "graphiql:docExplorerWidth": 350
+    },
+    {
+      "id": "tab7",
+      "name": "[user] updateRoom",
+      "url": "https://localhost:4000/api/v2_alpha/graphiql",
+      "websocketUrl": "",
+      "proxy": false,
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer 7usAt24_bjJhR2ZLd1RpRzdnbGlBMDF0UThOMDg3"
+        }
+      ],
+      "collapsed": false,
+      "maxHistory": 20,
+      "history": [
+        {
+          "query": "mutation {\n  updateRoom(\n    id: \"cfq2p8i\", \n    name:\"hello world!!!\", \n    description: \"A  room with a USER view\",\n    allowPromotion: true, \n    #sceneId: null,\n    sceneId: \"tXkCgJw\",\n    memberPermissions: {\n      fly: false\n    }\n    #sceneUrl: null\n    #sceneUrl:\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\"\n  ) {\n    description,\n    id,\n    name,\n    defaultEnvironmentGltfBundleUrl,\n    allowPromotion,\n    memberPermissions{\n      fly,\n      spawnEmoji\n    },\n    embedToken,\n    scene {\n      ... on Scene{\n        name,\n        id\n      }\n    }\n\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  updateRoom(\n    id: \"cfq2p8i\", \n    name:\"hello world!!!\", \n    description: \"A  room with a USER view\",\n    allowPromotion: true, \n    #sceneId: null,\n    #sceneId: \"tXkCgJw\",\n    memberPermissions: {\n      fly: false\n    }\n    #sceneUrl: null\n    sceneUrl:\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\"\n  ) {\n    description,\n    id,\n    name,\n    defaultEnvironmentGltfBundleUrl,\n    allowPromotion,\n    memberPermissions{\n      fly,\n      spawnEmoji\n    },\n    embedToken,\n    scene {\n      ... on Scene{\n        name,\n        id\n      }\n    }\n\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  updateRoom(\n    id: \"7VkWtfB\", \n    name:\"hello world!!!\", \n    description: \"A  room with a USER view\",\n    allowPromotion: true, \n    #sceneId: null,\n    #sceneId: \"tXkCgJw\",\n    memberPermissions: {\n      fly: false\n    }\n    #sceneUrl: null\n    sceneUrl:\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\"\n  ) {\n    description,\n    id,\n    name,\n    defaultEnvironmentGltfBundleUrl,\n    allowPromotion,\n    memberPermissions{\n      fly,\n      spawnEmoji\n    },\n    embedToken,\n    scene {\n      ... on Scene{\n        name,\n        id\n      }\n    }\n\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  updateRoom(\n    id: \"7VkWtfB\", \n    name:\"hello world!!!\", \n    description: \"A  room with a USER view\",\n    allowPromotion: true, \n    #sceneId: null,\n    sceneId: \"tXkCgJw\",\n    memberPermissions: {\n      fly: false\n    }\n    #sceneUrl: null\n   # sceneUrl:\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\"\n  ) {\n    description,\n    id,\n    name,\n    defaultEnvironmentGltfBundleUrl,\n    allowPromotion,\n    memberPermissions{\n      fly,\n      spawnEmoji\n    },\n    embedToken,\n    scene {\n      ... on Scene{\n        name,\n        id\n      }\n    }\n\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  updateRoom(\n    id: \"7VkWtfB\", \n    name:\"hello world!!!\", \n    description: \"A  room with a USER view\",\n    allowPromotion: true, \n    #sceneId: null,\n    sceneId: \"tXkCgJw\",\n    memberPermissions: {\n      fly: false\n    }\n    sceneUrl: null\n   # sceneUrl:\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\"\n  ) {\n    description,\n    id,\n    name,\n    defaultEnvironmentGltfBundleUrl,\n    allowPromotion,\n    memberPermissions{\n      fly,\n      spawnEmoji\n    },\n    embedToken,\n    scene {\n      ... on Scene{\n        name,\n        id\n      }\n    }\n\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  updateRoom(\n    id: \"7VkWtfB\", \n    name:\"hello world!!!\", \n    description: \"A  room with a USER view\",\n    allowPromotion: true, \n    #sceneId: null,\n    memberPermissions: {\n      fly: false\n    }\n    sceneUrl: null\n   # sceneUrl:\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\"\n  ) {\n    description,\n    id,\n    name,\n    defaultEnvironmentGltfBundleUrl,\n    allowPromotion,\n    memberPermissions{\n      fly,\n      spawnEmoji\n    },\n    embedToken,\n    scene {\n      ... on Scene{\n        name,\n        id\n      }\n    }\n\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  updateRoom(\n    id: \"7VkWtfB\", \n    name:\"hello world!!!\", \n    description: \"A  room with a USER view\",\n    allowPromotion: true, \n    #sceneId: null,\n    memberPermissions: {\n      fly: false\n    }\n    sceneUrl:\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\"\n  ) {\n    description,\n    id,\n    name,\n    defaultEnvironmentGltfBundleUrl,\n    allowPromotion,\n    memberPermissions{\n      fly,\n      spawnEmoji\n    },\n    embedToken,\n    scene {\n      ... on Scene{\n        name,\n        id\n      }\n    }\n\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  updateRoom(\n    id: \"7VkWtfB\", \n    name:\"hello world!!!\", \n    description: \"A  room with a USER view\",\n    allowPromotion: true, \n    sceneId: null,\n    memberPermissions: {\n      fly: false\n    }\n    sceneUrl:\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\"\n  ) {\n    description,\n    id,\n    name,\n    defaultEnvironmentGltfBundleUrl,\n    allowPromotion,\n    memberPermissions{\n      fly,\n      spawnEmoji\n    },\n    embedToken,\n    scene {\n      ... on Scene{\n        name,\n        id\n      }\n    }\n\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  updateRoom(\n    id: \"7VkWtfB\", \n    name:\"hello world!!!\", \n    description: \"A  room with a USER view\",\n    allowPromotion: true, \n    sceneId:null,\n    memberPermissions: {\n      fly: false\n    \n}\n    #sceneUrl:\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\"\n  ) {\n    description,\n    id,\n    name,\n    defaultEnvironmentGltfBundleUrl,\n    allowPromotion,\n    memberPermissions{\n      fly,\n      spawnEmoji\n    },\n    embedToken,\n    scene {\n      ... on Scene{\n        name,\n        id\n      }\n    }\n\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  updateRoom(\n    id: \"7VkWtfB\", \n    name:\"hello world!!!\", \n    description: \"A  room with a USER view\",\n    allowPromotion: true, \n    sceneId:null,\n    memberPermissions: null\n    #sceneUrl:\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\"\n  ) {\n    description,\n    id,\n    name,\n    defaultEnvironmentGltfBundleUrl,\n    allowPromotion,\n    memberPermissions{\n      fly,\n      spawnEmoji\n    },\n    embedToken,\n    scene {\n      ... on Scene{\n        name,\n        id\n      }\n    }\n\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  updateRoom(\n    id: \"7VkWtfB\", \n    name:\"hello world!!!\", \n    description: \"A  room with a USER view\",\n    allowPromotion: true, \n    sceneId:null,\n    memberPermissions: {\n      fly: true,\n      spawnEmoji: true\n    }\n    #sceneUrl:\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\"\n  ) {\n    description,\n    id,\n    name,\n    defaultEnvironmentGltfBundleUrl,\n    allowPromotion,\n    memberPermissions{\n      fly,\n      spawnEmoji\n    },\n    embedToken,\n    scene {\n      ... on Scene{\n        name,\n        id\n      }\n    }\n\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  updateRoom(\n    id: \"7VkWtfB\", \n    name:\"hello world!!!\", \n    description: \"A  room with a USER view\",\n    allowPromotion: true, \n    sceneId:null,\n    memberPermissions: {\n      fly: false,\n      spawnEmoji: true\n    }\n    #sceneUrl:\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\"\n  ) {\n    description,\n    id,\n    name,\n    defaultEnvironmentGltfBundleUrl,\n    allowPromotion,\n    memberPermissions{\n      fly,\n      spawnEmoji\n    },\n    embedToken,\n    scene {\n      ... on Scene{\n        name,\n        id\n      }\n    }\n\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  updateRoom(\n    id: \"7VkWtfB\", \n    name:\"hello world!!!\", \n    description: \"A  room with a USER view\",\n    allowPromotion: true, \n    sceneId:null,\n    memberPermissions: {\n      fly: false,\n      spawnEmoji: true\n    }\n    #sceneUrl:\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\"\n  ) {\n    description,\n    id,\n    name,\n    defaultEnvironmentGltfBundleUrl,\n    allowPromotion,\n    memberPermissions{\n      fly\n    },\n    embedToken,\n    scene {\n      ... on Scene{\n        name,\n        id\n      }\n    }\n\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  updateRoom(\n    id: \"7VkWtfB\", \n    name:\"hello world!!!\", \n    description: \"A  room with a USER view\",\n    allowPromotion: true, \n    sceneId:null,\n    memberPermissions: {\n      fly: false\n    }\n    #sceneUrl:\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\"\n  ) {\n    description,\n    id,\n    name,\n    defaultEnvironmentGltfBundleUrl,\n    allowPromotion,\n    memberPermissions{\n      fly\n    },\n    embedToken,\n    scene {\n      ... on Scene{\n        name,\n        id\n      }\n    }\n\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  updateRoom(\n    id: \"7VkWtfB\", \n    name:\"hello world!!!\", \n    description: \"A  room with a USER view\",\n    allowPromotion: true, \n    sceneId:null,\n    memberPermissions{\n      fly: false\n    }\n    #sceneUrl:\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\"\n  ) {\n    description,\n    id,\n    name,\n    defaultEnvironmentGltfBundleUrl,\n    allowPromotion,\n    memberPermissions{\n      fly\n    },\n    embedToken,\n    scene {\n      ... on Scene{\n        name,\n        id\n      }\n    }\n\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  updateRoom(\n    id: \"7VkWtfB\", \n    name:\"hello world!!!\", \n    description: \"A  room with a USER view\",\n    allowPromotion: true, \n    sceneId:null,\n    #sceneUrl:\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\"\n  ) {\n    description,\n    id,\n    name,\n    defaultEnvironmentGltfBundleUrl,\n    allowPromotion,\n    memberPermissions{\n      fly\n    },\n    embedToken,\n    scene {\n      ... on Scene{\n        name,\n        id\n      }\n    }\n\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  updateRoom(\n    id: \"7VkWtfB\", \n    name:\"hello world!!!\", \n    description: \"A  room with a USER view\",\n    allowPromotion: true, \n\n    #sceneUrl:\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\"\n  ) {\n    description,\n    id,\n    name,\n    defaultEnvironmentGltfBundleUrl,\n    allowPromotion,\n    memberPermissions{\n      fly\n    },\n    embedToken,\n    scene {\n      ... on Scene{\n        name,\n        id\n      }\n    }\n\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  updateRoom(\n    id: \"7VkWtfB\", \n    name:\"hello world!!!\", \n    description: \"A  room with a USER view\",\n    allowPromotion: true, \n    sceneId:null,\n    #sceneUrl:\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\"\n  ) {\n    description,\n    id,\n    name,\n    defaultEnvironmentGltfBundleUrl,\n    allowPromotion,\n    memberPermissions{\n      fly\n    },\n    embedToken,\n    scene {\n      ... on Scene{\n        name,\n        id\n      }\n    }\n\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  updateRoom(\n    id: \"7VkWtfB\", \n    name:\"hello world!!!\", \n    description: \"A  room with a USER view\",\n    allowPromotion: true, \n    #sceneId:\"tXkCgJw\",\n    #sceneUrl:\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\"\n  ) {\n    description,\n    id,\n    name,\n    defaultEnvironmentGltfBundleUrl,\n    allowPromotion,\n    memberPermissions{\n      fly\n    },\n    embedToken,\n    scene {\n      ... on Scene{\n        name,\n        id\n      }\n    }\n\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "mutation {\n  updateRoom(\n    id: \"7VkWtfB\", \n    name:\"hello world!!!\", \n    description: \"A  room with a USER view\",\n    allowPromotion: true, \n    #sceneId:\"tXkCgJw\",\n    sceneUrl:\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\"\n  ) {\n    description,\n    id,\n    name,\n    defaultEnvironmentGltfBundleUrl,\n    allowPromotion,\n    memberPermissions{\n      fly\n    },\n    embedToken,\n    scene {\n      ... on Scene{\n        name,\n        id\n      }\n    }\n\n  }\n}",
+          "variables": null
+        }
+      ],
+      "graphiql:query": "mutation {\n  updateRoom(\n    id: \"cfq2p8i\", \n    name:\"hello world!!!\", \n    description: \"A  room with a USER view\",\n    allowPromotion: true, \n    #sceneId: null,\n    sceneId: \"tXkCgJw\",\n    memberPermissions: {\n      fly: false\n    }\n    #sceneUrl: null\n    #sceneUrl:\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\"\n  ) {\n    description,\n    id,\n    name,\n    defaultEnvironmentGltfBundleUrl,\n    allowPromotion,\n    memberPermissions{\n      fly,\n      spawnEmoji\n    },\n    embedToken,\n    scene {\n      ... on Scene{\n        name,\n        id\n      }\n    }\n\n  }\n}",
+      "graphiql:queries": "{\"queries\":[{\"query\":\"mutation {\\n  updateRoom(\\n    id: \\\"7VkWtfB\\\", \\n    name:\\\"hello world!!!\\\", \\n    description: \\\"A  room with a USER view\\\",\\n    allowPromotion: true, \\n   sceneId:\\\"tXkCgJw\\\",\\n    #sceneUrl:\\\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\\\"\\n  ) {\\n    description,\\n    id,\\n    name,\\n    defaultEnvironmentGltfBundleUrl,\\n    allowPromotion,\\n    memberPermissions{\\n      fly\\n    },\\n    embedToken,\\n    scene {\\n      ... on Scene{\\n        name,\\n        id\\n      }\\n    }\\n\\n  }\\n}\",\"variables\":\"\"},{\"query\":\"mutation {\\n  updateRoom(\\n    id: \\\"7VkWtfB\\\", \\n    name:\\\"hello world!!!\\\", \\n    description: \\\"A  room with a USER view\\\",\\n    allowPromotion: true, \\n    #sceneId:\\\"tXkCgJw\\\",\\n    sceneUrl:\\\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\\\"\\n  ) {\\n    description,\\n    id,\\n    name,\\n    defaultEnvironmentGltfBundleUrl,\\n    allowPromotion,\\n    memberPermissions{\\n      fly\\n    },\\n    embedToken,\\n    scene {\\n      ... on Scene{\\n        name,\\n        id\\n      }\\n    }\\n\\n  }\\n}\",\"variables\":\"\"},{\"query\":\"mutation {\\n  updateRoom(\\n    id: \\\"7VkWtfB\\\", \\n    name:\\\"hello world!!!\\\", \\n    description: \\\"A  room with a USER view\\\",\\n    allowPromotion: true, \\n    #sceneId:\\\"tXkCgJw\\\",\\n    #sceneUrl:\\\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\\\"\\n  ) {\\n    description,\\n    id,\\n    name,\\n    defaultEnvironmentGltfBundleUrl,\\n    allowPromotion,\\n    memberPermissions{\\n      fly\\n    },\\n    embedToken,\\n    scene {\\n      ... on Scene{\\n        name,\\n        id\\n      }\\n    }\\n\\n  }\\n}\",\"variables\":\"\"},{\"query\":\"mutation {\\n  updateRoom(\\n    id: \\\"7VkWtfB\\\", \\n    name:\\\"hello world!!!\\\", \\n    description: \\\"A  room with a USER view\\\",\\n    allowPromotion: true, \\n    sceneId:null,\\n    #sceneUrl:\\\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\\\"\\n  ) {\\n    description,\\n    id,\\n    name,\\n    defaultEnvironmentGltfBundleUrl,\\n    allowPromotion,\\n    memberPermissions{\\n      fly\\n    },\\n    embedToken,\\n    scene {\\n      ... on Scene{\\n        name,\\n        id\\n      }\\n    }\\n\\n  }\\n}\",\"variables\":\"\"},{\"query\":\"mutation {\\n  updateRoom(\\n    id: \\\"7VkWtfB\\\", \\n    name:\\\"hello world!!!\\\", \\n    description: \\\"A  room with a USER view\\\",\\n    allowPromotion: true, \\n\\n    #sceneUrl:\\\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\\\"\\n  ) {\\n    description,\\n    id,\\n    name,\\n    defaultEnvironmentGltfBundleUrl,\\n    allowPromotion,\\n    memberPermissions{\\n      fly\\n    },\\n    embedToken,\\n    scene {\\n      ... on Scene{\\n        name,\\n        id\\n      }\\n    }\\n\\n  }\\n}\",\"variables\":\"\"},{\"query\":\"mutation {\\n  updateRoom(\\n    id: \\\"7VkWtfB\\\", \\n    name:\\\"hello world!!!\\\", \\n    description: \\\"A  room with a USER view\\\",\\n    allowPromotion: true, \\n    sceneId:null,\\n    #sceneUrl:\\\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\\\"\\n  ) {\\n    description,\\n    id,\\n    name,\\n    defaultEnvironmentGltfBundleUrl,\\n    allowPromotion,\\n    memberPermissions{\\n      fly\\n    },\\n    embedToken,\\n    scene {\\n      ... on Scene{\\n        name,\\n        id\\n      }\\n    }\\n\\n  }\\n}\",\"variables\":\"\"},{\"query\":\"mutation {\\n  updateRoom(\\n    id: \\\"7VkWtfB\\\", \\n    name:\\\"hello world!!!\\\", \\n    description: \\\"A  room with a USER view\\\",\\n    allowPromotion: true, \\n    sceneId:null,\\n    memberPermissions: {\\n      fly: false\\n    }\\n    #sceneUrl:\\\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\\\"\\n  ) {\\n    description,\\n    id,\\n    name,\\n    defaultEnvironmentGltfBundleUrl,\\n    allowPromotion,\\n    memberPermissions{\\n      fly\\n    },\\n    embedToken,\\n    scene {\\n      ... on Scene{\\n        name,\\n        id\\n      }\\n    }\\n\\n  }\\n}\",\"variables\":\"\"},{\"query\":\"mutation {\\n  updateRoom(\\n    id: \\\"7VkWtfB\\\", \\n    name:\\\"hello world!!!\\\", \\n    description: \\\"A  room with a USER view\\\",\\n    allowPromotion: true, \\n    sceneId:null,\\n    memberPermissions: {\\n      fly: false,\\n      spawnEmoji: true\\n    }\\n    #sceneUrl:\\\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\\\"\\n  ) {\\n    description,\\n    id,\\n    name,\\n    defaultEnvironmentGltfBundleUrl,\\n    allowPromotion,\\n    memberPermissions{\\n      fly\\n    },\\n    embedToken,\\n    scene {\\n      ... on Scene{\\n        name,\\n        id\\n      }\\n    }\\n\\n  }\\n}\",\"variables\":\"\"},{\"query\":\"mutation {\\n  updateRoom(\\n    id: \\\"7VkWtfB\\\", \\n    name:\\\"hello world!!!\\\", \\n    description: \\\"A  room with a USER view\\\",\\n    allowPromotion: true, \\n    sceneId:null,\\n    memberPermissions: {\\n      fly: false,\\n      spawnEmoji: true\\n    }\\n    #sceneUrl:\\\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\\\"\\n  ) {\\n    description,\\n    id,\\n    name,\\n    defaultEnvironmentGltfBundleUrl,\\n    allowPromotion,\\n    memberPermissions{\\n      fly,\\n      spawnEmoji\\n    },\\n    embedToken,\\n    scene {\\n      ... on Scene{\\n        name,\\n        id\\n      }\\n    }\\n\\n  }\\n}\",\"variables\":\"\"},{\"query\":\"mutation {\\n  updateRoom(\\n    id: \\\"7VkWtfB\\\", \\n    name:\\\"hello world!!!\\\", \\n    description: \\\"A  room with a USER view\\\",\\n    allowPromotion: true, \\n    sceneId:null,\\n    memberPermissions: {\\n      fly: true,\\n      spawnEmoji: true\\n    }\\n    #sceneUrl:\\\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\\\"\\n  ) {\\n    description,\\n    id,\\n    name,\\n    defaultEnvironmentGltfBundleUrl,\\n    allowPromotion,\\n    memberPermissions{\\n      fly,\\n      spawnEmoji\\n    },\\n    embedToken,\\n    scene {\\n      ... on Scene{\\n        name,\\n        id\\n      }\\n    }\\n\\n  }\\n}\",\"variables\":\"\"},{\"query\":\"mutation {\\n  updateRoom(\\n    id: \\\"7VkWtfB\\\", \\n    name:\\\"hello world!!!\\\", \\n    description: \\\"A  room with a USER view\\\",\\n    allowPromotion: true, \\n    sceneId:null,\\n    memberPermissions: null\\n    #sceneUrl:\\\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\\\"\\n  ) {\\n    description,\\n    id,\\n    name,\\n    defaultEnvironmentGltfBundleUrl,\\n    allowPromotion,\\n    memberPermissions{\\n      fly,\\n      spawnEmoji\\n    },\\n    embedToken,\\n    scene {\\n      ... on Scene{\\n        name,\\n        id\\n      }\\n    }\\n\\n  }\\n}\",\"variables\":\"\"},{\"query\":\"mutation {\\n  updateRoom(\\n    id: \\\"7VkWtfB\\\", \\n    name:\\\"hello world!!!\\\", \\n    description: \\\"A  room with a USER view\\\",\\n    allowPromotion: true, \\n    sceneId:null,\\n    memberPermissions: {\\n      fly: false\\n    \\n}\\n    #sceneUrl:\\\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\\\"\\n  ) {\\n    description,\\n    id,\\n    name,\\n    defaultEnvironmentGltfBundleUrl,\\n    allowPromotion,\\n    memberPermissions{\\n      fly,\\n      spawnEmoji\\n    },\\n    embedToken,\\n    scene {\\n      ... on Scene{\\n        name,\\n        id\\n      }\\n    }\\n\\n  }\\n}\",\"variables\":\"\"},{\"query\":\"mutation {\\n  updateRoom(\\n    id: \\\"7VkWtfB\\\", \\n    name:\\\"hello world!!!\\\", \\n    description: \\\"A  room with a USER view\\\",\\n    allowPromotion: true, \\n    sceneId: null,\\n    memberPermissions: {\\n      fly: false\\n    }\\n    sceneUrl:\\\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\\\"\\n  ) {\\n    description,\\n    id,\\n    name,\\n    defaultEnvironmentGltfBundleUrl,\\n    allowPromotion,\\n    memberPermissions{\\n      fly,\\n      spawnEmoji\\n    },\\n    embedToken,\\n    scene {\\n      ... on Scene{\\n        name,\\n        id\\n      }\\n    }\\n\\n  }\\n}\",\"variables\":\"\"},{\"query\":\"mutation {\\n  updateRoom(\\n    id: \\\"7VkWtfB\\\", \\n    name:\\\"hello world!!!\\\", \\n    description: \\\"A  room with a USER view\\\",\\n    allowPromotion: true, \\n    #sceneId: null,\\n    memberPermissions: {\\n      fly: false\\n    }\\n    sceneUrl:\\\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\\\"\\n  ) {\\n    description,\\n    id,\\n    name,\\n    defaultEnvironmentGltfBundleUrl,\\n    allowPromotion,\\n    memberPermissions{\\n      fly,\\n      spawnEmoji\\n    },\\n    embedToken,\\n    scene {\\n      ... on Scene{\\n        name,\\n        id\\n      }\\n    }\\n\\n  }\\n}\",\"variables\":\"\"},{\"query\":\"mutation {\\n  updateRoom(\\n    id: \\\"7VkWtfB\\\", \\n    name:\\\"hello world!!!\\\", \\n    description: \\\"A  room with a USER view\\\",\\n    allowPromotion: true, \\n    #sceneId: null,\\n    memberPermissions: {\\n      fly: false\\n    }\\n    sceneUrl: null\\n   # sceneUrl:\\\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\\\"\\n  ) {\\n    description,\\n    id,\\n    name,\\n    defaultEnvironmentGltfBundleUrl,\\n    allowPromotion,\\n    memberPermissions{\\n      fly,\\n      spawnEmoji\\n    },\\n    embedToken,\\n    scene {\\n      ... on Scene{\\n        name,\\n        id\\n      }\\n    }\\n\\n  }\\n}\",\"variables\":\"\"},{\"query\":\"mutation {\\n  updateRoom(\\n    id: \\\"7VkWtfB\\\", \\n    name:\\\"hello world!!!\\\", \\n    description: \\\"A  room with a USER view\\\",\\n    allowPromotion: true, \\n    #sceneId: null,\\n    sceneId: \\\"tXkCgJw\\\",\\n    memberPermissions: {\\n      fly: false\\n    }\\n    sceneUrl: null\\n   # sceneUrl:\\\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\\\"\\n  ) {\\n    description,\\n    id,\\n    name,\\n    defaultEnvironmentGltfBundleUrl,\\n    allowPromotion,\\n    memberPermissions{\\n      fly,\\n      spawnEmoji\\n    },\\n    embedToken,\\n    scene {\\n      ... on Scene{\\n        name,\\n        id\\n      }\\n    }\\n\\n  }\\n}\",\"variables\":\"\"},{\"query\":\"mutation {\\n  updateRoom(\\n    id: \\\"7VkWtfB\\\", \\n    name:\\\"hello world!!!\\\", \\n    description: \\\"A  room with a USER view\\\",\\n    allowPromotion: true, \\n    #sceneId: null,\\n    sceneId: \\\"tXkCgJw\\\",\\n    memberPermissions: {\\n      fly: false\\n    }\\n    #sceneUrl: null\\n   # sceneUrl:\\\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\\\"\\n  ) {\\n    description,\\n    id,\\n    name,\\n    defaultEnvironmentGltfBundleUrl,\\n    allowPromotion,\\n    memberPermissions{\\n      fly,\\n      spawnEmoji\\n    },\\n    embedToken,\\n    scene {\\n      ... on Scene{\\n        name,\\n        id\\n      }\\n    }\\n\\n  }\\n}\",\"variables\":\"\"},{\"query\":\"mutation {\\n  updateRoom(\\n    id: \\\"7VkWtfB\\\", \\n    name:\\\"hello world!!!\\\", \\n    description: \\\"A  room with a USER view\\\",\\n    allowPromotion: true, \\n    #sceneId: null,\\n    #sceneId: \\\"tXkCgJw\\\",\\n    memberPermissions: {\\n      fly: false\\n    }\\n    #sceneUrl: null\\n    sceneUrl:\\\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\\\"\\n  ) {\\n    description,\\n    id,\\n    name,\\n    defaultEnvironmentGltfBundleUrl,\\n    allowPromotion,\\n    memberPermissions{\\n      fly,\\n      spawnEmoji\\n    },\\n    embedToken,\\n    scene {\\n      ... on Scene{\\n        name,\\n        id\\n      }\\n    }\\n\\n  }\\n}\",\"variables\":\"\"},{\"query\":\"mutation {\\n  updateRoom(\\n    id: \\\"cfq2p8i\\\", \\n    name:\\\"hello world!!!\\\", \\n    description: \\\"A  room with a USER view\\\",\\n    allowPromotion: true, \\n    #sceneId: null,\\n    #sceneId: \\\"tXkCgJw\\\",\\n    memberPermissions: {\\n      fly: false\\n    }\\n    #sceneUrl: null\\n    sceneUrl:\\\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\\\"\\n  ) {\\n    description,\\n    id,\\n    name,\\n    defaultEnvironmentGltfBundleUrl,\\n    allowPromotion,\\n    memberPermissions{\\n      fly,\\n      spawnEmoji\\n    },\\n    embedToken,\\n    scene {\\n      ... on Scene{\\n        name,\\n        id\\n      }\\n    }\\n\\n  }\\n}\"},{\"query\":\"mutation {\\n  updateRoom(\\n    id: \\\"cfq2p8i\\\", \\n    name:\\\"hello world!!!\\\", \\n    description: \\\"A  room with a USER view\\\",\\n    allowPromotion: true, \\n    #sceneId: null,\\n    sceneId: \\\"tXkCgJw\\\",\\n    memberPermissions: {\\n      fly: false\\n    }\\n    #sceneUrl: null\\n    #sceneUrl:\\\"https://localhost:8080/assets/models/LoadingEnvironment-570a9f69a9509eb8a039c9ff93ccfdca.glb\\\"\\n  ) {\\n    description,\\n    id,\\n    name,\\n    defaultEnvironmentGltfBundleUrl,\\n    allowPromotion,\\n    memberPermissions{\\n      fly,\\n      spawnEmoji\\n    },\\n    embedToken,\\n    scene {\\n      ... on Scene{\\n        name,\\n        id\\n      }\\n    }\\n\\n  }\\n}\"}]}",
+      "graphiql:docExplorerWidth": 350,
+      "graphiql:editorFlex": 1,
+      "graphiql:variableEditorHeight": 200
+    },
+    {
+      "id": "tab8",
+      "name": "[revoked token] queries",
+      "url": "https://localhost:4000/api/v2_alpha/graphiql",
+      "websocketUrl": "",
+      "proxy": false,
+      "headers": [],
+      "collapsed": false,
+      "maxHistory": 20,
+      "history": [
+        {
+          "query": "query {\n  \n  myRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n  \n  favoriteRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n  \n   publicRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "",
+          "variables": null
+        },
+        {
+          "query": "query {\n  \n  myRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n  \n  favoriteRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n  \n   publicRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n}",
+          "variables": null
+        }
+      ],
+      "graphiql:query": "query {\n  \n  myRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n  \n  favoriteRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n  \n   publicRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n}",
+      "graphiql:variableEditorHeight": 200,
+      "graphiql:docExplorerWidth": 350,
+      "graphiql:editorFlex": 1,
+      "graphiql:queries": "{\"queries\":[{\"query\":\"query {\\n  \\n  myRooms(page: 1, pageSize: 3) {\\n    entries {\\n      name,\\n      id,\\n      memberPermissions{\\n        fly\\n      }\\n    }\\n  }\\n  \\n  favoriteRooms(page: 1, pageSize: 3) {\\n    entries {\\n      name,\\n      id,\\n      memberPermissions{\\n        fly\\n      }\\n    }\\n  }\\n  \\n   publicRooms(page: 1, pageSize: 3) {\\n    entries {\\n      name,\\n      id,\\n      memberPermissions{\\n        fly\\n      }\\n    }\\n  }\\n}\",\"variables\":\"\"}]}"
+    },
+    {
+      "id": "tab9",
+      "name": "[no token] queries",
+      "url": "https://localhost:4000/api/v2_alpha/graphiql",
+      "websocketUrl": "",
+      "proxy": false,
+      "headers": [],
+      "collapsed": false,
+      "maxHistory": 20,
+      "history": [
+        {
+          "query": "query {\n  myRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      description,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n  \n  favoriteRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n  \n   publicRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n}",
+          "variables": null
+        },
+        {
+          "query": "query {\n  myRooms{\n    entries{\n      id\n    }\n  }\n}",
+          "variables": null
+        }
+      ],
+      "graphiql:query": "query {\n  myRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      description,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n  \n  favoriteRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n  \n   publicRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n}",
+      "graphiql:variableEditorHeight": 200,
+      "graphiql:editorFlex": 1,
+      "graphiql:queries": "{\"queries\":[{\"query\":\"query {\\n  myRooms{\\n    entries{\\n      id\\n    }\\n  }\\n}\"},{\"query\":\"query {\\n  myRooms(page: 1, pageSize: 3) {\\n    entries {\\n      name,\\n      description,\\n      id,\\n      memberPermissions{\\n        fly\\n      }\\n    }\\n  }\\n  \\n  favoriteRooms(page: 1, pageSize: 3) {\\n    entries {\\n      name,\\n      id,\\n      memberPermissions{\\n        fly\\n      }\\n    }\\n  }\\n  \\n   publicRooms(page: 1, pageSize: 3) {\\n    entries {\\n      name,\\n      id,\\n      memberPermissions{\\n        fly\\n      }\\n    }\\n  }\\n}\"}]}",
+      "graphiql:docExplorerWidth": 350
+    },
+    {
+      "id": "tab10",
+      "name": "[invalid token] queries",
+      "url": "https://localhost:4000/api/v2_alpha/graphiql",
+      "websocketUrl": "",
+      "proxy": false,
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer foo"
+        }
+      ],
+      "collapsed": false,
+      "maxHistory": 20,
+      "history": [
+        {
+          "query": "query {\n  myRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      description,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n  \n  favoriteRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n  \n   publicRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n}",
+          "variables": null
+        }
+      ],
+      "graphiql:query": "query {\n  myRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      description,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n  \n  favoriteRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n  \n   publicRooms(page: 1, pageSize: 3) {\n    entries {\n      name,\n      id,\n      memberPermissions{\n        fly\n      }\n    }\n  }\n}",
+      "graphiql:docExplorerWidth": 350,
+      "graphiql:editorFlex": 1,
+      "graphiql:variableEditorHeight": 200,
+      "graphiql:queries": "{\"queries\":[{\"query\":\"query {\\n  myRooms(page: 1, pageSize: 3) {\\n    entries {\\n      name,\\n      description,\\n      id,\\n      memberPermissions{\\n        fly\\n      }\\n    }\\n  }\\n  \\n  favoriteRooms(page: 1, pageSize: 3) {\\n    entries {\\n      name,\\n      id,\\n      memberPermissions{\\n        fly\\n      }\\n    }\\n  }\\n  \\n   publicRooms(page: 1, pageSize: 3) {\\n    entries {\\n      name,\\n      id,\\n      memberPermissions{\\n        fly\\n      }\\n    }\\n  }\\n}\",\"variables\":\"\"}]}"
+    }
+  ]
+}
