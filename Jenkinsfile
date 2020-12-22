@@ -68,7 +68,12 @@ pipeline {
             if (onlyPromoteToStage == "true") {
               sh "sudo /usr/bin/hab-ret-pkg-promote '${packageIdent}' '${stageChannel}'"
 
-              def text = "*${jobName}* promoted ${retVersion} to ${stageChannel}"
+              def text = (
+                "*<http://localhost:8080/job/${jobName}/${buildNumber}|#${buildNumber}>* *${jobName}* " +
+                "<https://bldr.reticulum.io/#/pkgs/${packageIdent}|${packageIdent}>\n" +
+                "<https://github.com/mozilla/reticulum/commit/$gitSha|$gitSha> " +
+                "Promoted ${retVersion} to ${stageChannel}: ```${gitSha} ${gitMessage}```\n"
+              )
               sendSlackMessage(text, "#mr-builds", ":gift:", slackURL);
             }
         }
