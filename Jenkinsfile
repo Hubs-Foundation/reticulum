@@ -23,59 +23,59 @@ pipeline {
         sh 'sudo /usr/bin/hab-pkg-upload $(ls -t results/*.hart | head -n 1)'
 
         script {
-            def poolHost = env.RET_DARK_POOL_HOST
-            def slackURL = env.SLACK_URL
-            def buildNumber = env.BUILD_NUMBER
-            def jobName = env.JOB_NAME
-            def onlyPromoteToStage = env.ONLY_PROMOTE_TO_STAGE
-            def stageChannel = env.STAGE_CHANNEL
+          def poolHost = env.RET_DARK_POOL_HOST
+          def slackURL = env.SLACK_URL
+          def buildNumber = env.BUILD_NUMBER
+          def jobName = env.JOB_NAME
+          def onlyPromoteToStage = env.ONLY_PROMOTE_TO_STAGE
+          def stageChannel = env.STAGE_CHANNEL
 
-            // Grab IDENT file and cat it from .hart
-            def s = $/eval 'ls -t results/*.hart | head -n 1'/$
-            def hart = sh(returnStdout: true, script: "${s}").trim()
+          // Grab IDENT file and cat it from .hart
+          def s = $/eval 'ls -t results/*.hart | head -n 1'/$
+          def hart = sh(returnStdout: true, script: "${s}").trim()
 
-            s = $/eval 'tail -n +6 ${hart} | xzcat | tar tf - | grep IDENT'/$
-            def identPath = sh(returnStdout: true, script: "${s}").trim()
+          s = $/eval 'tail -n +6 ${hart} | xzcat | tar tf - | grep IDENT'/$
+          def identPath = sh(returnStdout: true, script: "${s}").trim()
 
-            s = $/eval 'tail -n +6 ${hart} | xzcat | tar xf - "${identPath}" -O'/$
-            def packageIdent = sh(returnStdout: true, script: "${s}").trim()
-            def packageTimeVersion = packageIdent.tokenize('/')[3]
-            def (major, minor, version) = packageIdent.tokenize('/')[2].tokenize('.')
-            def retVersion = "${major}.${minor}.${packageTimeVersion}"
+          s = $/eval 'tail -n +6 ${hart} | xzcat | tar xf - "${identPath}" -O'/$
+          def packageIdent = sh(returnStdout: true, script: "${s}").trim()
+          def packageTimeVersion = packageIdent.tokenize('/')[3]
+          def (major, minor, version) = packageIdent.tokenize('/')[2].tokenize('.')
+          def retVersion = "${major}.${minor}.${packageTimeVersion}"
 
-            if (onlyPromoteToStage == "") {
-              def retPool = sh(returnStdout: true, script: "curl https://${poolHost}/api/v1/meta | jq -r '.pool'").trim()
-              sh "sudo /usr/bin/hab-pkg-promote '${packageIdent}' '${retPool}'"
-              sh "sudo /usr/bin/hab-pkg-promote '${packageIdent}' 'stable'"
+          if (onlyPromoteToStage == "") {
+            def retPool = sh(returnStdout: true, script: "curl https://${poolHost}/api/v1/meta | jq -r '.pool'").trim()
+            sh "sudo /usr/bin/hab-pkg-promote '${packageIdent}' '${retPool}'"
+            sh "sudo /usr/bin/hab-pkg-promote '${packageIdent}' 'stable'"
 
-              def retPoolIcon = retPool == 'earth' ? ':earth_americas:' : ':new_moon:'
-              def gitMessage = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'[%an] %s'").trim()
-              def gitSha = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'%h'").trim()
-              def text = (
-                "*<http://localhost:8080/job/${jobName}/${buildNumber}|#${buildNumber}>* *${jobName}* " +
-                "<https://bldr.habitat.sh/#/pkgs/${packageIdent}|${packageIdent}>\n" +
-                "<https://github.com/mozilla/reticulum/commit/$gitSha|$gitSha> " +
-                "Reticulum -> ${retPoolIcon} `${retPool}`: ```${gitSha} ${gitMessage}```\n" +
-                "<https://smoke-hubs.mozilla.com/0zuesf6c6mf/smoke-test?required_ret_version=${retVersion}&required_ret_pool=${retPool}|Smoke Test> - to push:\n" +
-                "`/mr ret deploy ${retVersion} ${retPool}`"
-              )
-              sendSlackMessage(text, "#mr-builds", ":gift:", slackURL);
-            }
+            def retPoolIcon = retPool == 'earth' ? ':earth_americas:' : ':new_moon:'
+            def gitMessage = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'[%an] %s'").trim()
+            def gitSha = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'%h'").trim()
+            def text = (
+              "*<http://localhost:8080/job/${jobName}/${buildNumber}|#${buildNumber}>* *${jobName}* " +
+              "<https://bldr.habitat.sh/#/pkgs/${packageIdent}|${packageIdent}>\n" +
+              "<https://github.com/mozilla/reticulum/commit/$gitSha|$gitSha> " +
+              "Reticulum -> ${retPoolIcon} `${retPool}`: ```${gitSha} ${gitMessage}```\n" +
+              "<https://smoke-hubs.mozilla.com/0zuesf6c6mf/smoke-test?required_ret_version=${retVersion}&required_ret_pool=${retPool}|Smoke Test> - to push:\n" +
+              "`/mr ret deploy ${retVersion} ${retPool}`"
+            )
+            sendSlackMessage(text, "#mr-builds", ":gift:", slackURL);
+          }
 
-            // Upload to ret depot after publishing to slack to minimize wait
-            sh 'sudo /usr/bin/hab-ret-pkg-upload $(ls -t results/*.hart | head -n 1)'
+          // Upload to ret depot after publishing to slack to minimize wait
+          sh 'sudo /usr/bin/hab-ret-pkg-upload $(ls -t results/*.hart | head -n 1)'
 
-            if (onlyPromoteToStage == "true") {
-              sh "sudo /usr/bin/hab-ret-pkg-promote '${packageIdent}' '${stageChannel}'"
+          if (onlyPromoteToStage == "true") {
+            sh "sudo /usr/bin/hab-ret-pkg-promote '${packageIdent}' '${stageChannel}'"
 
-              def text = (
-                "*<http://localhost:8080/job/${jobName}/${buildNumber}|#${buildNumber}>* *${jobName}* " +
-                "<https://bldr.reticulum.io/#/pkgs/${packageIdent}|${packageIdent}>\n" +
-                "<https://github.com/mozilla/reticulum/commit/$gitSha|$gitSha> " +
-                "Promoted ${retVersion} to ${stageChannel}: ```${gitSha} ${gitMessage}```\n"
-              )
-              sendSlackMessage(text, "#mr-builds", ":gift:", slackURL);
-            }
+            def text = (
+              "*<http://localhost:8080/job/${jobName}/${buildNumber}|#${buildNumber}>* *${jobName}* " +
+              "<https://bldr.reticulum.io/#/pkgs/${packageIdent}|${packageIdent}>\n" +
+              "<https://github.com/mozilla/reticulum/commit/$gitSha|$gitSha> " +
+              "Promoted ${retVersion} to ${stageChannel}: ```${gitSha} ${gitMessage}```\n"
+            )
+            sendSlackMessage(text, "#mr-builds", ":gift:", slackURL);
+          }
         }
       }
     }
