@@ -221,8 +221,6 @@ defmodule RetWeb.Schema.RoomTypes do
       arg(:scene_url, :string)
       @desc "The permissions non-admin participants should have in the room"
       arg(:member_permissions, :input_member_permissions)
-      @desc "Make this room public (while it is open)"
-      arg(:allow_promotion, :boolean)
       @desc "Arbitrary json data associated with this room"
       arg(:user_data, :json)
       # TODO: add/remove owner
