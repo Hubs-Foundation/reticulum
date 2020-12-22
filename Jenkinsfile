@@ -20,7 +20,7 @@ pipeline {
           /usr/bin/script --return -c \\\\"sudo /usr/bin/hab-docker-studio -k mozillareality run /bin/bash scripts/build.sh\\\\" /dev/null
         '''
 
-        sh 'sudo /usr/bin/hab-pkg-upload $(ls -rt results/*.hart | head -n 1)'
+        sh 'sudo /usr/bin/hab-pkg-upload $(ls -t results/*.hart | head -n 1)'
 
         script {
             def poolHost = env.RET_DARK_POOL_HOST
@@ -31,7 +31,7 @@ pipeline {
             def stageChannel = env.STAGE_CHANNEL
 
             // Grab IDENT file and cat it from .hart
-            def s = $/eval 'ls -rt results/*.hart | head -n 1'/$
+            def s = $/eval 'ls -t results/*.hart | head -n 1'/$
             def hart = sh(returnStdout: true, script: "${s}").trim()
 
             s = $/eval 'tail -n +6 ${hart} | xzcat | tar tf - | grep IDENT'/$
@@ -63,7 +63,7 @@ pipeline {
             }
 
             // Upload to ret depot after publishing to slack to minimize wait
-            sh 'sudo /usr/bin/hab-ret-pkg-upload $(ls -rt results/*.hart | head -n 1)'
+            sh 'sudo /usr/bin/hab-ret-pkg-upload $(ls -t results/*.hart | head -n 1)'
 
             if (onlyPromoteToStage == "true") {
               sh "sudo /usr/bin/hab-ret-pkg-promote '${packageIdent}' '${stageChannel}'"
