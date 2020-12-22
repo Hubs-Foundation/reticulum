@@ -31,7 +31,7 @@ Scopes, actions, and token types are expected to expand over time.
 ## Examples
 Reticulum ships with [GraphiQL](https://github.com/graphql/graphiql/tree/main/packages/graphiql#graphiql), a graphical, interactive, in-browser GraphQL IDE that makes it easier to test and learn the API. It can be accessed by navigating to `<your_hubs_cloud_host>/api/v2_alpha/graphiql`. 
 
-[This example workspace](../test/api/v2/graphiql-workspace-2020-10-28-15-28-39.json) demonstrates several queries and can be loaded into the GraphiQL interface. You will have to supply your own API access token(s).
+[This example workspace](../test/api/v2/graphiql-workspace-2020-12-07-15-26-56.json) demonstrates several queries and can be loaded into the GraphiQL interface. You will have to supply your own API access token(s).
 
 Requests can also be sent by
 - an `HTTP` client library, 
