@@ -135,8 +135,7 @@ defmodule Ret.Hub do
     :default_environment_gltf_bundle_url,
     :user_data,
     :last_active_at,
-    :entry_mode,
-    :allow_promotion | @required_keys
+    :entry_mode | @required_keys
   ]
 
   # TODO: This function was created for use in the public API.
