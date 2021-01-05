@@ -43,14 +43,15 @@ pipeline {
           def (major, minor, version) = packageIdent.tokenize('/')[2].tokenize('.')
           def retVersion = "${major}.${minor}.${packageTimeVersion}"
 
+          def gitMessage = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'[%an] %s'").trim()
+          def gitSha = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'%h'").trim()
+
           if (onlyPromoteToStage == "") {
             def retPool = sh(returnStdout: true, script: "curl https://${poolHost}/api/v1/meta | jq -r '.pool'").trim()
             sh "sudo /usr/bin/hab-pkg-promote '${packageIdent}' '${retPool}'"
             sh "sudo /usr/bin/hab-pkg-promote '${packageIdent}' 'stable'"
 
             def retPoolIcon = retPool == 'earth' ? ':earth_americas:' : ':new_moon:'
-            def gitMessage = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'[%an] %s'").trim()
-            def gitSha = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'%h'").trim()
             def text = (
               "*<http://localhost:8080/job/${jobName}/${buildNumber}|#${buildNumber}>* *${jobName}* " +
               "<https://bldr.habitat.sh/#/pkgs/${packageIdent}|${packageIdent}>\n" +
