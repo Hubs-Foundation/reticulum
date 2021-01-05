@@ -54,37 +54,32 @@ defmodule Ret.Api.Rooms do
       {:error, "Cannot find room with id: " <> hub_sid}
     else
       if can?(credentials, update_room(hub)) do
-        do_update_room(hub, credentials, params)
+        update_room(hub, credentials, params)
       else
         {:error, :invalid_credentials}
       end
     end
   end
 
-  defp do_update_room(hub, %Credentials{subject_type: :app}, params) do
+  defp update_room(hub, %Credentials{} = credentials, params) do
     hub
     |> Repo.preload(Hub.hub_preloads())
     |> Hub.add_attrs_to_changeset(params)
     |> Hub.maybe_add_member_permissions(hub, params)
     |> Hub.add_scene_changes_to_changeset(params)
-    |> try_do_update_room(:reticulum_app_token)
+    |> try_do_update_room(credentials)
   end
 
-  defp do_update_room(hub, %Credentials{subject_type: :account, account: account}, params) do
-    hub
-    |> Repo.preload(Hub.hub_preloads())
-    |> Hub.add_attrs_to_changeset(params)
-    |> Hub.maybe_add_member_permissions(hub, params)
-    |> Hub.maybe_add_promotion(account, hub, params)
-    |> Hub.add_scene_changes_to_changeset(params)
-    |> try_do_update_room(account)
-  end
+  defp subject_for(%Credentials{subject_type: :app}), do: :reticulum_app_token
+  defp subject_for(%Credentials{subject_type: :account, account: account}), do: account
 
   defp try_do_update_room({:error, reason}, _) do
     {:error, reason}
   end
 
-  defp try_do_update_room(changeset, subject) do
+  defp try_do_update_room(changeset, %Credentials{} = c) do
+    subject = subject_for(c)
+
     case changeset |> Repo.update() do
       {:error, changeset} ->
         {:error, changeset}

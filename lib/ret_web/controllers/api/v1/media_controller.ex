@@ -1,6 +1,7 @@
 defmodule RetWeb.Api.V1.MediaController do
   use RetWeb, :controller
   use Retry
+  alias Ret.Statix
 
   def create(conn, %{"media" => %{"url" => url, "quality" => quality}, "version" => version}),
     do: resolve_and_render(conn, url, version, String.to_atom(quality))
@@ -92,6 +93,7 @@ defmodule RetWeb.Api.V1.MediaController do
 
     case Cachex.fetch(:media_urls, query) do
       {_status, nil} ->
+        Statix.increment("ret.media_resolver.404")
         conn |> send_resp(404, "")
 
       {_status, %Ret.ResolvedMedia{ttl: ttl} = resolved_media} ->
@@ -99,12 +101,15 @@ defmodule RetWeb.Api.V1.MediaController do
           Cachex.expire(:media_urls, query, :timer.seconds(ttl / 1000))
         end
 
+        Statix.increment("ret.media_resolver.ok")
         render_resolved_media(conn, resolved_media)
 
       {:error, e} ->
+        Statix.increment("ret.media_resolver.500")
         conn |> send_resp(500, e)
 
       _ ->
+        Statix.increment("ret.media_resolver.500")
         conn |> send_resp(500, "Error resolving media")
     end
   end
