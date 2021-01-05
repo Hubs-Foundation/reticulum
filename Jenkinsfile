@@ -46,7 +46,7 @@ pipeline {
           def gitMessage = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'[%an] %s'").trim()
           def gitSha = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'%h'").trim()
 
-          if (onlyPromoteToStage == "") {
+          if (onlyPromoteToStage == null || onlyPromoteToStage == "") {
             def retPool = sh(returnStdout: true, script: "curl https://${poolHost}/api/v1/meta | jq -r '.pool'").trim()
             sh "sudo /usr/bin/hab-pkg-promote '${packageIdent}' '${retPool}'"
             sh "sudo /usr/bin/hab-pkg-promote '${packageIdent}' 'stable'"
