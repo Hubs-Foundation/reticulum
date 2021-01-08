@@ -53,7 +53,6 @@ defmodule Ret.Mixfile do
       {:plug_cowboy, "~> 2.0"},
       {:distillery, "~> 2.0"},
       {:peerage, "~> 1.0"},
-      {:hackney, "~> 1.16.0", override: true},
       {:httpoison, "~> 1.5"},
       {:poison, "~> 3.1"},
       {:ecto_autoslug_field, "~> 2.0"},
