@@ -34,7 +34,21 @@ defmodule Ret.MediaResolver do
   def resolve(%MediaResolverQuery{url: url} = query) when is_binary(url) do
     uri = url |> URI.parse()
     root_host = get_root_host(uri.host)
-    resolve(query |> Map.put(:url, uri), root_host)
+    query = Map.put(query, :url, uri)
+
+    # TODO: We could end up running fallback_to_screenshot_opengraph_or_nothing
+    #       twice in a row. These resolve functions can be simplified so that we can
+    #       more easily track individual failures and only fallback when necessary.
+    case resolve(query, root_host) do
+      {:error, _} ->
+        fallback_to_screenshot_opengraph_or_nothing(query)
+
+      {:commit, nil} ->
+        fallback_to_screenshot_opengraph_or_nothing(query)
+
+      commit ->
+        commit
+    end
   end
 
   def resolve(%MediaResolverQuery{url: %URI{host: nil}}, _root_host) do
@@ -332,7 +346,12 @@ defmodule Ret.MediaResolver do
     end)
   end
 
-  defp resolve_non_video(%MediaResolverQuery{url: %URI{host: host} = uri, version: version}, _root_host) do
+  defp resolve_non_video(%MediaResolverQuery{} = query, _root_host) do
+    fallback_to_screenshot_opengraph_or_nothing(query)
+  end
+
+  # TODO: Refactor this function
+  defp fallback_to_screenshot_opengraph_or_nothing(%MediaResolverQuery{url: %URI{host: host} = uri, version: version}) do
     photomnemonic_endpoint = module_config(:photomnemonic_endpoint)
 
     # Crawl og tags for hubs rooms + scenes
@@ -340,7 +359,8 @@ defmodule Ret.MediaResolver do
 
     case uri |> URI.to_string() |> retry_head_then_get_until_success([{"Range", "bytes=0-32768"}]) do
       :error ->
-        nil
+        # TODO: Track these failures in telemetry
+        {:commit, nil}
 
       %HTTPoison.Response{headers: headers} ->
         content_type = headers |> content_type_from_headers
@@ -395,7 +415,8 @@ defmodule Ret.MediaResolver do
   defp opengraph_result_for_uri(uri) do
     case uri |> URI.to_string() |> retry_get_until_success([{"Range", "bytes=0-32768"}]) do
       :error ->
-        :error
+        # TODO: Track these failures
+        {:commit, nil}
 
       resp ->
         # note that there exist og:image:type and og:video:type tags we could use,
