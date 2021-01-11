@@ -74,7 +74,7 @@ pipeline {
               "<https://bldr.reticulum.io/#/pkgs/${packageIdent}|${packageIdent}>\n" +
               "<https://github.com/mozilla/reticulum/commit/$gitSha|$gitSha> " +
               "${packageIdent} built and uploaded - to promote:\n" +
-              "`/mr promote-qa ${packageIdent} polycosm-unstable-a`"
+              "`/mr promote-ret-qa ${packageIdent}`"
             )
             sendSlackMessage(text, "#bp-test-messages", ":gift:", slackURL);
           }
