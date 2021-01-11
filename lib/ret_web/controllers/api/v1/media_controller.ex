@@ -74,6 +74,14 @@ defmodule RetWeb.Api.V1.MediaController do
   end
 
   defp resolve_and_render(conn, url, version, quality \\ nil) do
+    query = query_for(conn, url, version, quality)
+    value = Cachex.fetch(:media_urls, query)
+    maybe_do_telemetry(value)
+    maybe_bump_ttl(value, query)
+    render_resolved_media_or_error(conn, value)
+  end
+
+  defp query_for(conn, url, version, quality \\ nil) do
     quality = quality || default_quality(conn)
 
     ua =
@@ -84,43 +92,12 @@ defmodule RetWeb.Api.V1.MediaController do
 
     supports_webm = ua.family != "Safari" && ua.family != "Mobile Safari"
 
-    query = %Ret.MediaResolverQuery{
+    %Ret.MediaResolverQuery{
       url: url,
       supports_webm: supports_webm,
       quality: quality,
       version: version
     }
-
-    case Cachex.fetch(:media_urls, query) do
-      {_status, nil} ->
-        Statix.increment("ret.media_resolver.404")
-        conn |> send_resp(404, "")
-
-      {_status, %Ret.ResolvedMedia{ttl: ttl} = resolved_media} ->
-        if ttl do
-          Cachex.expire(:media_urls, query, :timer.seconds(ttl / 1000))
-        end
-
-        Statix.increment("ret.media_resolver.ok")
-        render_resolved_media(conn, resolved_media)
-
-      {:error, e} ->
-        Statix.increment("ret.media_resolver.500")
-        conn |> send_resp(500, e)
-
-      _ ->
-        Statix.increment("ret.media_resolver.500")
-        conn |> send_resp(500, "Error resolving media")
-    end
-  end
-
-  defp render_resolved_media(conn, %Ret.ResolvedMedia{uri: uri, audio_uri: audio_uri, meta: meta})
-       when audio_uri != nil do
-    conn |> render("show.json", origin: uri |> URI.to_string(), origin_audio: audio_uri |> URI.to_string(), meta: meta)
-  end
-
-  defp render_resolved_media(conn, %Ret.ResolvedMedia{uri: uri, meta: meta}) do
-    conn |> render("show.json", origin: uri |> URI.to_string(), meta: meta)
   end
 
   defp default_quality(conn) do
@@ -135,5 +112,45 @@ defmodule RetWeb.Api.V1.MediaController do
     else
       :high
     end
+  end
+
+  defp maybe_do_telemetry({:commit, nil}), do: Statix.increment("ret.media_resolver.404")
+  defp maybe_do_telemetry({:commit, %Ret.ResolvedMedia{}}), do: Statix.increment("ret.media_resolver.ok")
+  defp maybe_do_telemetry({:error, _reason}), do: Statix.increment("ret.media_resolver.500")
+  defp maybe_do_telemetry(_), do: nil
+
+  defp maybe_bump_ttl({_status, %Ret.ResolvedMedia{ttl: ttl}}, query) do
+    if ttl do
+      Cachex.expire(:media_urls, query, :timer.seconds(ttl / 1000))
+    end
+  end
+
+  defp maybe_bump_ttl(_value, _query), do: nil
+
+  defp render_resolved_media_or_error(conn, {:error, reason}) do
+    send_resp(conn, 500, reason)
+  end
+
+  defp render_resolved_media_or_error(conn, {_status, nil}) do
+    send_resp(conn, 404, "")
+  end
+
+  defp render_resolved_media_or_error(conn, {_status, %Ret.ResolvedMedia{} = resolved_media}) do
+    render_resolved_media(conn, resolved_media)
+  end
+
+  defp render_resolved_media_or_error(conn, _) do
+    # We do not expect this code to run, so if it happens, something went wrong
+    Statix.increment("ret.media_resolver.unknown_error")
+    send_resp(conn, 500, "An unexpected error occurred during media resolution.")
+  end
+
+  defp render_resolved_media(conn, %Ret.ResolvedMedia{uri: uri, audio_uri: audio_uri, meta: meta})
+       when audio_uri != nil do
+    conn |> render("show.json", origin: uri |> URI.to_string(), origin_audio: audio_uri |> URI.to_string(), meta: meta)
+  end
+
+  defp render_resolved_media(conn, %Ret.ResolvedMedia{uri: uri, meta: meta}) do
+    conn |> render("show.json", origin: uri |> URI.to_string(), meta: meta)
   end
 end
