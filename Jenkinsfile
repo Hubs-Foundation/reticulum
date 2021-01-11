@@ -29,6 +29,7 @@ pipeline {
           def jobName = env.JOB_NAME
           def disablePromoteToStable = env.DISABLE_PROMOTE_TO_STABLE
           def showQAPromoteCommand = env.SHOW_QA_PROMOTE_COMMAND
+          def qaBuildsSlackChannel = en.QA_BUILDS_SLACK_CHANNEL
 
           // Grab IDENT file and cat it from .hart
           def s = $/eval 'ls -t results/*.hart | head -n 1'/$
@@ -76,7 +77,7 @@ pipeline {
               "${packageIdent} built and uploaded - to promote:\n" +
               "`/mr promote-ret-qa ${packageIdent}`"
             )
-            sendSlackMessage(text, "#bp-test-messages", ":gift:", slackURL);
+            sendSlackMessage(text, qaBuildsSlackChannel, ":gift:", slackURL);
           }
         }
       }
