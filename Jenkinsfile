@@ -27,8 +27,8 @@ pipeline {
           def slackURL = env.SLACK_URL
           def buildNumber = env.BUILD_NUMBER
           def jobName = env.JOB_NAME
-          def onlyPromoteToStage = env.ONLY_PROMOTE_TO_STAGE
-          def stageChannel = env.STAGE_CHANNEL
+          def disablePromoteToStable = env.DISABLE_PROMOTE_TO_STABLE
+          def showQAPromoteCommand = env.SHOW_QA_PROMOTE_COMMAND
 
           // Grab IDENT file and cat it from .hart
           def s = $/eval 'ls -t results/*.hart | head -n 1'/$
@@ -39,19 +39,21 @@ pipeline {
 
           s = $/eval 'tail -n +6 ${hart} | xzcat | tar xf - "${identPath}" -O'/$
           def packageIdent = sh(returnStdout: true, script: "${s}").trim()
-          def packageTimeVersion = packageIdent.tokenize('/')[3]
-          def (major, minor, version) = packageIdent.tokenize('/')[2].tokenize('.')
-          def retVersion = "${major}.${minor}.${packageTimeVersion}"
 
           def gitMessage = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'[%an] %s'").trim()
           def gitSha = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'%h'").trim()
 
-          if (onlyPromoteToStage == null || onlyPromoteToStage == "") {
+          if (disablePromoteToStable == "true") {
             def retPool = sh(returnStdout: true, script: "curl https://${poolHost}/api/v1/meta | jq -r '.pool'").trim()
             sh "sudo /usr/bin/hab-pkg-promote '${packageIdent}' '${retPool}'"
             sh "sudo /usr/bin/hab-pkg-promote '${packageIdent}' 'stable'"
 
+            def packageTimeVersion = packageIdent.tokenize('/')[3]
+            def (major, minor, version) = packageIdent.tokenize('/')[2].tokenize('.')
+            def retVersion = "${major}.${minor}.${packageTimeVersion}"
+
             def retPoolIcon = retPool == 'earth' ? ':earth_americas:' : ':new_moon:'
+
             def text = (
               "*<http://localhost:8080/job/${jobName}/${buildNumber}|#${buildNumber}>* *${jobName}* " +
               "<https://bldr.habitat.sh/#/pkgs/${packageIdent}|${packageIdent}>\n" +
@@ -66,16 +68,15 @@ pipeline {
           // Upload to ret depot after publishing to slack to minimize wait
           sh 'sudo /usr/bin/hab-ret-pkg-upload $(ls -t results/*.hart | head -n 1)'
 
-          if (onlyPromoteToStage == "true") {
-            sh "sudo /usr/bin/hab-ret-pkg-promote '${packageIdent}' '${stageChannel}'"
-
+          if (showQAPromoteCommand == "true") {
             def text = (
               "*<http://localhost:8080/job/${jobName}/${buildNumber}|#${buildNumber}>* *${jobName}* " +
               "<https://bldr.reticulum.io/#/pkgs/${packageIdent}|${packageIdent}>\n" +
               "<https://github.com/mozilla/reticulum/commit/$gitSha|$gitSha> " +
-              "Promoted ${retVersion} to ${stageChannel}: ```${gitSha} ${gitMessage}```\n"
+              "${packageIdent} built and uploaded - to promote:\n" +
+              "`/mr promote-qa ${packageIdent} polycosm-unstable-a`"
             )
-            sendSlackMessage(text, "#mr-builds", ":gift:", slackURL);
+            sendSlackMessage(text, "#bp-test-messages", ":gift:", slackURL);
           }
         }
       }
