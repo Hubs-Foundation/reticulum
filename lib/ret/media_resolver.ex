@@ -39,8 +39,16 @@ defmodule Ret.MediaResolver do
     # TODO: We could end up running fallback_to_screenshot_opengraph_or_nothing
     #       twice in a row. These resolve functions can be simplified so that we can
     #       more easily track individual failures and only fallback when necessary.
+    #       Also make sure they have a uniform response shape for indicating an
+    #       error.
     case resolve(query, root_host) do
-      {:error, _} ->
+      :error ->
+        fallback_to_screenshot_opengraph_or_nothing(query)
+
+      {:error, _reason} ->
+        fallback_to_screenshot_opengraph_or_nothing(query)
+
+      {:commit, :error} ->
         fallback_to_screenshot_opengraph_or_nothing(query)
 
       {:commit, nil} ->
@@ -359,8 +367,7 @@ defmodule Ret.MediaResolver do
 
     case uri |> URI.to_string() |> retry_head_then_get_until_success([{"Range", "bytes=0-32768"}]) do
       :error ->
-        # TODO: Track these failures in telemetry
-        {:commit, nil}
+        :error
 
       %HTTPoison.Response{headers: headers} ->
         content_type = headers |> content_type_from_headers
@@ -415,8 +422,7 @@ defmodule Ret.MediaResolver do
   defp opengraph_result_for_uri(uri) do
     case uri |> URI.to_string() |> retry_get_until_success([{"Range", "bytes=0-32768"}]) do
       :error ->
-        # TODO: Track these failures
-        {:commit, nil}
+        :error
 
       resp ->
         # note that there exist og:image:type and og:video:type tags we could use,
