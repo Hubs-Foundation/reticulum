@@ -48,9 +48,6 @@ defmodule Ret.MediaResolver do
       {:error, _reason} ->
         fallback_to_screenshot_opengraph_or_nothing(query)
 
-      {:commit, :error} ->
-        fallback_to_screenshot_opengraph_or_nothing(query)
-
       {:commit, nil} ->
         fallback_to_screenshot_opengraph_or_nothing(query)
 
