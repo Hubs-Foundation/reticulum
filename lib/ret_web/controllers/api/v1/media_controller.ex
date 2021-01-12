@@ -116,7 +116,9 @@ defmodule RetWeb.Api.V1.MediaController do
 
   defp maybe_do_telemetry({:commit, nil}), do: Statix.increment("ret.media_resolver.404")
   defp maybe_do_telemetry({:commit, %Ret.ResolvedMedia{}}), do: Statix.increment("ret.media_resolver.ok")
-  defp maybe_do_telemetry({:error, _reason}), do: Statix.increment("ret.media_resolver.500")
+  defp maybe_do_telemetry({:error, _reason}), do: Statix.increment("ret.media_resolver.unknown_error")
+  defp maybe_do_telemetry({:commit, :error}), do: Statix.increment("ret.media_resolver.500")
+  defp maybe_do_telemetry({:commit, {:error, _reason}}), do: Statix.increment("ret.media_resolver.500")
   defp maybe_do_telemetry(_), do: nil
 
   defp maybe_bump_ttl({_status, %Ret.ResolvedMedia{ttl: ttl}}, query) do
@@ -127,10 +129,6 @@ defmodule RetWeb.Api.V1.MediaController do
 
   defp maybe_bump_ttl(_value, _query), do: nil
 
-  defp render_resolved_media_or_error(conn, {:error, reason}) do
-    send_resp(conn, 500, reason)
-  end
-
   defp render_resolved_media_or_error(conn, {_status, nil}) do
     send_resp(conn, 404, "")
   end
@@ -139,6 +137,23 @@ defmodule RetWeb.Api.V1.MediaController do
     render_resolved_media(conn, resolved_media)
   end
 
+  # This is an error response that we have cached ourselves
+  defp render_resolved_media_or_error(conn, {_status, :error}) do
+    send_resp(conn, 500, "An error occured during media resolution")
+  end
+
+  # This is an error response that we have cached ourselves
+  defp render_resolved_media_or_error(conn, {_status, {:error, _reason}}) do
+    send_resp(conn, 500, "An error occured during media resolution")
+  end
+
+  # This is an unexpected error response from Cachex
+  defp render_resolved_media_or_error(conn, {:error, reason}) do
+    Statix.increment("ret.media_resolver.unknown_cachex_error")
+    send_resp(conn, 500, "An unexpected error occurred during media resolution.")
+  end
+
+  # This is an unexpected response from Cachex
   defp render_resolved_media_or_error(conn, _) do
     # We do not expect this code to run, so if it happens, something went wrong
     Statix.increment("ret.media_resolver.unknown_error")
