@@ -24,6 +24,8 @@ defmodule Ret.HttpUtils do
   end
 
   def retry_until_success(verb, url, body \\ "", headers \\ [], cap_ms \\ 5_000, expiry_ms \\ 10_000) do
+    headers = headers ++ [{"User-Agent", "Mozilla/5.0 (X11; Linux x86_64; rv:84.0) Gecko/20100101 Firefox/84.0"}]
+
     hackney_options =
       if module_config(:insecure_ssl) == true do
         [:insecure]

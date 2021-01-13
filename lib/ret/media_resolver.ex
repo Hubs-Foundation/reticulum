@@ -400,7 +400,7 @@ defmodule Ret.MediaResolver do
 
           case Download.from(url, path: path) do
             {:ok, _path} -> {:ok, %{content_type: "image/png"}}
-            error -> {:error, error}
+            _error -> :error
           end
         end
       )
