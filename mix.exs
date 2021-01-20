@@ -5,7 +5,7 @@ defmodule Ret.Mixfile do
     [
       app: :ret,
       version: System.get_env("RELEASE_VERSION") || "1.0.0",
-      elixir: "~> 1.8",
+      elixir: "~> 1.4",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:phoenix, :gettext] ++ Mix.compilers(),
       start_permanent: Mix.env() == :prod,
@@ -41,10 +41,10 @@ defmodule Ret.Mixfile do
       # Avoid 3.4.0 for now bc https://github.com/elixir-ecto/ecto/issues/3246
       {:ecto, "~> 3.3.0"},
       {:ecto_sql, "~> 3.3.0"},
-      {:absinthe, "~> 1.5"},
+      {:absinthe, "~> 1.4"},
       {:dataloader, "~> 1.0.0"},
-      {:absinthe_plug, "~> 1.5"},
-      {:absinthe_phoenix, "~> 1.5"},
+      {:absinthe_plug, "~> 1.4"},
+      {:absinthe_phoenix, "~> 1.4.0"},
       {:postgrex, ">= 0.0.0"},
       {:phoenix_html, "~> 2.13"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
