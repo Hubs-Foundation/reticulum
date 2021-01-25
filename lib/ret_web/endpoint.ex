@@ -3,6 +3,8 @@ defmodule RetWeb.Endpoint do
   use Sentry.Phoenix.Endpoint
   use Absinthe.Phoenix.Endpoint
 
+  socket "/live", Phoenix.LiveView.Socket
+
   socket("/socket", RetWeb.SessionSocket, websocket: [check_origin: {RetWeb.Endpoint, :allowed_origin?, []}])
 
   def get_cors_origins, do: Application.get_env(:ret, RetWeb.Endpoint)[:allowed_origins] |> String.split(",")

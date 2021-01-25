@@ -2,6 +2,7 @@ defmodule RetWeb.Router do
   use RetWeb, :router
   use Plug.ErrorHandler
   use Sentry.Plug
+  import Phoenix.LiveDashboard.Router
 
   pipeline :secure_headers do
     plug(:put_secure_browser_headers)
@@ -177,6 +178,11 @@ defmodule RetWeb.Router do
     scope "/v1", as: :api_v1 do
       resources("/media", Api.V1.MediaController, only: [:create])
     end
+  end
+
+  scope "/" do
+    pipe_through [:parsed_body, :browser]
+    live_dashboard "/telemetry"
   end
 
   scope "/", RetWeb do
