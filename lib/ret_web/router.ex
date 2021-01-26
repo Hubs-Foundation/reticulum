@@ -89,6 +89,22 @@ defmodule RetWeb.Router do
     forward("/", RetWeb.Plugs.ItaProxy)
   end
 
+  scope "/", RetWeb do
+    pipe_through(
+      [:secure_headers, :parsed_body, :browser] ++
+        if(Mix.env() == :prod, do: [:ssl_only, :canonicalize_domain], else: [])
+    )
+
+    get("/api/v1/accounts/expire_cookie", Api.V1.AccountController, :expire_cookie)
+
+    scope "/" do
+      pipe_through([:admin_required])
+
+      live_dashboard "/telemetry"
+      get("/api/v1/accounts/set_cookie", Api.V1.AccountController, :set_cookie)
+    end
+  end
+
   scope "/api", RetWeb do
     pipe_through(
       [:secure_headers, :parsed_body, :api] ++ if(Mix.env() == :prod, do: [:ssl_only, :canonicalize_domain], else: [])
@@ -178,11 +194,6 @@ defmodule RetWeb.Router do
     scope "/v1", as: :api_v1 do
       resources("/media", Api.V1.MediaController, only: [:create])
     end
-  end
-
-  scope "/" do
-    pipe_through [:parsed_body, :browser]
-    live_dashboard "/telemetry"
   end
 
   scope "/", RetWeb do

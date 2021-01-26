@@ -5,6 +5,7 @@ defmodule RetWeb.Guardian.AuthPipeline do
     error_handler: RetWeb.Guardian.AuthErrorHandler
 
   plug(Guardian.Plug.VerifyHeader, realm: "Bearer")
+  plug(Guardian.Plug.VerifyCookie, exchange_from: "access")
   plug(Guardian.Plug.EnsureAuthenticated)
   plug(Guardian.Plug.LoadResource)
 end
