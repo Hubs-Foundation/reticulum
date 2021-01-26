@@ -83,7 +83,7 @@ defmodule RetWeb.Api.V1.AccountController do
     key = Guardian.Plug.Keys.token_key("default") |> Atom.to_string()
 
     opts = [
-      encrypt: false,
+      encrypt: true,
       max_age: max_age,
       http_only: true,
       secure: true
