@@ -73,7 +73,7 @@ defmodule RetWeb.Api.V1.ProjectController do
     }
 
     with %{project: {:ok, project_file}, thumbnail: {:ok, thumbnail_file}} <-
-           Storage.promote(promotion_params, account),
+           Storage.promote_optional(promotion_params, account),
          {:ok, project} <-
            project
            |> Project.changeset(account, project_file, thumbnail_file, parent_scene, params)

@@ -110,21 +110,21 @@ defmodule Ret.Project do
   def changeset(
         %Project{} = project,
         account,
-        %OwnedFile{} = project_owned_file,
-        %OwnedFile{} = thumbnail_owned_file,
+        project_owned_file,
+        thumbnail_owned_file,
         params
       ) do
     project
     |> changeset(account, params)
-    |> put_change(:project_owned_file_id, project_owned_file.owned_file_id)
-    |> put_change(:thumbnail_owned_file_id, thumbnail_owned_file.owned_file_id)
+    |> maybe_put_assoc(:project_owned_file_id, project_owned_file)
+    |> maybe_put_assoc(:thumbnail_owned_file_id, thumbnail_owned_file)
   end
 
   def changeset(
         %Project{} = project,
         account,
-        %OwnedFile{} = project_owned_file,
-        %OwnedFile{} = thumbnail_owned_file,
+        project_owned_file,
+        thumbnail_owned_file,
         nil = _parent_scene,
         params
       ) do
@@ -135,8 +135,8 @@ defmodule Ret.Project do
   def changeset(
         %Project{} = project,
         account,
-        %OwnedFile{} = project_owned_file,
-        %OwnedFile{} = thumbnail_owned_file,
+        project_owned_file,
+        thumbnail_owned_file,
         %Scene{} = parent_scene,
         params
       ) do
@@ -148,8 +148,8 @@ defmodule Ret.Project do
   def changeset(
         %Project{} = project,
         account,
-        %OwnedFile{} = project_owned_file,
-        %OwnedFile{} = thumbnail_owned_file,
+        project_owned_file,
+        thumbnail_owned_file,
         %SceneListing{} = parent_scene_listing,
         params
       ) do
@@ -161,5 +161,13 @@ defmodule Ret.Project do
   defp maybe_add_project_sid_to_changeset(changeset) do
     project_sid = changeset |> get_field(:project_sid) || Ret.Sids.generate_sid()
     put_change(changeset, :project_sid, project_sid)
+  end
+
+  defp maybe_put_assoc(changeset, key, nil) do
+    changeset
+  end
+
+  defp maybe_put_assoc(changeset, key, value) do
+    changeset |> put_assoc(key, value)
   end
 end

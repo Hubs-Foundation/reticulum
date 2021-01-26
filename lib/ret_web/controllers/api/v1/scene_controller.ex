@@ -1,7 +1,7 @@
 defmodule RetWeb.Api.V1.SceneController do
   use RetWeb, :controller
 
-  alias Ret.{Account, Repo, Scene, SceneListing, Storage}
+  alias Ret.{Account, Repo, Scene, SceneListing, Storage, Project}
 
   plug(RetWeb.Plugs.RateLimit when action in [:create, :update])
 
@@ -88,7 +88,7 @@ defmodule RetWeb.Api.V1.SceneController do
 
   defp create_or_update(conn, params, scene, account) do
     owned_file_results =
-      Storage.promote(
+      Storage.promote_optional(
         %{
           model: {params["model_file_id"], params["model_file_token"]},
           screenshot: {params["screenshot_file_id"], params["screenshot_file_token"]},
@@ -110,6 +110,11 @@ defmodule RetWeb.Api.V1.SceneController do
           scene
           |> Scene.changeset(account, model_file, screenshot_file, scene_file, params)
           |> Repo.insert_or_update()
+
+        if not is_nil(params["project_id"]) do
+          project = Project.project_by_sid_for_account(params["project_id"], account)
+          {:ok, updated_project} = project |> Project.add_scene_to_project(scene)
+        end
 
         scene = scene |> preload()
 
