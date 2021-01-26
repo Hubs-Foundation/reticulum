@@ -20,7 +20,7 @@ defmodule Ret.Mixfile do
   def application do
     [
       mod: {Ret.Application, []},
-      extra_applications: [:runtime_tools, :canada]
+      extra_applications: [:runtime_tools, :canada, :os_mon]
     ]
   end
 
