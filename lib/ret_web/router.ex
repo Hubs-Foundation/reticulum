@@ -100,7 +100,10 @@ defmodule RetWeb.Router do
     scope "/" do
       pipe_through([:admin_required])
 
-      live_dashboard "/telemetry", metrics: RetWeb.Telemetry
+      # TODO: investigate whether we have pg_stat_statements installed for postgres
+      # https://www.postgresql.org/docs/current/pgstatstatements.html
+      # https://hexdocs.pm/phoenix_live_dashboard/ecto_stats.html#install-custom-extensions
+      live_dashboard "/telemetry", metrics: RetWeb.Telemetry, ecto_repos: [Ret.Repo]
       get("/api/v1/accounts/set_cookie", Api.V1.AccountController, :set_cookie)
     end
   end
