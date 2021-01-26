@@ -70,9 +70,11 @@ defmodule RetWeb.Plugs.AddCSP do
         }:#{janus_port} #{default_janus_csp_rule}"
       end
 
-    "default-src 'none'; manifest-src #{custom_rules[:manifest_src]} 'self'; script-src * 'unsafe-inline' 'unsafe-eval'; child-src #{custom_rules[:child_src]} 'self' blob:; worker-src #{
-      custom_rules[:worker_src]
-    } #{storage_url} #{assets_url} 'self' blob:; font-src #{custom_rules[:font_src]} 'self' https://fonts.googleapis.com https://cdn.jsdelivr.net https://fonts.gstatic.com https://cdn.aframe.io #{
+    "default-src 'none'; manifest-src #{custom_rules[:manifest_src]} 'self'; script-src * 'unsafe-inline' 'unsafe-eval'; child-src #{
+      custom_rules[:child_src]
+    } 'self' blob:; worker-src #{custom_rules[:worker_src]} #{storage_url} #{assets_url} 'self' blob:; font-src #{
+      custom_rules[:font_src]
+    } 'self' https://fonts.googleapis.com https://cdn.jsdelivr.net https://fonts.gstatic.com https://cdn.aframe.io #{
       storage_url
     } #{assets_url} #{cors_proxy_url}; style-src #{custom_rules[:style_src]} 'self' https://fonts.googleapis.com https://cdn.jsdelivr.net #{
       cors_proxy_url
