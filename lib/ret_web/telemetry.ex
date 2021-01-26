@@ -43,7 +43,22 @@ defmodule RetWeb.Telemetry do
       summary("vm.memory.total", unit: {:byte, :kilobyte}),
       summary("vm.total_run_queue_lengths.total"),
       summary("vm.total_run_queue_lengths.cpu"),
-      summary("vm.total_run_queue_lengths.io")
+      summary("vm.total_run_queue_lengths.io"),
+
+      # Absinthe
+      # summary("absinthe.execute.operation.start"),
+      # summary("absinthe.execute.operation.stop"),
+      # summary("absinthe.subscription.publish.start"),
+      # summary("absinthe.subscription.publish.stop"),
+      # summary("absinthe.resolve.field.start"),
+      # summary("absinthe.resolve.field.stop"),
+      # summary("absinthe.middleware.batch.start"),
+      # summary("absinthe.middleware.batch.stop"),
+      # TODO: Learn how these metrics work
+      summary("absinthe.execute.operation.stop.duration"),
+      summary("absinthe.subscription.publish.stop.duration"),
+      summary("absinthe.resolve.field.stop.duration"),
+      summary("absinthe.middleware.batch.stop.duration")
     ]
   end
 
