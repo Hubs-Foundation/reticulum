@@ -100,7 +100,7 @@ defmodule RetWeb.Router do
     scope "/" do
       pipe_through([:admin_required])
 
-      live_dashboard "/telemetry"
+      live_dashboard "/telemetry", metrics: RetWeb.Telemetry
       get("/api/v1/accounts/set_cookie", Api.V1.AccountController, :set_cookie)
     end
   end

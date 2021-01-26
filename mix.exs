@@ -88,7 +88,9 @@ defmodule Ret.Mixfile do
       {:ex_rated, "~> 1.3.3"},
       {:mix_test_watch, "~> 1.0", only: :dev, runtime: false},
       {:ex_json_schema, "~> 0.7.3"},
-      {:observer_cli, "~> 1.5"}
+      {:observer_cli, "~> 1.5"},
+      {:telemetry_poller, "~> 0.4"},
+      {:telemetry_metrics, "~> 0.4"}
     ]
   end
 
