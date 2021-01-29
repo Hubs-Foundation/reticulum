@@ -30,6 +30,11 @@ defmodule RetWeb.Api.V1.SceneController do
     end
   end
 
+  def index_projectless(conn, _params) do
+    account = Guardian.Plug.current_resource(conn)
+    conn |> render("index.json", scenes: Scene.projectless_scenes_for_account(account), account: account)
+  end
+
   def update(conn, %{"id" => scene_sid, "scene" => params}) do
     case scene_sid |> get_scene() do
       %Scene{} = scene -> create_or_update(conn, params, scene)
@@ -110,11 +115,6 @@ defmodule RetWeb.Api.V1.SceneController do
           scene
           |> Scene.changeset(account, model_file, screenshot_file, scene_file, params)
           |> Repo.insert_or_update()
-
-        if not is_nil(params["project_id"]) do
-          project = Project.project_by_sid_for_account(params["project_id"], account)
-          {:ok, updated_project} = project |> Project.add_scene_to_project(scene)
-        end
 
         scene = scene |> preload()
 

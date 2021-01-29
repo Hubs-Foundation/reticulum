@@ -9,6 +9,7 @@ end
 defmodule Ret.Scene do
   use Ecto.Schema
   import Ecto.Changeset
+  import Ecto.Query
 
   alias Ret.{Repo, Scene, SceneListing, Project, Storage}
   alias Ret.Scene.{SceneSlug}
@@ -57,6 +58,17 @@ defmodule Ret.Scene do
   def scene_or_scene_listing_by_sid(sid) do
     Scene |> Repo.get_by(scene_sid: sid) ||
       SceneListing |> Repo.get_by(scene_listing_sid: sid) |> Repo.preload(scene: Scene.scene_preloads())
+  end
+
+  def projectless_scenes_for_account(account) do
+    Repo.all(
+      from(s in Scene,
+        left_join: project in assoc(s, :project),
+        where: s.account_id == ^account.account_id and is_nil(project),
+        preload: ^Scene.scene_preloads(),
+        order_by: [desc: s.updated_at]
+      )
+    )
   end
 
   def to_sid(nil), do: nil

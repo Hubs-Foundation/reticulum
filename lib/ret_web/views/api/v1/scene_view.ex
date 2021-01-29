@@ -10,6 +10,12 @@ defmodule RetWeb.Api.V1.SceneView do
     %{scenes: [render_scene(scene, account)]}
   end
 
+  def render("index.json", %{scenes: scenes, account: account}) do
+    %{
+      scenes: Enum.map(scenes, fn s -> render_scene(s, account) end)
+    }
+  end
+
   def render_scene(nil, _account), do: nil
   def render_scene(%Scene{state: :removed}, _account), do: nil
   def render_scene(%SceneListing{state: :delisted}, _account), do: nil
