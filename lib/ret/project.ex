@@ -116,8 +116,8 @@ defmodule Ret.Project do
       ) do
     project
     |> changeset(account, params)
-    |> put_assoc(:project_owned_file_id, project_owned_file)
-    |> put_assoc(:thumbnail_owned_file_id, thumbnail_owned_file)
+    |> put_change(:project_owned_file_id, project_owned_file.owned_file_id)
+    |> put_change(:thumbnail_owned_file_id, thumbnail_owned_file.owned_file_id)
   end
 
   def changeset(
