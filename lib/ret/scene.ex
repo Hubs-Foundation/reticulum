@@ -262,7 +262,7 @@ defmodule Ret.Scene do
     put_change(changeset, :scene_sid, scene_sid)
   end
 
-  defp maybe_put_assoc(changeset, key, nil) do
+  defp maybe_put_assoc(changeset, _key, nil) do
     changeset
   end
 

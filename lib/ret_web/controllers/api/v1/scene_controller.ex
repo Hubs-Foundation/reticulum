@@ -1,7 +1,7 @@
 defmodule RetWeb.Api.V1.SceneController do
   use RetWeb, :controller
 
-  alias Ret.{Account, Repo, Scene, SceneListing, Storage, Project}
+  alias Ret.{Account, Repo, Scene, SceneListing, Storage}
 
   plug(RetWeb.Plugs.RateLimit when action in [:create, :update])
 
