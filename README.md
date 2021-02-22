@@ -5,7 +5,9 @@ A hybrid game networking and web API server, focused on Social Mixed Reality.
 ## Development
 
 ### 1. Install Prerequisite Packages:
+
 #### PostgreSQL (recommended version 11.x):
+
 Linux:
 
 On Ubuntu, you can use
@@ -13,18 +15,26 @@ On Ubuntu, you can use
 apt install postgresql
 ```
 
-Consult your package manager of choice for other Linux distributions
+Otherwise, consult your package manager of choice for other Linux distributions
 
 Windows: https://www.postgresql.org/download/windows/
 
 Windows WSL: https://github.com/michaeltreat/Windows-Subsystem-For-Linux-Setup-Guide/blob/master/readmes/installs/PostgreSQL.md
 
-#### Elixr + Phoenix
+#### Erlang (v22) + Elixr + Phoenix
+
 https://elixir-lang.org/install.html
+
 https://hexdocs.pm/phoenix/installation.html
 
+#### Ansible
+
+https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html
+
 ### 2. Setup Reticulum:
+
 Run the following commands at the root of the reticulum directory:
+
 1. `mix deps.get`
 2. `mix ecto.create`
     * If step 2 fails, you may need to change the password for the `postgres` role to match the password configured `dev.exs`.
@@ -34,6 +44,7 @@ Run the following commands at the root of the reticulum directory:
 4. From the project directory `mkdir -p storage/dev`
 
 ### 3. Start Reticulum
+
 Run `scripts/run.sh` if you have the hubs secret repo cloned. Otherwise `iex -S mix phx.server`
 
 ## Run Hubs Against a Local Reticulum Instance
@@ -48,12 +59,9 @@ When running the full stack for Hubs (which includes Reticulum) locally it is ne
 This will allow the CSP checks to pass that are served up by Reticulum so you can test the whole app. Note that you must also load hubs.local over https.
 
 On MacOS or Linux:
+
 ```bash
-nano /etc/hosts # easier for newbiese
-```
-OR
-```bash
-vim /etc/hosts # vi and vim ship with most lightweight Linux distros
+nano /etc/hosts
 ```
 
 From there, add a host alias
@@ -96,6 +104,7 @@ Go to the reticulum terminal session and find a url that looks like https://hubs
 Navigate to that url in your browser to finish signing in.
 
 ### 6. Creating an Admin User
+
 After you've started Reticulum for the first time you'll likely want to create an admin user. Assuming you want to make the first account the admin, this can be done in the iex console using the following code:
 
 ```
@@ -114,6 +123,33 @@ You can now navigate to https://hubs.local:4000/admin to access the admin contro
 
 
 ## Run Spoke Against a Local Reticulum Instance
+
 1. Follow the steps above to setup Hubs
 2. Clone and start spoke by running `./scripts/run_local_reticulum.sh` in the root of the spoke project
 3. Navigate to https://hubs.local:4000/spoke
+
+## Run Reticulum against a local Dialog instance
+
+1. Update the Janus host in `dev.exs`: 
+```
+dev_janus_host = "hubs.local"
+```
+1. Update the Janus port in `dev.exs`:
+```
+config :ret, Ret.JanusLoadStatus, default_janus_host: dev_janus_host, janus_port: 4443
+```
+3. Add the Dialog meta endpoint to the CSP rules in `add_csp.ex`: 
+
+```
+default_janus_csp_rule =
+   if default_janus_host,
+      do: "wss://#{default_janus_host}:#{janus_port} https://#{default_janus_host}:#{janus_port} https://#{default_janus_host}:#{janus_port}/meta",
+      else: ""
+```
+
+4. Edit the Dialog configuration file *turnserver.conf* and update the PostgreSQL database connection string to use the *coturn* schema from the Reticulum database:
+```
+   psql-userdb="host=hubs.local dbname=ret_dev user=postgres password=postgres options='-c search_path=coturn' connect_timeout=30"
+```
+
+

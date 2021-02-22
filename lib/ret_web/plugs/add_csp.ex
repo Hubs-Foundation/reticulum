@@ -43,6 +43,7 @@ defmodule RetWeb.Plugs.AddCSP do
     storage_url = Application.get_env(:ret, Ret.Storage)[:host]
     cors_proxy_url = config_url(:cors_proxy_url)
     janus_port = Application.get_env(:ret, Ret.JanusLoadStatus)[:janus_port]
+    default_janus_host = Application.get_env(:ret, Ret.JanusLoadStatus)[:default_janus_host]
     ret_host = Ret.Meta.get_meta(include_repo: false)[:phx_host]
     ret_domain = ret_host |> String.split(".") |> Enum.take(-2) |> Enum.join(".")
     ret_port = RetWeb.Endpoint.config(:url) |> Keyword.get(:port)
@@ -51,16 +52,27 @@ defmodule RetWeb.Plugs.AddCSP do
     # legacy
     thumbnail_url = config_url(:thumbnail_url) || cors_proxy_url |> String.replace("cors-proxy", "nearspark")
 
+    # TODO: The https janus port CSP rules (including the default) can be removed after dialog is deployed,
+    # since they are used to snoop and see what SFU it is.
+    default_janus_csp_rule =
+      if default_janus_host != nil && String.length(String.trim(default_janus_host)) > 0,
+        do: "wss://#{default_janus_host}:#{janus_port} https://#{default_janus_host}:#{janus_port}",
+        else: ""
+
     ret_direct_connect =
       if is_subdomain do
-        "https://*.#{ret_domain}:#{ret_port} wss://*.#{ret_domain}:#{ret_port} wss://*.#{ret_domain}:#{janus_port}"
+        "https://*.#{ret_domain}:#{ret_port} wss://*.#{ret_domain}:#{ret_port} wss://*.#{ret_domain}:#{janus_port} https://*.#{
+          ret_domain
+        }:#{janus_port} #{default_janus_csp_rule}"
       else
-        "https://#{ret_host}:#{ret_port} wss://#{ret_host}:#{janus_port} wss://#{ret_host}:#{ret_port}"
+        "https://#{ret_host}:#{ret_port} wss://#{ret_host}:#{janus_port} wss://#{ret_host}:#{ret_port} https://#{
+          ret_host
+        }:#{janus_port} #{default_janus_csp_rule}"
       end
 
     "default-src 'none'; manifest-src #{custom_rules[:manifest_src]} 'self'; script-src #{custom_rules[:script_src]} #{
       storage_url
-    } #{assets_url} 'self' 'unsafe-eval' 'sha256-ViVvpb0oYlPAp7R8ZLxlNI6rsf7E7oz8l1SgCIXgMvM=' 'sha256-hsbRcgUBASABDq7qVGVTpbnWq/ns7B+ToTctZFJXYi8=' 'sha256-MIpWPgYj31kCgSUFc0UwHGQrV87W6N5ozotqfxxQG0w=' 'sha256-buF6N8Z4p2PuaaeRUjm7mxBpPNf4XlCT9Fep83YabbM=' 'sha256-/S6PM16MxkmUT7zJN2lkEKFgvXR7yL4Z8PCrRrFu4Q8=' https://www.google-analytics.com #{
+    } #{assets_url} 'self' 'unsafe-eval' 'sha256-ViVvpb0oYlPAp7R8ZLxlNI6rsf7E7oz8l1SgCIXgMvM=' 'sha256-hsbRcgUBASABDq7qVGVTpbnWq/ns7B+ToTctZFJXYi8=' 'sha256-MIpWPgYj31kCgSUFc0UwHGQrV87W6N5ozotqfxxQG0w=' 'sha256-buF6N8Z4p2PuaaeRUjm7mxBpPNf4XlCT9Fep83YabbM=' 'sha256-/S6PM16MxkmUT7zJN2lkEKFgvXR7yL4Z8PCrRrFu4Q8=' https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js 'sha256-foB3G7vO68Ot8wctsG3OKBQ84ADKVinlnTg9/s93Ycs=' 'sha256-g0j42v3Wo/ohUAMR/t0EuObDSEkx1rZ3lv45fUaNmYs=' https://www.google-analytics.com https://ssl.google-analytics.com  #{
       storage_url
     } #{assets_url} https://aframe.io https://www.youtube.com https://s.ytimg.com; child-src #{custom_rules[:child_src]} 'self' blob:; worker-src #{
       custom_rules[:worker_src]
@@ -70,7 +82,7 @@ defmodule RetWeb.Plugs.AddCSP do
       cors_proxy_url
     } #{storage_url} #{assets_url} 'unsafe-inline'; connect-src #{custom_rules[:connect_src]} 'self' #{cors_proxy_url} #{
       storage_url
-    } #{assets_url} #{link_url} https://dpdb.webvr.rocks #{thumbnail_url} #{ret_direct_connect} https://cdn.aframe.io https://www.youtube.com https://api.github.com data: blob:; img-src #{
+    } #{assets_url} #{link_url} https://dpdb.webvr.rocks #{thumbnail_url} #{ret_direct_connect} https://www.google-analytics.com https://cdn.aframe.io https://www.youtube.com https://api.github.com https://bh4d9od16a-3.algolianet.com data: blob:; img-src #{
       custom_rules[:img_src]
     } 'self' https://www.google-analytics.com #{storage_url} #{assets_url} #{cors_proxy_url} #{thumbnail_url} https://cdn.aframe.io https://www.youtube.com https://user-images.githubusercontent.com https://cdn.jsdelivr.net data: blob:; media-src #{
       custom_rules[:media_src]

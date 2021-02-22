@@ -8,6 +8,7 @@ defmodule RetWeb.HubChannel do
   alias Ret.{
     AppConfig,
     Hub,
+    HubInvite,
     Account,
     AccountFavorite,
     Identity,
@@ -54,7 +55,7 @@ defmodule RetWeb.HubChannel do
     |> perform_join(
       hub,
       context,
-      params |> Map.take(["push_subscription_endpoint", "auth_token", "perms_token", "bot_access_key"])
+      params |> Map.take(["push_subscription_endpoint", "auth_token", "perms_token", "bot_access_key", "hub_invite_id"])
     )
   end
 
@@ -66,14 +67,13 @@ defmodule RetWeb.HubChannel do
       end
 
     hub_requires_oauth = hub.hub_bindings |> Enum.empty?() |> Kernel.not()
-
     bot_access_key = Application.get_env(:ret, :bot_access_key)
-
     has_valid_bot_access_key = !!(bot_access_key && params["bot_access_key"] == bot_access_key)
 
     account_has_provider_for_hub = account |> Ret.Account.matching_oauth_providers(hub) |> Enum.empty?() |> Kernel.not()
 
     account_can_join = account |> can?(join_hub(hub))
+    account_can_update = account |> can?(update_hub(hub))
 
     perms_token = params["perms_token"]
 
@@ -96,13 +96,17 @@ defmodule RetWeb.HubChannel do
           {nil, nil}
       end
 
+    has_active_invite = Ret.HubInvite.active?(params["hub_invite_id"])
+
     params =
       params
       |> Map.merge(%{
+        has_active_invite: has_active_invite,
         hub_requires_oauth: hub_requires_oauth,
         has_valid_bot_access_key: has_valid_bot_access_key,
         account_has_provider_for_hub: account_has_provider_for_hub,
         account_can_join: account_can_join,
+        account_can_update: account_can_update,
         has_perms_token: has_perms_token,
         oauth_account_id: oauth_account_id,
         oauth_source: oauth_source,
@@ -404,6 +408,8 @@ defmodule RetWeb.HubChannel do
       room_size_changed = hub.room_size != payload["room_size"]
       can_change_promotion = account |> can?(update_hub_promotion(hub))
       promotion_changed = can_change_promotion and hub.allow_promotion != payload["allow_promotion"]
+      # Older clients may not send an entry_mode in the payload.
+      entry_mode_changed = payload["entry_mode"] !== nil and hub.entry_mode != payload["entry_mode"]
 
       stale_fields = []
       stale_fields = if name_changed, do: ["name" | stale_fields], else: stale_fields
@@ -411,17 +417,45 @@ defmodule RetWeb.HubChannel do
       stale_fields = if member_permissions_changed, do: ["member_permissions" | stale_fields], else: stale_fields
       stale_fields = if room_size_changed, do: ["room_size" | stale_fields], else: stale_fields
       stale_fields = if promotion_changed, do: ["allow_promotion" | stale_fields], else: stale_fields
+      stale_fields = if entry_mode_changed, do: ["entry_mode" | stale_fields], else: stale_fields
 
       hub
       |> Hub.add_attrs_to_changeset(payload)
       |> Hub.add_member_permissions_to_changeset(payload)
       |> Hub.maybe_add_promotion_to_changeset(account, hub, payload)
+      |> Hub.maybe_add_entry_mode_to_changeset(payload)
       |> Repo.update!()
       |> Repo.preload(Hub.hub_preloads())
       |> broadcast_hub_refresh!(socket, stale_fields)
     end
 
     {:noreply, socket}
+  end
+
+  def handle_in("fetch_invite", _payload, socket) do
+    hub = hub_for_socket(socket)
+    account = Guardian.Phoenix.Socket.current_resource(socket)
+
+    if account |> can?(update_hub(hub)) do
+      hub_invite = hub |> HubInvite.find_or_create_invite_for_hub()
+      {:reply, {:ok, %{hub_invite_id: hub_invite && hub_invite.hub_invite_sid}}, socket}
+    else
+      {:reply, {:ok, %{}}, socket}
+    end
+  end
+
+  def handle_in("revoke_invite", payload, socket) do
+    hub = hub_for_socket(socket)
+    account = Guardian.Phoenix.Socket.current_resource(socket)
+
+    if account |> can?(update_hub(hub)) do
+      HubInvite.revoke_invite(payload["hub_invite_id"])
+      # Hubs can only have one invite for now, so we create a new one when the old one was revoked.
+      hub_invite = hub |> HubInvite.find_or_create_invite_for_hub()
+      {:reply, {:ok, %{hub_invite_id: hub_invite.hub_invite_sid}}, socket}
+    else
+      {:reply, {:ok, %{}}, socket}
+    end
   end
 
   def handle_in("close_hub", _payload, socket) do
@@ -889,6 +923,18 @@ defmodule RetWeb.HubChannel do
        do: deny_join()
 
   defp join_with_hub(
+         %Hub{entry_mode: :invite},
+         _account,
+         _socket,
+         _context,
+         %{
+           has_active_invite: false,
+           account_can_update: false
+         }
+       ),
+       do: deny_join()
+
+  defp join_with_hub(
          %Hub{},
          %Account{},
          _socket,
@@ -1042,6 +1088,7 @@ defmodule RetWeb.HubChannel do
     |> Enum.map(
       &case &1 do
         %{type: :discord} -> %{type: :discord, url: Ret.DiscordClient.get_oauth_url(hub_sid)}
+        %{type: :slack} -> %{type: :slack, url: Ret.SlackClient.get_oauth_url(hub_sid)}
       end
     )
   end

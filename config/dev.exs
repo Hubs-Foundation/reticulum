@@ -35,6 +35,7 @@ config :ret, RetWeb.Endpoint,
   debug_errors: true,
   code_reloader: true,
   check_origin: false,
+  # This config value is for local development only.
   secret_key_base: "txlMOtlaY5x3crvOCko4uV5PM29ul3zGo1oBGNO3cDXx+7GHLKqt0gR9qzgThxb5",
   allowed_origins: "*",
   allow_crawlers: true,
@@ -54,9 +55,9 @@ config :ret, RetWeb.Endpoint,
 # command from your terminal:
 #
 #     openssl req -new -newkey rsa:4096 -days 365 -nodes -x509 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout priv/server.key -out priv/server.pem
-#
+
 # The `http:` config above can be replaced with:
-#
+
 #     https: [port: 4000, keyfile: "priv/server.key", certfile: "priv/server.pem"],
 #
 # If desired, both `http:` and `https:` keys can be
@@ -105,6 +106,15 @@ config :ret, RetWeb.Plugs.HeaderAuthorization,
   header_name: "x-ret-admin-access-key",
   header_value: "admin-only"
 
+config :ret, Ret.SlackClient,
+  client_id: "",
+  client_secret: "",
+  bot_token: ""
+
+# Token is our randomly generated auth token to append to Slacks slash command
+# As a query param "token"
+config :ret, RetWeb.Api.V1.SlackController, token: ""
+
 config :ret, Ret.DiscordClient,
   client_id: "",
   client_secret: "",
@@ -114,6 +124,7 @@ config :ret, Ret.DiscordClient,
 config :cors_plug, origin: ["*"]
 
 config :ret,
+  # This config value is for local development only.
   upload_encryption_key: "a8dedeb57adafa7821027d546f016efef5a501bd",
   bot_access_key: ""
 
@@ -153,7 +164,7 @@ asset_hosts =
 websocket_hosts =
   "https://localhost:4000 https://localhost:8080 wss://localhost:4000 " <>
     "https://#{host}:4000 https://#{host}:8080 wss://#{host}:4000 wss://#{host}:8080 wss://#{host}:8989 wss://#{host}:9090 " <>
-    "wss://#{dev_janus_host} wss://prod-janus.reticulum.io wss://#{host}:4000 wss://#{host}:8080 https://#{host}:8080 https://hubs.local:8080 wss://hubs.local:8080"
+    "wss://#{host}:4000 wss://#{host}:8080 https://#{host}:8080 https://hubs.local:8080 wss://hubs.local:8080"
 
 config :ret, RetWeb.Plugs.AddCSP,
   script_src: asset_hosts,
@@ -175,12 +186,14 @@ config :ret, Ret.OAuthToken, oauth_token_key: ""
 
 config :ret, Ret.Guardian,
   issuer: "ret",
+  # This config value is for local development only.
   secret_key: "47iqPEdWcfE7xRnyaxKDLt9OGEtkQG3SycHBEMOuT2qARmoESnhc76IgCUjaQIwX",
   ttl: {12, :weeks}
 
 config :web_push_encryption, :vapid_details,
   subject: "mailto:admin@mozilla.com",
   public_key: "BAb03820kHYuqIvtP6QuCKZRshvv_zp5eDtqkuwCUAxASBZMQbFZXzv8kjYOuLGF16A3k8qYnIN10_4asB-Aw7w",
+  # This config value is for local development only.
   private_key: "w76tXh1d3RBdVQ5eINevXRwW6Ow6uRcBa8tBDOXfmxM"
 
 config :sentry,

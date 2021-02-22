@@ -9,6 +9,18 @@ client_id = {{ toToml cfg.discord_client.client_id }}
 client_secret = {{ toToml cfg.discord_client.client_secret }}
 bot_token = {{ toToml cfg.discord_client.bot_token }}
 
+{{#if cfg.slack_client.client_id}}
+[ret."Elixir.Ret.SlackClient"]
+client_id = {{ toToml cfg.slack_client.client_id }}
+client_secret = {{ toToml cfg.slack_client.client_secret }}
+bot_token = {{ toToml cfg.slack_client.bot_token }}
+{{/if}}
+
+{{#if cfg.slack_controller.token}}
+[ret."Elixir.RetWeb.Api.V1.SlackController"]
+token = {{ toToml cfg.slack_controller.token }}
+{{/if}}
+
 {{ #if cfg.twitter_client.consumer_secret }}
 [ret."Elixir.Ret.TwitterClient"]
 {{ toToml cfg.twitter_client }}
