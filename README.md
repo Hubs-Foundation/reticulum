@@ -41,10 +41,6 @@ Run `scripts/run.sh` if you have the hubs secret repo cloned. Otherwise `iex -S 
 
 ## Run Hubs Against a Local Reticulum Instance
 
-### 0. Dependencies
-
-[Install NodeJS](https://nodejs.org) if you haven't already. We recommend version 12 or above.
-
 ### 1. Setup the `hubs.local` hostname
 
 When running the full stack for Hubs (which includes Reticulum) locally it is necessary to add a `hosts` entry pointing `hubs.local` to your local server's IP.
