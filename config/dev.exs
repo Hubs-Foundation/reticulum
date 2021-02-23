@@ -38,15 +38,7 @@ config :ret, RetWeb.Endpoint,
   # This config value is for local development only.
   secret_key_base: "txlMOtlaY5x3crvOCko4uV5PM29ul3zGo1oBGNO3cDXx+7GHLKqt0gR9qzgThxb5",
   allowed_origins: "*",
-  allow_crawlers: true,
-  watchers: [
-    node: [
-      "node_modules/brunch/bin/brunch",
-      "watch",
-      "--stdin",
-      cd: Path.expand("../assets", __DIR__)
-    ]
-  ]
+  allow_crawlers: true
 
 # ## SSL Support
 #
