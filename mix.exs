@@ -20,7 +20,7 @@ defmodule Ret.Mixfile do
   def application do
     [
       mod: {Ret.Application, []},
-      extra_applications: [:runtime_tools, :canada]
+      extra_applications: [:runtime_tools, :canada, :os_mon]
     ]
   end
 
@@ -38,9 +38,8 @@ defmodule Ret.Mixfile do
       {:phoenix_pubsub, "~> 2.0"},
       {:phoenix_ecto, "~> 4.0"},
       {:plug, "~> 1.7"},
-      # Avoid 3.4.0 for now bc https://github.com/elixir-ecto/ecto/issues/3246
-      {:ecto, "~> 3.3.0"},
-      {:ecto_sql, "~> 3.3.0"},
+      {:ecto, "~> 3.5.0"},
+      {:ecto_sql, "~> 3.5.0"},
       {:absinthe, "~> 1.5.0"},
       {:dataloader, "~> 1.0.0"},
       {:absinthe_plug, "~> 1.5.0"},
@@ -48,6 +47,7 @@ defmodule Ret.Mixfile do
       {:postgrex, ">= 0.0.0"},
       {:phoenix_html, "~> 2.13"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
+      {:phoenix_live_dashboard, "~> 0.1"},
       {:gettext, "~> 0.17"},
       {:plug_cowboy, "~> 2.1"},
       {:distillery, "~> 2.0"},
@@ -87,7 +87,10 @@ defmodule Ret.Mixfile do
       {:ex_rated, "~> 1.3.3"},
       {:mix_test_watch, "~> 1.0", only: :dev, runtime: false},
       {:ex_json_schema, "~> 0.7.3"},
-      {:observer_cli, "~> 1.5"}
+      {:observer_cli, "~> 1.5"},
+      {:telemetry_poller, "~> 0.4"},
+      {:telemetry_metrics, "~> 0.4"},
+      {:ecto_psql_extras, "~> 0.2"}
     ]
   end
 

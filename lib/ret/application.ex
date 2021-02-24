@@ -69,6 +69,7 @@ defmodule Ret.Application do
 
       # Start the Ecto repository
       supervisor(Ret.Repo, []),
+      RetWeb.Telemetry,
       supervisor(RetWeb.Endpoint, []),
       supervisor(RetWeb.Presence, []),
 

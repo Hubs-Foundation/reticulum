@@ -63,4 +63,33 @@ defmodule RetWeb.Api.V1.AccountController do
       {:ok, {200, Phoenix.View.render(AccountView, "create.json", account: account, email: email)}}
     end
   end
+
+  def set_cookie(conn, _params) do
+    conn
+    |> set_account_cookie(%{
+      value: Ret.Guardian.Plug.current_token(conn),
+      max_age: 60 * 60 * 24
+    })
+    |> Plug.Conn.send_resp(200, "")
+  end
+
+  def expire_cookie(conn, _params) do
+    conn
+    |> set_account_cookie(%{value: "", max_age: 60})
+    |> Plug.Conn.send_resp(200, "")
+  end
+
+  defp set_account_cookie(conn, %{value: value, max_age: max_age}) do
+    key = Guardian.Plug.Keys.token_key("default") |> Atom.to_string()
+
+    opts = [
+      encrypt: true,
+      max_age: max_age,
+      http_only: true,
+      secure: true
+    ]
+
+    conn
+    |> Plug.Conn.put_resp_cookie(key, value, opts)
+  end
 end

@@ -30,7 +30,9 @@ config :ret, RetWeb.Endpoint,
   url: [host: "localhost"],
   secret_key_base: "txlMOtlaY5x3crvOCko4uV5PM29ul3zGo1oBGNO3cDXx+7GHLKqt0gR9qzgThxb5",
   render_errors: [view: RetWeb.ErrorView, accepts: ~w(html json)],
-  pubsub_server: Ret.PubSub
+  pubsub_server: Ret.PubSub,
+  # TODO: Load salt securely for production environment
+  live_view: [signing_salt: "p1pqfyVx4YPcjkZYz5PiQJDm0XlMWYk7"]
 
 # Configures Elixir's Logger
 config :logger, :console,

@@ -2,6 +2,7 @@ defmodule RetWeb.Router do
   use RetWeb, :router
   use Plug.ErrorHandler
   use Sentry.Plug
+  import Phoenix.LiveDashboard.Router
 
   pipeline :secure_headers do
     plug(:put_secure_browser_headers)
@@ -86,6 +87,25 @@ defmodule RetWeb.Router do
   scope "/api/ita" do
     pipe_through([:secure_headers, :auth_required, :admin_required, :proxy_api])
     forward("/", RetWeb.Plugs.ItaProxy)
+  end
+
+  scope "/", RetWeb do
+    pipe_through(
+      [:secure_headers, :parsed_body, :browser] ++
+        if(Mix.env() == :prod, do: [:ssl_only, :canonicalize_domain], else: [])
+    )
+
+    post("/api/v1/accounts/expire_cookie", Api.V1.AccountController, :expire_cookie)
+
+    scope "/" do
+      pipe_through([:admin_required])
+
+      # TODO: investigate whether we have pg_stat_statements installed for postgres
+      # https://www.postgresql.org/docs/current/pgstatstatements.html
+      # https://hexdocs.pm/phoenix_live_dashboard/ecto_stats.html#install-custom-extensions
+      live_dashboard "/telemetry", metrics: RetWeb.Telemetry, ecto_repos: [Ret.Repo]
+      post("/api/v1/accounts/set_cookie", Api.V1.AccountController, :set_cookie)
+    end
   end
 
   scope "/api", RetWeb do
