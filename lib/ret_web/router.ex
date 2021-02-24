@@ -95,7 +95,7 @@ defmodule RetWeb.Router do
         if(Mix.env() == :prod, do: [:ssl_only, :canonicalize_domain], else: [])
     )
 
-    get("/api/v1/accounts/expire_cookie", Api.V1.AccountController, :expire_cookie)
+    post("/api/v1/accounts/expire_cookie", Api.V1.AccountController, :expire_cookie)
 
     scope "/" do
       pipe_through([:admin_required])
@@ -104,7 +104,7 @@ defmodule RetWeb.Router do
       # https://www.postgresql.org/docs/current/pgstatstatements.html
       # https://hexdocs.pm/phoenix_live_dashboard/ecto_stats.html#install-custom-extensions
       live_dashboard "/telemetry", metrics: RetWeb.Telemetry, ecto_repos: [Ret.Repo]
-      get("/api/v1/accounts/set_cookie", Api.V1.AccountController, :set_cookie)
+      post("/api/v1/accounts/set_cookie", Api.V1.AccountController, :set_cookie)
     end
   end
 
