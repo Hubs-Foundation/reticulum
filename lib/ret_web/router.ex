@@ -121,10 +121,17 @@ defmodule RetWeb.Router do
       resources("/hubs", Api.V1.HubController, only: [:create, :delete])
     end
 
+    # Must be defined before :show for scenes
+    scope "/v1", as: :api_v1 do
+      pipe_through([:auth_required])
+      get("/scenes/projectless", Api.V1.SceneController, :index_projectless)
+    end
+
     scope "/v1", as: :api_v1 do
       pipe_through([:auth_optional])
       resources("/media/search", Api.V1.MediaSearchController, only: [:index])
       resources("/avatars", Api.V1.AvatarController, only: [:show])
+
       resources("/scenes", Api.V1.SceneController, only: [:show])
     end
 
