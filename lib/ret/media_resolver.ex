@@ -22,6 +22,7 @@ defmodule Ret.MediaResolver do
   @sketchfab_rate_limit %{scale: 60_000, limit: 15}
   @poly_rate_limit %{scale: 60_000, limit: 1000}
   @max_await_for_rate_limit_s 120
+  @sketchfab_ttl_ms 1000 * 60 * 60 * 24 * 31
 
   @non_video_root_hosts [
     "sketchfab.com",
@@ -454,7 +455,7 @@ defmodule Ret.MediaResolver do
         _err -> [uri, nil]
       end
 
-    {:commit, uri |> resolved(meta)}
+    {:commit, resolved(uri, meta) |> Map.put(:ttl, @sketchfab_ttl_ms)}
   end
 
   defp resolve_sketchfab_model(model_id, api_key, version \\ 1) do
