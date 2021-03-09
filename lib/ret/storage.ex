@@ -190,7 +190,6 @@ defmodule Ret.Storage do
     with(
       storage_path when is_binary(storage_path) <- module_config(:storage_path),
       {:ok, uuid} <- Ecto.UUID.cast(id),
-      # TODO: If we add new buckets, we have to get the file out of new buckets
       [_, meta_file_path, blob_file_path] <- paths_for_uuid(uuid, expiring_file_path()),
       [dest_path, dest_meta_file_path, dest_blob_file_path] <- paths_for_uuid(uuid, owned_file_path()),
       [{:ok, _}, {:ok, _}] <- [File.stat(meta_file_path), File.stat(blob_file_path)],
