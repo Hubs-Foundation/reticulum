@@ -83,8 +83,9 @@ defmodule Ret.CachedFile do
   end
 
   def vacuum do
-    now = Timex.now()
-    expiration = Timex.shift(now, weeks: -4)
+    # TODO: Extend the lifetime once everything has been migrated to the cached_file_path()
+    expiration = Timex.now() |> Timex.shift(now, days: -2) |> Timex.to_naive_datetime()
+    # expiration = Timex.now() |> Timex.shift(now, weeks: -4) |> Timex.to_naive_datetime()
     vacuum(%{expiration: expiration})
   end
 
@@ -95,8 +96,6 @@ defmodule Ret.CachedFile do
       case Storage.vacuum(%{cached_files: cached_files_to_delete}) do
         {:ok, %{vacuumed: vacuumed, errors: _errors}} ->
           vacuumed |> Enum.each(&Repo.delete/1)
-
-        # TODO: What if some failed to be vacuumed?
 
         _ ->
           # TODO: What to do if storage vacuum fails?

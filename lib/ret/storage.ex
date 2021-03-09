@@ -93,7 +93,32 @@ defmodule Ret.Storage do
 
   def fetch_at(%CachedFile{file_uuid: id, file_key: key} = cached_file, time) do
     maybe_bump_accessed_at(cached_file, time)
-    fetch_blob(id, key, cached_file_path())
+
+    case fetch_blob(id, key, cached_file_path()) do
+      {:ok, meta, stream} ->
+        {:ok, meta, stream}
+
+      {:error, _} ->
+        migrate(%{cached_file: cached_file})
+        fetch_blob(id, key, cached_file_path())
+    end
+  end
+
+  # TODO: Remove this code once all the CachedFiles are stored in the cached_file_path().
+  defp migrate(%{
+         cached_file: %CachedFile{file_uuid: id, file_key: file_key, file_content_type: content_type} = cached_file
+       }) do
+    with {:ok, _meta, _stream} <- fetch_blob(id, key, expiring_file_path()),
+         {:ok, uuid} <- Ecto.UUID.cast(id),
+         [src_file_directory, src_meta_file_path, src_blob_file_path] <- paths_for_uuid(uuid, expiring_file_path()),
+         [dest_file_directory, dest_meta_file_path, dest_blob_file_path] <- paths_for_uuid(uuid, cached_file_path()),
+         {:ok, _} <- File.mkdir_p(dest_file_directory),
+         {:ok, _} <- File.cp(src_meta_file_path, dest_meta_file_path),
+         {:ok, _} <- File.cp(src_blob_file_path, dest_blob_file_path) do
+      {:ok, cached_file}
+    else
+      _ -> {:error, "Migration failed"}
+    end
   end
 
   defp fetch_blob(id, key, subpath) do
@@ -101,7 +126,8 @@ defmodule Ret.Storage do
          {:ok, uuid} <- Ecto.UUID.cast(id),
          [_file_path, meta_file_path, blob_file_path] <- paths_for_uuid(uuid, subpath),
          [{:ok, _}, {:ok, _}] <- [File.stat(meta_file_path), File.stat(blob_file_path)],
-         meta <- File.read!(meta_file_path) |> Poison.decode!(),
+         {:ok, meta_file_data} <- File.read(meta_file_path),
+         {:ok, meta} <- Poison.decode(meta_file_data),
          {:ok, stream} <- decrypt_file_to_stream(blob_file_path, meta, key) do
       {:ok, meta, stream}
     else
