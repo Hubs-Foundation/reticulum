@@ -464,13 +464,13 @@ defmodule Ret.MediaResolver do
         {:error, "Failed to get sketchfab metadata"}
 
       response ->
-        zip_url =
-          response
-          |> Map.get(:body)
-          |> Poison.decode!()
-          |> Kernel.get_in(["gltf", "url"])
+        case response |> Map.get(:body) |> Poison.decode() do
+          {:ok, json} ->
+            {:ok, Kernel.get_in(json, ["gltf", "url"])}
 
-        {:ok, zip_url}
+          _ ->
+            {:error, "Failed to get sketchfab metadata"}
+        end
     end
   end
 
@@ -483,8 +483,8 @@ defmodule Ret.MediaResolver do
       {:error, error} ->
         {:error, error}
 
-      other ->
-        IO.inspect({"other", other})
+      _ ->
+        {:error, "Failed to get sketchfab url"}
     end
   end
 

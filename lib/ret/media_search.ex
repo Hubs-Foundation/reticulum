@@ -346,8 +346,12 @@ defmodule Ret.MediaSearch do
   def sketchfab_search(query) do
     with api_key when is_binary(api_key) <- resolver_config(:sketchfab_api_key) do
       res =
-        "https://api.sketchfab.com/v3/search?#{query}"
-        |> retry_get_until_success([{"Authorization", "Token #{api_key}"}], 15_000, 15_000)
+        retry_get_until_success(
+          "https://api.sketchfab.com/v3/search?#{query}",
+          [{"Authorization", "Token #{api_key}"}],
+          15_000,
+          15_000
+        )
 
       case res do
         :error ->
