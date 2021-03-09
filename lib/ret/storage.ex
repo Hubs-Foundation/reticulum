@@ -106,7 +106,7 @@ defmodule Ret.Storage do
 
   # TODO: Remove this code once all the CachedFiles are stored in the cached_file_path().
   defp migrate(%{
-         cached_file: %CachedFile{file_uuid: id, file_key: file_key, file_content_type: content_type} = cached_file
+         cached_file: %CachedFile{file_uuid: id, file_key: file_key} = cached_file
        }) do
     with {:ok, _meta, _stream} <- fetch_blob(id, file_key, expiring_file_path()),
          {:ok, uuid} <- Ecto.UUID.cast(id),
