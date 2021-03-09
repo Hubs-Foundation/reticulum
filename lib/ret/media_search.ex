@@ -343,7 +343,7 @@ defmodule Ret.MediaSearch do
   def available?(:tenor), do: has_resolver_config?(:tenor_api_key)
   def available?(:twitch), do: has_resolver_config?(:twitch_client_id)
 
-  defp sketchfab_search(query) do
+  def sketchfab_search(query) do
     with api_key when is_binary(api_key) <- resolver_config(:sketchfab_api_key) do
       res =
         "https://api.sketchfab.com/v3/search?#{query}"
