@@ -64,7 +64,7 @@ defmodule Ret.Scene do
     Repo.all(
       from(s in Scene,
         left_join: project in assoc(s, :project),
-        where: s.account_id == ^account.account_id and is_nil(project),
+        where: s.account_id == ^account.account_id and is_nil(s.scene_owned_file_id) and is_nil(project),
         preload: ^Scene.scene_preloads(),
         order_by: [desc: s.updated_at]
       )
