@@ -81,3 +81,5 @@ config :ret, Ret.MediaResolver,
   sketchfab_api_key: nil,
   ytdl_host: nil,
   photomnemonic_endpoint: "https://uvnsm9nzhe.execute-api.us-west-1.amazonaws.com/public"
+
+config :ret, :ex_unit_configuration, exclude: [dev_only: true]

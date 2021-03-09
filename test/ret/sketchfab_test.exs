@@ -20,6 +20,7 @@ defmodule Ret.SketchfabTest do
     }
   end
 
+  @tag dev_only: true
   test "Can download Sketchfab models", %{api_key: api_key, cube: %{model_id: model_id}} do
     {:ok, path} = Temp.path()
 
@@ -37,6 +38,7 @@ defmodule Ret.SketchfabTest do
     end
   end
 
+  @tag dev_only: true
   test "Sketchfab models are cached", %{
     api_key: api_key,
     cube: %{model_id: model_id, cache_key: cache_key}
@@ -65,8 +67,8 @@ defmodule Ret.SketchfabTest do
         type: :models,
         downloadable: true,
         count: 1,
-        max_face_count: 20_000,
-        max_filesizes: "gltf:#{1024 * 1024}",
+        max_face_count: 10_000,
+        max_filesizes: "gltf:#{16 * 1024}",
         processing_status: :succeeded,
         cursor: nil,
         q: search_term
