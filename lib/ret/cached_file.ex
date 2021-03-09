@@ -84,8 +84,8 @@ defmodule Ret.CachedFile do
 
   def vacuum do
     # TODO: Extend the lifetime once everything has been migrated to the cached_file_path()
-    expiration = Timex.now() |> Timex.shift(now, days: -2) |> Timex.to_naive_datetime()
-    # expiration = Timex.now() |> Timex.shift(now, weeks: -4) |> Timex.to_naive_datetime()
+    expiration = Timex.now() |> Timex.shift(days: -2) |> Timex.to_naive_datetime()
+    # expiration = Timex.now() |> Timex.shift(weeks: -4) |> Timex.to_naive_datetime()
     vacuum(%{expiration: expiration})
   end
 

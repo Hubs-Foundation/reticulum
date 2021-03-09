@@ -108,9 +108,9 @@ defmodule Ret.Storage do
   defp migrate(%{
          cached_file: %CachedFile{file_uuid: id, file_key: file_key, file_content_type: content_type} = cached_file
        }) do
-    with {:ok, _meta, _stream} <- fetch_blob(id, key, expiring_file_path()),
+    with {:ok, _meta, _stream} <- fetch_blob(id, file_key, expiring_file_path()),
          {:ok, uuid} <- Ecto.UUID.cast(id),
-         [src_file_directory, src_meta_file_path, src_blob_file_path] <- paths_for_uuid(uuid, expiring_file_path()),
+         [_src_file_directory, src_meta_file_path, src_blob_file_path] <- paths_for_uuid(uuid, expiring_file_path()),
          [dest_file_directory, dest_meta_file_path, dest_blob_file_path] <- paths_for_uuid(uuid, cached_file_path()),
          {:ok, _} <- File.mkdir_p(dest_file_directory),
          {:ok, _} <- File.cp(src_meta_file_path, dest_meta_file_path),
