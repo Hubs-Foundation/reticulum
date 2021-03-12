@@ -86,7 +86,7 @@ defmodule Ret.MediaSearch do
         count: @page_size,
         max_face_count: @max_face_count,
         max_filesizes: "gltf:#{@max_file_size_bytes}",
-        processing_status: :succeeded,
+        # processing_status: :succeeded, # Sketchfab API seems to have a bug that rejects processing_status
         cursor: cursor,
         q: q
       )
@@ -103,7 +103,7 @@ defmodule Ret.MediaSearch do
         count: @page_size,
         max_face_count: @max_face_count,
         max_filesizes: "gltf:#{@max_file_size_bytes}",
-        processing_status: :succeeded,
+        # processing_status: :succeeded,  # Sketchfab API seems to have a bug that rejects processing_status
         sort_by:
           if q == nil || q == "" do
             "-publishedAt"
