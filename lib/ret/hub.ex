@@ -24,7 +24,8 @@ defmodule Ret.Hub do
     RoomAssigner,
     BitFieldUtils,
     HubRoleMembership,
-    AppConfig
+    AppConfig,
+    AccountFavorite
   }
 
   alias Ret.Hub.{HubSlug}
@@ -100,8 +101,8 @@ defmodule Ret.Hub do
     field(:spawned_object_types, :integer, default: 0)
     field(:entry_mode, Ret.Hub.EntryMode)
     field(:user_data, :map)
-    belongs_to(:scene, Ret.Scene, references: :scene_id)
-    belongs_to(:scene_listing, Ret.SceneListing, references: :scene_listing_id)
+    belongs_to(:scene, Ret.Scene, references: :scene_id, on_replace: :nilify)
+    belongs_to(:scene_listing, Ret.SceneListing, references: :scene_listing_id, on_replace: :nilify)
     has_many(:web_push_subscriptions, Ret.WebPushSubscription, foreign_key: :hub_id)
     belongs_to(:created_by_account, Ret.Account, references: :account_id)
     has_many(:hub_invites, Ret.HubInvite, foreign_key: :hub_id)
@@ -113,6 +114,201 @@ defmodule Ret.Hub do
     field(:room_size, :integer)
 
     timestamps()
+  end
+
+  @required_keys [
+    :name,
+    :hub_sid,
+    :host,
+    :entry_code,
+    :entry_code_expires_at,
+    :embed_token,
+    :member_permissions,
+    :max_occupant_count,
+    :spawned_object_types,
+    :room_size
+  ]
+  @permitted_keys [
+    :creator_assignment_token,
+    :description,
+    :embedded,
+    :default_environment_gltf_bundle_url,
+    :user_data,
+    :last_active_at,
+    :entry_mode | @required_keys
+  ]
+
+  # TODO: This function was created for use in the public API.
+  #       It would be good to revisit this and the alternatives below
+  #       so that there did not need to be as many variations.
+  def create_room(params, account_or_nil) do
+    with {:ok, params} <- parse_member_permissions(params) do
+      params =
+        Map.merge(
+          %{
+            name: Ret.RandomRoomNames.generate_room_name(),
+            hub_sid: Ret.Sids.generate_sid(),
+            host: RoomAssigner.get_available_host(nil),
+            entry_code: generate_entry_code!(),
+            entry_code_expires_at:
+              Timex.now()
+              |> Timex.shift(hours: @entry_code_expiration_hours)
+              |> DateTime.truncate(:second),
+            creator_assignment_token: SecureRandom.hex(),
+            embed_token: SecureRandom.hex(),
+            member_permissions: default_member_permissions(),
+            room_size: AppConfig.get_cached_config_value("features|default_room_size")
+          },
+          params
+        )
+
+      result =
+        %Hub{}
+        |> change()
+        |> cast(params, @permitted_keys)
+        |> add_account_to_changeset(account_or_nil)
+        |> add_scene_changes_to_changeset(params)
+        |> HubSlug.maybe_generate_slug()
+        |> validate_required(@required_keys)
+        |> validate_length(:name, max: 64)
+        |> validate_length(:description, max: 64_000)
+        |> validate_number(:room_size,
+          greater_than_or_equal_to: 0,
+          less_than_or_equal_to: AppConfig.get_cached_config_value("features|max_room_size")
+        )
+        |> unique_constraint(:hub_sid)
+        |> unique_constraint(:entry_code)
+        |> Repo.insert()
+
+      case result do
+        {:ok, hub} ->
+          {:ok, Repo.preload(hub, hub_preloads())}
+
+        _ ->
+          result
+      end
+    end
+  end
+
+  # TODO: Clean up handling of member_permissions so that it is
+  # clear everywhere whether we are dealing with a map or an int
+  defp parse_member_permissions(%{member_permissions: map} = params) when is_map(map) do
+    case Hub.lenient_member_permissions_to_int(map) do
+      {:ok, member_permissions} ->
+        {:ok, %{params | member_permissions: member_permissions}}
+
+      {ArgumentError, e} ->
+        {:error, e}
+    end
+  end
+
+  defp parse_member_permissions(%{member_permissions: nil} = params) do
+    {:ok, Map.delete(params, :member_permissions)}
+  end
+
+  defp parse_member_permissions(params) do
+    {:ok, params}
+  end
+
+  defp default_member_permissions() do
+    if Ret.AppConfig.get_config_bool("features|permissive_rooms") do
+      member_permissions_to_int(@default_member_permissions)
+    else
+      member_permissions_to_int(@default_restrictive_member_permissions)
+    end
+  end
+
+  def add_scene_changes_to_changeset(changeset, %{} = params) do
+    add_scene_changes(changeset, scene_change_from_params(params))
+  end
+
+  defp scene_change_from_params(%{scene_id: nil, scene_url: nil}) do
+    :nilify
+  end
+
+  defp scene_change_from_params(%{scene_id: _id, scene_url: _url}) do
+    {:error,
+     %{key: :scene_id, message: "Cannot specify both scene_id and scene_url. Choose one or the other (or neither)."}}
+  end
+
+  defp scene_change_from_params(%{scene_url: nil}) do
+    :nilify
+  end
+
+  defp scene_change_from_params(%{scene_id: nil}) do
+    :nilify
+  end
+
+  defp scene_change_from_params(%{scene_url: url}) do
+    endpoint_host = RetWeb.Endpoint.host()
+
+    case url |> URI.parse() do
+      %URI{host: ^endpoint_host, path: "/scenes/" <> scene_path} ->
+        scene_or_scene_listing = scene_path |> String.split("/") |> Enum.at(0) |> Scene.scene_or_scene_listing_by_sid()
+
+        if is_nil(scene_or_scene_listing) do
+          {:error, %{key: :scene_url, message: "Cannot find scene with url: " <> url}}
+        else
+          scene_or_scene_listing
+        end
+
+      _ ->
+        url
+    end
+  end
+
+  defp scene_change_from_params(%{scene_id: id}) do
+    scene_or_scene_listing = Scene.scene_or_scene_listing_by_sid(id)
+
+    if is_nil(scene_or_scene_listing) do
+      {:error, %{key: :scene_id, message: "Cannot find scene with id: " <> id}}
+    else
+      scene_or_scene_listing
+    end
+  end
+
+  defp scene_change_from_params(_params) do
+    nil
+  end
+
+  defp add_scene_changes(changeset, {:error, %{key: key, message: message}}) do
+    add_error(changeset, key, message)
+  end
+
+  defp add_scene_changes(changeset, nil) do
+    # No scene info in params. Leave unchanged
+    changeset
+  end
+
+  defp add_scene_changes(changeset, :nilify) do
+    # Clear scene info
+    changeset
+    |> put_change(:default_environment_gltf_bundle_url, nil)
+    |> put_assoc(:scene, nil)
+    |> put_assoc(:scene_listing, nil)
+  end
+
+  defp add_scene_changes(changeset, %Scene{} = scene) do
+    changeset
+    |> put_assoc(:scene, scene)
+    |> put_assoc(:scene_listing, nil)
+    |> put_change(:default_environment_gltf_bundle_url, nil)
+  end
+
+  defp add_scene_changes(changeset, %SceneListing{} = scene_listing) do
+    changeset
+    |> put_assoc(:scene, nil)
+    |> put_assoc(:scene_listing, scene_listing)
+    |> put_change(:default_environment_gltf_bundle_url, nil)
+  end
+
+  defp add_scene_changes(changeset, url) do
+    changeset
+    |> cast(%{default_environment_gltf_bundle_url: url}, [:default_environment_gltf_bundle_url])
+    # TODO: Should we validate the format of the URL?
+    |> validate_required([:default_environment_gltf_bundle_url])
+    |> put_assoc(:scene, nil)
+    |> put_assoc(:scene_listing, nil)
   end
 
   # Create new room, inserts into db
@@ -134,6 +330,14 @@ defmodule Ret.Hub do
     |> changeset(scene_or_scene_listing, params)
   end
 
+  def create(params) do
+    scene_or_scene_listing = get_scene_or_scene_listing(params)
+
+    %Hub{}
+    |> changeset(scene_or_scene_listing, params)
+    |> Repo.insert()
+  end
+
   defp get_scene_or_scene_listing(params) do
     if is_nil(params["scene_id"]) do
       SceneListing.get_random_default_scene_listing()
@@ -142,11 +346,44 @@ defmodule Ret.Hub do
     end
   end
 
+  defp get_scene_or_scene_listing_by_id(nil) do
+    SceneListing.get_random_default_scene_listing()
+  end
+
+  defp get_scene_or_scene_listing_by_id(id) do
+    Scene.scene_or_scene_listing_by_sid(id)
+  end
+
   def get_by_entry_code_string(entry_code_string) when is_binary(entry_code_string) do
     case Integer.parse(entry_code_string) do
       {entry_code, _} -> Hub |> Repo.get_by(entry_code: entry_code)
       _ -> nil
     end
+  end
+
+  def get_my_rooms(account, params) do
+    Hub
+    |> where([h], h.created_by_account_id == ^account.account_id and h.entry_mode in ^["allow", "invite"])
+    |> order_by(desc: :inserted_at)
+    |> preload(^Hub.hub_preloads())
+    |> Repo.paginate(params)
+  end
+
+  def get_favorite_rooms(account, params) do
+    Hub
+    |> where([h], h.entry_mode in ^["allow", "invite"])
+    |> join(:inner, [h], f in AccountFavorite, on: f.hub_id == h.hub_id and f.account_id == ^account.account_id)
+    |> order_by([h, f], desc: f.last_activated_at)
+    |> preload(^Hub.hub_preloads())
+    |> Repo.paginate(params)
+  end
+
+  def get_public_rooms(params) do
+    Hub
+    |> where([h], h.allow_promotion and h.entry_mode in ^["allow", "invite"])
+    |> order_by(desc: :inserted_at)
+    |> preload(^Hub.hub_preloads())
+    |> Repo.paginate(params)
   end
 
   def changeset(%Hub{} = hub, %Scene{} = scene, attrs) do
@@ -190,9 +427,9 @@ defmodule Ret.Hub do
     attrs["member_permissions"] |> Map.new(fn {k, v} -> {String.to_atom(k), v} end) |> member_permissions_to_int
   end
 
-  def add_member_permissions_update_to_changeset(changeset, hub, attrs) do
+  defp add_member_permissions_update_to_changeset(changeset, hub, member_permissions) do
     member_permissions =
-      Map.merge(member_permissions_for_hub(hub), attrs["member_permissions"])
+      Map.merge(member_permissions_for_hub(hub), member_permissions)
       |> Map.new(fn {k, v} -> {String.to_atom(k), v} end)
       |> member_permissions_to_int
 
@@ -213,7 +450,8 @@ defmodule Ret.Hub do
   end
 
   def add_promotion_to_changeset(changeset, attrs) do
-    changeset |> put_change(:allow_promotion, !!attrs["allow_promotion"])
+    changeset
+    |> put_change(:allow_promotion, Map.get(attrs, "allow_promotion", false) || Map.get(attrs, :allow_promotion, false))
   end
 
   def maybe_add_entry_mode_to_changeset(changeset, attrs) do
@@ -222,6 +460,20 @@ defmodule Ret.Hub do
     else
       changeset |> put_change(:entry_mode, attrs["entry_mode"])
     end
+  end
+
+  def maybe_add_new_scene_to_changeset(changeset, %{scene_id: scene_id}) do
+    scene_or_scene_listing = get_scene_or_scene_listing_by_id(scene_id)
+
+    if is_nil(scene_or_scene_listing) do
+      {:error, "Cannot find scene with id " <> scene_id}
+    else
+      Hub.add_new_scene_to_changeset(changeset, scene_or_scene_listing)
+    end
+  end
+
+  def maybe_add_new_scene_to_changeset(changeset, _args) do
+    changeset
   end
 
   def changeset_for_new_seen_occupant_count(%Hub{} = hub, occupant_count) do
@@ -356,6 +608,15 @@ defmodule Ret.Hub do
 
   def room_size_for(%Hub{} = hub) do
     hub.room_size || AppConfig.get_cached_config_value("features|default_room_size")
+  end
+
+  def scene_or_scene_listing_for(%Hub{} = hub) do
+    case hub.scene || hub.scene_listing do
+      nil -> nil
+      %Scene{state: :removed} -> nil
+      %SceneListing{state: :delisted} -> nil
+      scene_or_scene_listing -> scene_or_scene_listing
+    end
   end
 
   defp changeset_for_new_entry_code(%Hub{} = hub) do
@@ -524,17 +785,35 @@ defmodule Ret.Hub do
     is_creator?(hub, account_id) || hub_role_memberships |> Enum.any?(&(&1.account_id === account_id))
   end
 
-  def member_permissions_to_int(%{} = member_permissions) do
+  @doc """
+  Lenient version of member permissions conversion
+  Does not throw on invalid permissions
+  """
+  def lenient_member_permissions_to_int(%{} = member_permissions) do
     invalid_member_permissions = member_permissions |> Map.drop(@member_permissions_keys) |> Map.keys()
 
     if invalid_member_permissions |> Enum.count() > 0 do
-      raise ArgumentError, "Invalid permissions #{invalid_member_permissions |> Enum.join(", ")}"
+      {ArgumentError, "Invalid permissions #{invalid_member_permissions |> Enum.join(", ")}"}
+    else
+      {:ok,
+       @member_permissions
+       |> Enum.reduce(0, fn {val, member_permission}, acc ->
+         if(member_permissions[member_permission], do: val, else: 0) + acc
+       end)}
     end
+  end
 
-    @member_permissions
-    |> Enum.reduce(0, fn {val, member_permission}, acc ->
-      if(member_permissions[member_permission], do: val, else: 0) + acc
-    end)
+  # TODO: Rename (lenient_)member_permissions_to_int
+  # to follow the elixir pattern of using an exclamation mark (!)
+  # to indicate possibly raising an error
+  def member_permissions_to_int(%{} = member_permissions) do
+    case lenient_member_permissions_to_int(member_permissions) do
+      {:ok, int} ->
+        int
+
+      {ArgumentError, e} ->
+        raise ArgumentError, e
+    end
   end
 
   def has_member_permission?(%Hub{} = hub, member_permission) do
@@ -550,6 +829,43 @@ defmodule Ret.Hub do
     |> BitFieldUtils.permissions_to_map(@member_permissions)
     |> Map.new(fn {k, v} -> {Atom.to_string(k), v} end)
   end
+
+  def member_permissions_for_hub_as_atoms(%Hub{} = hub) do
+    hub.member_permissions
+    |> BitFieldUtils.permissions_to_map(@member_permissions)
+  end
+
+  def maybe_add_member_permissions(changeset, hub, %{"member_permissions" => member_permissions}) do
+    add_member_permissions_update_to_changeset(
+      changeset,
+      hub,
+      member_permissions
+    )
+  end
+
+  def maybe_add_member_permissions(changeset, _hub, %{:member_permissions => nil}) do
+    changeset
+  end
+
+  def maybe_add_member_permissions(changeset, hub, %{:member_permissions => member_permissions}) do
+    add_member_permissions_update_to_changeset(
+      changeset,
+      hub,
+      Map.new(member_permissions, fn {k, v} -> {Atom.to_string(k), v} end)
+    )
+  end
+
+  def maybe_add_member_permissions(changeset, _hub, _params) do
+    changeset
+  end
+
+  def maybe_add_promotion(changeset, account, hub, %{"allow_promotion" => _} = hub_params),
+    do: changeset |> Hub.maybe_add_promotion_to_changeset(account, hub, hub_params)
+
+  def maybe_add_promotion(changeset, account, hub, %{allow_promotion: _} = hub_params),
+    do: changeset |> Hub.maybe_add_promotion_to_changeset(account, hub, hub_params)
+
+  def maybe_add_promotion(changeset, _account, _hub, _), do: changeset
 
   # The account argument here can be a Ret.Account, a Ret.OAuthProvider or nil.
   def perms_for_account(%Ret.Hub{} = hub, account) do
@@ -580,6 +896,36 @@ end
 
 defimpl Canada.Can, for: Ret.Account do
   alias Ret.{Hub, AppConfig}
+  alias Ret.Api.Credentials
+
+  def can?(%Ret.Account{is_admin: is_admin}, :create_credentials, _params) do
+    is_admin
+  end
+
+  def can?(%Ret.Account{is_admin: is_admin}, :list_credentials, :app) do
+    is_admin
+  end
+
+  def can?(%Ret.Account{}, :list_credentials, :account) do
+    # TODO: Allow admins to disable this in config
+    true
+  end
+
+  def can?(%Ret.Account{}, :list_credentials, _subject_type) do
+    false
+  end
+
+  def can?(%Ret.Account{account_id: account_id}, :revoke_credentials, %Credentials{account_id: account_id}) do
+    true
+  end
+
+  def can?(%Ret.Account{is_admin: true}, :revoke_credentials, %Credentials{}) do
+    true
+  end
+
+  def can?(%Ret.Account{}, :revoke_credentials, %Credentials{}) do
+    false
+  end
 
   @owner_actions [:update_hub, :close_hub, :embed_hub, :kick_users, :mute_users]
   @object_actions [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects, :spawn_emoji, :fly]
@@ -653,6 +999,13 @@ defimpl Canada.Can, for: Ret.Account do
     hub |> Hub.has_member_permission?(action) or hub |> Ret.Hub.is_owner?(account_id)
   end
 
+  @self_allowed_actions [:get_rooms_created_by, :get_favorite_rooms_of]
+  # Allow accounts to access their own rooms
+  def can?(%Ret.Account{} = a, action, %Ret.Account{} = b) when action in @self_allowed_actions,
+    do: a.account_id == b.account_id
+
+  def can?(%Ret.Account{}, :get_public_rooms, _), do: true
+
   # Create hubs
   def can?(%Ret.Account{is_admin: true}, :create_hub, _), do: true
 
@@ -699,11 +1052,32 @@ defimpl Canada.Can, for: Ret.OAuthProvider do
   def can?(_, _, _), do: false
 end
 
-# Permissions for un-authenticated clients
+# Permissions for app tokens and un-authenticated clients
 defimpl Canada.Can, for: Atom do
-  alias Ret.{AppConfig, Hub}
+  @allowed_app_token_actions [
+    :get_rooms_created_by,
+    :get_favorite_rooms_of,
+    :get_public_rooms,
+    :create_hub,
+    :update_hub
+  ]
+  def can?(:reticulum_app_token, action, _) when action in @allowed_app_token_actions do
+    true
+  end
 
-  @object_actions [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects, :spawn_emoji, :fly]
+  # Bound hubs - Always prevent embedding and role assignment (since it's dictated by binding)
+  def can?(:reticulum_app_token, action, %Ret.Hub{hub_bindings: hub_bindings})
+      when length(hub_bindings) > 0 and action in [:embed_hub, :update_roles],
+      do: false
+
+  # Allow app tokens to act like owners/creators if the room has no bindings
+  def can?(:reticulum_app_token, action, %Ret.Hub{})
+      when action in [:embed_hub, :update_roles],
+      do: true
+
+  def can?(:reticulum_app_token, _, _), do: false
+
+  alias Ret.{AppConfig, Hub}
 
   # Always deny access to non-enterable hubs
   def can?(_, :join_hub, %Ret.Hub{entry_mode: :deny}), do: false
@@ -712,6 +1086,7 @@ defimpl Canada.Can, for: Atom do
   def can?(_, :join_hub, %Ret.Hub{hub_bindings: []}),
     do: !AppConfig.get_cached_config_value("features|require_account_for_join")
 
+  @object_actions [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects, :spawn_emoji, :fly]
   # Object permissions for anonymous users are based on member permission settings
   def can?(_account, action, hub) when action in @object_actions do
     hub |> Hub.has_member_permission?(action)

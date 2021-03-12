@@ -8,7 +8,14 @@ A hybrid game networking and web API server, focused on Social Mixed Reality.
 
 #### PostgreSQL (recommended version 11.x):
 
-Linux: Use your package manager
+Linux:
+
+On Ubuntu, you can use
+```
+apt install postgresql
+```
+
+Otherwise, consult your package manager of choice for other Linux distributions
 
 Windows: https://www.postgresql.org/download/windows/
 
@@ -30,8 +37,9 @@ Run the following commands at the root of the reticulum directory:
 
 1. `mix deps.get`
 2. `mix ecto.create`
-   - If step 2 fails, you may need to change the password for the `postgres` role to match the password configured `dev.exs`.
-   - From within the `psql` shell, enter `ALTER USER postgres WITH PASSWORD 'postgres';`
+    * If step 2 fails, you may need to change the password for the `postgres` role to match the password configured `dev.exs`.
+    * From within the `psql` shell, enter `ALTER USER postgres WITH PASSWORD 'postgres';`
+    * If you receive an error that the `ret_dev` database does not exist, (using psql again) enter `create database ret_dev;`
 3. from the `assets` directory, `npm install`
 4. From the project directory `mkdir -p storage/dev`
 
@@ -41,19 +49,22 @@ Run `scripts/run.sh` if you have the hubs secret repo cloned. Otherwise `iex -S 
 
 ## Run Hubs Against a Local Reticulum Instance
 
-### 0. Dependencies
-
-[Install NodeJS](https://nodejs.org) if you haven't already. We recommend version 12 or above.
-
 ### 1. Setup the `hubs.local` hostname
 
 When running the full stack for Hubs (which includes Reticulum) locally it is necessary to add a `hosts` entry pointing `hubs.local` to your local server's IP.
 This will allow the CSP checks to pass that are served up by Reticulum so you can test the whole app. Note that you must also load hubs.local over https.
 
-Example:
+On MacOS or Linux:
 
+```bash
+nano /etc/hosts
 ```
-hubs.local 127.0.0.1
+
+From there, add a host alias
+
+Example:
+```bash
+127.0.0.1   hubs.local
 ```
 
 ### 2. Setting up the Hubs Repository
@@ -96,6 +107,17 @@ After you've started Reticulum for the first time you'll likely want to create a
 Ret.Account |> Ret.Repo.all() |> Enum.at(0) |> Ecto.Changeset.change(is_admin: true) |> Ret.Repo.update!()
 ```
 
+### 7. Start the Admin Portal server in local development mode
+
+When running locally, you will need to also run the admin portal, which routes to hubs.local:8989
+Using a separate terminal instance, navigate to the `hubs/admin` folder and use:
+```
+npm run local
+```
+
+You can now navigate to https://hubs.local:4000/admin to access the admin control panel
+
+
 ## Run Spoke Against a Local Reticulum Instance
 
 1. Follow the steps above to setup Hubs
@@ -125,3 +147,5 @@ default_janus_csp_rule =
 ```
    psql-userdb="host=hubs.local dbname=ret_dev user=postgres password=postgres options='-c search_path=coturn' connect_timeout=30"
 ```
+
+

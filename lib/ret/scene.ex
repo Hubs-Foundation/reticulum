@@ -9,6 +9,7 @@ end
 defmodule Ret.Scene do
   use Ecto.Schema
   import Ecto.Changeset
+  import Ecto.Query
 
   alias Ret.{Repo, Scene, SceneListing, Project, Storage}
   alias Ret.Scene.{SceneSlug}
@@ -57,6 +58,17 @@ defmodule Ret.Scene do
   def scene_or_scene_listing_by_sid(sid) do
     Scene |> Repo.get_by(scene_sid: sid) ||
       SceneListing |> Repo.get_by(scene_listing_sid: sid) |> Repo.preload(scene: Scene.scene_preloads())
+  end
+
+  def projectless_scenes_for_account(account) do
+    Repo.all(
+      from(s in Scene,
+        left_join: project in assoc(s, :project),
+        where: s.account_id == ^account.account_id and is_nil(s.scene_owned_file_id) and is_nil(project),
+        preload: ^Scene.scene_preloads(),
+        order_by: [desc: s.updated_at]
+      )
+    )
   end
 
   def to_sid(nil), do: nil
@@ -195,9 +207,9 @@ defmodule Ret.Scene do
     |> maybe_add_scene_sid_to_changeset
     |> unique_constraint(:scene_sid)
     |> put_assoc(:account, account)
-    |> put_assoc(:model_owned_file, model_owned_file)
-    |> put_assoc(:screenshot_owned_file, screenshot_owned_file)
-    |> put_assoc(:scene_owned_file, scene_owned_file)
+    |> maybe_put_assoc(:model_owned_file, model_owned_file)
+    |> maybe_put_assoc(:screenshot_owned_file, screenshot_owned_file)
+    |> maybe_put_assoc(:scene_owned_file, scene_owned_file)
     |> SceneSlug.maybe_generate_slug()
   end
 
@@ -248,5 +260,13 @@ defmodule Ret.Scene do
   defp maybe_add_scene_sid_to_changeset(changeset) do
     scene_sid = changeset |> get_field(:scene_sid) || Ret.Sids.generate_sid()
     put_change(changeset, :scene_sid, scene_sid)
+  end
+
+  defp maybe_put_assoc(changeset, _key, nil) do
+    changeset
+  end
+
+  defp maybe_put_assoc(changeset, key, value) do
+    changeset |> put_assoc(key, value)
   end
 end

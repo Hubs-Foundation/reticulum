@@ -111,6 +111,18 @@ defmodule Ret.Storage do
     |> Enum.into(%{})
   end
 
+  # Similar to promote above, but allows for passing nil. Useful for optional upload fields
+  def promote_optional(map, %Account{} = account) when is_map(map) do
+    map
+    |> Enum.map(fn
+      {k, {nil, nil}} -> {k, {:ok, nil}}
+      {k, {nil, nil, nil}} -> {k, {:ok, nil}}
+      {k, {id, key}} -> {k, promote(id, key, nil, account)}
+      {k, {id, key, promotion_token}} -> {k, promote(id, key, promotion_token, account)}
+    end)
+    |> Enum.into(%{})
+  end
+
   defp promote_or_return_owned_file(%OwnedFile{} = owned_file, _id, _key, _promotion_token, _account) do
     {:ok, owned_file}
   end
