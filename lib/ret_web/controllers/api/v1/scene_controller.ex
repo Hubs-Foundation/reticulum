@@ -30,6 +30,11 @@ defmodule RetWeb.Api.V1.SceneController do
     end
   end
 
+  def index_projectless(conn, _params) do
+    account = Guardian.Plug.current_resource(conn)
+    conn |> render("index.json", scenes: Scene.projectless_scenes_for_account(account), account: account)
+  end
+
   def update(conn, %{"id" => scene_sid, "scene" => params}) do
     case scene_sid |> get_scene() do
       %Scene{} = scene -> create_or_update(conn, params, scene)
@@ -88,7 +93,7 @@ defmodule RetWeb.Api.V1.SceneController do
 
   defp create_or_update(conn, params, scene, account) do
     owned_file_results =
-      Storage.promote(
+      Storage.promote_optional(
         %{
           model: {params["model_file_id"], params["model_file_token"]},
           screenshot: {params["screenshot_file_id"], params["screenshot_file_token"]},

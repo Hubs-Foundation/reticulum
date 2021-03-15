@@ -1,5 +1,5 @@
 FROM elixir:1.5
-RUN apt-get update -qq && apt-get install -y inotify-tools nodejs nodejs-legacy
+RUN apt-get update -qq && apt-get install -y inotify-tools
 RUN curl -so- -L https://yarnpkg.com/install.sh | bash
 RUN mkdir /ret
 WORKDIR	/ret
