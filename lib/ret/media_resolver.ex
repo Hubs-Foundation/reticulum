@@ -492,7 +492,7 @@ defmodule Ret.MediaResolver do
     loader = fn path ->
       Statix.increment("ret.media_resolver.sketchfab.requests")
 
-      case download_sketchfab_model_to_path(%{model_id: model_id, api_key: api_key, version: version, path: path}) do
+      case download_sketchfab_model_to_path(%{model_id: model_id, api_key: api_key, path: path}) do
         {:ok, metadata} ->
           Statix.increment("ret.media_resolver.sketchfab.ok")
           {:ok, metadata}
