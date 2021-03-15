@@ -86,7 +86,7 @@ defmodule Ret.Storage do
   defp maybe_bump_accessed_at(%CachedFile{accessed_at: accessed_at} = cached_file, time) do
     one_day_ago = Timex.shift(time, days: -1)
 
-    if accessed_at < one_day_ago do
+    if Timex.before?(accessed_at, one_day_ago) do
       cached_file |> Ecto.Changeset.change(accessed_at: time) |> Ret.Repo.update()
     end
   end
