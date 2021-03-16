@@ -55,7 +55,7 @@ defmodule RetWeb do
 
   def channel do
     quote do
-      use Phoenix.Channel, log_join: false, log_handle_in: false
+      use Phoenix.Channel
       import RetWeb.Gettext
     end
   end
