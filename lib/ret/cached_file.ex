@@ -41,13 +41,7 @@ defmodule Ret.CachedFile do
     try do
       with {:ok, %{content_type: content_type}} <- loader.(path),
            {:ok, file_uuid} <-
-             Storage.store(%{
-               path: path,
-               content_type: content_type,
-               key: file_key,
-               promotion_token: nil,
-               file_path: Storage.cached_file_path()
-             }),
+             Storage.store(path, content_type, file_key, nil, Storage.cached_file_path()),
            {:ok, _} <-
              %CachedFile{}
              |> changeset(%{

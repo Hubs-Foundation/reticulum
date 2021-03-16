@@ -20,18 +20,18 @@ defmodule Ret.Storage do
   end
 
   def store(path, content_type, key, promotion_token) do
-    store(%{
-      path: path,
-      content_type: content_type,
-      key: key,
-      promotion_token: promotion_token,
-      file_path: expiring_file_path()
-    })
+    store(
+      path,
+      content_type,
+      key,
+      promotion_token,
+      expiring_file_path()
+    )
   end
 
   # Given a path to a file, a content-type, and an optional encryption key, returns an id
   # that can be used to fetch a stream to the uploaded file after this call.
-  def store(%{path: path, content_type: content_type, key: key, promotion_token: promotion_token, file_path: file_path}) do
+  def store(path, content_type, key, promotion_token, file_path) do
     if in_quota?() do
       case File.stat(path) do
         {:ok, %{size: source_size}} ->
