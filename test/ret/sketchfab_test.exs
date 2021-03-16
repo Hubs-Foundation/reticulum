@@ -49,16 +49,16 @@ defmodule Ret.SketchfabTest do
     cube: %{model_id: model_id, cache_key: cache_key}
   } do
     {:ok, uri} =
-      CachedFile.fetch(%{
-        cache_key: cache_key,
-        loader: fn path ->
+      CachedFile.fetch(
+        cache_key,
+        fn path ->
           MediaResolver.download_sketchfab_model_to_path(%{
             model_id: model_id,
             api_key: api_key,
             path: path
           })
         end
-      })
+      )
 
     %CachedFile{file_uuid: file_uuid, file_content_type: file_content_type, file_key: file_key} =
       CachedFile |> where(cache_key: ^cache_key) |> Repo.one()

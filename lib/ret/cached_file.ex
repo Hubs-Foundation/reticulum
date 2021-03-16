@@ -16,15 +16,11 @@ defmodule Ret.CachedFile do
     timestamps()
   end
 
-  def fetch(cache_key, loader) do
-    fetch(%{cache_key: cache_key, loader: loader})
-  end
-
   # Returns the URI to the file with the given cache key. If file is not
   # cached, expects loader to be a function that will receive a path to a temp file to
   # write the data to cache to, and is expected to return a { :ok, %{ content_type: } } tuple
   # with the content type.
-  def fetch(%{cache_key: cache_key, loader: loader}) do
+  def fetch(cache_key, loader) do
     # Use a PostgreSQL advisory lock on the cache key as a mutex across all
     # nodes for accessing this cache key
     Ret.Locking.exec_after_lock(cache_key, fn ->

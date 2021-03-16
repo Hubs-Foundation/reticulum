@@ -33,9 +33,9 @@ defmodule Ret.CachedFileTest do
   end
 
   test "CachedFiles are vacuumed based on access time" do
-    with {:ok, _} <- CachedFile.fetch(%{cache_key: "aaa", loader: write_to_path("aaa")}),
-         {:ok, _} <- CachedFile.fetch(%{cache_key: "bbb", loader: write_to_path("bbb")}),
-         {:ok, _} <- CachedFile.fetch(%{cache_key: "ccc", loader: write_to_path("ccc")}) do
+    with {:ok, _} <- CachedFile.fetch("aaa", write_to_path("aaa")),
+         {:ok, _} <- CachedFile.fetch("bbb", write_to_path("bbb")),
+         {:ok, _} <- CachedFile.fetch("ccc", write_to_path("ccc")) do
       aaa = cached_file(%{cache_key: "aaa"})
       bbb = cached_file(%{cache_key: "bbb"})
       ccc = cached_file(%{cache_key: "ccc"})

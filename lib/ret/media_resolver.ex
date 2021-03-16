@@ -503,11 +503,7 @@ defmodule Ret.MediaResolver do
       end
     end
 
-    cached_file_result =
-      CachedFile.fetch(%{
-        cache_key: "sketchfab-#{model_id}-#{version}",
-        loader: loader
-      })
+    cached_file_result = CachedFile.fetch("sketchfab-#{model_id}-#{version}", loader)
 
     case cached_file_result do
       {:ok, uri} -> [uri, %{expected_content_type: "model/gltf+zip"}]
