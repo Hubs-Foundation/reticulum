@@ -260,10 +260,8 @@ defmodule Ret.Storage do
         )
 
         # TODO figure out what to do about owned files -- that structure increase over time
-        for type <- [expiring_file_path()] do
-          root_path = "#{storage_path}/#{type}"
-          clean_empty_dirs(%{root_path: root_path})
-        end
+        root_path = "#{storage_path}/#{expiring_file_path()}"
+        clean_empty_dirs(root_path)
       end
 
       Logger.info("Stored Files: Vacuum Finished.")
@@ -307,11 +305,8 @@ defmodule Ret.Storage do
                 %{vacuumed: vacuumed, errors: errors ++ [cached_file]}
             end)
 
-          for type <- [cached_file_path()] do
-            root_path = "#{storage_path}/#{type}"
-            clean_empty_dirs(%{root_path: root_path})
-          end
-
+          root_path = "#{storage_path}/#{cached_file_path()}"
+          clean_empty_dirs(root_path)
           results
         end
 
@@ -321,7 +316,7 @@ defmodule Ret.Storage do
     end)
   end
 
-  defp clean_empty_dirs(%{root_path: root_path}) do
+  defp clean_empty_dirs(root_path) do
     with {:ok, dirs} <- :file.list_dir(root_path) do
       # Walk sub directories and remove them if they are empty.
       for d <- dirs do
