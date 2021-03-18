@@ -75,6 +75,11 @@ defmodule Ret.Storage do
     fetch_blob(id, key, expiring_file_path())
   end
 
+  # TODO: Should this function not exist because it is only used in testing?
+  def fetch(id, key, file_path) when is_binary(id) and is_binary(key) do
+    fetch_blob(id, key, file_path)
+  end
+
   def fetch(%OwnedFile{owned_file_uuid: id, key: key}) do
     fetch_blob(id, key, owned_file_path())
   end
@@ -91,6 +96,21 @@ defmodule Ret.Storage do
     end
   end
 
+  defp lock_and_migrate(%CachedFile{file_uuid: id, file_key: key} = cached_file) do
+    Ret.Locking.exec_after_lock(
+      "migrate_" <> id,
+      fn ->
+        case fetch_blob(id, key, cached_file_path()) do
+          {:ok, meta, stream} ->
+            {:ok, meta, stream}
+
+          {:error, _} ->
+            migrate(cached_file)
+        end
+      end
+    )
+  end
+
   def fetch_at(%CachedFile{file_uuid: id, file_key: key} = cached_file, time) do
     maybe_bump_accessed_at(cached_file, time)
 
@@ -99,24 +119,34 @@ defmodule Ret.Storage do
         {:ok, meta, stream}
 
       {:error, _} ->
-        migrate(%{cached_file: cached_file})
-        fetch_blob(id, key, cached_file_path())
+        case lock_and_migrate(cached_file) do
+          {:ok, {:ok, meta, stream}} ->
+            {:ok, meta, stream}
+
+          {:ok, {:ok, _cached_file}} ->
+            fetch_blob(id, key, cached_file_path())
+
+          {:ok, {:error, reason}} ->
+            {:error, reason}
+
+          _ ->
+            {:error, "Failed to acquire database lock."}
+        end
     end
   end
 
   # TODO: Remove this code once all the CachedFiles are stored in the cached_file_path().
-  defp migrate(%{
-         cached_file: %CachedFile{file_uuid: id, file_key: file_key} = cached_file
-       }) do
+  defp migrate(%CachedFile{file_uuid: id, file_key: file_key} = cached_file) do
     with {:ok, _meta, _stream} <- fetch_blob(id, file_key, expiring_file_path()),
          {:ok, uuid} <- Ecto.UUID.cast(id),
          [_src_file_directory, src_meta_file_path, src_blob_file_path] <- paths_for_uuid(uuid, expiring_file_path()),
          [dest_file_directory, dest_meta_file_path, dest_blob_file_path] <- paths_for_uuid(uuid, cached_file_path()),
-         {:ok, _} <- File.mkdir_p(dest_file_directory),
-         {:ok, _} <- File.cp(src_meta_file_path, dest_meta_file_path),
-         {:ok, _} <- File.cp(src_blob_file_path, dest_blob_file_path) do
+         :ok <- File.mkdir_p(dest_file_directory),
+         :ok <- File.cp(src_meta_file_path, dest_meta_file_path),
+         :ok <- File.cp(src_blob_file_path, dest_blob_file_path) do
       {:ok, cached_file}
     else
+      {:error, reason} -> {:error, "Migration failed: #{reason}"}
       _ -> {:error, "Migration failed"}
     end
   end
@@ -125,13 +155,16 @@ defmodule Ret.Storage do
     with storage_path when is_binary(storage_path) <- module_config(:storage_path),
          {:ok, uuid} <- Ecto.UUID.cast(id),
          [_file_path, meta_file_path, blob_file_path] <- paths_for_uuid(uuid, subpath),
-         [{:ok, _}, {:ok, _}] <- [File.stat(meta_file_path), File.stat(blob_file_path)],
+         {:ok, _} <- File.stat(meta_file_path),
+         {:ok, _} <- File.stat(blob_file_path),
          {:ok, meta_file_data} <- File.read(meta_file_path),
          {:ok, meta} <- Poison.decode(meta_file_data),
          {:ok, stream} <- decrypt_file_to_stream(blob_file_path, meta, key) do
       {:ok, meta, stream}
     else
       {:error, :invalid_key} -> {:error, :not_allowed}
+      {:error, :enoent} -> {:error, "File not found"}
+      {:error, reason} -> {:error, reason}
       _ -> {:error, :not_allowed}
     end
   end
