@@ -1,4 +1,5 @@
 defmodule Ret.CachedFile do
+  require Logger
   use Ecto.Schema
   import Ecto.Query
   import Ecto.Changeset
@@ -84,11 +85,17 @@ defmodule Ret.CachedFile do
       cached_files_to_delete = from(f in CachedFile, where: f.accessed_at() < ^expiration) |> Repo.all()
 
       case Storage.vacuum(%{cached_files: cached_files_to_delete}) do
-        {:ok, %{vacuumed: vacuumed, errors: _errors}} ->
-          vacuumed |> Enum.each(&Repo.delete/1)
+        {:ok, %{vacuumed: vacuumed, errors: []}} ->
+          keys = Enum.map(vacuumed, fn v -> v.cache_key end)
+          Repo.delete_all(from(c in CachedFile, where: c.cache_key in ^keys))
+
+        {:ok, %{vacuumed: vacuumed, errors: errors}} ->
+          keys = Enum.map(vacuumed, fn v -> v.cache_key end)
+          Repo.delete_all(from(c in CachedFile, where: c.cache_key in ^keys))
+          Logger.info("Failed to vacuum some cached files. #{length(errors)} files will not be deleted.")
 
         _ ->
-          # TODO: What to do if storage vacuum fails?
+          Logger.info("Failed to vacuum cached files. #{length(cached_files_to_delete)} files will not be deleted.")
           nil
       end
     end)
