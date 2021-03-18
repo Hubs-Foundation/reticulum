@@ -91,6 +91,11 @@ defmodule Ret.Storage do
   defp maybe_bump_accessed_at(%CachedFile{accessed_at: accessed_at} = cached_file, time) do
     one_day_ago = Timex.shift(time, days: -1)
 
+    # Save a trip to the database if this file was recently accessed.
+    # If the vacuum window for CachedFiles is on the order of days, only update
+    # the accessed_at time daily. If vacuuming happens on the order of weeks,
+    # we can update accessed_at even less often. This is a minor (perhaps unnecessary)
+    # performance optimization.
     if Timex.before?(accessed_at, one_day_ago) do
       cached_file |> Ecto.Changeset.change(accessed_at: time) |> Ret.Repo.update()
     end
