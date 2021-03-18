@@ -112,7 +112,7 @@ defmodule Ret.CachedFileTest do
     file_key = SecureRandom.hex()
     {:ok, %{content_type: content_type}} = write_large_file_to_path(contents).(path)
     {:ok, file_uuid} = Storage.store(path, content_type, file_key, nil, Storage.expiring_file_path())
-    # File.rm_rf(path)
+    File.rm_rf(path)
 
     {:ok, cached_file} =
       %CachedFile{}
