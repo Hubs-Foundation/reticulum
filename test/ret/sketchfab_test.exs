@@ -21,8 +21,8 @@ defmodule Ret.SketchfabTest do
   end
 
   @tag dev_only: true
-  test "Can search Sketchfab models", %{api_key: api_key, cube: %{model_id: model_id}} do
-    {:ok, url} = sketchfab_url_for("cube")
+  test "Can search Sketchfab models", %{} do
+    {:ok, _url} = sketchfab_url_for("cube")
   end
 
   @tag dev_only: true
