@@ -101,8 +101,6 @@ defmodule Ret.CachedFileTest do
       _ -> false
     end)
 
-    # This line causes the file to be copied to the cached_file_path
-    {:ok, _meta, _stream} = Storage.fetch(cached_file(cache_key))
     # This line ensures the file has been copied to the cached_file_path
     {:ok, _meta, _stream} = Storage.fetch(file_uuid, file_key, Storage.cached_file_path())
   end
