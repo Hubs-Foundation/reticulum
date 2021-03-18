@@ -105,6 +105,42 @@ defmodule Ret.CachedFileTest do
     {:ok, _meta, _stream} = Storage.fetch(file_uuid, file_key, Storage.cached_file_path())
   end
 
+  test "Vacuuming CachedFiles destroy underlying assets when they exist" do
+    with {:ok, _} <- CachedFile.fetch("aaa", write_to_path("aaa")),
+         {:ok, _} <- CachedFile.fetch("bbb", write_to_path("bbb")),
+         {:ok, _} <- CachedFile.fetch("ccc", write_to_path("ccc")) do
+      aaa = cached_file("aaa")
+      bbb = cached_file("bbb")
+      ccc = cached_file("ccc")
+      expiring = put_file_in_expiring_storage("expiring", "expiring")
+
+      now = Timex.now()
+      one_week_from_now = shift(%{now: now, shift_options: [weeks: 1]})
+      three_weeks_from_now = shift(%{now: now, shift_options: [weeks: 3]})
+      Storage.fetch_at(ccc, three_weeks_from_now)
+
+      {:ok, %{errors: [^expiring]}} = CachedFile.vacuum(%{expiration: one_week_from_now})
+
+      # The CachedFile has been vacuumed
+      assert cached_file("aaa") === nil
+      assert cached_file("bbb") === nil
+      assert cached_file("expiring") === nil
+      assert %CachedFile{cache_key: "ccc"} = cached_file("ccc")
+
+      # The underlying asset has been vacuumed
+      assert {:error, "File not found"} = Storage.fetch(aaa.file_uuid, aaa.file_key, Storage.cached_file_path())
+      assert {:error, "File not found"} = Storage.fetch(bbb.file_uuid, bbb.file_key, Storage.cached_file_path())
+
+      assert {:error, "File not found"} =
+               Storage.fetch(expiring.file_uuid, expiring.file_key, Storage.cached_file_path())
+
+      assert {:ok, _meta, _stream} = Storage.fetch(ccc)
+
+      # The expiring file will exist until vacuumed independently
+      assert {:ok, _meta, _stream} = Storage.fetch(expiring.file_uuid, expiring.file_key, Storage.expiring_file_path())
+    end
+  end
+
   defp put_file_in_expiring_storage(cache_key, contents) do
     {:ok, path} = Temp.path()
     file_key = SecureRandom.hex()
