@@ -105,6 +105,8 @@ defmodule Ret.Storage do
     Ret.Locking.exec_after_lock(
       "migrate_" <> id,
       fn ->
+        # Try fetch_blob again in case the file has been migrated
+        # while waiting for the lock
         case fetch_blob(id, key, cached_file_path()) do
           {:ok, meta, stream} ->
             {:ok, meta, stream}
@@ -126,12 +128,15 @@ defmodule Ret.Storage do
       {:error, _} ->
         case lock_and_migrate(cached_file) do
           {:ok, {:ok, meta, stream}} ->
+            # Got lock, but file had already been migrated
             {:ok, meta, stream}
 
           {:ok, {:ok, _cached_file}} ->
+            # Got lock, then migrated
             fetch_blob(id, key, cached_file_path())
 
           {:ok, {:error, reason}} ->
+            # Got lock, failed to migrate the file
             {:error, reason}
 
           _ ->
