@@ -57,8 +57,8 @@ defmodule Ret.CachedFileTest do
       assert %CachedFile{cache_key: "ccc"} = cached_file("ccc")
 
       # The underlying asset has been vacuumed
-      assert {:error, "File not found"} = Storage.fetch(aaa.file_uuid, aaa.file_key, Storage.cached_file_path())
-      assert {:error, "File not found"} = Storage.fetch(bbb.file_uuid, bbb.file_key, Storage.cached_file_path())
+      assert {:error, :not_found} = Storage.fetch(aaa.file_uuid, aaa.file_key, Storage.cached_file_path())
+      assert {:error, :not_found} = Storage.fetch(bbb.file_uuid, bbb.file_key, Storage.cached_file_path())
       assert {:ok, _meta, _stream} = Storage.fetch(ccc)
     end
   end
@@ -128,11 +128,9 @@ defmodule Ret.CachedFileTest do
       assert %CachedFile{cache_key: "ccc"} = cached_file("ccc")
 
       # The underlying asset has been vacuumed
-      assert {:error, "File not found"} = Storage.fetch(aaa.file_uuid, aaa.file_key, Storage.cached_file_path())
-      assert {:error, "File not found"} = Storage.fetch(bbb.file_uuid, bbb.file_key, Storage.cached_file_path())
-
-      assert {:error, "File not found"} =
-               Storage.fetch(expiring.file_uuid, expiring.file_key, Storage.cached_file_path())
+      assert {:error, :not_found} = Storage.fetch(aaa.file_uuid, aaa.file_key, Storage.cached_file_path())
+      assert {:error, :not_found} = Storage.fetch(bbb.file_uuid, bbb.file_key, Storage.cached_file_path())
+      assert {:error, :not_found} = Storage.fetch(expiring.file_uuid, expiring.file_key, Storage.cached_file_path())
 
       assert {:ok, _meta, _stream} = Storage.fetch(ccc)
 
