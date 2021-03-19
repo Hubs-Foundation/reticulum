@@ -168,7 +168,7 @@ defmodule Ret.Storage do
       {:ok, meta, stream}
     else
       {:error, :invalid_key} -> {:error, :not_allowed}
-      {:error, :enoent} -> {:error, "File not found"}
+      {:error, :enoent} -> {:error, :not_found}
       {:error, reason} -> {:error, reason}
       _ -> {:error, :not_allowed}
     end
