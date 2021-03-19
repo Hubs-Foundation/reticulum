@@ -89,7 +89,7 @@ defmodule Ret.CachedFileTest do
     {:error, _} = Storage.fetch(file_uuid, file_key, Storage.cached_file_path())
 
     # This ensures that nothing goes wrong if the file is contested
-    1..500
+    1..100
     |> Enum.map(fn _ ->
       Task.async(fn -> Storage.fetch(cached_file) end)
     end)
