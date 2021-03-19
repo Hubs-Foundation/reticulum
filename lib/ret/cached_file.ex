@@ -1,4 +1,5 @@
 defmodule Ret.CachedFile do
+  require Logger
   use Ecto.Schema
   import Ecto.Query
   import Ecto.Changeset
@@ -12,6 +13,7 @@ defmodule Ret.CachedFile do
     field(:file_uuid, :string)
     field(:file_key, :string)
     field(:file_content_type, :string)
+    field(:accessed_at, :naive_datetime)
     timestamps()
   end
 
@@ -22,65 +24,83 @@ defmodule Ret.CachedFile do
   def fetch(cache_key, loader) do
     # Use a PostgreSQL advisory lock on the cache key as a mutex across all
     # nodes for accessing this cache key
-    #
     Ret.Locking.exec_after_lock(cache_key, fn ->
-      case CachedFile
-           |> where(cache_key: ^cache_key)
-           |> Repo.one() do
+      case CachedFile |> where(cache_key: ^cache_key) |> Repo.one() do
         %CachedFile{file_uuid: file_uuid, file_content_type: file_content_type, file_key: file_key} ->
           Storage.uri_for(file_uuid, file_content_type, file_key)
 
         nil ->
-          {:ok, path} = Temp.path()
-
-          try do
-            loader_result = loader.(path)
-
-            case loader_result do
-              {:ok, %{content_type: content_type}} ->
-                file_key = SecureRandom.hex()
-
-                case Storage.store(path, content_type, file_key) do
-                  {:ok, file_uuid} ->
-                    %CachedFile{}
-                    |> changeset(%{
-                      cache_key: cache_key,
-                      file_uuid: file_uuid,
-                      file_key: file_key,
-                      file_content_type: content_type
-                    })
-                    |> Repo.insert!()
-
-                    Storage.uri_for(file_uuid, content_type, file_key)
-
-                  {:error, reason} ->
-                    {:error, "error running loader: #{reason}"}
-                end
-
-              :error ->
-                {:error, "error running loader"}
-            end
-          after
-            File.rm_rf(path)
-          end
+          load_and_store(%{cache_key: cache_key, loader: loader})
       end
     end)
   end
 
+  defp load_and_store(%{cache_key: cache_key, loader: loader}) do
+    {:ok, path} = Temp.path()
+    file_key = SecureRandom.hex()
+
+    try do
+      with {:ok, %{content_type: content_type}} <- loader.(path),
+           {:ok, file_uuid} <-
+             Storage.store(path, content_type, file_key, nil, Storage.cached_file_path()),
+           {:ok, _} <-
+             %CachedFile{}
+             |> changeset(%{
+               cache_key: cache_key,
+               file_uuid: file_uuid,
+               file_key: file_key,
+               file_content_type: content_type,
+               accessed_at: Timex.now() |> Timex.to_naive_datetime() |> NaiveDateTime.truncate(:second)
+             })
+             |> Repo.insert() do
+        Storage.uri_for(file_uuid, content_type, file_key)
+      else
+        :error ->
+          {:error, "error loading or storing asset"}
+
+        {:error, reason} ->
+          {:error, "error loading or storing asset. #{reason}"}
+      end
+    after
+      File.rm_rf(path)
+    end
+  end
+
   defp changeset(struct, params) do
     struct
-    |> cast(params, [:cache_key, :file_uuid, :file_key, :file_content_type])
-    |> validate_required([:cache_key, :file_uuid, :file_key, :file_content_type])
+    |> cast(params, [:cache_key, :file_uuid, :file_key, :file_content_type, :accessed_at])
+    |> validate_required([:cache_key, :file_uuid, :file_key, :file_content_type, :accessed_at])
     |> unique_constraint(:cache_key)
   end
 
   def vacuum do
-    Ret.Locking.exec_if_lockable(:cached_file_vacuum, fn ->
-      # Underlying files will be removed by storage vacuum
-      two_days_ago = Timex.now() |> Timex.shift(days: -2)
+    # TODO: Extend the lifetime once everything has been migrated to the cached_file_path()
+    expiration = Timex.now() |> Timex.shift(days: -2) |> Timex.to_naive_datetime()
+    # expiration = Timex.now() |> Timex.shift(weeks: -4) |> Timex.to_naive_datetime()
+    vacuum(%{expiration: expiration})
+  end
 
-      from(f in CachedFile, where: f.inserted_at() < ^two_days_ago)
-      |> Repo.delete_all()
+  def vacuum(%{expiration: expiration}) do
+    Ret.Locking.exec_if_lockable(:cached_file_vacuum, fn ->
+      cached_files_to_delete = from(f in CachedFile, where: f.accessed_at() < ^expiration) |> Repo.all()
+      keys = Enum.map(cached_files_to_delete, fn v -> v.cache_key end)
+
+      case Storage.vacuum(%{cached_files: cached_files_to_delete}) do
+        {:ok, %{vacuumed: vacuumed, errors: []}} ->
+          Repo.delete_all(from(c in CachedFile, where: c.cache_key in ^keys))
+          %{vacuumed: vacuumed, errors: []}
+
+        {:ok, %{vacuumed: vacuumed, errors: errors}} ->
+          Repo.delete_all(from(c in CachedFile, where: c.cache_key in ^keys))
+          # If a CachedFile is backed by a file in expiring_storage_path, then this version of
+          # the Storage.vacuum task will not delete the underlying files.
+          Logger.info("Removing #{length(errors)} cached files without finding underlying assets.")
+          %{vacuumed: vacuumed, errors: errors}
+
+        _ ->
+          Logger.info("Failed to vacuum cached files. #{length(cached_files_to_delete)} files will not be deleted.")
+          %{vacuumed: [], errors: cached_files_to_delete}
+      end
     end)
   end
 end

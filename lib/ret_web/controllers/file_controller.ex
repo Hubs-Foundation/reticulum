@@ -2,7 +2,7 @@ defmodule RetWeb.FileController do
   use RetWeb, :controller
   require Logger
 
-  alias Ret.{OwnedFile, Storage, Repo, AppConfig}
+  alias Ret.{OwnedFile, CachedFile, Storage, Repo, AppConfig}
 
   def show(conn, params) do
     case conn |> get_req_header("x-original-method") do
@@ -39,6 +39,9 @@ defmodule RetWeb.FileController do
 
       {:error, :not_allowed} ->
         conn |> send_resp(401, "")
+
+      {:error, reason} ->
+        conn |> send_resp(424, reason)
     end
   end
 
@@ -77,14 +80,22 @@ defmodule RetWeb.FileController do
     |> fetch_and_render(conn, type)
   end
 
-  # Given a tuple of a UUID and a (optional) user specified token, check to see if there is a OwnedFile
-  # record for the given UUID. If, so, return it, since we want to pass that to Ret.Storage.fetch.
+  # Given a tuple of a UUID and a (optional) user specified token,
+  # check to see if there is an OwnedFile or CachedFile
+  # record for the given UUID.
+  # If, so, return it, since we want to pass that to Ret.Storage.fetch.
   #
   # Otherwise return the passed in tuple, which will be used as-is.
   defp resolve_fetch_args({uuid, _token} = args) do
     case OwnedFile |> Repo.get_by(owned_file_uuid: uuid) do
-      %OwnedFile{} = owned_file -> owned_file
-      _ -> args
+      %OwnedFile{} = owned_file ->
+        owned_file
+
+      _ ->
+        case CachedFile |> Repo.get_by(file_uuid: uuid) do
+          %CachedFile{} = cached_file -> cached_file
+          _ -> args
+        end
     end
   end
 
@@ -98,6 +109,10 @@ defmodule RetWeb.FileController do
 
   defp fetch_and_render(%OwnedFile{} = owned_file, conn, type) do
     owned_file |> Storage.fetch() |> render_fetch_result(conn, type)
+  end
+
+  defp fetch_and_render(%CachedFile{} = cached_file, conn, type) do
+    cached_file |> Storage.fetch() |> render_fetch_result(conn, type)
   end
 
   defp render_fetch_result(fetch_result, conn, :head) do
@@ -114,6 +129,9 @@ defmodule RetWeb.FileController do
 
       {:error, :not_allowed} ->
         conn |> send_resp(401, "")
+
+      {:error, reason} ->
+        conn |> send_resp(424, reason)
     end
   end
 
@@ -182,6 +200,9 @@ defmodule RetWeb.FileController do
 
       {:error, :not_allowed} ->
         conn |> send_resp(401, "")
+
+      {:error, reason} ->
+        conn |> send_resp(424, reason)
     end
   end
 
