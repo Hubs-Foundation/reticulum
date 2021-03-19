@@ -41,7 +41,7 @@ defmodule RetWeb.FileController do
         conn |> send_resp(401, "")
 
       {:error, reason} ->
-        conn |> send_resp(500, reason)
+        conn |> send_resp(424, reason)
     end
   end
 
@@ -131,7 +131,7 @@ defmodule RetWeb.FileController do
         conn |> send_resp(401, "")
 
       {:error, reason} ->
-        conn |> send_resp(500, reason)
+        conn |> send_resp(424, reason)
     end
   end
 
@@ -202,7 +202,7 @@ defmodule RetWeb.FileController do
         conn |> send_resp(401, "")
 
       {:error, reason} ->
-        conn |> send_resp(500, reason)
+        conn |> send_resp(424, reason)
     end
   end
 
