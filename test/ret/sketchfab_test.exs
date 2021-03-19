@@ -74,7 +74,6 @@ defmodule Ret.SketchfabTest do
         count: 1,
         max_face_count: 10_000,
         max_filesizes: "gltf:#{16 * 1024}",
-        processing_status: :succeeded,
         cursor: nil,
         q: search_term
       )
