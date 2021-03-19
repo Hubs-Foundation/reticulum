@@ -1,0 +1,92 @@
+{
+  "name": "assets/fbDxapxkwY9",
+  "displayName": "Truck",
+  "authorName": "sugamo",
+  "createTime": "2019-11-26T15:02:44.257368Z",
+  "updateTime": "2021-03-15T22:15:01.194045Z",
+  "formats": [
+    {
+      "root": {
+        "relativePath": "model.gltf",
+        "url": "https://poly.googleapis.com/downloads/fp/1615846501194045/fbDxapxkwY9/fE-jMvrzOGG/model.gltf",
+        "contentType": "model/gltf+json"
+      },
+      "resources": [
+        {
+          "relativePath": "model.bin",
+          "url": "https://poly.googleapis.com/downloads/fp/1615846501194045/fbDxapxkwY9/fE-jMvrzOGG/model.bin",
+          "contentType": "application/octet-stream"
+        }
+      ],
+      "formatComplexity": {
+        "triangleCount": "3084"
+      },
+      "formatType": "GLTF2"
+    },
+    {
+      "root": {
+        "relativePath": "model.gltf",
+        "url": "https://poly.googleapis.com/downloads/fp/1615846501194045/fbDxapxkwY9/c7H9nYtApEP/model.gltf",
+        "contentType": "model/gltf+json"
+      },
+      "resources": [
+        {
+          "relativePath": "model.bin",
+          "url": "https://poly.googleapis.com/downloads/fp/1615846501194045/fbDxapxkwY9/c7H9nYtApEP/model.bin",
+          "contentType": "application/octet-stream"
+        }
+      ],
+      "formatComplexity": {
+        "triangleCount": "3084"
+      },
+      "formatType": "GLTF"
+    },
+    {
+      "root": {
+        "relativePath": "model.obj",
+        "url": "https://poly.googleapis.com/downloads/fp/1615846501194045/fbDxapxkwY9/7n1CFXadAyh/model.obj",
+        "contentType": "text/plain"
+      },
+      "resources": [
+        {
+          "relativePath": "materials.mtl",
+          "url": "https://poly.googleapis.com/downloads/fp/1615846501194045/fbDxapxkwY9/7n1CFXadAyh/materials.mtl",
+          "contentType": "text/plain"
+        }
+      ],
+      "formatComplexity": {
+        "triangleCount": "1858"
+      },
+      "formatType": "OBJ"
+    },
+    {
+      "root": {
+        "relativePath": "model.fbx",
+        "url": "https://poly.googleapis.com/downloads/fp/1615846501194045/fbDxapxkwY9/fv-RKc2BdI-/model.fbx",
+        "contentType": "application/octet-stream"
+      },
+      "formatComplexity": {},
+      "formatType": "FBX"
+    }
+  ],
+  "thumbnail": {
+    "relativePath": "thumbnail.png",
+    "url": "https://lh3.googleusercontent.com/ni-2GoqFMu4afJ5rsI7X7sZmWjePMkf9u1p9k6nPJSR4x3ySp_7aNdxY5WrKVlG0PQ",
+    "contentType": "image/png"
+  },
+  "license": "CREATIVE_COMMONS_BY",
+  "visibility": "PUBLIC",
+  "isCurated": true,
+  "presentationParams": {
+    "orientingRotation": {
+      "w": 1
+    },
+    "colorSpace": "LINEAR",
+    "backgroundColor": "#6f00ff"
+  },
+  "remixInfo": {
+    "sourceAsset": [
+      "assets/2SNngBhunHZ"
+    ]
+  }
+}
