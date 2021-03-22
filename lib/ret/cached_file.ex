@@ -74,9 +74,9 @@ defmodule Ret.CachedFile do
   end
 
   def vacuum do
-    # TODO: Extend the lifetime once everything has been migrated to the cached_file_path()
-    expiration = Timex.now() |> Timex.shift(days: -2) |> Timex.to_naive_datetime()
-    # expiration = Timex.now() |> Timex.shift(weeks: -4) |> Timex.to_naive_datetime()
+    # TODO: Hubs Cloud must migrate underlying files to the cached_file_path() or else purge
+    # CachedFile records that point to files from the expiring_file_path() that have been vacuumed
+    expiration = Timex.now() |> Timex.shift(weeks: -2) |> Timex.to_naive_datetime()
     vacuum(%{expiration: expiration})
   end
 
