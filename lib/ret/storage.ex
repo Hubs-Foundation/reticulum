@@ -137,6 +137,8 @@ defmodule Ret.Storage do
 
           {:ok, {:error, reason}} ->
             # Got lock, failed to migrate the file
+            # Delete the cached_file record. The user will have to re-request this file.
+            Repo.delete(cached_file)
             {:error, reason}
 
           _ ->
