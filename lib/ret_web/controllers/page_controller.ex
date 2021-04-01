@@ -452,8 +452,23 @@ defmodule RetWeb.PageController do
     Ret.AppConfig.get_config(!!module_config(:skip_cache)) |> generate_config("APP_CONFIG")
   end
 
+  defp escape_themes(%{"themes" => themes_string} = config) do
+    case Poison.decode(themes_string) do
+      {:ok, themes_map} ->
+        Map.put(config, "themes", themes_map)
+
+      _ ->
+        config = Map.put(config, "themes", "[]")
+        Map.put(config, "themes_failed_to_load", true)
+    end
+  end
+
+  defp escape_themes(config) do
+    config
+  end
+
   defp generate_config(config, name) do
-    config_json = config |> Poison.encode!()
+    config_json = config |> escape_themes() |> Poison.encode!()
     config_script = "window.#{name} = JSON.parse('#{config_json |> String.replace("'", "\\'")}')"
     {config, config_script}
   end
