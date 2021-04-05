@@ -469,10 +469,9 @@ defmodule RetWeb.PageController do
   # The themes array must be decoded from a string and re-encoded
   # so that it can be successfully parsed by the client.
   defp escape_themes(%{"theme" => %{"themes" => string} = category} = config) do
-    case Poison.decode(string) do
-      {:ok, array} ->
-        Map.put(config, "theme", Map.put(category, "themes", array))
-
+    try do
+      Map.put(config, "theme", Map.put(category, "themes", Poison.decode!(string)))
+    rescue
       _ ->
         category = Map.put(category, "themes", [])
         category = Map.put(category, "failed_to_load", true)
