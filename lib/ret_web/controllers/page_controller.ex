@@ -452,14 +452,31 @@ defmodule RetWeb.PageController do
     Ret.AppConfig.get_config(!!module_config(:skip_cache)) |> generate_config("APP_CONFIG")
   end
 
-  defp escape_themes(%{"themes" => themes_string} = config) do
-    case Poison.decode(themes_string) do
-      {:ok, themes_map} ->
-        Map.put(config, "themes", themes_map)
+  # The expected format for theme-related app configs
+  # contains an array of themes for the UI (as of April 2021)
+  # and deprecated color properties that were set for the old UI.
+  #
+  # {
+  #   theme: {
+  #     themes: [],
+  #     failed_to_load: false,
+  #     deprecated_color_property_1: "#ffffff",
+  #     deprecated_color_property_n: "#000000"
+  #     some_additional_flag: false,
+  #   }
+  # }
+  #
+  # The themes array must be decoded from a string and re-encoded
+  # so that it can be successfully parsed by the client.
+  defp escape_themes(%{"theme" => %{"themes" => string} = category} = config) do
+    case Poison.decode(string) do
+      {:ok, map} ->
+        Map.put(config, "theme", Map.put(category, "themes", map))
 
       _ ->
-        config = Map.put(config, "themes", [])
-        Map.put(config, "themes_failed_to_load", true)
+        category = Map.put(category, "themes", [])
+        category = Map.put(category, "failed_to_load", true)
+        Map.put(config, "theme", category)
     end
   end
 
