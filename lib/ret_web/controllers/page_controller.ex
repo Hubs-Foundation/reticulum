@@ -470,8 +470,8 @@ defmodule RetWeb.PageController do
   # so that it can be successfully parsed by the client.
   defp escape_themes(%{"theme" => %{"themes" => string} = category} = config) do
     case Poison.decode(string) do
-      {:ok, map} ->
-        Map.put(config, "theme", Map.put(category, "themes", map))
+      {:ok, array} ->
+        Map.put(config, "theme", Map.put(category, "themes", array))
 
       _ ->
         category = Map.put(category, "themes", [])
