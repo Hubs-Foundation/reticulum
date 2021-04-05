@@ -458,7 +458,7 @@ defmodule RetWeb.PageController do
         Map.put(config, "themes", themes_map)
 
       _ ->
-        config = Map.put(config, "themes", "[]")
+        config = Map.put(config, "themes", [])
         Map.put(config, "themes_failed_to_load", true)
     end
   end
