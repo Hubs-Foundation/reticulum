@@ -486,7 +486,7 @@ defmodule RetWeb.PageController do
 
       _ ->
         category = Map.put(category, "themes", [])
-        category = Map.put(category, "failed_to_load", true)
+        category = Map.put(category, "error", "Failed to parse custom theme JSON.")
         Map.put(config, "theme", category)
     end
   end
