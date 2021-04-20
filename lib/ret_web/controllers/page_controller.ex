@@ -452,8 +452,51 @@ defmodule RetWeb.PageController do
     Ret.AppConfig.get_config(!!module_config(:skip_cache)) |> generate_config("APP_CONFIG")
   end
 
+  # We receive the themes array as stringified JSON. We must decode it here and
+  # then re-encode it so that it will be successfully parsed by the client.
+  #
+  # The data going into this function looks something like this:
+  # %{
+  #   "theme" => %{
+  #     "themes" => "[
+  #       { \"id\": \"theme-1\", ...},
+  #       { \"id\": \"theme-2\", ...},
+  #       ...
+  #     ]",
+  #     "deprecated_color_property_1" => "#ffffff",
+  #     "deprecated_color_property_n" => "#000000"
+  #   }
+  # }
+  # The data returned from this function looks something like this:
+  # %{
+  #   "theme" => %{
+  #     "themes" => [
+  #       %{ "id" => "theme-1", ...},
+  #       %{ "id" => "theme-2", ...},
+  #       ...
+  #     ],
+  #     "deprecated_color_property_1" => "#ffffff",
+  #     "deprecated_color_property_n" => "#000000"
+  #   }
+  # }
+  defp escape_themes(%{"theme" => %{"themes" => string} = category} = config) do
+    case Poison.decode(string || "") do
+      {:ok, array} ->
+        Map.put(config, "theme", Map.put(category, "themes", array))
+
+      _ ->
+        category = Map.put(category, "themes", [])
+        category = Map.put(category, "error", "Failed to parse custom theme JSON.")
+        Map.put(config, "theme", category)
+    end
+  end
+
+  defp escape_themes(config) do
+    config
+  end
+
   defp generate_config(config, name) do
-    config_json = config |> Poison.encode!()
+    config_json = config |> escape_themes() |> Poison.encode!()
     config_script = "window.#{name} = JSON.parse('#{config_json |> String.replace("'", "\\'")}')"
     {config, config_script}
   end

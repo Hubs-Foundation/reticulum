@@ -32,6 +32,10 @@ defmodule RetWeb.Router do
     plug(:accepts, ["json"])
   end
 
+  pipeline :public_api_access do
+    plug(RetWeb.Plugs.RequirePublicApiAccess)
+  end
+
   pipeline :proxy_api do
     plug(:accepts, ["json"])
     plug(RetWeb.Plugs.RewriteAuthorizationHeaderToPerms)
@@ -63,6 +67,11 @@ defmodule RetWeb.Router do
 
   pipeline :canonicalize_domain do
     plug(RetWeb.Plugs.RedirectToMainDomain)
+  end
+
+  pipeline :graphql do
+    plug RetWeb.ApiTokenAuthPipeline
+    plug RetWeb.AddAbsintheContext
   end
 
   scope "/health", RetWeb do
@@ -112,10 +121,17 @@ defmodule RetWeb.Router do
       resources("/hubs", Api.V1.HubController, only: [:create, :delete])
     end
 
+    # Must be defined before :show for scenes
+    scope "/v1", as: :api_v1 do
+      pipe_through([:auth_required])
+      get("/scenes/projectless", Api.V1.SceneController, :index_projectless)
+    end
+
     scope "/v1", as: :api_v1 do
       pipe_through([:auth_optional])
       resources("/media/search", Api.V1.MediaSearchController, only: [:index])
       resources("/avatars", Api.V1.AvatarController, only: [:show])
+
       resources("/scenes", Api.V1.SceneController, only: [:show])
     end
 
@@ -140,6 +156,24 @@ defmodule RetWeb.Router do
       patch("/accounts", Api.V1.AccountController, :update)
       resources("/accounts/search", Api.V1.AccountSearchController, only: [:create])
     end
+  end
+
+  scope "/api/v2_alpha", RetWeb do
+    pipe_through(
+      [:secure_headers, :parsed_body, :api, :public_api_access, :auth_required] ++
+        if(Mix.env() == :prod, do: [:ssl_only, :canonicalize_domain], else: [])
+    )
+
+    resources("/credentials", Api.V2.CredentialsController, only: [:create, :index, :update, :show])
+  end
+
+  scope "/api/v2_alpha", as: :api_v2_alpha do
+    pipe_through(
+      [:parsed_body, :api, :public_api_access, :graphql] ++ if(Mix.env() == :prod, do: [:ssl_only], else: [])
+    )
+
+    forward "/graphiql", Absinthe.Plug.GraphiQL, json_codec: Jason, schema: RetWeb.Schema
+    forward "/", Absinthe.Plug, json_codec: Jason, schema: RetWeb.Schema
   end
 
   # Directly accessible APIs.

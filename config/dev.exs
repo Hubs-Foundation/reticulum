@@ -25,8 +25,8 @@ config :ret, RetWeb.Endpoint,
     port: 4000,
     otp_app: :ret,
     cipher_suite: :strong,
-    keyfile: "#{System.get_env("PWD")}/priv/dev-ssl.key",
-    certfile: "#{System.get_env("PWD")}/priv/dev-ssl.cert"
+    keyfile: "#{File.cwd!()}/priv/dev-ssl.key",
+    certfile: "#{File.cwd!()}/priv/dev-ssl.cert"
   ],
   cors_proxy_url: [scheme: "https", host: cors_proxy_host, port: 4000],
   assets_url: [scheme: "https", host: assets_host, port: 4000],
@@ -35,17 +35,10 @@ config :ret, RetWeb.Endpoint,
   debug_errors: true,
   code_reloader: true,
   check_origin: false,
+  # This config value is for local development only.
   secret_key_base: "txlMOtlaY5x3crvOCko4uV5PM29ul3zGo1oBGNO3cDXx+7GHLKqt0gR9qzgThxb5",
   allowed_origins: "*",
-  allow_crawlers: true,
-  watchers: [
-    node: [
-      "node_modules/brunch/bin/brunch",
-      "watch",
-      "--stdin",
-      cd: Path.expand("../assets", __DIR__)
-    ]
-  ]
+  allow_crawlers: true
 
 # ## SSL Support
 #
@@ -123,6 +116,7 @@ config :ret, Ret.DiscordClient,
 config :cors_plug, origin: ["*"]
 
 config :ret,
+  # This config value is for local development only.
   upload_encryption_key: "a8dedeb57adafa7821027d546f016efef5a501bd",
   bot_access_key: ""
 
@@ -184,12 +178,14 @@ config :ret, Ret.OAuthToken, oauth_token_key: ""
 
 config :ret, Ret.Guardian,
   issuer: "ret",
+  # This config value is for local development only.
   secret_key: "47iqPEdWcfE7xRnyaxKDLt9OGEtkQG3SycHBEMOuT2qARmoESnhc76IgCUjaQIwX",
   ttl: {12, :weeks}
 
 config :web_push_encryption, :vapid_details,
   subject: "mailto:admin@mozilla.com",
   public_key: "BAb03820kHYuqIvtP6QuCKZRshvv_zp5eDtqkuwCUAxASBZMQbFZXzv8kjYOuLGF16A3k8qYnIN10_4asB-Aw7w",
+  # This config value is for local development only.
   private_key: "w76tXh1d3RBdVQ5eINevXRwW6Ow6uRcBa8tBDOXfmxM"
 
 config :sentry,

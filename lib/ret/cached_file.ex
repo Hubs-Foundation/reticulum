@@ -77,9 +77,9 @@ defmodule Ret.CachedFile do
   def vacuum do
     Ret.Locking.exec_if_lockable(:cached_file_vacuum, fn ->
       # Underlying files will be removed by storage vacuum
-      one_day_ago = Timex.now() |> Timex.shift(days: -1)
+      two_days_ago = Timex.now() |> Timex.shift(days: -2)
 
-      from(f in CachedFile, where: f.inserted_at() < ^one_day_ago)
+      from(f in CachedFile, where: f.inserted_at() < ^two_days_ago)
       |> Repo.delete_all()
     end)
   end

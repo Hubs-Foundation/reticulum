@@ -34,7 +34,26 @@ defmodule Ret.MediaResolver do
   def resolve(%MediaResolverQuery{url: url} = query) when is_binary(url) do
     uri = url |> URI.parse()
     root_host = get_root_host(uri.host)
-    resolve(query |> Map.put(:url, uri), root_host)
+    query = Map.put(query, :url, uri)
+
+    # TODO: We could end up running fallback_to_screenshot_opengraph_or_nothing
+    #       twice in a row. These resolve functions can be simplified so that we can
+    #       more easily track individual failures and only fallback when necessary.
+    #       Also make sure they have a uniform response shape for indicating an
+    #       error.
+    case resolve(query, root_host) do
+      :error ->
+        fallback_to_screenshot_opengraph_or_nothing(query)
+
+      {:error, _reason} ->
+        fallback_to_screenshot_opengraph_or_nothing(query)
+
+      {:commit, nil} ->
+        fallback_to_screenshot_opengraph_or_nothing(query)
+
+      commit ->
+        commit
+    end
   end
 
   def resolve(%MediaResolverQuery{url: %URI{host: nil}}, _root_host) do
@@ -191,6 +210,7 @@ defmodule Ret.MediaResolver do
             {:offline_stream, body}
 
           String.contains?(body, "HTTPError 429") ->
+            Statix.increment("ret.media_resolver.ytdl.rate_limited")
             {:rate_limited, body}
 
           true ->
@@ -331,7 +351,12 @@ defmodule Ret.MediaResolver do
     end)
   end
 
-  defp resolve_non_video(%MediaResolverQuery{url: %URI{host: host} = uri, version: version}, _root_host) do
+  defp resolve_non_video(%MediaResolverQuery{} = query, _root_host) do
+    fallback_to_screenshot_opengraph_or_nothing(query)
+  end
+
+  # TODO: Refactor this function
+  defp fallback_to_screenshot_opengraph_or_nothing(%MediaResolverQuery{url: %URI{host: host} = uri, version: version}) do
     photomnemonic_endpoint = module_config(:photomnemonic_endpoint)
 
     # Crawl og tags for hubs rooms + scenes
@@ -339,7 +364,7 @@ defmodule Ret.MediaResolver do
 
     case uri |> URI.to_string() |> retry_head_then_get_until_success([{"Range", "bytes=0-32768"}]) do
       :error ->
-        nil
+        :error
 
       %HTTPoison.Response{headers: headers} ->
         content_type = headers |> content_type_from_headers
@@ -375,7 +400,7 @@ defmodule Ret.MediaResolver do
 
           case Download.from(url, path: path) do
             {:ok, _path} -> {:ok, %{content_type: "image/png"}}
-            error -> {:error, error}
+            _error -> :error
           end
         end
       )
