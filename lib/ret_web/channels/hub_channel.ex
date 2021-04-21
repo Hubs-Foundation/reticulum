@@ -66,7 +66,12 @@ defmodule RetWeb.HubChannel do
         _ -> nil
       end
 
-    hub_requires_oauth = hub.hub_bindings |> Enum.empty?() |> Kernel.not()
+    hub_requires_oauth =
+      case hub do
+        nil -> false
+        _ -> hub.hub_bindings |> Enum.empty?() |> Kernel.not()
+      end
+
     bot_access_key = Application.get_env(:ret, :bot_access_key)
     has_valid_bot_access_key = !!(bot_access_key && params["bot_access_key"] == bot_access_key)
 
@@ -903,7 +908,7 @@ defmodule RetWeb.HubChannel do
   defp join_with_hub(nil, _account, _socket, _context, _params) do
     Statix.increment("ret.channels.hub.joins.not_found")
 
-    {:error, %{message: "No such Hub"}}
+    {:error, %{message: "No such Hub", reason: "not_found"}}
   end
 
   defp join_with_hub(%Hub{entry_mode: :deny}, _account, _socket, _context, _params) do
