@@ -1,7 +1,7 @@
 defmodule Ret.Repo.Migrations.AddSessionStatsIndex do
   use Ecto.Migration
 
-  @max_year 2030
+  @max_year 2022
 
   def up do
     for year <- 2018..@max_year,
