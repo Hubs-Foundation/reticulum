@@ -122,6 +122,12 @@ defmodule Ret.Api.Credentials do
     )
   end
 
+  def where_token_is_not_revoked(query) do
+    from([credential, _account] in query,
+      where: not(credential.is_revoked)
+    )
+  end
+
   def app_token_query() do
     from(c in Credentials, where: c.subject_type == ^:app)
   end
