@@ -641,7 +641,7 @@ defmodule RetWeb.PageController do
             # TODO We should probably be able to handle ipv6 here too.
             results |> Enum.filter(&InetCidr.v4?/1) |> Enum.random()
 
-          result ->
+          _ ->
             nil
         end
     end
