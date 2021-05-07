@@ -26,6 +26,8 @@ defmodule RetWeb.Api.V2.CredentialsView do
     }
   end
 
+  # def render("show.json", )
+
   def render("show.json", %{credentials: credentials}) do
     render("show.json", %{credentials: credentials, token: nil})
   end
