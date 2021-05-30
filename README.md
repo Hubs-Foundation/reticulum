@@ -25,6 +25,8 @@ Windows WSL: https://github.com/michaeltreat/Windows-Subsystem-For-Linux-Setup-G
 
 https://elixir-lang.org/install.html
 
+Note: On Linux, you may also have to install the erlang-src package for your distribution in order to compile dependencies successfully.
+
 https://hexdocs.pm/phoenix/installation.html
 
 #### Ansible
@@ -40,8 +42,7 @@ Run the following commands at the root of the reticulum directory:
     * If step 2 fails, you may need to change the password for the `postgres` role to match the password configured `dev.exs`.
     * From within the `psql` shell, enter `ALTER USER postgres WITH PASSWORD 'postgres';`
     * If you receive an error that the `ret_dev` database does not exist, (using psql again) enter `create database ret_dev;`
-3. from the `assets` directory, `npm install`
-4. From the project directory `mkdir -p storage/dev`
+3. From the project directory `mkdir -p storage/dev`
 
 ### 3. Start Reticulum
 
