@@ -4,7 +4,6 @@ defmodule RetWeb.Api.V1.ScopesController do
   alias Ret.Api.Scopes
 
   # Get available scopes
-  # /api/v1/credentials/scopes
   def index(conn, _params) do
     IO.puts("get scopes")
     IO.puts("SCOPES")

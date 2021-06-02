@@ -124,7 +124,7 @@ defmodule Ret.Api.Credentials do
 
   def where_token_is_not_revoked(query) do
     from([credential, _account] in query,
-      where: not(credential.is_revoked)
+      where: not credential.is_revoked
     )
   end
 
