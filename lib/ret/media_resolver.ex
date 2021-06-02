@@ -20,7 +20,6 @@ defmodule Ret.MediaResolver do
 
   @youtube_rate_limit %{scale: 8_000, limit: 1}
   @sketchfab_rate_limit %{scale: 60_000, limit: 15}
-  @poly_rate_limit %{scale: 60_000, limit: 1000}
   @max_await_for_rate_limit_s 120
 
   @non_video_root_hosts [
@@ -72,13 +71,6 @@ defmodule Ret.MediaResolver do
        |> URI.encode_query()
      )
      |> resolved()}
-  end
-
-  # Necessary short circuit around google.com root_host to skip YT-DL check for Poly
-  def resolve(%MediaResolverQuery{url: %URI{host: "poly.google.com"}} = query, root_host) do
-    rate_limited_resolve(query, root_host, @poly_rate_limit, fn ->
-      resolve_non_video(query, root_host)
-    end)
   end
 
   def resolve(%MediaResolverQuery{} = query, root_host) when root_host in @non_video_root_hosts do
@@ -292,43 +284,6 @@ defmodule Ret.MediaResolver do
       |> image_data_for_imgur_collection_api_url
 
     {:commit, (resolved_url || uri) |> resolved(meta)}
-  end
-
-  defp resolve_non_video(
-         %MediaResolverQuery{url: %URI{host: "poly.google.com", path: "/view/" <> asset_id} = uri},
-         "google.com"
-       ) do
-    [uri, meta] =
-      with api_key when is_binary(api_key) <- module_config(:google_poly_api_key) do
-        Statix.increment("ret.media_resolver.poly.requests")
-
-        payload =
-          "https://poly.googleapis.com/v1/assets/#{asset_id}?key=#{api_key}"
-          |> retry_get_until_success
-          |> Map.get(:body)
-          |> Poison.decode!()
-
-        meta =
-          %{expected_content_type: "model/gltf"}
-          |> Map.put(:name, payload["displayName"])
-          |> Map.put(:author, payload["authorName"])
-          |> Map.put(:license, payload["license"])
-
-        formats = payload |> Map.get("formats")
-
-        uri =
-          (Enum.find(formats, &(&1["formatType"] == "GLTF2")) || Enum.find(formats, &(&1["formatType"] == "GLTF")))
-          |> Kernel.get_in(["root", "url"])
-          |> URI.parse()
-
-        Statix.increment("ret.media_resolver.poly.ok")
-
-        [uri, meta]
-      else
-        _err -> [uri, nil]
-      end
-
-    {:commit, uri |> resolved(meta)}
   end
 
   defp resolve_non_video(
