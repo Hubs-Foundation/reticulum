@@ -169,46 +169,6 @@ defmodule Ret.MediaSearch do
     sketchfab_search(query)
   end
 
-  def search(%Ret.MediaSearchQuery{source: "poly", cursor: cursor, filter: filter, q: q}) do
-    with api_key when is_binary(api_key) <- resolver_config(:google_poly_api_key) do
-      query =
-        URI.encode_query(
-          pageSize: @page_size,
-          maxComplexity: :MEDIUM,
-          format: :GLTF2,
-          pageToken: cursor,
-          category: filter,
-          keywords: q,
-          key: api_key
-        )
-
-      res =
-        "https://poly.googleapis.com/v1/assets?#{query}"
-        |> retry_get_until_success()
-
-      case res do
-        :error ->
-          :error
-
-        res ->
-          decoded_res = res |> Map.get(:body) |> Poison.decode!()
-          entries = decoded_res |> Map.get("assets") |> Enum.map(&poly_api_result_to_entry/1)
-          next_cursor = decoded_res |> Map.get("nextPageToken")
-
-          {:commit,
-           %Ret.MediaSearchResult{
-             meta: %Ret.MediaSearchResultMeta{
-               next_cursor: next_cursor,
-               source: :poly
-             },
-             entries: entries
-           }}
-      end
-    else
-      _ -> nil
-    end
-  end
-
   def search(%Ret.MediaSearchQuery{source: "youtube_videos", cursor: cursor, filter: filter, q: q}) do
     with api_key when is_binary(api_key) <- resolver_config(:youtube_api_key) do
       query =
@@ -335,7 +295,6 @@ defmodule Ret.MediaSearch do
     end
   end
 
-  def available?(:poly), do: has_resolver_config?(:google_poly_api_key)
   def available?(:bing_images), do: has_resolver_config?(:bing_search_api_key)
   def available?(:bing_videos), do: has_resolver_config?(:bing_search_api_key)
   def available?(:youtube_videos), do: has_resolver_config?(:youtube_api_key)
@@ -803,17 +762,6 @@ defmodule Ret.MediaSearch do
       attributions: %{creator: %{name: result["user"]["username"], url: result["user"]["profileUrl"]}},
       url: "https://sketchfab.com/models/#{result["uid"]}",
       images: images
-    }
-  end
-
-  defp poly_api_result_to_entry(result) do
-    %{
-      id: result["name"],
-      type: "poly_model",
-      name: result["displayName"],
-      attributions: %{creator: %{name: result["authorName"]}},
-      url: "https://poly.google.com/view/#{result["name"] |> String.replace("assets/", "")}",
-      images: %{preview: %{url: result["thumbnail"]["url"]}}
     }
   end
 
