@@ -20,7 +20,6 @@ defmodule Ret.MediaResolver do
 
   @youtube_rate_limit %{scale: 8_000, limit: 1}
   @sketchfab_rate_limit %{scale: 60_000, limit: 15}
-  @poly_rate_limit %{scale: 60_000, limit: 1000}
   @max_await_for_rate_limit_s 120
 
   @non_video_root_hosts [
@@ -72,13 +71,6 @@ defmodule Ret.MediaResolver do
        |> URI.encode_query()
      )
      |> resolved()}
-  end
-
-  # Necessary short circuit around google.com root_host to skip YT-DL check for Poly
-  def resolve(%MediaResolverQuery{url: %URI{host: "poly.google.com"}} = query, root_host) do
-    rate_limited_resolve(query, root_host, @poly_rate_limit, fn ->
-      resolve_non_video(query, root_host)
-    end)
   end
 
   def resolve(%MediaResolverQuery{} = query, root_host) when root_host in @non_video_root_hosts do
@@ -295,43 +287,6 @@ defmodule Ret.MediaResolver do
   end
 
   defp resolve_non_video(
-         %MediaResolverQuery{url: %URI{host: "poly.google.com", path: "/view/" <> asset_id} = uri},
-         "google.com"
-       ) do
-    [uri, meta] =
-      with api_key when is_binary(api_key) <- module_config(:google_poly_api_key) do
-        Statix.increment("ret.media_resolver.poly.requests")
-
-        payload =
-          "https://poly.googleapis.com/v1/assets/#{asset_id}?key=#{api_key}"
-          |> retry_get_until_success
-          |> Map.get(:body)
-          |> Poison.decode!()
-
-        meta =
-          %{expected_content_type: "model/gltf"}
-          |> Map.put(:name, payload["displayName"])
-          |> Map.put(:author, payload["authorName"])
-          |> Map.put(:license, payload["license"])
-
-        formats = payload |> Map.get("formats")
-
-        uri =
-          (Enum.find(formats, &(&1["formatType"] == "GLTF2")) || Enum.find(formats, &(&1["formatType"] == "GLTF")))
-          |> Kernel.get_in(["root", "url"])
-          |> URI.parse()
-
-        Statix.increment("ret.media_resolver.poly.ok")
-
-        [uri, meta]
-      else
-        _err -> [uri, nil]
-      end
-
-    {:commit, uri |> resolved(meta)}
-  end
-
-  defp resolve_non_video(
          %MediaResolverQuery{url: %URI{path: "/models/" <> model_id}} = query,
          "sketchfab.com" = root_host
        ) do
@@ -454,41 +409,56 @@ defmodule Ret.MediaResolver do
         _err -> [uri, nil]
       end
 
-    {:commit, uri |> resolved(meta)}
+    {:commit, resolved(uri, meta)}
+  end
+
+  defp get_sketchfab_model_zip_url(%{model_id: model_id, api_key: api_key}) do
+    case "https://api.sketchfab.com/v3/models/#{model_id}/download"
+         |> retry_get_until_success([{"Authorization", "Token #{api_key}"}], 15_000, 15_000) do
+      :error ->
+        {:error, "Failed to get sketchfab metadata"}
+
+      response ->
+        case response |> Map.get(:body) |> Poison.decode() do
+          {:ok, json} ->
+            {:ok, Kernel.get_in(json, ["gltf", "url"])}
+
+          _ ->
+            {:error, "Failed to get sketchfab metadata"}
+        end
+    end
+  end
+
+  def download_sketchfab_model_to_path(%{model_id: model_id, api_key: api_key, path: path}) do
+    case get_sketchfab_model_zip_url(%{model_id: model_id, api_key: api_key}) do
+      {:ok, zip_url} ->
+        Download.from(zip_url, path: path)
+        {:ok, %{content_type: "model/gltf+zip"}}
+
+      {:error, error} ->
+        {:error, error}
+
+      _ ->
+        {:error, "Failed to get sketchfab url"}
+    end
   end
 
   defp resolve_sketchfab_model(model_id, api_key, version \\ 1) do
-    cached_file_result =
-      CachedFile.fetch(
-        "sketchfab-#{model_id}-#{version}",
-        fn path ->
-          Statix.increment("ret.media_resolver.sketchfab.requests")
+    loader = fn path ->
+      Statix.increment("ret.media_resolver.sketchfab.requests")
 
-          res =
-            "https://api.sketchfab.com/v3/models/#{model_id}/download"
-            |> retry_get_until_success([{"Authorization", "Token #{api_key}"}])
+      case download_sketchfab_model_to_path(%{model_id: model_id, api_key: api_key, path: path}) do
+        {:ok, metadata} ->
+          Statix.increment("ret.media_resolver.sketchfab.ok")
+          {:ok, metadata}
 
-          case res do
-            :error ->
-              Statix.increment("ret.media_resolver.sketchfab.errors")
+        {:error, _} ->
+          Statix.increment("ret.media_resolver.sketchfab.errors")
+          :error
+      end
+    end
 
-              :error
-
-            res ->
-              Statix.increment("ret.media_resolver.sketchfab.ok")
-
-              zip_url =
-                res
-                |> Map.get(:body)
-                |> Poison.decode!()
-                |> Kernel.get_in(["gltf", "url"])
-
-              Download.from(zip_url, path: path)
-
-              {:ok, %{content_type: "model/gltf+zip"}}
-          end
-        end
-      )
+    cached_file_result = CachedFile.fetch("sketchfab-#{model_id}-#{version}", loader)
 
     case cached_file_result do
       {:ok, uri} -> [uri, %{expected_content_type: "model/gltf+zip"}]

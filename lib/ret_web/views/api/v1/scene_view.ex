@@ -12,7 +12,7 @@ defmodule RetWeb.Api.V1.SceneView do
 
   def render("index.json", %{scenes: scenes, account: account}) do
     %{
-      scenes: Enum.map(scenes, &render_scene(&1, account))
+      scenes: Enum.map(scenes, &render_scene(&1, account)) |> Enum.reject(&is_nil/1)
     }
   end
 

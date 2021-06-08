@@ -878,6 +878,7 @@ defmodule Ret.Hub do
       embed_hub: account |> can?(embed_hub(hub)),
       kick_users: account |> can?(kick_users(hub)),
       mute_users: account |> can?(mute_users(hub)),
+      amplify_audio: account |> can?(amplify_audio(hub)),
       spawn_camera: account |> can?(spawn_camera(hub)),
       spawn_drawing: account |> can?(spawn_drawing(hub)),
       spawn_and_move_media: account |> can?(spawn_and_move_media(hub)),
@@ -927,7 +928,7 @@ defimpl Canada.Can, for: Ret.Account do
     false
   end
 
-  @owner_actions [:update_hub, :close_hub, :embed_hub, :kick_users, :mute_users]
+  @owner_actions [:update_hub, :close_hub, :embed_hub, :kick_users, :mute_users, :amplify_audio]
   @object_actions [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects, :spawn_emoji, :fly]
   @creator_actions [:update_roles]
 
@@ -956,7 +957,7 @@ defimpl Canada.Can, for: Ret.Account do
 
   # Bound hubs - Moderator actions
   def can?(%Ret.Account{} = account, action, %Ret.Hub{hub_bindings: hub_bindings})
-      when hub_bindings |> length > 0 and action in [:kick_users, :mute_users] do
+      when hub_bindings |> length > 0 and action in [:kick_users, :mute_users, :amplify_audio] do
     hub_bindings |> Enum.any?(&(account |> Ret.HubBinding.can_moderate_users?(&1)))
   end
 
@@ -1025,7 +1026,7 @@ defimpl Canada.Can, for: Ret.OAuthProvider do
   alias Ret.{AppConfig, Hub}
 
   @object_actions [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects, :spawn_emoji, :fly]
-  @special_actions [:update_hub, :update_roles, :close_hub, :embed_hub, :kick_users, :mute_users]
+  @special_actions [:update_hub, :update_roles, :close_hub, :embed_hub, :kick_users, :mute_users, :amplify_audio]
 
   # Always deny access to non-enterable hubs
   def can?(%Ret.OAuthProvider{}, :join_hub, %Ret.Hub{entry_mode: :deny}), do: false
