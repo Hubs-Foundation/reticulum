@@ -119,7 +119,7 @@ defmodule RetWeb.FileController do
     case fetch_result do
       {:ok, %{"content_type" => content_type, "content_length" => content_length}, _stream} ->
         conn
-        |> put_resp_content_type(content_type |> RetWeb.ContentType.sanitize_content_type, nil)
+        |> put_resp_content_type(content_type |> RetWeb.ContentType.sanitize_content_type(), nil)
         |> put_resp_header("content-length", "#{content_length}")
         |> put_resp_header("accept-ranges", "bytes")
         |> send_resp(200, "")
@@ -142,7 +142,7 @@ defmodule RetWeb.FileController do
           {:ok, conn, ranges, is_partial} ->
             conn =
               conn
-              |> put_resp_content_type(content_type |> RetWeb.ContentType.sanitize_content_type, nil)
+              |> put_resp_content_type(content_type |> RetWeb.ContentType.sanitize_content_type(), nil)
               |> put_resp_header("content-length", "#{ranges |> total_range_length}")
               |> put_resp_header("cache-control", "public, max-age=31536000")
               |> put_resp_header("accept-ranges", "bytes")

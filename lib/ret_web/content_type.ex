@@ -1,6 +1,7 @@
 defmodule RetWeb.ContentType do
   def sanitize_content_type(content_type) do
     downcase_content_type = String.downcase(content_type)
+
     cond do
       # Covers content_types like text/html, application/xhtml+xml, etc.
       downcase_content_type |> String.contains?("html") -> "text/plain"
