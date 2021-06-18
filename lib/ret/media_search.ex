@@ -86,7 +86,7 @@ defmodule Ret.MediaSearch do
         count: @page_size,
         max_face_count: @max_face_count,
         max_filesizes: "gltf:#{@max_file_size_bytes}",
-        processing_status: :succeeded,
+        # processing_status: :succeeded, # Sketchfab API seems to have a bug that rejects processing_status
         cursor: cursor,
         q: q
       )
@@ -103,7 +103,7 @@ defmodule Ret.MediaSearch do
         count: @page_size,
         max_face_count: @max_face_count,
         max_filesizes: "gltf:#{@max_file_size_bytes}",
-        processing_status: :succeeded,
+        # processing_status: :succeeded,  # Sketchfab API seems to have a bug that rejects processing_status
         sort_by:
           if q == nil || q == "" do
             "-publishedAt"
@@ -167,46 +167,6 @@ defmodule Ret.MediaSearch do
     query = URI.encode_query(query_params)
 
     sketchfab_search(query)
-  end
-
-  def search(%Ret.MediaSearchQuery{source: "poly", cursor: cursor, filter: filter, q: q}) do
-    with api_key when is_binary(api_key) <- resolver_config(:google_poly_api_key) do
-      query =
-        URI.encode_query(
-          pageSize: @page_size,
-          maxComplexity: :MEDIUM,
-          format: :GLTF2,
-          pageToken: cursor,
-          category: filter,
-          keywords: q,
-          key: api_key
-        )
-
-      res =
-        "https://poly.googleapis.com/v1/assets?#{query}"
-        |> retry_get_until_success()
-
-      case res do
-        :error ->
-          :error
-
-        res ->
-          decoded_res = res |> Map.get(:body) |> Poison.decode!()
-          entries = decoded_res |> Map.get("assets") |> Enum.map(&poly_api_result_to_entry/1)
-          next_cursor = decoded_res |> Map.get("nextPageToken")
-
-          {:commit,
-           %Ret.MediaSearchResult{
-             meta: %Ret.MediaSearchResultMeta{
-               next_cursor: next_cursor,
-               source: :poly
-             },
-             entries: entries
-           }}
-      end
-    else
-      _ -> nil
-    end
   end
 
   def search(%Ret.MediaSearchQuery{source: "youtube_videos", cursor: cursor, filter: filter, q: q}) do
@@ -335,7 +295,6 @@ defmodule Ret.MediaSearch do
     end
   end
 
-  def available?(:poly), do: has_resolver_config?(:google_poly_api_key)
   def available?(:bing_images), do: has_resolver_config?(:bing_search_api_key)
   def available?(:bing_videos), do: has_resolver_config?(:bing_search_api_key)
   def available?(:youtube_videos), do: has_resolver_config?(:youtube_api_key)
@@ -343,11 +302,15 @@ defmodule Ret.MediaSearch do
   def available?(:tenor), do: has_resolver_config?(:tenor_api_key)
   def available?(:twitch), do: has_resolver_config?(:twitch_client_id)
 
-  defp sketchfab_search(query) do
+  def sketchfab_search(query) do
     with api_key when is_binary(api_key) <- resolver_config(:sketchfab_api_key) do
       res =
-        "https://api.sketchfab.com/v3/search?#{query}"
-        |> retry_get_until_success([{"Authorization", "Token #{api_key}"}])
+        retry_get_until_success(
+          "https://api.sketchfab.com/v3/search?#{query}",
+          [{"Authorization", "Token #{api_key}"}],
+          15_000,
+          15_000
+        )
 
       case res do
         :error ->
@@ -799,17 +762,6 @@ defmodule Ret.MediaSearch do
       attributions: %{creator: %{name: result["user"]["username"], url: result["user"]["profileUrl"]}},
       url: "https://sketchfab.com/models/#{result["uid"]}",
       images: images
-    }
-  end
-
-  defp poly_api_result_to_entry(result) do
-    %{
-      id: result["name"],
-      type: "poly_model",
-      name: result["displayName"],
-      attributions: %{creator: %{name: result["authorName"]}},
-      url: "https://poly.google.com/view/#{result["name"] |> String.replace("assets/", "")}",
-      images: %{preview: %{url: result["thumbnail"]["url"]}}
     }
   end
 

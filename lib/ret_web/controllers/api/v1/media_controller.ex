@@ -14,16 +14,25 @@ defmodule RetWeb.Api.V1.MediaController do
         %{"media" => %Plug.Upload{filename: filename, content_type: "application/octet-stream"} = upload} = params
       ) do
     desired_content_type = params |> Map.get("desired_content_type")
-    promotion_token = params |> promotion_token_for_params
+    content_type_from_path = MIME.from_path(filename)
 
-    store_and_render_upload(conn, upload, MIME.from_path(filename), desired_content_type, promotion_token)
+    if [desired_content_type, content_type_from_path] |> Enum.any?(&RetWeb.ContentType.is_forbidden_content_type/1) do
+      conn |> send_resp(403, "")
+    else
+      promotion_token = params |> promotion_token_for_params
+      store_and_render_upload(conn, upload, content_type_from_path, desired_content_type, promotion_token)
+    end
   end
 
   def create(conn, %{"media" => %Plug.Upload{content_type: content_type} = upload} = params) do
     desired_content_type = params |> Map.get("desired_content_type")
-    promotion_token = params |> promotion_token_for_params
 
-    store_and_render_upload(conn, upload, content_type, desired_content_type, promotion_token)
+    if [desired_content_type, content_type] |> Enum.any?(&RetWeb.ContentType.is_forbidden_content_type/1) do
+      conn |> send_resp(403, "")
+    else
+      promotion_token = params |> promotion_token_for_params
+      store_and_render_upload(conn, upload, content_type, desired_content_type, promotion_token)
+    end
   end
 
   defp promotion_token_for_params(%{"promotion_mode" => "with_token"}), do: SecureRandom.hex()
