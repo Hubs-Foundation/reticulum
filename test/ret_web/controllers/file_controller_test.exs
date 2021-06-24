@@ -20,7 +20,8 @@ defmodule RetWeb.FileControllerTest do
 
   defp assert_file_content_type(conn, expected_content_type: expected_content_type, uuid: uuid, token: token) do
     req = conn |> file_path(:show, uuid, token: token)
-    resp = conn |> get("#{RetWeb.Endpoint.url()}#{req}")
+    storage_host = Application.get_env(:ret, Ret.Storage)[:host]
+    resp = conn |> get("#{storage_host}#{req}")
     [content_type] = resp |> Plug.Conn.get_resp_header("content-type")
 
     assert content_type == expected_content_type
