@@ -50,7 +50,6 @@ config :ret, Ret.Guardian,
   secret_key: "47iqPEdWcfE7xRnyaxKDLt9OGEtkQG3SycHBEMOuT2qARmoESnhc76IgCUjaQIwX"
 
 config :ret, Ret.Storage,
-  host: "https://hubs.local:4000",
   storage_path: "storage/test",
   ttl: 60 * 60 * 24
 
