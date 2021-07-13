@@ -203,7 +203,6 @@ defmodule RetWeb.Router do
         if(Mix.env() == :prod, do: [:ssl_only, :canonicalize_domain], else: [])
     )
 
-    get("/link/", PageController, only: [:index])
     get("/link", PageController, only: [:index])
   end
 
