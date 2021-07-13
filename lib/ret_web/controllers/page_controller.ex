@@ -514,9 +514,6 @@ defmodule RetWeb.PageController do
 
   # Redirect to the specified hub identifier, which can be a sid or an entry code
   defp redirect_to_hub_identifier(conn, hub_identifier) do
-    # Rate limit requests for redirects.
-    :timer.sleep(500)
-
     hub = Repo.get_by(Hub, hub_sid: hub_identifier) || Hub.get_by_entry_code_string(hub_identifier)
 
     case hub do
