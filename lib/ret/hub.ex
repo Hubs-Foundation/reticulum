@@ -356,8 +356,17 @@ defmodule Ret.Hub do
 
   def get_by_entry_code_string(entry_code_string) when is_binary(entry_code_string) do
     case Integer.parse(entry_code_string) do
-      {entry_code, _} -> Hub |> Repo.get_by(entry_code: entry_code)
-      _ -> nil
+      {entry_code, _} ->
+        hub = Hub |> Repo.get_by(entry_code: entry_code)
+
+        cond do
+          is_nil(hub) -> nil
+          hub |> Hub.entry_code_expired?() -> nil
+          true -> hub
+        end
+
+      _ ->
+        nil
     end
   end
 

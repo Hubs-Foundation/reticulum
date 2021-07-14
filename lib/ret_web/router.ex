@@ -12,6 +12,10 @@ defmodule RetWeb.Router do
     plug(Plug.SSL, hsts: true, rewrite_on: [:x_forwarded_proto])
   end
 
+  pipeline :rate_limit do
+    plug(RetWeb.Plugs.RateLimit)
+  end
+
   pipeline :parsed_body do
     plug(
       Plug.Parsers,
@@ -191,6 +195,24 @@ defmodule RetWeb.Router do
 
     head("/files/:id", FileController, :head)
     get("/files/:id", FileController, :show)
+  end
+
+  scope "/", RetWeb do
+    pipe_through(
+      [:secure_headers, :parsed_body, :browser] ++
+        if(Mix.env() == :prod, do: [:ssl_only, :canonicalize_domain], else: [])
+    )
+
+    get("/link", PageController, only: [:index])
+  end
+
+  scope "/", RetWeb do
+    pipe_through(
+      [:secure_headers, :parsed_body, :browser, :rate_limit] ++
+        if(Mix.env() == :prod, do: [:ssl_only, :canonicalize_domain], else: [])
+    )
+
+    get("/link/*path", PageController, only: [:index])
   end
 
   scope "/", RetWeb do
