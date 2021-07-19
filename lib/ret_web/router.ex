@@ -160,14 +160,11 @@ defmodule RetWeb.Router do
   end
 
   scope "/api/v2_alpha", RetWeb do
-    IO.puts("1")
-
     pipe_through(
       [:secure_headers, :parsed_body, :api, :public_api_access, :auth_required] ++
         if(Mix.env() == :prod, do: [:ssl_only, :canonicalize_domain], else: [])
     )
 
-    IO.puts("2")
     resources("/credentials", Api.V2.CredentialsController, only: [:create, :index, :update, :show])
   end
 

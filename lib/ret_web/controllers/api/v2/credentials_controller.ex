@@ -12,19 +12,14 @@ defmodule RetWeb.Api.V2.CredentialsController do
   plug(RetWeb.Plugs.RateLimit when action in [:create, :update])
 
   def index(conn, %{"app" => _anything} = _params) do
-    IO.puts("inside index 14")
     handle_list_credentials_result(conn, authed_list_credentials(Guardian.Plug.current_resource(conn), :app))
   end
 
   def index(conn, _params) do
-    IO.puts("inside index 19")
-    IO.inspect(conn)
     handle_list_credentials_result(conn, authed_list_credentials(Guardian.Plug.current_resource(conn), :account))
   end
 
   def show(conn, %{"id" => credentials_sid}) do
-    IO.puts("inside index 25")
-
     case Repo.get_by(Credentials, api_credentials_sid: credentials_sid) do
       nil ->
         render_errors(conn, 400, {:error, "Invalid request"})
@@ -39,7 +34,6 @@ defmodule RetWeb.Api.V2.CredentialsController do
 
   def create(conn, params) do
     account = Guardian.Plug.current_resource(conn)
-    IO.puts("hit create endpoint")
 
     case to_claims(account, params) do
       {:ok, claims} ->
@@ -88,7 +82,6 @@ defmodule RetWeb.Api.V2.CredentialsController do
   end
 
   defp handle_create_credentials_result(conn, {:ok, token, _claims}) do
-    IO.puts("hit handle-credentials-result endpoint")
     # Lookup credentials because token creation returns the
     # claims map, not the credentials object written to DB.
     credentials =
