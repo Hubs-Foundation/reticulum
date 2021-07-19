@@ -40,6 +40,7 @@ defmodule RetWeb.Api.V2.CredentialsController do
 
   def create(conn, params) do
     account = Guardian.Plug.current_resource(conn)
+    IO.puts("hit create endpoint")
 
     case to_claims(account, params) do
       {:ok, claims} ->
@@ -88,6 +89,7 @@ defmodule RetWeb.Api.V2.CredentialsController do
   end
 
   defp handle_create_credentials_result(conn, {:ok, token, _claims}) do
+    IO.puts("hit handle-credentials-result endpoint")
     # Lookup credentials because token creation returns the
     # claims map, not the credentials object written to DB.
     credentials =

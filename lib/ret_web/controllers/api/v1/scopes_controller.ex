@@ -3,11 +3,8 @@ defmodule RetWeb.Api.V1.ScopesController do
 
   alias Ret.Api.Scopes
 
-  # Get available scopes
+  # Get available API token credential scopes
   def index(conn, _params) do
-    IO.puts("get scopes")
-    IO.puts("SCOPES")
-
     conn
     |> put_resp_header("content-type", "application/json")
     |> put_status(200)
