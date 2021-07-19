@@ -16,6 +16,7 @@ defmodule RetWeb.Api.V2.CredentialsView do
 
   def render("index.json", %{credentials: credentials}) when is_list(credentials) do
     IO.puts("index hit endpoint")
+
     %{
       credentials: Enum.map(credentials, fn c -> render_credentials(c) end)
     }
@@ -23,6 +24,7 @@ defmodule RetWeb.Api.V2.CredentialsView do
 
   def render("show.json", %{token: token, credentials: credentials}) do
     IO.puts("show hit endpoint")
+
     %{
       credentials: [Map.merge(render_credentials(credentials), %{token: token})]
     }
@@ -37,6 +39,7 @@ defmodule RetWeb.Api.V2.CredentialsView do
 
   def render("errors.json", %{errors: errors}) when is_list(errors) do
     IO.puts("4")
+
     %{
       errors: Enum.map(errors, fn e -> render_error(e) end)
     }

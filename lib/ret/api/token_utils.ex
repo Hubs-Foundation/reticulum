@@ -20,7 +20,7 @@ defmodule Ret.Api.TokenUtils do
       subject_type: :account,
       scopes: scopes,
       account_id: account.account_id
-    }                       )
+    })
   end
 
   defp ensure_atom(x) when is_atom(x), do: x

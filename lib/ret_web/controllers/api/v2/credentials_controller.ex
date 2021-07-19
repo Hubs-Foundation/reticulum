@@ -16,7 +16,6 @@ defmodule RetWeb.Api.V2.CredentialsController do
     handle_list_credentials_result(conn, authed_list_credentials(Guardian.Plug.current_resource(conn), :app))
   end
 
-
   def index(conn, _params) do
     IO.puts("inside index 19")
     IO.inspect(conn)
