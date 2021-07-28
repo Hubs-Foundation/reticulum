@@ -108,6 +108,7 @@ defmodule RetWeb.Router do
         resources("/availability", Api.V1.SupportSubscriptionController, only: [:index])
       end
 
+      resources("/credentials/scopes", Api.V1.ScopesController, only: [:index])
       resources("/ret_notices", Api.V1.RetNoticeController, only: [:create])
     end
 
