@@ -85,12 +85,11 @@ defmodule Ret.MediaSearch do
         downloadable: true,
         count: @page_size,
         max_face_count: @max_face_count,
-        max_filesizes: "gltf:#{@max_file_size_bytes}",
+        # max_filesizes: "gltf:#{@max_file_size_bytes}", # Sketchfab API has bug that disregards selected category if query has max_filesizes defined. Issue: https://forum.sketchfab.com/t/bug-model-search-api-using-max-filesizes-causes-query-to-ignore-categories/40247
         # processing_status: :succeeded, # Sketchfab API seems to have a bug that rejects processing_status
         cursor: cursor,
         q: q
       )
-
     sketchfab_search(query)
   end
 
@@ -102,7 +101,7 @@ defmodule Ret.MediaSearch do
         staffpicked: true,
         count: @page_size,
         max_face_count: @max_face_count,
-        max_filesizes: "gltf:#{@max_file_size_bytes}",
+        # max_filesizes: "gltf:#{@max_file_size_bytes}",
         # processing_status: :succeeded,  # Sketchfab API seems to have a bug that rejects processing_status
         sort_by:
           if q == nil || q == "" do
@@ -124,7 +123,7 @@ defmodule Ret.MediaSearch do
         downloadable: true,
         count: @page_size,
         max_face_count: @max_collection_face_count,
-        max_filesizes: "gltf:#{@max_collection_file_size_bytes}",
+        # max_filesizes: "gltf:#{@max_collection_file_size_bytes}",
         processing_status: :succeeded,
         sort_by:
           if q == nil || q == "" do
@@ -155,7 +154,7 @@ defmodule Ret.MediaSearch do
           downloadable: true,
           count: @page_size,
           max_face_count: @max_face_count,
-          max_filesizes: "gltf:#{@max_file_size_bytes}",
+          # max_filesizes: "gltf:#{@max_file_size_bytes}", 
           processing_status: :succeeded,
           cursor: cursor,
           categories: filter,
