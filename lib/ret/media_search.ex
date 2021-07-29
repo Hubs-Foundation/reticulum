@@ -28,7 +28,7 @@ defmodule Ret.MediaSearch do
   @scene_page_size 23
   @max_face_count 60000
   @max_collection_face_count 200_000
-  @max_file_size_bytes 20 * 1024 * 1024
+  # @max_file_size_bytes 20 * 1024 * 1024 # see sketchfab bug about max_filesizes params broken
   @max_collection_file_size_bytes 100 * 1024 * 1024
 
   def search(%Ret.MediaSearchQuery{source: "scene_listings", cursor: cursor, filter: "featured", q: query}) do
@@ -103,7 +103,7 @@ defmodule Ret.MediaSearch do
         count: @page_size,
         max_face_count: @max_face_count,
         # max_filesizes: "gltf:#{@max_file_size_bytes}",
-        # processing_status: :succeeded,  # Sketchfab API seems to have a bug that rejects processing_status
+        # processing_status: :succeeded, # Sketchfab API seems to have a bug that rejects processing_status
         sort_by:
           if q == nil || q == "" do
             "-publishedAt"
