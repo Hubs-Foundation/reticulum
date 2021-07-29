@@ -12,8 +12,8 @@ defmodule RetWeb.Router do
     plug(Plug.SSL, hsts: true, rewrite_on: [:x_forwarded_proto])
   end
 
-  pipeline :rate_limit do
-    plug(RetWeb.Plugs.RateLimit)
+  pipeline :fail2ban do
+    plug(RetWeb.Plugs.Fail2Ban)
   end
 
   pipeline :parsed_body do
@@ -209,7 +209,7 @@ defmodule RetWeb.Router do
 
   scope "/", RetWeb do
     pipe_through(
-      [:secure_headers, :parsed_body, :browser, :rate_limit] ++
+      [:secure_headers, :parsed_body, :browser, :fail2ban] ++
         if(Mix.env() == :prod, do: [:ssl_only, :canonicalize_domain], else: [])
     )
 
