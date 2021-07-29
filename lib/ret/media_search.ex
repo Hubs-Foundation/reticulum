@@ -90,6 +90,7 @@ defmodule Ret.MediaSearch do
         cursor: cursor,
         q: q
       )
+
     sketchfab_search(query)
   end
 
