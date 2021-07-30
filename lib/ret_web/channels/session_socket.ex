@@ -3,6 +3,7 @@ defmodule RetWeb.SessionSocket do
 
   channel("ret", RetWeb.RetChannel)
   channel("hub:*", RetWeb.HubChannel)
+  channel("room:*", RetWeb.RoomChannel)
   channel("link:*", RetWeb.LinkChannel)
   channel("auth:*", RetWeb.AuthChannel)
 
