@@ -1,4 +1,7 @@
 # Reticulum
+Note: **Due to our small team size, we don't support setting up Reticulum locally due to restrictions on developer credentials. Although relatively difficult and new territory, you're welcome to set up this up yourself. In addition to running Reticulum locally, you'll need to also run [Hubs](https://github.com/mozilla/hubs) and [Dialog](https://github.com/mozilla/dialog) locally because the developer Dialog server is locked down and your local Reticulum will not connect properly)**
+
+Reference [this discussion thread](https://github.com/mozilla/hubs/discussions/3323) for more information. 
 
 A hybrid game networking and web API server, focused on Social Mixed Reality.
 
