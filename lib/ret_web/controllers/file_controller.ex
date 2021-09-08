@@ -75,7 +75,7 @@ defmodule RetWeb.FileController do
   end
 
   defp render_file_with_token(conn, type, uuid, token) do
-    %{host: storage_host} = Application.get_env(:ret, Ret.Storage)[:host] |> URI.parse()
+    %{host: storage_host} = Storage.uri_for(uuid, type, token)
 
     if conn.host !== storage_host do
       # We want to avoid serving files from the primary domain, so we forbid requests
