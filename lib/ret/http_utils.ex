@@ -84,6 +84,21 @@ defmodule Ret.HttpUtils do
     end
   end
 
+  def get_forwarded_ip(headers) do
+    origin_ips = headers |> get_http_header("x-forwarded-for")
+
+    if origin_ips do
+      ip_str = origin_ips |> String.split(",") |> Enum.map(&String.trim/1) |> Enum.at(0)
+
+      case :inet.parse_address(to_charlist(ip_str)) do
+        {:ok, ip} -> ip
+        _ -> nil
+      end
+    else
+      nil
+    end
+  end
+
   defp module_config(key) do
     Application.get_env(:ret, __MODULE__)[key]
   end

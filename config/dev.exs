@@ -134,7 +134,6 @@ config :ret, Ret.MediaResolver,
   deviantart_client_secret: nil,
   imgur_mashape_api_key: nil,
   imgur_client_id: nil,
-  google_poly_api_key: nil,
   youtube_api_key: nil,
   sketchfab_api_key: nil,
   ytdl_host: nil,
@@ -143,6 +142,7 @@ config :ret, Ret.MediaResolver,
 config :ret, Ret.Speelycaptor, speelycaptor_endpoint: "https://1dhaogh2hd.execute-api.us-west-1.amazonaws.com/public"
 
 config :ret, Ret.Storage,
+  host: "https://#{host}:4000",
   storage_path: "storage/dev",
   ttl: 60 * 60 * 24
 

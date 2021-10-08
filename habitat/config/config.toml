@@ -192,9 +192,6 @@ deviantart_client_secret = {{ toToml cfg.resolver.deviantart_client_secret }}
 imgur_mashape_api_key = {{ toToml cfg.resolver.imgur_mashape_api_key }}
 imgur_client_id = {{ toToml cfg.resolver.imgur_client_id }}
 {{/if}}
-{{ #if cfg.resolver.google_poly_api_key }}
-google_poly_api_key = {{ toToml cfg.resolver.google_poly_api_key }}
-{{/if}}
 {{ #if cfg.resolver.youtube_api_key }}
 youtube_api_key = {{ toToml cfg.resolver.youtube_api_key }}
 {{/if}}

@@ -212,6 +212,9 @@ defmodule RetWeb.PageController do
   def render_for_path("/verify", _params, conn), do: conn |> render_page("verify.html")
   def render_for_path("/verify/", _params, conn), do: conn |> render_page("verify.html")
 
+  def render_for_path("/tokens", _params, conn), do: conn |> render_page("tokens.html")
+  def render_for_path("/tokens/", _params, conn), do: conn |> render_page("tokens.html")
+
   def render_for_path("/discord", _params, conn), do: conn |> render_page("discord.html")
   def render_for_path("/discord/", _params, conn), do: conn |> render_page("discord.html")
 
@@ -286,7 +289,9 @@ defmodule RetWeb.PageController do
     conn |> respond_with_configurable_asset(asset_key, path, mime_type)
   end
 
-  def render_for_path("/admin", _params, conn), do: conn |> render_page("admin.html", :admin)
+  def render_for_path("/admin", _params, conn) do
+    conn |> render_page("admin.html", :admin)
+  end
 
   def render_for_path("/robots.txt", _params, conn) do
     allow_crawlers = Application.get_env(:ret, RetWeb.Endpoint)[:allow_crawlers] || false
@@ -514,9 +519,6 @@ defmodule RetWeb.PageController do
 
   # Redirect to the specified hub identifier, which can be a sid or an entry code
   defp redirect_to_hub_identifier(conn, hub_identifier) do
-    # Rate limit requests for redirects.
-    :timer.sleep(500)
-
     hub = Repo.get_by(Hub, hub_sid: hub_identifier) || Hub.get_by_entry_code_string(hub_identifier)
 
     case hub do

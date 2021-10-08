@@ -1,9 +1,29 @@
 defmodule RetWeb.PageControllerTest do
   use RetWeb.ConnCase
 
-  # TODO, fix, this has HTTP auth behind it now
-  # test "GET /", %{conn: conn} do
-  #  conn = get conn, "/"
-  #  assert html_response(conn, 200) =~ "Sign in with Google"
-  # end
+  test "redirect to non-existent entry code", %{conn: conn} do
+    resp = conn |> get("/link/123456")
+    assert resp |> response(404)
+  end
+
+  test "redirect with existing entry code", %{conn: conn} do
+    {:ok, hub} = Ret.Hub.create_new_room(%{"name" => "test hub"}, true)
+    resp = conn |> get("/link/#{hub.entry_code}")
+    assert resp |> response(302)
+  end
+
+  test "redirect fails with expired entry code", %{conn: conn} do
+    {:ok, hub} = Ret.Hub.create_new_room(%{"name" => "test hub"}, true)
+
+    hub
+    |> Ecto.Changeset.change(
+      entry_code_expires_at:
+        Timex.now()
+        |> DateTime.truncate(:second)
+    )
+    |> Ret.Repo.update!()
+
+    resp = conn |> get("/link/#{hub.entry_code}")
+    assert resp |> response(404)
+  end
 end

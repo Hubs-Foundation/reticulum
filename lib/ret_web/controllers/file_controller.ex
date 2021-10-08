@@ -75,9 +75,17 @@ defmodule RetWeb.FileController do
   end
 
   defp render_file_with_token(conn, type, uuid, token) do
-    {uuid, token}
-    |> resolve_fetch_args
-    |> fetch_and_render(conn, type)
+    %{host: storage_host} = Application.get_env(:ret, Ret.Storage)[:host] |> URI.parse()
+
+    if conn.host !== storage_host do
+      # We want to avoid serving files from the primary domain, so we forbid requests
+      # that aren't from the storage host
+      conn |> send_resp(403, "")
+    else
+      {uuid, token}
+      |> resolve_fetch_args
+      |> fetch_and_render(conn, type)
+    end
   end
 
   # Given a tuple of a UUID and a (optional) user specified token,
@@ -119,7 +127,7 @@ defmodule RetWeb.FileController do
     case fetch_result do
       {:ok, %{"content_type" => content_type, "content_length" => content_length}, _stream} ->
         conn
-        |> put_resp_content_type(content_type, nil)
+        |> put_resp_content_type(content_type |> RetWeb.ContentType.sanitize_content_type(), nil)
         |> put_resp_header("content-length", "#{content_length}")
         |> put_resp_header("accept-ranges", "bytes")
         |> send_resp(200, "")
@@ -142,7 +150,7 @@ defmodule RetWeb.FileController do
           {:ok, conn, ranges, is_partial} ->
             conn =
               conn
-              |> put_resp_content_type(content_type, nil)
+              |> put_resp_content_type(content_type |> RetWeb.ContentType.sanitize_content_type(), nil)
               |> put_resp_header("content-length", "#{ranges |> total_range_length}")
               |> put_resp_header("cache-control", "public, max-age=31536000")
               |> put_resp_header("accept-ranges", "bytes")

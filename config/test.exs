@@ -50,6 +50,7 @@ config :ret, Ret.Guardian,
   secret_key: "47iqPEdWcfE7xRnyaxKDLt9OGEtkQG3SycHBEMOuT2qARmoESnhc76IgCUjaQIwX"
 
 config :ret, Ret.Storage,
+  host: "https://hubs.local:4000",
   storage_path: "storage/test",
   ttl: 60 * 60 * 24
 
@@ -76,7 +77,6 @@ config :ret, Ret.MediaResolver,
   deviantart_client_secret: nil,
   imgur_mashape_api_key: nil,
   imgur_client_id: nil,
-  google_poly_api_key: nil,
   youtube_api_key: nil,
   sketchfab_api_key: nil,
   ytdl_host: nil,
