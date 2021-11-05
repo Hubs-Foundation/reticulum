@@ -1,3 +1,6 @@
+[ret."Elixir.Ret.Meta"]
+phx_host = "{{ cfg.ret.phx_host }}"
+
 [ret."Elixir.Ret"]
 pool = "{{ cfg.ret.pool }}"
 

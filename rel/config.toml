@@ -1,0 +1,206 @@
+####################################################################
+# SUB_DOMAIN    ="instance#1"
+# DOMAIN        ="domain.net"
+# DB_USER       ="postgres"
+# DB_PASS       ="XXXXXXXXXXX"
+# DB_NAME       ="ret_dev"
+# DB_HOST       ="name.uuid.region.rds.amazonaws.com"
+# GUARDIAN_KEY  ="strongSecret#1"
+# PERMS_KEY     ="-----BEGIN RSA PRIVATE KEY-----\nXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\nXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n-----END RSA PRIVATE KEY-----"
+# PHX_KEY       ="strongSecret#2"
+####################################################################
+
+[peerage]
+dns_name = "{{POD_DNS}}"
+app_name = "ret"
+
+[ret."Elixir.Ret"]
+pool = "{{SUB_DOMAIN}}"
+
+[ret."Elixir.RetWeb.Plugs.HeaderAuthorization"]
+header_value = ""
+
+[ret."Elixir.Ret.DiscordClient"]
+client_id = ""
+client_secret = ""
+bot_token = ""
+
+[ret."Elixir.RetWeb.Endpoint".https]
+port = 4000
+certfile = "/ret/cert.pem"
+cacertfile = "/ret/cacert.pem"
+keyfile = "/ret/key.pem"
+
+[ret."Elixir.RetWeb.Endpoint"]
+allowed_origins = "*"
+secret_key_base = "{{PHX_KEY}}"
+allow_crawlers = true
+
+[ret."Elixir.RetWeb.Endpoint".secondary_url]
+
+[ret."Elixir.RetWeb.Endpoint".cors_proxy_url]
+host = "{{SUB_DOMAIN}}-cors.{{DOMAIN}}"
+port = 443
+
+[ret."Elixir.RetWeb.Endpoint".imgproxy_url]
+host = "localhost"
+port = 5000
+
+[ret."Elixir.RetWeb.Endpoint".assets_url]
+host = "{{SUB_DOMAIN}}-assets.{{DOMAIN}}"
+port = 443
+
+[ret."Elixir.RetWeb.Endpoint".link_url]
+host = "hubs-link.local"
+
+[ret."Elixir.RetWeb.Endpoint".url]
+host = "{{SUB_DOMAIN}}.{{DOMAIN}}"
+port = 443
+
+[ret."Elixir.RetWeb.Endpoint".static_url]
+host = "{{SUB_DOMAIN}}.{{DOMAIN}}"
+
+[ret."Elixir.Ret.Repo"]
+username = "{{DB_USER}}"
+password = "{{DB_PASS}}"
+database = "{{DB_NAME}}"
+hostname = "{{DB_HOST_T}}"
+template = "template0"
+pool_size = 10
+port = 5432
+
+[ret."Elixir.Ret.SessionLockRepo"]
+username = "{{DB_USER}}"
+password = "{{DB_PASS}}"
+database = "{{DB_NAME}}"
+hostname = "{{DB_HOST}}"
+template = "template0"
+
+port = 5432
+
+[ret."Elixir.Ret.Locking".session_lock_db]
+username = "{{DB_USER}}"
+password = "{{DB_PASS}}"
+database = "{{DB_NAME}}"
+hostname = "{{DB_HOST}}"
+port = 5432
+
+[ret."Elixir.Ret.Habitat"]
+ip = "127.0.0.1"
+http_port = 9631
+
+[ret."Elixir.Ret.JanusLoadStatus"]
+default_janus_host = "stream.{{DOMAIN}}"
+janus_service_name = ""
+janus_admin_secret = ""
+janus_admin_port = 7000
+janus_port = 4443
+
+[ret."Elixir.Ret.Guardian"]
+secret_key = "{{GUARDIAN_KEY}}"
+issuer = "{{SUB_DOMAIN}}.{{DOMAIN}}"
+
+[ret."Elixir.Ret.PermsToken"]
+perms_key = "{{PERMS_KEY}}"
+
+[ret."Elixir.Ret.OAuthToken"]
+oauth_token_key = ""
+
+[ret]
+bot_access_key = ""
+pgrest_host = "{{PGREST_HOST}}"
+ita_host = "{{ITA_HOST}}"
+
+[ret."Elixir.Ret.MediaResolver"]
+ytdl_host = ""
+photomnemonic_endpoint = ""
+
+[ret."Elixir.Ret.Speelycaptor"]
+speelycaptor_endpoint = ""
+
+[ret."Elixir.Ret.PageOriginWarmer"]
+hubs_page_origin = "https://{{SUB_DOMAIN}}-assets.{{DOMAIN}}/hubs/pages"
+spoke_page_origin = "https://{{SUB_DOMAIN}}-assets.{{DOMAIN}}/spoke/pages/latest"
+admin_page_origin = "https://{{SUB_DOMAIN}}-assets.{{DOMAIN}}/hubs/pages"
+
+[ret."Elixir.Ret.HttpUtils"]
+insecure_ssl = false
+
+[ret."Elixir.Ret.Storage"]
+storage_path = "/storage"
+ttl = 172800
+host = "https://{{SUB_DOMAIN}}.{{DOMAIN}}"
+quota_gb = "12"
+# ^^^ has to be string or elixir throws (ArgumentError) argument error:erlang.byte_size(#), but like why
+
+[ret."Elixir.RetWeb.Email"]
+from = "noreply@{{SUB_DOMAIN}}.{{DOMAIN}}"
+
+[ret."Elixir.Ret.Mailer"]
+server = "{{SMTP_SERVER}}"
+port = "{{SMTP_PORT}}"
+username = "{{SMTP_USER}}"
+password = "{{SMTP_PASS}}"
+
+[ret."Elixir.Ret.Support"]
+slack_webhook_url = ""
+
+[ret."Elixir.RetWeb.Plugs.AddCSP"]
+child_src = ""
+connect_src = ""
+font_src = ""
+form_action = ""
+frame_src = ""
+img_src = ""
+manifest_src = ""
+media_src = ""
+script_src = ""
+style_src = ""
+worker_src = ""
+
+[ret."Ret.Repo.Migrations.AdminSchemaInit"]
+postgrest_password = ""
+
+[ret."Elixir.Ret.StatsJob"]
+
+[ret."Elixir.RetWeb.HealthController"]
+
+[ret."Elixir.RetWeb.PageController"]
+extra_avatar_headers = ""
+extra_index_headers = ""
+extra_room_headers = ""
+extra_scene_headers = ""
+
+extra_avatar_html = ""
+extra_index_html = ""
+extra_room_html = ""
+extra_scene_html = ""
+
+extra_avatar_script = ""
+extra_index_script = ""
+extra_room_script = ""
+extra_scene_script = ""
+
+[ret."Elixir.Ret.Account"]
+admin_email = "{{ADM_EMAIL}}"
+
+[ret."Elixir.Ret.Coturn"]
+realm = "turkey"
+public_tls_ports = "5349"
+
+[web_push_encryption.vapid_details]
+subject = ""
+public_key = ""
+private_key = ""
+
+[sentry]
+dsn = ""
+
+[run]
+hostname_dns_suffix = "turkey"
+
+[hackney]
+max_connections = 250
+
+[ret."Elixir.Ret.Meta"]
+phx_host = "{{SUB_DOMAIN}}.{{DOMAIN}}"

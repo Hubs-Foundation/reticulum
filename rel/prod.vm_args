@@ -5,6 +5,6 @@
 -setcookie ${NODE_COOKIE}
 
 # Node port ranges
--kernel inet_dist_listen_min 9000
+-kernel inet_dist_listen_min 9100
 -kernel inet_dist_listen_max 9100
 

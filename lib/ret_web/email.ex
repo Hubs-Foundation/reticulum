@@ -29,11 +29,14 @@ defmodule RetWeb.Email do
       |> subject(email_subject)
       |> text_body(email_body)
 
-    if admin_email do
-      email |> put_header("Return-Path", admin_email)
-    else
-      email
-    end
+    # if admin_email do
+    #   email |> put_header("Return-Path", admin_email)
+    # else
+    #   email
+    # end
+
+    email
+
   end
 
   defp string_is_nil_or_empty(check_string) do
