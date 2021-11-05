@@ -108,8 +108,8 @@ oauth_token_key = ""
 
 [ret]
 bot_access_key = ""
-pgrest_host = "{{PGREST_HOST}}"
-ita_host = "{{ITA_HOST}}"
+# pgrest_host = ""
+# ita_host = ""
 
 [ret."Elixir.Ret.MediaResolver"]
 ytdl_host = ""

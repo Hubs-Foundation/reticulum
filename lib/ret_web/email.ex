@@ -29,14 +29,11 @@ defmodule RetWeb.Email do
       |> subject(email_subject)
       |> text_body(email_body)
 
-    # if admin_email do
-    #   email |> put_header("Return-Path", admin_email)
-    # else
-    #   email
-    # end
-
-    email
-
+    if admin_email && !System.get_env("TURKEY_MODE") do
+      email |> put_header("Return-Path", admin_email)
+    else
+      email
+    end
   end
 
   defp string_is_nil_or_empty(check_string) do

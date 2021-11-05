@@ -28,5 +28,5 @@ export NODE_NAME="${POD_IP}" NODE_COOKIE="foobar" \n\
 echo "NODE_NAME=$NODE_NAME" \n\
 cat config.toml \n\
 /healthcheck.sh& \n\
-exec /ret/bin/ret foreground ' > /run.sh
+TURKEY_MODE=1 exec /ret/bin/ret foreground ' > /run.sh
 cmd bash /run.sh
