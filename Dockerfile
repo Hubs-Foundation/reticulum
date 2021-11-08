@@ -18,7 +18,6 @@ copy --from=certr /certs .
 RUN apk update && apk add --no-cache bash openssl-dev openssl jq libstdc++
 run printf 'while true; do (echo -e "HTTP/1.1 200 OK\r\n") | nc -lp 1111 > /dev/null; done' > /healthcheck.sh && chmod +x /healthcheck.sh
 run printf ' \n\
-printenv \n\
 sed -i "s/{{POD_DNS}}/ret.${POD_NS}.svc.cluster.local/g" config.toml \n\
 echo "update runtime configs into config.toml" \n\
 prefix="turkeyCfg_"; for var in $(compgen -e); do [[ $var == $prefix* ]] && sed -i "s/{{${var#$prefix}}}/${!var//\//\\\/}/g" config.toml; done \n\
@@ -26,7 +25,6 @@ export HOME="/ret/var" LC_ALL="en_US.UTF-8 LANG=en_US.UTF-8" REPLACE_OS_VARS="tr
 export MIX_ENV="turkey" RELEASE_CONFIG_DIR="/ret" RELEASE_MUTABLE_DIR="/ret/var" \n\
 export NODE_NAME="${POD_IP}" NODE_COOKIE="foobar" \n\
 echo "NODE_NAME=$NODE_NAME" \n\
-cat config.toml \n\
 /healthcheck.sh& \n\
 TURKEY_MODE=1 exec /ret/bin/ret foreground ' > /run.sh
 cmd bash /run.sh
