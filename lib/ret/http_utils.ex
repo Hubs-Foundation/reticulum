@@ -84,6 +84,27 @@ defmodule Ret.HttpUtils do
     end
   end
 
+  def get_forwarded_ip(headers) do
+    origin_ips_csv = headers |> get_http_header("x-forwarded-for")
+
+    if origin_ips_csv do
+      origin_ips = origin_ips_csv |> String.split(",") |> Enum.map(&String.trim/1)
+
+      # AWS' Application Load Balancer (ALB) will append the client's actual IP Address
+      # at the end of the list of forwarded headers. Since we want to ignore any
+      # spoofed IPs, we take the last IP in the list.
+      # See https://docs.aws.amazon.com/elasticloadbalancing/latest/application/x-forwarded-headers.html#x-forwarded-for
+      ip_str = origin_ips |> Enum.at(length(origin_ips) - 1)
+
+      case :inet.parse_address(to_charlist(ip_str)) do
+        {:ok, ip} -> ip
+        _ -> nil
+      end
+    else
+      nil
+    end
+  end
+
   defp module_config(key) do
     Application.get_env(:ret, __MODULE__)[key]
   end

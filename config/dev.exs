@@ -142,6 +142,7 @@ config :ret, Ret.MediaResolver,
 config :ret, Ret.Speelycaptor, speelycaptor_endpoint: "https://1dhaogh2hd.execute-api.us-west-1.amazonaws.com/public"
 
 config :ret, Ret.Storage,
+  host: "https://#{host}:4000",
   storage_path: "storage/dev",
   ttl: 60 * 60 * 24
 
