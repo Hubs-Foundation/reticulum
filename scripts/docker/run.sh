@@ -10,5 +10,5 @@ export HOME="/ret/var" LC_ALL="en_US.UTF-8 LANG=en_US.UTF-8" REPLACE_OS_VARS="tr
 export MIX_ENV="turkey" RELEASE_CONFIG_DIR="/ret" RELEASE_MUTABLE_DIR="/ret/var" 
 export NODE_NAME="${POD_IP}" NODE_COOKIE="foobar" 
 echo "NODE_NAME=$NODE_NAME" 
-/healthcheck.sh& 
+healthcheck &
 TURKEY_MODE=1 exec /ret/bin/ret foreground
