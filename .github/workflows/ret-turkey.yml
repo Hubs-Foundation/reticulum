@@ -1,7 +1,7 @@
 name: ret
 on:
   push:
-    branches: [master, dev, feature/turkey]
+    branches: [master, stable, feature/turkey]
   workflow_dispatch:
 
 env:
