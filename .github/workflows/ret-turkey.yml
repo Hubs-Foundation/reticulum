@@ -1,0 +1,67 @@
+name: ret
+on:
+  push:
+    branches: [master, dev, feature/turkey]
+  workflow_dispatch:
+
+env:
+  registryName: mozillareality
+  containerName: ret
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout-ret
+        uses: actions/checkout@v2
+        with:
+          repository: mozilla/reticulum
+          ref: feature/turkey
+          path: "./ret"
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+        with:
+          install: true
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ env.registryName }}
+          password: ${{ secrets.DOCKER_HUB_PWD }}
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: ret/
+          file: ret/TurkeyDockerfile
+          tags: ${{ env.registryName }}/${{ env.containerName }}:${{ github.run_number }}
+          # cache-from: type=gha
+          # cache-to: type=gha,mode=max
+          cache-from: type=registry,ref=${{ env.registryName }}/${{ env.containerName }}:buildcache
+          cache-to: type=registry,ref=${{ env.registryName }}/${{ env.containerName }}:buildcache,mode=max
+          push: true
+
+  push-dev:
+    if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    needs: build
+    # environment:
+    #   name: dev
+    steps:
+      - name: pull <GITHUB_RUN_NUMBER>, re-tag to dev, push
+        run: |
+          echo ${{ secrets.DOCKER_HUB_PWD }} | sudo docker login --username $registryName --password-stdin             
+          docker pull $registryName/$containerName:$GITHUB_RUN_NUMBER
+          docker tag $registryName/$containerName:$GITHUB_RUN_NUMBER $registryName/$containerName:dev
+          sudo docker push $registryName/$containerName:dev
+  push-prod:
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    needs: push-dev
+    # environment:
+    #   name: prod
+    steps:
+      - name: pull <GITHUB_RUN_NUMBER>, re-tag to prod, push
+        run: |
+          echo ${{ secrets.DOCKER_HUB_PWD }} | sudo docker login --username $registryName --password-stdin             
+          docker pull $registryName/$containerName:$GITHUB_RUN_NUMBER
+          docker tag $registryName/$containerName:$GITHUB_RUN_NUMBER $registryName/$containerName:prod
+          sudo docker push $registryName/$containerName:prod
