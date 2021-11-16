@@ -35,7 +35,9 @@ defmodule Ret.HttpUtils do
       end
 
     retry with: exponential_backoff() |> randomize |> cap(cap_ms) |> expiry(expiry_ms) do
-      case HTTPoison.request(verb, url, body, headers,
+      http_client = module_config(:http_client) || HTTPoison
+
+      case http_client.request(verb, url, body, headers,
              follow_redirect: true,
              timeout: cap_ms,
              recv_timeout: cap_ms,
