@@ -133,9 +133,9 @@ defmodule Ret.TwitterClient do
       retry_post_until_success(
         url,
         encoded_params,
-        [{"content-type", "application/x-www-form-urlencoded"}],
-        cap_ms,
-        expiry_ms
+        headers: [{"content-type", "application/x-www-form-urlencoded"}],
+        cap_ms: cap_ms,
+        expiry_ms: expiry_ms
       )
       |> Map.get(:body)
       |> to_string

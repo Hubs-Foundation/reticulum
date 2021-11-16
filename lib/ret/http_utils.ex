@@ -1,31 +1,46 @@
 defmodule Ret.HttpUtils do
   use Retry
 
-  def retry_head_until_success(url, headers \\ [], cap_ms \\ 5_000, expiry_ms \\ 10_000),
-    do: retry_until_success(:head, url, "", headers, cap_ms, expiry_ms)
+  def retry_head_until_success(url, options \\ []),
+    do: retry_until_success(:head, url, options)
 
-  def retry_get_until_success(url, headers \\ [], cap_ms \\ 5_000, expiry_ms \\ 10_000),
-    do: retry_until_success(:get, url, "", headers, cap_ms, expiry_ms)
+  def retry_get_until_success(url, options \\ []),
+    do: retry_until_success(:get, url, options)
 
-  def retry_post_until_success(url, body, headers \\ [], cap_ms \\ 5_000, expiry_ms \\ 10_000),
-    do: retry_until_success(:post, url, body, headers, cap_ms, expiry_ms)
+  def retry_post_until_success(url, body, options \\ []),
+    do: retry_until_success(:post, url, Keyword.merge(options, body: body))
 
-  def retry_put_until_success(url, body, headers \\ [], cap_ms \\ 5_000, expiry_ms \\ 10_000),
-    do: retry_until_success(:put, url, body, headers, cap_ms, expiry_ms)
+  def retry_put_until_success(url, body, options \\ []),
+    do: retry_until_success(:put, url, Keyword.merge(options, body: body))
 
-  def retry_head_then_get_until_success(url, headers \\ [], cap_ms \\ 5_000, expiry_ms \\ 10_000) do
-    case url |> retry_head_until_success(headers, cap_ms, expiry_ms) do
+  def retry_head_then_get_until_success(url, options \\ []) do
+    case url |> retry_head_until_success(options) do
       :error ->
-        url |> retry_get_until_success(headers, cap_ms, expiry_ms)
+        url |> retry_get_until_success(options)
 
       res ->
         res
     end
   end
 
-  def retry_until_success(verb, url, body \\ "", headers \\ [], cap_ms \\ 5_000, expiry_ms \\ 10_000) do
+  defp retry_until_success(verb, url, options) do
+    default_options = [
+      body: "",
+      headers: [],
+      cap_ms: 5_000,
+      expiry_ms: 10_000,
+      append_browser_ua: false
+    ]
+
+    options = Keyword.merge(default_options, options)
+
     headers =
-      headers ++ [{"User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:84.0) Gecko/20100101 Firefox/84.0"}]
+      if options[:append_browser_ua] do
+        options[:headers] ++
+          [{"User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:84.0) Gecko/20100101 Firefox/84.0"}]
+      else
+        options[:headers]
+      end
 
     hackney_options =
       if module_config(:insecure_ssl) == true do
@@ -34,11 +49,11 @@ defmodule Ret.HttpUtils do
         []
       end
 
-    retry with: exponential_backoff() |> randomize |> cap(cap_ms) |> expiry(expiry_ms) do
-      case HTTPoison.request(verb, url, body, headers,
+    retry with: exponential_backoff() |> randomize |> cap(options[:cap_ms]) |> expiry(options[:expiry_ms]) do
+      case HTTPoison.request(verb, url, options[:body], headers,
              follow_redirect: true,
-             timeout: cap_ms,
-             recv_timeout: cap_ms,
+             timeout: options[:cap_ms],
+             recv_timeout: options[:cap_ms],
              hackney: hackney_options
            ) do
         {:ok, %HTTPoison.Response{status_code: status_code} = resp}
