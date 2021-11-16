@@ -317,7 +317,9 @@ defmodule Ret.MediaResolver do
     # Crawl og tags for hubs rooms + scenes
     is_local_url = host === RetWeb.Endpoint.host()
 
-    case uri |> URI.to_string() |> retry_head_then_get_until_success([{"Range", "bytes=0-32768"}]) do
+    case uri
+         |> URI.to_string()
+         |> retry_head_then_get_until_success(headers: [{"Range", "bytes=0-32768"}], append_browser_user_agent: true) do
       :error ->
         :error
 
@@ -372,7 +374,9 @@ defmodule Ret.MediaResolver do
   end
 
   defp opengraph_result_for_uri(uri) do
-    case uri |> URI.to_string() |> retry_get_until_success([{"Range", "bytes=0-32768"}]) do
+    case uri
+         |> URI.to_string()
+         |> retry_get_until_success(headers: [{"Range", "bytes=0-32768"}], append_browser_user_agent: true) do
       :error ->
         :error
 
@@ -414,7 +418,7 @@ defmodule Ret.MediaResolver do
 
   defp get_sketchfab_model_zip_url(%{model_id: model_id, api_key: api_key}) do
     case "https://api.sketchfab.com/v3/models/#{model_id}/download"
-         |> retry_get_until_success([{"Authorization", "Token #{api_key}"}], 15_000, 15_000) do
+         |> retry_get_until_success(headers: [{"Authorization", "Token #{api_key}"}], cap_ms: 15_000, expiry_ms: 15_000) do
       :error ->
         {:error, "Failed to get sketchfab metadata"}
 
@@ -493,7 +497,7 @@ defmodule Ret.MediaResolver do
     with headers when is_list(headers) <- get_imgur_headers() do
       image_data =
         imgur_api_url
-        |> retry_get_until_success(headers)
+        |> retry_get_until_success(headers: headers)
         |> Map.get(:body)
         |> Poison.decode!()
         |> Kernel.get_in(["data", "images"])
