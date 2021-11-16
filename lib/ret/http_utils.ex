@@ -28,13 +28,13 @@ defmodule Ret.HttpUtils do
       headers: [],
       cap_ms: 5_000,
       expiry_ms: 10_000,
-      append_browser_ua: false
+      append_browser_user_agent: false
     ]
 
     options = Keyword.merge(default_options, options)
 
     headers =
-      if options[:append_browser_ua] do
+      if options[:append_browser_user_agent] do
         options[:headers] ++
           [{"User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:84.0) Gecko/20100101 Firefox/84.0"}]
       else

@@ -319,7 +319,7 @@ defmodule Ret.MediaResolver do
 
     case uri
          |> URI.to_string()
-         |> retry_head_then_get_until_success(headers: [{"Range", "bytes=0-32768"}], append_browser_ua: true) do
+         |> retry_head_then_get_until_success(headers: [{"Range", "bytes=0-32768"}], append_browser_user_agent: true) do
       :error ->
         :error
 
@@ -376,7 +376,7 @@ defmodule Ret.MediaResolver do
   defp opengraph_result_for_uri(uri) do
     case uri
          |> URI.to_string()
-         |> retry_get_until_success(headers: [{"Range", "bytes=0-32768"}], append_browser_ua: true) do
+         |> retry_get_until_success(headers: [{"Range", "bytes=0-32768"}], append_browser_user_agent: true) do
       :error ->
         :error
 
