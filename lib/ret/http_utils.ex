@@ -2,16 +2,16 @@ defmodule Ret.HttpUtils do
   use Retry
 
   def retry_head_until_success(url, options \\ []),
-    do: retry_until_success(:head, url, options)
+    do: retry_until_success(:head, url, "", options)
 
   def retry_get_until_success(url, options \\ []),
-    do: retry_until_success(:get, url, options)
+    do: retry_until_success(:get, url, "", options)
 
   def retry_post_until_success(url, body, options \\ []),
-    do: retry_until_success(:post, url, Keyword.merge(options, body: body))
+    do: retry_until_success(:post, url, body, options)
 
   def retry_put_until_success(url, body, options \\ []),
-    do: retry_until_success(:put, url, Keyword.merge(options, body: body))
+    do: retry_until_success(:put, url, body, options)
 
   def retry_head_then_get_until_success(url, options \\ []) do
     case url |> retry_head_until_success(options) do
@@ -23,9 +23,8 @@ defmodule Ret.HttpUtils do
     end
   end
 
-  defp retry_until_success(verb, url, options) do
+  defp retry_until_success(verb, url, body, options) do
     default_options = [
-      body: "",
       headers: [],
       cap_ms: 5_000,
       expiry_ms: 10_000,
@@ -50,7 +49,7 @@ defmodule Ret.HttpUtils do
       end
 
     retry with: exponential_backoff() |> randomize |> cap(options[:cap_ms]) |> expiry(options[:expiry_ms]) do
-      case HTTPoison.request(verb, url, options[:body], headers,
+      case HTTPoison.request(verb, url, body, headers,
              follow_redirect: true,
              timeout: options[:cap_ms],
              recv_timeout: options[:cap_ms],
