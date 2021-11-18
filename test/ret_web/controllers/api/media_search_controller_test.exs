@@ -206,7 +206,10 @@ defmodule RetWeb.MediaSearchControllerTest do
     assert length(Enum.filter(entries, fn e -> e["id"] == private_hub_2.hub_sid end)) == 1
 
     # Close the first hub
-    private_hub |> Hub.changeset_for_entry_mode(:deny) |> Repo.update!()
+    private_hub
+    |> Hub.changeset_for_entry_mode(:deny)
+    |> Hub.changeset_for_scrubbed_room_data()
+    |> Repo.update!()
 
     resp =
       conn

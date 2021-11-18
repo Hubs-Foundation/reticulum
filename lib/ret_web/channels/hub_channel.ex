@@ -714,6 +714,14 @@ defmodule RetWeb.HubChannel do
     end
   end
 
+  defp maybe_scrub_room_data(hub, entry_mode) do
+    if entry_mode == :deny do
+      Hub.changeset_for_scrubbed_room_data(hub)
+    else
+      hub
+    end
+  end
+
   defp handle_entry_mode_change(socket, entry_mode) do
     hub = socket |> hub_for_socket
     account = Guardian.Phoenix.Socket.current_resource(socket)
@@ -721,6 +729,7 @@ defmodule RetWeb.HubChannel do
     if account |> can?(close_hub(hub)) do
       hub
       |> Hub.changeset_for_entry_mode(entry_mode)
+      |> maybe_scrub_room_data(entry_mode)
       |> Repo.update!()
       |> Repo.preload(Hub.hub_preloads())
       |> broadcast_hub_refresh!(socket, ["entry_mode"])

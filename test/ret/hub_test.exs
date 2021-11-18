@@ -41,14 +41,19 @@ defmodule Ret.HubTest do
   end
 
   test "should deny entry for closed hub, allow entry for re-opened hub", %{scene: scene} do
-    {:ok, hub} = %Hub{} |> Hub.changeset(scene, %{name: "Test Hub"}) |> Repo.insert()
+    {:ok, hub} = %Hub{} |> Hub.changeset(scene, %{name: "Test Hub", description: "Test"}) |> Repo.insert()
     hub = hub |> Repo.preload([:hub_bindings])
 
     %{join_hub: true} = hub |> Hub.perms_for_account(nil)
 
-    hub = hub |> Hub.changeset_for_entry_mode(:deny) |> Repo.update!()
+    hub = hub
+          |> Hub.changeset_for_entry_mode(:deny)
+          |> Hub.changeset_for_scrubbed_room_data()
+          |> Repo.update!()
 
     %{join_hub: false} = hub |> Hub.perms_for_account(nil)
+
+    %{name: "closed", description: "room is closed"} = hub
 
     hub = hub |> Hub.changeset_for_entry_mode(:allow) |> Repo.update!()
 
