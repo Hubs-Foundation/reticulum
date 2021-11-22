@@ -39,29 +39,34 @@ jobs:
           cache-to: type=registry,ref=${{ env.registryName }}/${{ env.containerName }}:buildcache,mode=max
           push: true
 
-  push-dev:
-    if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/master'
+  promote:
+    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/prod'
     runs-on: ubuntu-latest
     needs: build
-    # environment:
-    #   name: dev
     steps:
-      - name: pull <GITHUB_RUN_NUMBER>, re-tag to dev, push
+      - name: promote artifact
         run: |
-          echo ${{ secrets.DOCKER_HUB_PWD }} | sudo docker login --username $registryName --password-stdin             
-          docker pull $registryName/$containerName:$GITHUB_RUN_NUMBER
-          docker tag $registryName/$containerName:$GITHUB_RUN_NUMBER $registryName/$containerName:dev
-          sudo docker push $registryName/$containerName:dev
-  push-prod:
-    if: github.ref == 'refs/heads/master'
+          fromTag=${{ env.registryName }}/${{ env.containerName }}:${{ github.run_number }}
+          toTag=${{ env.registryName }}/${{ env.containerName }}:${GITHUB_REF/'refs/heads/'/}          
+          toTag=${toTag//:master/:dev}
+          echo "promoting :$fromTag to :$toTag"
+          echo ${{ secrets.DOCKER_HUB_PWD }} | sudo docker login --username $registryName --password-stdin
+          docker pull $fromTag && docker tag $fromTag $toTag && sudo docker push $toTag
+
+  staging_pr_to_prod:
+    if: github.ref == 'refs/heads/staging'
     runs-on: ubuntu-latest
-    needs: push-dev
-    # environment:
-    #   name: prod
+    needs: promote
     steps:
-      - name: pull <GITHUB_RUN_NUMBER>, re-tag to prod, push
+      - name: create pr for staging -> prod
         run: |
-          echo ${{ secrets.DOCKER_HUB_PWD }} | sudo docker login --username $registryName --password-stdin             
-          docker pull $registryName/$containerName:$GITHUB_RUN_NUMBER
-          docker tag $registryName/$containerName:$GITHUB_RUN_NUMBER $registryName/$containerName:prod
-          sudo docker push $registryName/$containerName:prod
+          gh pr create -H staging -B prod
+
+  prod_cut_release_branch:
+    if: github.ref == 'refs/heads/prod'
+    runs-on: ubuntu-latest
+    needs: promote
+    steps:
+      - name: cut release branch for prod
+        run: |
+          git checkout -b releases/$(date '+%y%m%d').$GITHUB_RUN_NUMBER
