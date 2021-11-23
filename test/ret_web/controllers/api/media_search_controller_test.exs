@@ -208,7 +208,7 @@ defmodule RetWeb.MediaSearchControllerTest do
     # Close the first hub
     private_hub
     |> Hub.changeset_for_entry_mode(:deny)
-    |> Hub.changeset_for_scrubbed_room_data()
+    |> Hub.changeset_for_closed_room_name()
     |> Repo.update!()
 
     resp =

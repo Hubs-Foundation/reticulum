@@ -547,8 +547,7 @@ defmodule Ret.Hub do
   def changeset_for_entry_mode(%Hub{} = hub, entry_mode),
     do: hub |> cast(%{entry_mode: entry_mode}, [:entry_mode])
 
-  def changeset_for_scrubbed_room_data(hub),
-    do: hub |> cast(%{name: "closed", description: "room is closed"}, [:name, :description])
+  def changeset_for_closed_room_name(hub), do: hub |> cast(%{name: "closed"}, [:name])
 
   def changeset_for_new_host(%Hub{} = hub, host), do: hub |> cast(%{host: host}, [:host])
 

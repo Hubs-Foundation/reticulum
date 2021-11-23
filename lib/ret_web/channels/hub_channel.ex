@@ -716,7 +716,7 @@ defmodule RetWeb.HubChannel do
 
   defp maybe_scrub_room_data(hub, entry_mode) do
     if entry_mode == :deny do
-      Hub.changeset_for_scrubbed_room_data(hub)
+      Hub.changeset_for_closed_room_name(hub)
     else
       hub
     end

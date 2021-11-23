@@ -84,7 +84,7 @@ defmodule RetWeb.Api.V1.HubController do
     Hub
     |> Repo.get_by(hub_sid: hub_sid)
     |> Hub.changeset_for_entry_mode(:deny)
-    |> Hub.changeset_for_scrubbed_room_data()
+    |> Hub.changeset_for_closed_room_name()
     |> Repo.update!()
 
     conn |> send_resp(200, "OK")
