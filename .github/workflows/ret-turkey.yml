@@ -1,7 +1,7 @@
 name: ret
 on:
   push:
-    branches: [master, stable, feature/turkey]
+    paths-ignore: ["README.md"]
   workflow_dispatch:
 
 env:
