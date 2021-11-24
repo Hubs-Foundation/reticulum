@@ -28,8 +28,9 @@ defmodule Ret.MediaSearch do
   @scene_page_size 23
   @max_face_count 60000
   @max_collection_face_count 200_000
-  @max_file_size_bytes 20 * 1024 * 1024
-  @max_collection_file_size_bytes 100 * 1024 * 1024
+  # see sketchfab bug about max_filesizes params broken
+  # @max_file_size_bytes 20 * 1024 * 1024 
+  # @max_collection_file_size_bytes 100 * 1024 * 1024
 
   def search(%Ret.MediaSearchQuery{source: "scene_listings", cursor: cursor, filter: "featured", q: query}) do
     scene_listing_search(cursor, query, "featured", asc: :order)
@@ -85,7 +86,7 @@ defmodule Ret.MediaSearch do
         downloadable: true,
         count: @page_size,
         max_face_count: @max_face_count,
-        max_filesizes: "gltf:#{@max_file_size_bytes}",
+        # max_filesizes: "gltf:#{@max_file_size_bytes}", # Sketchfab API has bug that disregards selected category if query has max_filesizes defined. Issue: https://forum.sketchfab.com/t/bug-model-search-api-using-max-filesizes-causes-query-to-ignore-categories/40247
         # processing_status: :succeeded, # Sketchfab API seems to have a bug that rejects processing_status
         cursor: cursor,
         q: q
@@ -102,8 +103,8 @@ defmodule Ret.MediaSearch do
         staffpicked: true,
         count: @page_size,
         max_face_count: @max_face_count,
-        max_filesizes: "gltf:#{@max_file_size_bytes}",
-        # processing_status: :succeeded,  # Sketchfab API seems to have a bug that rejects processing_status
+        # max_filesizes: "gltf:#{@max_file_size_bytes}",
+        # processing_status: :succeeded, # Sketchfab API seems to have a bug that rejects processing_status
         sort_by:
           if q == nil || q == "" do
             "-publishedAt"
@@ -124,7 +125,7 @@ defmodule Ret.MediaSearch do
         downloadable: true,
         count: @page_size,
         max_face_count: @max_collection_face_count,
-        max_filesizes: "gltf:#{@max_collection_file_size_bytes}",
+        # max_filesizes: "gltf:#{@max_collection_file_size_bytes}",
         processing_status: :succeeded,
         sort_by:
           if q == nil || q == "" do
@@ -155,7 +156,7 @@ defmodule Ret.MediaSearch do
           downloadable: true,
           count: @page_size,
           max_face_count: @max_face_count,
-          max_filesizes: "gltf:#{@max_file_size_bytes}",
+          # max_filesizes: "gltf:#{@max_file_size_bytes}", 
           processing_status: :succeeded,
           cursor: cursor,
           categories: filter,

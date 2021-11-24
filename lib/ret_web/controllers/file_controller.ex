@@ -75,9 +75,17 @@ defmodule RetWeb.FileController do
   end
 
   defp render_file_with_token(conn, type, uuid, token) do
-    {uuid, token}
-    |> resolve_fetch_args
-    |> fetch_and_render(conn, type)
+    %{host: storage_host} = Application.get_env(:ret, Ret.Storage)[:host] |> URI.parse()
+
+    if conn.host !== storage_host do
+      # We want to avoid serving files from the primary domain, so we forbid requests
+      # that aren't from the storage host
+      conn |> send_resp(403, "")
+    else
+      {uuid, token}
+      |> resolve_fetch_args
+      |> fetch_and_render(conn, type)
+    end
   end
 
   # Given a tuple of a UUID and a (optional) user specified token,
