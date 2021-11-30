@@ -795,15 +795,16 @@ defmodule RetWeb.PageController do
 
   defp maybe_scrub_room_data(hub) do
     if hub.entry_mode == :deny do
-      Map.merge(hub, %{name: "Closed Room",
-                       description: "This room is closed.",
-                       slug: "",
-                       scene: nil,
-                       scene_listing: nil,
-                       user_data: nil})
+      Map.merge(hub, %{
+        name: "Closed Room",
+        description: "This room is closed.",
+        slug: "",
+        scene: nil,
+        scene_listing: nil,
+        user_data: nil
+      })
     else
       hub
     end
   end
-
 end
