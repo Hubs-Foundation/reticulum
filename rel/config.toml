@@ -120,7 +120,7 @@ speelycaptor_endpoint = ""
 
 [ret."Elixir.Ret.PageOriginWarmer"]
 hubs_page_origin = "https://{{SUB_DOMAIN}}-assets.{{DOMAIN}}/hubs/pages"
-spoke_page_origin = "https://{{SUB_DOMAIN}}-assets.{{DOMAIN}}/spoke/pages/latest"
+spoke_page_origin = "https://{{SUB_DOMAIN}}-assets.{{DOMAIN}}/spoke/pages"
 admin_page_origin = "https://{{SUB_DOMAIN}}-assets.{{DOMAIN}}/hubs/pages"
 
 [ret."Elixir.Ret.HttpUtils"]
