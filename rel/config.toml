@@ -18,7 +18,7 @@ app_name = "ret"
 pool = "{{SUB_DOMAIN}}"
 
 [ret."Elixir.RetWeb.Plugs.HeaderAuthorization"]
-header_value = ""
+header_value = "{{HEADER_AUTHZ}}"
 
 [ret."Elixir.Ret.DiscordClient"]
 client_id = ""
@@ -43,7 +43,7 @@ host = "{{SUB_DOMAIN}}-cors.{{DOMAIN}}"
 port = 443
 
 [ret."Elixir.RetWeb.Endpoint".imgproxy_url]
-host = "localhost"
+host = "{{IMG_PROXY}}"
 port = 5000
 
 [ret."Elixir.RetWeb.Endpoint".assets_url]
@@ -112,11 +112,11 @@ bot_access_key = ""
 # ita_host = ""
 
 [ret."Elixir.Ret.MediaResolver"]
-ytdl_host = ""
-photomnemonic_endpoint = ""
+ytdl_host = "{{YTDL_HOST}}"
+photomnemonic_endpoint = "{{PHOTOMNEMONIC}}"
 
 [ret."Elixir.Ret.Speelycaptor"]
-speelycaptor_endpoint = ""
+speelycaptor_endpoint = "{{SPEELYCAPTOR}}"
 
 [ret."Elixir.Ret.PageOriginWarmer"]
 hubs_page_origin = "https://{{SUB_DOMAIN}}-assets.{{DOMAIN}}/hubs/pages"
@@ -143,7 +143,7 @@ username = "{{SMTP_USER}}"
 password = "{{SMTP_PASS}}"
 
 [ret."Elixir.Ret.Support"]
-slack_webhook_url = ""
+slack_webhook_url = "{{SLACK_WEBHOOK}}"
 
 [ret."Elixir.RetWeb.Plugs.AddCSP"]
 child_src = ""
