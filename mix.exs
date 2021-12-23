@@ -60,6 +60,7 @@ defmodule Ret.Mixfile do
       {:statix, "~> 1.2"},
       {:quantum, "~> 2.2.7"},
       {:credo, "~> 1.1", only: [:dev, :test], runtime: false},
+      {:mox, "~> 1.0.1", only: [:dev, :test]},
       {:plug_attack, "~> 0.4"},
       {:ecto_enum, "~> 1.3"},
       {:the_end, git: "https://github.com/mozillareality/the_end.git", branch: "bug/phoenix-14"},

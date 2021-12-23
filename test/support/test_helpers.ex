@@ -224,4 +224,9 @@ defmodule Ret.TestHelpers do
     |> Ret.Hub.changeset_for_creator_assignment(account, hub.creator_assignment_token)
     |> Ret.Repo.update!()
   end
+
+  def merge_module_config(app, key, configs) do
+    current_config = Application.get_env(app, key, %{})
+    Application.put_env(app, key, Map.merge(current_config, configs))
+  end
 end
