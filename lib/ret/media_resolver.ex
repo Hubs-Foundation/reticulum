@@ -14,7 +14,7 @@ defmodule Ret.MediaResolver do
 
   require Logger
 
-  alias Ret.{CachedFile, MediaResolverQuery, Statix}
+  alias Ret.{CachedFile, MediaResolverQuery, Statix, HttpUtils}
 
   @ytdl_valid_status_codes [200, 500]
 
@@ -107,7 +107,15 @@ defmodule Ret.MediaResolver do
   end
 
   def resolve(%MediaResolverQuery{} = query, root_host) do
-    resolve_with_ytdl(query, root_host, query |> ytdl_format(root_host))
+    # If we fall through all the known hosts above, we must validate the resolved ip for this host
+    # to ensure that it is allowed.
+    resolved_ip = HttpUtils.resolve_ip(query.url.host)
+
+    if !HttpUtils.ip_allowed(resolved_ip) do
+      :error
+    else
+      resolve_with_ytdl(query, root_host, query |> ytdl_format(root_host))
+    end
   end
 
   def resolve_with_ytdl(%MediaResolverQuery{} = query, root_host, ytdl_format) do
@@ -312,33 +320,41 @@ defmodule Ret.MediaResolver do
 
   # TODO: Refactor this function
   defp fallback_to_screenshot_opengraph_or_nothing(%MediaResolverQuery{url: %URI{host: host} = uri, version: version}) do
-    photomnemonic_endpoint = module_config(:photomnemonic_endpoint)
+    # We fell back because we did not match any of the known hosts above, or ytdl resolution failed. So, we need to
+    # validate the IP for this host before making further requests.
+    resolved_ip = HttpUtils.resolve_ip(host)
 
-    # Crawl og tags for hubs rooms + scenes
-    is_local_url = host === RetWeb.Endpoint.host()
+    if !HttpUtils.ip_allowed(resolved_ip) do
+      :error
+    else
+      photomnemonic_endpoint = module_config(:photomnemonic_endpoint)
 
-    case uri
-         |> URI.to_string()
-         |> retry_head_then_get_until_success(headers: [{"Range", "bytes=0-32768"}], append_browser_user_agent: true) do
-      :error ->
-        :error
+      # Crawl og tags for hubs rooms + scenes
+      is_local_url = host === RetWeb.Endpoint.host()
 
-      %HTTPoison.Response{headers: headers} ->
-        content_type = headers |> content_type_from_headers
-        has_entity_type = headers |> get_http_header("hub-entity-type") != nil
+      case uri
+           |> URI.to_string()
+           |> retry_head_then_get_until_success(headers: [{"Range", "bytes=0-32768"}], append_browser_user_agent: true) do
+        :error ->
+          :error
 
-        if content_type |> String.starts_with?("text/html") do
-          if !has_entity_type && !is_local_url && photomnemonic_endpoint do
-            case uri |> screenshot_commit_for_uri(content_type, version) do
-              :error -> uri |> opengraph_result_for_uri()
-              commit -> commit
+        %HTTPoison.Response{headers: headers} ->
+          content_type = headers |> content_type_from_headers
+          has_entity_type = headers |> get_http_header("hub-entity-type") != nil
+
+          if content_type |> String.starts_with?("text/html") do
+            if !has_entity_type && !is_local_url && photomnemonic_endpoint do
+              case uri |> screenshot_commit_for_uri(content_type, version) do
+                :error -> uri |> opengraph_result_for_uri()
+                commit -> commit
+              end
+            else
+              uri |> opengraph_result_for_uri()
             end
           else
-            uri |> opengraph_result_for_uri()
+            {:commit, uri |> resolved(%{expected_content_type: content_type})}
           end
-        else
-          {:commit, uri |> resolved(%{expected_content_type: content_type})}
-        end
+      end
     end
   end
 

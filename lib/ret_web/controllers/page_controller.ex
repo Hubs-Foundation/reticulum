@@ -1,6 +1,20 @@
 defmodule RetWeb.PageController do
   use RetWeb, :controller
-  alias Ret.{Repo, Hub, Scene, SceneListing, Avatar, AppConfig, OwnedFile, AvatarListing, PageOriginWarmer, Storage}
+
+  alias Ret.{
+    Repo,
+    Hub,
+    Scene,
+    SceneListing,
+    Avatar,
+    AppConfig,
+    OwnedFile,
+    AvatarListing,
+    PageOriginWarmer,
+    Storage,
+    HttpUtils
+  }
+
   alias Plug.Conn
   import Ret.ConnUtils
 
@@ -17,15 +31,6 @@ defmodule RetWeb.PageController do
 
   @configurable_asset_files @configurable_assets |> Map.values() |> Enum.map(&elem(&1, 0))
   @configurable_asset_paths @configurable_asset_files |> Enum.map(&"/#{&1}")
-
-  @proxy_ipv4_cidr_deny_list [
-    InetCidr.parse("0.0.0.0/16"),
-    InetCidr.parse("127.0.0.0/16"),
-    InetCidr.parse("10.0.0.0/8"),
-    InetCidr.parse("172.16.0.0/12"),
-    InetCidr.parse("192.168.0.0/16"),
-    InetCidr.parse("169.254.0.0/16")
-  ]
 
   def call(conn, _params) do
     assets_host = RetWeb.Endpoint.config(:assets_url)[:host]
@@ -633,55 +638,20 @@ defmodule RetWeb.PageController do
     end
   end
 
-  defp resolve_ip(host) do
-    try do
-      InetCidr.parse_address!(host)
-    rescue
-      _ ->
-        case DNS.resolve(host) do
-          {:ok, results} ->
-            # TODO We should probably be able to handle ipv6 here too.
-            results |> Enum.filter(&InetCidr.v4?/1) |> Enum.random()
-
-          _ ->
-            nil
-        end
-    end
-  end
-
-  defp ip_allowed(ip_address) do
-    case ip_address do
-      nil ->
-        # host could not be resolved to an ip address, so we deny it
-        false
-
-      {_, _, _, _} = ipv4_address ->
-        # deny if any of the denied cidrs contain this address
-        matches_any_denied_cidr =
-          Enum.any?(@proxy_ipv4_cidr_deny_list, fn cidr -> InetCidr.contains?(cidr, ipv4_address) end)
-
-        !matches_any_denied_cidr
-
-      _ ->
-        # anything else is not allowed
-        false
-    end
-  end
-
   defp cors_proxy(%Conn{request_path: "/" <> url, query_string: ""} = conn), do: cors_proxy(conn, url)
   defp cors_proxy(%Conn{request_path: "/" <> url, query_string: qs} = conn), do: cors_proxy(conn, "#{url}?#{qs}")
 
   defp cors_proxy(conn, url) do
     %URI{authority: authority, host: host} = uri = URI.parse(url)
 
-    resolved_ip = resolve_ip(host)
+    resolved_ip = HttpUtils.resolve_ip(host)
 
-    if !ip_allowed(resolved_ip) do
+    if !HttpUtils.ip_allowed(resolved_ip) do
       conn |> send_resp(401, "Bad request.")
     else
       # We want to ensure that the URL we request hits the same IP that we verified above,
       # so we replace the host with the IP address here and use this url to make the proxy request.
-      ip_url = URI.to_string(Map.put(uri, :host, to_string(:inet.ntoa(resolved_ip))))
+      ip_url = URI.to_string(HttpUtils.replace_host(uri, resolved_ip))
 
       # Disallow CORS proxying unless request was made to the cors proxy url
       cors_proxy_url = Application.get_env(:ret, RetWeb.Endpoint)[:cors_proxy_url]
