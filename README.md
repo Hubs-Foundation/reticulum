@@ -111,7 +111,15 @@ After you've started Reticulum for the first time you'll likely want to create a
 Ret.Account |> Ret.Repo.all() |> Enum.at(0) |> Ecto.Changeset.change(is_admin: true) |> Ret.Repo.update!()
 ```
 
-### 7. Start the Admin Portal server in local development mode
+### 7. Enabling Room Features
+
+Rooms are created with restricted permissions by default, which means you can't spawn media objects. You can change this setting in the admin panel, or run the following code in the iex console:
+
+```
+Ret.AppConfig.set_config_value("features|permissive_rooms", true)
+```
+
+### 8. Start the Admin Portal server in local development mode
 
 When running locally, you will need to also run the admin portal, which routes to hubs.local:8989
 Using a separate terminal instance, navigate to the `hubs/admin` folder and use:
