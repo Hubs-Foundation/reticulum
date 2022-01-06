@@ -566,8 +566,10 @@ defmodule RetWeb.HubChannel do
 
     case Guardian.Phoenix.Socket.current_resource(socket) do
       %Account{} = account ->
-        url = Ret.TwitterClient.get_oauth_url(hub.hub_sid, account.account_id)
-        {:reply, {:ok, %{oauth_url: url}}, socket}
+        case Ret.TwitterClient.get_oauth_url(hub.hub_sid, account.account_id) do
+          {:error, reason} -> {:reply, {:error, %{reason: reason}}, socket}
+          url -> {:reply, {:ok, %{oauth_url: url}}, socket}
+        end
 
       _ ->
         {:reply, :error, socket}
