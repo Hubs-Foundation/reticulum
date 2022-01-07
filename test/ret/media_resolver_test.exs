@@ -8,4 +8,9 @@ defmodule Ret.MediaResolverTest do
     :error = Ret.MediaResolver.resolve(%Ret.MediaResolverQuery{url: "https://192.168.0.1/foo"})
     :error = Ret.MediaResolver.resolve(%Ret.MediaResolverQuery{url: "http://127.0.0.1.sslip.io"})
   end
+
+  test "media resolver succeeds when requesting public hosts" do
+    {:commit, %Ret.ResolvedMedia{uri: %URI{host: "example.com"}}} =
+      Ret.MediaResolver.resolve(%Ret.MediaResolverQuery{url: "https://example.com/"})
+  end
 end

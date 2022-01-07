@@ -646,7 +646,7 @@ defmodule RetWeb.PageController do
 
     resolved_ip = HttpUtils.resolve_ip(host)
 
-    if !HttpUtils.ip_allowed(resolved_ip) do
+    if HttpUtils.internal_ip?(resolved_ip) do
       conn |> send_resp(401, "Bad request.")
     else
       # We want to ensure that the URL we request hits the same IP that we verified above,

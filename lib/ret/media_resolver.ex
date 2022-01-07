@@ -41,6 +41,9 @@ defmodule Ret.MediaResolver do
     #       Also make sure they have a uniform response shape for indicating an
     #       error.
     case resolve(query, root_host) do
+      :forbidden ->
+        :error
+
       :error ->
         fallback_to_screenshot_opengraph_or_nothing(query)
 
@@ -109,10 +112,8 @@ defmodule Ret.MediaResolver do
   def resolve(%MediaResolverQuery{} = query, root_host) do
     # If we fall through all the known hosts above, we must validate the resolved ip for this host
     # to ensure that it is allowed.
-    resolved_ip = HttpUtils.resolve_ip(query.url.host)
-
-    if !HttpUtils.ip_allowed(resolved_ip) do
-      :error
+    if query.url.host |> HttpUtils.resolve_ip() |> HttpUtils.internal_ip?() do
+      :forbidden
     else
       resolve_with_ytdl(query, root_host, query |> ytdl_format(root_host))
     end
@@ -322,9 +323,7 @@ defmodule Ret.MediaResolver do
   defp fallback_to_screenshot_opengraph_or_nothing(%MediaResolverQuery{url: %URI{host: host} = uri, version: version}) do
     # We fell back because we did not match any of the known hosts above, or ytdl resolution failed. So, we need to
     # validate the IP for this host before making further requests.
-    resolved_ip = HttpUtils.resolve_ip(host)
-
-    if !HttpUtils.ip_allowed(resolved_ip) do
+    if host |> HttpUtils.resolve_ip() |> HttpUtils.internal_ip?() do
       :error
     else
       photomnemonic_endpoint = module_config(:photomnemonic_endpoint)

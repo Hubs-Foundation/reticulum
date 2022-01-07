@@ -1,7 +1,7 @@
 defmodule Ret.HttpUtils do
   use Retry
 
-  @ipv4_cidr_deny_list [
+  @internal_ipv4_cidr_list [
     InetCidr.parse("0.0.0.0/8"),
     InetCidr.parse("10.0.0.0/8"),
     InetCidr.parse("127.0.0.0/8"),
@@ -146,21 +146,18 @@ defmodule Ret.HttpUtils do
     end
   end
 
-  def ip_allowed(ip_address) do
+  def internal_ip?(ip_address) do
     case ip_address do
       nil ->
-        # host could not be resolved to an ip address, so we deny it
-        false
+        # Default to true for safety.
+        true
 
       {_, _, _, _} = ipv4_address ->
-        # deny if any of the denied cidrs contain this address
-        matches_any_denied_cidr = Enum.any?(@ipv4_cidr_deny_list, fn cidr -> InetCidr.contains?(cidr, ipv4_address) end)
-
-        !matches_any_denied_cidr
+        Enum.any?(@internal_ipv4_cidr_list, fn cidr -> InetCidr.contains?(cidr, ipv4_address) end)
 
       _ ->
-        # anything else is not allowed
-        false
+        # For safety, assume anything else is internal.
+        true
     end
   end
 
