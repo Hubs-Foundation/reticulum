@@ -35,23 +35,23 @@ defmodule Ret.MediaResolver do
     root_host = get_root_host(uri.host)
     query = Map.put(query, :url, uri)
 
-    # TODO: We could end up running fallback_to_screenshot_opengraph_or_nothing
+    # TODO: We could end up running maybe_fallback_to_screenshot_opengraph_or_nothing
     #       twice in a row. These resolve functions can be simplified so that we can
     #       more easily track individual failures and only fallback when necessary.
     #       Also make sure they have a uniform response shape for indicating an
     #       error.
     case resolve(query, root_host) do
       :forbidden ->
-        :error
+        :forbidden
 
       :error ->
-        fallback_to_screenshot_opengraph_or_nothing(query)
+        maybe_fallback_to_screenshot_opengraph_or_nothing(query)
 
       {:error, _reason} ->
-        fallback_to_screenshot_opengraph_or_nothing(query)
+        maybe_fallback_to_screenshot_opengraph_or_nothing(query)
 
       {:commit, nil} ->
-        fallback_to_screenshot_opengraph_or_nothing(query)
+        maybe_fallback_to_screenshot_opengraph_or_nothing(query)
 
       commit ->
         commit
@@ -112,10 +112,18 @@ defmodule Ret.MediaResolver do
   def resolve(%MediaResolverQuery{} = query, root_host) do
     # If we fall through all the known hosts above, we must validate the resolved ip for this host
     # to ensure that it is allowed.
-    if query.url.host |> HttpUtils.resolve_ip() |> HttpUtils.internal_ip?() do
-      :forbidden
-    else
-      resolve_with_ytdl(query, root_host, query |> ytdl_format(root_host))
+    resolved_ip = HttpUtils.resolve_ip(query.url.host)
+
+    case resolved_ip do
+      nil ->
+        :error
+
+      resolved_ip ->
+        if HttpUtils.internal_ip?(resolved_ip) do
+          :forbidden
+        else
+          resolve_with_ytdl(query, root_host, query |> ytdl_format(root_host))
+        end
     end
   end
 
@@ -316,44 +324,57 @@ defmodule Ret.MediaResolver do
   end
 
   defp resolve_non_video(%MediaResolverQuery{} = query, _root_host) do
-    fallback_to_screenshot_opengraph_or_nothing(query)
+    maybe_fallback_to_screenshot_opengraph_or_nothing(query)
   end
 
-  # TODO: Refactor this function
-  defp fallback_to_screenshot_opengraph_or_nothing(%MediaResolverQuery{url: %URI{host: host} = uri, version: version}) do
+  defp maybe_fallback_to_screenshot_opengraph_or_nothing(
+         %MediaResolverQuery{url: %URI{host: host}, version: _version} = query
+       ) do
     # We fell back because we did not match any of the known hosts above, or ytdl resolution failed. So, we need to
     # validate the IP for this host before making further requests.
-    if host |> HttpUtils.resolve_ip() |> HttpUtils.internal_ip?() do
-      :error
-    else
-      photomnemonic_endpoint = module_config(:photomnemonic_endpoint)
+    resolved_ip = HttpUtils.resolve_ip(host)
 
-      # Crawl og tags for hubs rooms + scenes
-      is_local_url = host === RetWeb.Endpoint.host()
+    case resolved_ip do
+      nil ->
+        :error
 
-      case uri
-           |> URI.to_string()
-           |> retry_head_then_get_until_success(headers: [{"Range", "bytes=0-32768"}], append_browser_user_agent: true) do
-        :error ->
-          :error
+      resolved_ip ->
+        if HttpUtils.internal_ip?(resolved_ip) do
+          :forbidden
+        else
+          fallback_to_screenshot_opengraph_or_nothing(query)
+        end
+    end
+  end
 
-        %HTTPoison.Response{headers: headers} ->
-          content_type = headers |> content_type_from_headers
-          has_entity_type = headers |> get_http_header("hub-entity-type") != nil
+  defp fallback_to_screenshot_opengraph_or_nothing(%MediaResolverQuery{url: %URI{host: host} = uri, version: version}) do
+    photomnemonic_endpoint = module_config(:photomnemonic_endpoint)
 
-          if content_type |> String.starts_with?("text/html") do
-            if !has_entity_type && !is_local_url && photomnemonic_endpoint do
-              case uri |> screenshot_commit_for_uri(content_type, version) do
-                :error -> uri |> opengraph_result_for_uri()
-                commit -> commit
-              end
-            else
-              uri |> opengraph_result_for_uri()
+    # Crawl og tags for hubs rooms + scenes
+    is_local_url = host === RetWeb.Endpoint.host()
+
+    case uri
+         |> URI.to_string()
+         |> retry_head_then_get_until_success(headers: [{"Range", "bytes=0-32768"}], append_browser_user_agent: true) do
+      :error ->
+        :error
+
+      %HTTPoison.Response{headers: headers} ->
+        content_type = headers |> content_type_from_headers
+        has_entity_type = headers |> get_http_header("hub-entity-type") != nil
+
+        if content_type |> String.starts_with?("text/html") do
+          if !has_entity_type && !is_local_url && photomnemonic_endpoint do
+            case uri |> screenshot_commit_for_uri(content_type, version) do
+              :error -> uri |> opengraph_result_for_uri()
+              commit -> commit
             end
           else
-            {:commit, uri |> resolved(%{expected_content_type: content_type})}
+            uri |> opengraph_result_for_uri()
           end
-      end
+        else
+          {:commit, uri |> resolved(%{expected_content_type: content_type})}
+        end
     end
   end
 
