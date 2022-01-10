@@ -10,7 +10,7 @@ defmodule Ret.HttpUtilsTest do
     end)
   end
 
-  test "fetch_content_type should attempt a request return the response content type" do
+  test "fetch_content_type should attempt a request and return the response content type" do
     Ret.HttpMock
     |> Mox.expect(:request, 1, fn _verb, _url, _body, _headers, _options ->
       {:ok, %HTTPoison.Response{status_code: 200, headers: %{"content-type" => "foo/bar"}}}

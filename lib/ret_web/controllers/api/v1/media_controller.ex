@@ -125,6 +125,7 @@ defmodule RetWeb.Api.V1.MediaController do
 
   defp maybe_do_telemetry({:commit, nil}), do: Statix.increment("ret.media_resolver.404")
   defp maybe_do_telemetry({:commit, %Ret.ResolvedMedia{}}), do: Statix.increment("ret.media_resolver.ok")
+  defp maybe_do_telemetry({:commit, :forbidden}), do: Statix.increment("ret.media_resolver.forbidden")
   defp maybe_do_telemetry({:error, _reason}), do: Statix.increment("ret.media_resolver.unknown_error")
   defp maybe_do_telemetry({:commit, :error}), do: Statix.increment("ret.media_resolver.500")
   defp maybe_do_telemetry({:commit, {:error, _reason}}), do: Statix.increment("ret.media_resolver.500")
@@ -144,6 +145,11 @@ defmodule RetWeb.Api.V1.MediaController do
 
   defp render_resolved_media_or_error(conn, {_status, %Ret.ResolvedMedia{} = resolved_media}) do
     render_resolved_media(conn, resolved_media)
+  end
+
+  # The media resolver forbade this request
+  defp render_resolved_media_or_error(conn, {_status, :forbidden}) do
+    send_resp(conn, 403, "Forbidden")
   end
 
   # This is an error response that we have cached ourselves
