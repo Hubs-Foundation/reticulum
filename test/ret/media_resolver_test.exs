@@ -13,9 +13,4 @@ defmodule Ret.MediaResolverTest do
     :error = Ret.MediaResolver.resolve(%Ret.MediaResolverQuery{url: "http://localhost:4000/foo"})
     :error = Ret.MediaResolver.resolve(%Ret.MediaResolverQuery{url: "https://missing.example.com/"})
   end
-
-  test "media resolver succeeds when requesting public hosts" do
-    {:commit, %Ret.ResolvedMedia{uri: %URI{host: "example.com"}}} =
-      Ret.MediaResolver.resolve(%Ret.MediaResolverQuery{url: "https://example.com/"})
-  end
 end
