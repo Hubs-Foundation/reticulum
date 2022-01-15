@@ -18,8 +18,21 @@ defmodule Ret.TwitterClient do
 
     token = Ret.OAuthToken.token_for_hub_and_account(hub_sid, account_id)
     callback_url = "#{get_redirect_uri()}?state=#{token}"
-    res = post("#{@twitter_api_base}/oauth/request_token", [{"oauth_callback", callback_url}], creds)
-    "#{@twitter_api_base}/oauth/authorize?" <> URI.encode_query(%{oauth_token: res["oauth_token"]})
+
+    token_response =
+      post(
+        "#{@twitter_api_base}/oauth/request_token",
+        [{"oauth_callback", callback_url}],
+        creds
+      )
+
+    case token_response do
+      {:error, reason} ->
+        {:error, reason}
+
+      _ ->
+        "#{@twitter_api_base}/oauth/authorize?" <> URI.encode_query(%{oauth_token: token_response["oauth_token"]})
+    end
   end
 
   def get_access_token_and_user_info(oauth_verifier, request_token) do
@@ -129,7 +142,7 @@ defmodule Ret.TwitterClient do
     params = OAuther.sign("post", url, params, creds)
     encoded_params = URI.encode_query(params)
 
-    body =
+    result =
       retry_post_until_success(
         url,
         encoded_params,
@@ -137,13 +150,19 @@ defmodule Ret.TwitterClient do
         cap_ms,
         expiry_ms
       )
-      |> Map.get(:body)
-      |> to_string
 
-    case response_type do
-      :urlencoded -> body |> URI.decode_query()
-      :json -> body |> Poison.decode!()
-      _ -> body
+    case result do
+      :error ->
+        {:error, :twitter_api_error}
+
+      resp ->
+        body = resp |> Map.get(:body) |> to_string
+
+        case response_type do
+          :urlencoded -> body |> URI.decode_query()
+          :json -> body |> Poison.decode!()
+          _ -> body
+        end
     end
   end
 
