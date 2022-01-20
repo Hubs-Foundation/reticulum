@@ -81,27 +81,133 @@ defmodule RetWeb.Plugs.AddCSP do
         }:#{janus_port} #{default_janus_csp_rule}"
       end
 
-    "default-src 'none'; manifest-src #{custom_rules[:manifest_src]} 'self'; script-src #{custom_rules[:script_src]} #{
-      storage_url
-    } #{assets_url} 'self' 'unsafe-eval' 'sha256-ViVvpb0oYlPAp7R8ZLxlNI6rsf7E7oz8l1SgCIXgMvM=' 'sha256-hsbRcgUBASABDq7qVGVTpbnWq/ns7B+ToTctZFJXYi8=' 'sha256-MIpWPgYj31kCgSUFc0UwHGQrV87W6N5ozotqfxxQG0w=' 'sha256-buF6N8Z4p2PuaaeRUjm7mxBpPNf4XlCT9Fep83YabbM=' 'sha256-/S6PM16MxkmUT7zJN2lkEKFgvXR7yL4Z8PCrRrFu4Q8=' https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js 'sha256-foB3G7vO68Ot8wctsG3OKBQ84ADKVinlnTg9/s93Ycs=' 'sha256-g0j42v3Wo/ohUAMR/t0EuObDSEkx1rZ3lv45fUaNmYs=' https://www.google-analytics.com https://ssl.google-analytics.com  #{
-      storage_url
-    } #{assets_url} https://aframe.io https://www.youtube.com https://s.ytimg.com; child-src #{custom_rules[:child_src]} 'self' blob:; worker-src #{
-      custom_rules[:worker_src]
-    } #{storage_url} #{assets_url} 'self' blob:; font-src #{custom_rules[:font_src]} 'self' https://fonts.googleapis.com https://cdn.jsdelivr.net https://fonts.gstatic.com https://cdn.aframe.io #{
-      storage_url
-    } #{assets_url} #{cors_proxy_url}; style-src #{custom_rules[:style_src]} 'self' https://fonts.googleapis.com https://cdn.jsdelivr.net #{
-      cors_proxy_url
-    } #{storage_url} #{assets_url} 'unsafe-inline'; connect-src #{custom_rules[:connect_src]} 'self' #{cors_proxy_url} #{
-      storage_url
-    } #{assets_url} #{link_url} https://dpdb.webvr.rocks #{thumbnail_url} #{ret_direct_connect} https://www.google-analytics.com https://cdn.aframe.io https://www.youtube.com https://api.github.com https://bh4d9od16a-3.algolianet.com data: blob:; img-src #{
-      custom_rules[:img_src]
-    } 'self' https://www.google-analytics.com #{storage_url} #{assets_url} #{cors_proxy_url} #{thumbnail_url} https://cdn.aframe.io https://www.youtube.com https://user-images.githubusercontent.com https://cdn.jsdelivr.net data: blob:; media-src #{
-      custom_rules[:media_src]
-    } 'self' #{cors_proxy_url} #{storage_url} #{assets_url} #{thumbnail_url} https://www.youtube.com *.googlevideo.com data: blob:; frame-src #{
-      custom_rules[:frame_src]
-    } https://www.youtube.com https://docs.google.com https://player.vimeo.com 'self'; base-uri 'none'; form-action #{
-      custom_rules[:form_action]
-    } 'self';"
+    csp_rules = %{
+      "default-src" => [
+        "'none'"
+      ],
+      "manifest-src" => [
+        custom_rules[:manifest_src],
+        "'self'"
+      ],
+      "script-src" => [
+        custom_rules[:script_src],
+        storage_url,
+        assets_url,
+        "'self'",
+        "'unsafe-eval'",
+        "'sha256-ViVvpb0oYlPAp7R8ZLxlNI6rsf7E7oz8l1SgCIXgMvM='",
+        "'sha256-hsbRcgUBASABDq7qVGVTpbnWq/ns7B+ToTctZFJXYi8='",
+        "'sha256-MIpWPgYj31kCgSUFc0UwHGQrV87W6N5ozotqfxxQG0w='",
+        "'sha256-buF6N8Z4p2PuaaeRUjm7mxBpPNf4XlCT9Fep83YabbM='",
+        "'sha256-/S6PM16MxkmUT7zJN2lkEKFgvXR7yL4Z8PCrRrFu4Q8='",
+        "https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js",
+        "'sha256-foB3G7vO68Ot8wctsG3OKBQ84ADKVinlnTg9/s93Ycs='",
+        "'sha256-g0j42v3Wo/ohUAMR/t0EuObDSEkx1rZ3lv45fUaNmYs='",
+        "https://www.google-analytics.com",
+        "https://ssl.google-analytics.com",
+        storage_url,
+        assets_url,
+        "https://aframe.io",
+        "https://www.youtube.com",
+        "https://s.ytimg.com"
+      ],
+      "child-src" => [
+        custom_rules[:child_src],
+        "'self'",
+        "blob:"
+      ],
+      "worker-src" => [
+        custom_rules[:worker_src],
+        storage_url,
+        assets_url,
+        "'self'",
+        "blob:"
+      ],
+      "font-src" => [
+        custom_rules[:font_src],
+        "'self'",
+        "https://fonts.googleapis.com",
+        "https://cdn.jsdelivr.net",
+        "https://fonts.gstatic.com",
+        "https://cdn.aframe.io",
+        storage_url,
+        assets_url,
+        cors_proxy_url
+      ],
+      "style-src" => [
+        custom_rules[:style_src],
+        "'self'",
+        "https://fonts.googleapis.com",
+        "https://cdn.jsdelivr.net",
+        cors_proxy_url,
+        storage_url,
+        assets_url,
+        "'unsafe-inline'"
+      ],
+      "connect-src" => [
+        custom_rules[:connect_src],
+        "'self'",
+        cors_proxy_url,
+        storage_url,
+        assets_url,
+        link_url,
+        "https://dpdb.webvr.rocks",
+        thumbnail_url,
+        ret_direct_connect,
+        "https://www.google-analytics.com",
+        "https://cdn.aframe.io",
+        "https://www.youtube.com",
+        "https://api.github.com",
+        "https://bh4d9od16a-3.algolianet.com",
+        "data:",
+        "blob:"
+      ],
+      "img-src" => [
+        custom_rules[:img_src],
+        "'self'",
+        "https://www.google-analytics.com",
+        storage_url,
+        assets_url,
+        cors_proxy_url,
+        thumbnail_url,
+        "https://cdn.aframe.io",
+        "https://www.youtube.com",
+        "https://user-images.githubusercontent.com",
+        "https://cdn.jsdelivr.net",
+        "data:",
+        "blob:"
+      ],
+      "media-src" => [
+        custom_rules[:media_src],
+        "'self'",
+        cors_proxy_url,
+        storage_url,
+        assets_url,
+        thumbnail_url,
+        "https://www.youtube.com",
+        "*.googlevideo.com",
+        "data:",
+        "blob:"
+      ],
+      "frame-src" => [
+        custom_rules[:frame_src],
+        "https://www.youtube.com",
+        "https://docs.google.com",
+        "https://player.vimeo.com",
+        "'self'"
+      ],
+      "base-uri" => [
+        "'none'"
+      ],
+      "form-action" => [
+        custom_rules[:form_action],
+        "'self'"
+      ]
+    }
+
+    csp_rules
+    |> Enum.map(fn {category, values} -> "#{category} #{values |> Enum.join(" ")}" end)
+    |> Enum.join("; ")
   end
 
   defp get_custom_rules do
