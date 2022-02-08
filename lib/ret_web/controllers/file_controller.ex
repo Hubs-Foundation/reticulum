@@ -77,7 +77,18 @@ defmodule RetWeb.FileController do
   defp render_file_with_token(conn, type, uuid, token) do
     %{host: storage_host} = Application.get_env(:ret, Ret.Storage)[:host] |> URI.parse()
 
-    if conn.host !== storage_host do
+    is_storage_host = conn.host === storage_host
+
+    # File may be served via a Cloudflare CDN worker, in which case the connection
+    # host will not match the configured storage host. We can use Cloudflare's cf-worker
+    # header to verify that the worker matches the suffix of the configured
+    # storage host (which should be a cloudflare worker host).
+    # In this scenario the cf-worker header will be something like foo.workers.dev
+    # The configured host will be something like hubs-baz-proxy.foo.workers.dev
+    cf_worker = conn.req_headers |> Ret.HttpUtils.get_http_header("cf-worker")
+    has_cf_worker_suffix = !!(cf_worker && storage_host |> String.ends_with?(cf_worker))
+
+    if !is_storage_host and !has_cf_worker_suffix do
       # We want to avoid serving files from the primary domain, so we forbid requests
       # that aren't from the storage host
       conn |> send_resp(403, "")
