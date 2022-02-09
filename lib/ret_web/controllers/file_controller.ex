@@ -86,7 +86,7 @@ defmodule RetWeb.FileController do
     # In this scenario the cf-worker header will be something like foo.workers.dev
     # and the configured host will be something like hubs-baz-proxy.foo.workers.dev
     cf_worker = conn.req_headers |> Ret.HttpUtils.get_http_header("cf-worker")
-    cf_worker_matches = !!cf_worker and (storage_host |> String.ends_with?(cf_worker))
+    cf_worker_matches = !!cf_worker and storage_host |> String.ends_with?(cf_worker)
 
     if is_storage_host or cf_worker_matches do
       {uuid, token}
