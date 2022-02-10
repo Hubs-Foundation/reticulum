@@ -75,7 +75,7 @@ defmodule Ret.Application do
       worker(Ret.RoomAssignerMonitor, []),
       # Storage for rate limiting
       worker(PlugAttack.Storage.Ets, [RetWeb.RateLimit.Storage, [clean_period: 60_000]], id: :rate_limit),
-      worker(PlugAttack.Storage.Ets, [RetWeb.Fail2Ban.Storage, [clean_period: 60_000]], id: :fail2ban),
+      worker(PlugAttack.Storage.Ets, [RetWeb.LinkFail2Ban.Storage, [clean_period: 60_000]], id: :link_fail2ban),
       # Media resolution cache
       worker(
         Cachex,
