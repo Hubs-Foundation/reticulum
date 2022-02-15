@@ -182,6 +182,7 @@ defmodule RetWeb.Plugs.AddCSP do
         "https://dpdb.webvr.rocks",
         "https://www.google-analytics.com",
         "https://www.youtube.com",
+        "https://fonts.gstatic.com",
         assets_url,
         cors_proxy_url,
         custom_rules[:connect_src],
