@@ -121,6 +121,7 @@ defmodule RetWeb.Plugs.AddCSP do
       ],
       "script-src" => [
         "'self'",
+        "blob:",
         "'sha256-/S6PM16MxkmUT7zJN2lkEKFgvXR7yL4Z8PCrRrFu4Q8='",
         "'sha256-MIpWPgYj31kCgSUFc0UwHGQrV87W6N5ozotqfxxQG0w='",
         "'sha256-ViVvpb0oYlPAp7R8ZLxlNI6rsf7E7oz8l1SgCIXgMvM='",
