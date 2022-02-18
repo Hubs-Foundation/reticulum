@@ -198,12 +198,12 @@ defmodule RetWeb.PageController do
       |> put_hub_headers("hub")
       |> render_page("link.html", :hubs, "link-meta.html")
 
-  def render_for_path("/link/" <> hub_identifier_and_slug, _params, conn) do
-    hub_identifier = hub_identifier_and_slug |> String.split("/") |> List.first()
+  def render_for_path("/link/" <> hub_sid_and_slug, _params, conn) do
+    hub_sid = hub_sid_and_slug |> String.split("/") |> List.first()
 
     conn
     |> put_hub_headers("link")
-    |> redirect_to_hub_identifier(hub_identifier)
+    |> redirect_to_hub_sid(hub_sid)
   end
 
   def render_for_path("/signin", _params, conn), do: conn |> render_page("signin.html")
@@ -517,9 +517,8 @@ defmodule RetWeb.PageController do
 
   defp csp_for_script(script), do: "'sha256-#{:crypto.hash(:sha256, script) |> :base64.encode()}'"
 
-  # Redirect to the specified hub identifier, which can be a sid or an entry code
-  defp redirect_to_hub_identifier(conn, hub_identifier) do
-    hub = Repo.get_by(Hub, hub_sid: hub_identifier) || Hub.get_by_entry_code_string(hub_identifier)
+  defp redirect_to_hub_sid(conn, hub_sid) do
+    hub = Repo.get_by(Hub, hub_sid: hub_sid)
 
     case hub do
       %Hub{} = hub -> conn |> redirect(to: "/#{hub.hub_sid}/#{hub.slug}")
