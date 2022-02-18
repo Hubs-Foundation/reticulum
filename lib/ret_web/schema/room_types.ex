@@ -67,8 +67,13 @@ defmodule RetWeb.Schema.RoomTypes do
     field(:description, :string)
     @desc "Makes this room as public (while it is still open)"
     field(:allow_promotion, :boolean)
+
     @desc "Temporary entry code"
-    field(:entry_code, :string)
+    field(:entry_code, :string) do
+      deprecate("Entry codes have been removed.")
+      resolve(&Resolvers.RoomResolver.entry_code/3)
+    end
+
     @desc "Determines if entry is allowed, denied, or by-invite-only. (Values are \"allow\", \"deny\", or \"invite\".)"
     field(:entry_mode, :string)
     @desc "The host server associated with this room via the load balancer"
