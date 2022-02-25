@@ -94,6 +94,12 @@ defmodule RetWeb.Resolvers.RoomResolver do
     resolver_error(:unauthorized, "Unauthorized access")
   end
 
+  def entry_code(_hub, _args, _resolutions) do
+    # The entry code feature has been removed. We return "000000" here to
+    # maintain compatibility with older clients.
+    {:ok, "000000"}
+  end
+
   def port(_hub, _args, _resolutions) do
     # No permission check needed
     {:ok, Hub.janus_port()}

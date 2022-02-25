@@ -1004,7 +1004,7 @@ defmodule RetWeb.HubChannel do
        do: deny_join()
 
   defp join_with_hub(%Hub{} = hub, account, socket, context, params) do
-    hub = hub |> Hub.ensure_valid_entry_code!() |> Hub.ensure_host()
+    hub = hub |> Hub.ensure_host()
 
     hub =
       if context["embed"] && !hub.embedded do

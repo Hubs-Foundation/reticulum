@@ -32,9 +32,6 @@ defmodule Ret.Hub do
 
   @schema_prefix "ret0"
   @primary_key {:hub_id, :id, autogenerate: true}
-  @max_entry_code 999_999
-  @entry_code_expiration_hours 72
-  @max_entry_code_generate_attempts 25
 
   @member_permissions %{
     (1 <<< 0) => :spawn_and_move_media,
@@ -88,8 +85,6 @@ defmodule Ret.Hub do
     field(:description, :string)
     field(:hub_sid, :string)
     field(:host, :string)
-    field(:entry_code, :integer)
-    field(:entry_code_expires_at, :utc_datetime)
     field(:last_active_at, :utc_datetime)
     field(:creator_assignment_token, :string)
     field(:embed_token, :string)
@@ -120,8 +115,6 @@ defmodule Ret.Hub do
     :name,
     :hub_sid,
     :host,
-    :entry_code,
-    :entry_code_expires_at,
     :embed_token,
     :member_permissions,
     :max_occupant_count,
@@ -149,11 +142,6 @@ defmodule Ret.Hub do
             name: Ret.RandomRoomNames.generate_room_name(),
             hub_sid: Ret.Sids.generate_sid(),
             host: RoomAssigner.get_available_host(nil),
-            entry_code: generate_entry_code!(),
-            entry_code_expires_at:
-              Timex.now()
-              |> Timex.shift(hours: @entry_code_expiration_hours)
-              |> DateTime.truncate(:second),
             creator_assignment_token: SecureRandom.hex(),
             embed_token: SecureRandom.hex(),
             member_permissions: default_member_permissions(),
@@ -177,7 +165,6 @@ defmodule Ret.Hub do
           less_than_or_equal_to: AppConfig.get_cached_config_value("features|max_room_size")
         )
         |> unique_constraint(:hub_sid)
-        |> unique_constraint(:entry_code)
         |> Repo.insert()
 
       case result do
@@ -354,22 +341,6 @@ defmodule Ret.Hub do
     Scene.scene_or_scene_listing_by_sid(id)
   end
 
-  def get_by_entry_code_string(entry_code_string) when is_binary(entry_code_string) do
-    case Integer.parse(entry_code_string) do
-      {entry_code, _} ->
-        hub = Hub |> Repo.get_by(entry_code: entry_code)
-
-        cond do
-          is_nil(hub) -> nil
-          hub |> Hub.entry_code_expired?() -> nil
-          true -> hub
-        end
-
-      _ ->
-        nil
-    end
-  end
-
   def get_my_rooms(account, params) do
     Hub
     |> where([h], h.created_by_account_id == ^account.account_id and h.entry_mode in ^["allow", "invite"])
@@ -413,10 +384,8 @@ defmodule Ret.Hub do
     |> add_attrs_to_changeset(attrs)
     |> add_hub_sid_to_changeset
     |> add_generated_tokens_to_changeset
-    |> add_entry_code_to_changeset
     |> add_default_member_permissions_to_changeset
     |> unique_constraint(:hub_sid)
-    |> unique_constraint(:entry_code)
   end
 
   def add_attrs_to_changeset(changeset, attrs) do
@@ -628,20 +597,6 @@ defmodule Ret.Hub do
     end
   end
 
-  defp changeset_for_new_entry_code(%Hub{} = hub) do
-    hub
-    |> Ecto.Changeset.change()
-    |> add_entry_code_to_changeset
-  end
-
-  def ensure_valid_entry_code!(hub) do
-    if hub |> entry_code_expired? do
-      hub |> changeset_for_new_entry_code |> Repo.update!()
-    else
-      hub
-    end
-  end
-
   def ensure_host(hub) do
     if RoomAssigner.is_alive?(hub.host) do
       hub
@@ -656,21 +611,6 @@ defmodule Ret.Hub do
         hub
       end
     end
-  end
-
-  def entry_code_expired?(%Hub{entry_code: entry_code, entry_code_expires_at: entry_code_expires_at})
-      when is_nil(entry_code) or is_nil(entry_code_expires_at),
-      do: true
-
-  def entry_code_expired?(%Hub{} = hub) do
-    Timex.now() |> Timex.after?(hub.entry_code_expires_at)
-  end
-
-  def vacuum_entry_codes do
-    Ret.Locking.exec_if_lockable(:hub_vacuum_entry_codes, fn ->
-      query = from(h in Hub, where: h.entry_code_expires_at() < ^Timex.now())
-      Repo.update_all(query, set: [entry_code: nil, entry_code_expires_at: nil])
-    end)
   end
 
   # Remove the host entry from any rooms that are older than a day old and have no presence
@@ -702,29 +642,6 @@ defmodule Ret.Hub do
     changeset
     |> put_change(:creator_assignment_token, creator_assignment_token)
     |> put_change(:embed_token, embed_token)
-  end
-
-  defp add_entry_code_to_changeset(changeset) do
-    expires_at = Timex.now() |> Timex.shift(hours: @entry_code_expiration_hours) |> DateTime.truncate(:second)
-
-    changeset
-    |> put_change(:entry_code, generate_entry_code!())
-    |> put_change(:entry_code_expires_at, expires_at)
-  end
-
-  defp generate_entry_code!(attempt \\ 0)
-
-  defp generate_entry_code!(attempt) when attempt > @max_entry_code_generate_attempts do
-    raise "Unable to allocate entry code"
-  end
-
-  defp generate_entry_code!(attempt) do
-    candidate_entry_code = :rand.uniform(@max_entry_code)
-
-    case Hub |> Repo.get_by(entry_code: candidate_entry_code) do
-      nil -> candidate_entry_code
-      _ -> generate_entry_code!(attempt + 1)
-    end
   end
 
   def janus_room_id_for_hub(hub) do
