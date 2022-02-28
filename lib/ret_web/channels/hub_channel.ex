@@ -234,8 +234,8 @@ defmodule RetWeb.HubChannel do
 
   def handle_in("events:begin_recording", _payload, socket), do: socket |> set_presence_flag(:recording, true)
   def handle_in("events:end_recording", _payload, socket), do: socket |> set_presence_flag(:recording, false)
-  def handle_in("events:raise_hand", _payload, socket), do: socket |> set_presence_flag(:handRaised, true)
-  def handle_in("events:lower_hand", _payload, socket), do: socket |> set_presence_flag(:handRaised, false)
+  def handle_in("events:raise_hand", _payload, socket), do: socket |> set_presence_flag(:hand_raised, true)
+  def handle_in("events:lower_hand", _payload, socket), do: socket |> set_presence_flag(:hand_raised, false)
   def handle_in("events:begin_streaming", _payload, socket), do: socket |> set_presence_flag(:streaming, true)
   def handle_in("events:end_streaming", _payload, socket), do: socket |> set_presence_flag(:streaming, false)
   def handle_in("events:begin_typing", _payload, socket), do: socket |> set_presence_flag(:typing, true)
@@ -819,7 +819,7 @@ defmodule RetWeb.HubChannel do
     |> maybe_override_identifiers(account)
     |> Map.put(:roles, hub |> Hub.roles_for_account(account))
     |> Map.put(:permissions, hub |> Hub.perms_for_account(account))
-    |> Map.take([:presence, :profile, :context, :roles, :permissions, :streaming, :recording, :handRaised, :typing])
+    |> Map.take([:presence, :profile, :context, :roles, :permissions, :streaming, :recording, :hand_raised, :typing])
   end
 
   # Hubs Bot can set their own display name.
