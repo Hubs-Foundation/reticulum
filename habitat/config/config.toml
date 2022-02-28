@@ -26,6 +26,11 @@ token = {{ toToml cfg.slack_controller.token }}
 {{ toToml cfg.twitter_client }}
 {{/if}}
 
+{{#if cfg.whats_new.token}}
+[ret."Elixir.RetWeb.Api.V1.WhatsNewController"]
+token = {{ toToml cfg.whats_new.token }}
+{{/if}}
+
 [ret."Elixir.RetWeb.Endpoint".https]
 port = {{ cfg.phx.port }}
 certfile = "{{ pkg.svc_files_path }}/ssl.pem"
