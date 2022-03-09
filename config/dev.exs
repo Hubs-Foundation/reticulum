@@ -112,6 +112,8 @@ config :ret, Ret.DiscordClient,
   client_secret: "",
   bot_token: ""
 
+config :ret, RetWeb.Api.V1.WhatsNewController, token: ""
+
 # Allow any origin for API access in dev
 config :cors_plug, origin: ["*"]
 

@@ -31,7 +31,7 @@ defmodule Ret.DiscordClient do
     }
 
     "#{@discord_api_base}/oauth2/token"
-    |> Ret.HttpUtils.retry_post_until_success(body, [{"content-type", "application/x-www-form-urlencoded"}])
+    |> Ret.HttpUtils.retry_post_until_success(body, headers: [{"content-type", "application/x-www-form-urlencoded"}])
     |> Map.get(:body)
     |> Poison.decode!()
     |> Map.get("access_token")
@@ -39,7 +39,7 @@ defmodule Ret.DiscordClient do
 
   def fetch_user_info(access_token) do
     "#{@discord_api_base}/users/@me"
-    |> Ret.HttpUtils.retry_get_until_success([{"authorization", "Bearer #{access_token}"}])
+    |> Ret.HttpUtils.retry_get_until_success(headers: [{"authorization", "Bearer #{access_token}"}])
     |> Map.get(:body)
     |> Poison.decode!()
   end
@@ -84,7 +84,7 @@ defmodule Ret.DiscordClient do
 
   def api_request(path) do
     "#{@discord_api_base}#{path}"
-    |> Ret.HttpUtils.retry_get_until_success([{"authorization", "Bot #{module_config(:bot_token)}"}])
+    |> Ret.HttpUtils.retry_get_until_success(headers: [{"authorization", "Bot #{module_config(:bot_token)}"}])
     |> Map.get(:body)
     |> Poison.decode!()
   end

@@ -12,6 +12,17 @@ defmodule RetWeb.FileControllerTest do
     conn |> assert_file_content_type(expected_content_type: "text/plain", uuid: uuid, token: "secret")
   end
 
+  test "Files are served with stricter CSP", %{conn: conn} do
+    uuid = store_file(content: "test", content_type: "text/plain", token: "secret")
+
+    req = conn |> file_path(:show, uuid, token: "secret")
+    storage_host = Application.get_env(:ret, Ret.Storage)[:host]
+    resp = conn |> get("#{storage_host}#{req}")
+    [csp] = resp |> Plug.Conn.get_resp_header("content-security-policy")
+
+    refute csp |> String.contains?("google-analytics")
+  end
+
   defp store_file(content: content, content_type: content_type, token: token) do
     temp_file = generate_temp_file(content)
     {:ok, uuid} = Ret.Storage.store(%Plug.Upload{path: temp_file}, content_type, token)

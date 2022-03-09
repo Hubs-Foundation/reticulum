@@ -40,6 +40,13 @@ environment :prod do
   set(vm_args: "rel/prod.vm_args")
 end
 
+environment :turkey do
+  set(include_erts: true)
+  set(include_src: false)
+  set(no_dot_erlang: true)
+  set(vm_args: "rel/prod.vm_args")
+end
+
 # You may define one or more releases in this file.
 # If you have not set a default release, or selected one
 # when running `mix release`, the first release in the file

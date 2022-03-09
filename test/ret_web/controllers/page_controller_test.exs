@@ -11,4 +11,11 @@ defmodule RetWeb.PageControllerTest do
     resp = conn |> get("/link/#{hub.hub_sid}")
     assert resp |> response(302)
   end
+
+  test "pages are served with csp headers", %{conn: conn} do
+    resp = conn |> get("/")
+    [csp] = resp |> Plug.Conn.get_resp_header("content-security-policy")
+
+    assert csp |> String.contains?("google-analytics")
+  end
 end

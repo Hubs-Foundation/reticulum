@@ -1,31 +1,54 @@
 defmodule Ret.HttpUtils do
   use Retry
 
-  def retry_head_until_success(url, headers \\ [], cap_ms \\ 5_000, expiry_ms \\ 10_000),
-    do: retry_until_success(:head, url, "", headers, cap_ms, expiry_ms)
+  @internal_ipv4_cidr_list [
+    InetCidr.parse("0.0.0.0/8"),
+    InetCidr.parse("10.0.0.0/8"),
+    InetCidr.parse("127.0.0.0/8"),
+    InetCidr.parse("169.254.0.0/16"),
+    InetCidr.parse("172.16.0.0/12"),
+    InetCidr.parse("192.168.0.0/16")
+  ]
 
-  def retry_get_until_success(url, headers \\ [], cap_ms \\ 5_000, expiry_ms \\ 10_000),
-    do: retry_until_success(:get, url, "", headers, cap_ms, expiry_ms)
+  def retry_head_until_success(url, options \\ []),
+    do: retry_until_success(:head, url, "", options)
 
-  def retry_post_until_success(url, body, headers \\ [], cap_ms \\ 5_000, expiry_ms \\ 10_000),
-    do: retry_until_success(:post, url, body, headers, cap_ms, expiry_ms)
+  def retry_get_until_success(url, options \\ []),
+    do: retry_until_success(:get, url, "", options)
 
-  def retry_put_until_success(url, body, headers \\ [], cap_ms \\ 5_000, expiry_ms \\ 10_000),
-    do: retry_until_success(:put, url, body, headers, cap_ms, expiry_ms)
+  def retry_post_until_success(url, body, options \\ []),
+    do: retry_until_success(:post, url, body, options)
 
-  def retry_head_then_get_until_success(url, headers \\ [], cap_ms \\ 5_000, expiry_ms \\ 10_000) do
-    case url |> retry_head_until_success(headers, cap_ms, expiry_ms) do
+  def retry_put_until_success(url, body, options \\ []),
+    do: retry_until_success(:put, url, body, options)
+
+  def retry_head_then_get_until_success(url, options \\ []) do
+    case url |> retry_head_until_success(options) do
       :error ->
-        url |> retry_get_until_success(headers, cap_ms, expiry_ms)
+        url |> retry_get_until_success(options)
 
       res ->
         res
     end
   end
 
-  def retry_until_success(verb, url, body \\ "", headers \\ [], cap_ms \\ 5_000, expiry_ms \\ 10_000) do
+  defp retry_until_success(verb, url, body, options) do
+    default_options = [
+      headers: [],
+      cap_ms: 5_000,
+      expiry_ms: 10_000,
+      append_browser_user_agent: false
+    ]
+
+    options = Keyword.merge(default_options, options)
+
     headers =
-      headers ++ [{"User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:84.0) Gecko/20100101 Firefox/84.0"}]
+      if options[:append_browser_user_agent] do
+        options[:headers] ++
+          [{"User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:84.0) Gecko/20100101 Firefox/84.0"}]
+      else
+        options[:headers]
+      end
 
     hackney_options =
       if module_config(:insecure_ssl) == true do
@@ -34,11 +57,13 @@ defmodule Ret.HttpUtils do
         []
       end
 
-    retry with: exponential_backoff() |> randomize |> cap(cap_ms) |> expiry(expiry_ms) do
-      case HTTPoison.request(verb, url, body, headers,
+    retry with: exponential_backoff() |> randomize |> cap(options[:cap_ms]) |> expiry(options[:expiry_ms]) do
+      http_client = module_config(:http_client) || HTTPoison
+
+      case http_client.request(verb, url, body, headers,
              follow_redirect: true,
-             timeout: cap_ms,
-             recv_timeout: cap_ms,
+             timeout: options[:cap_ms],
+             recv_timeout: options[:cap_ms],
              hackney: hackney_options
            ) do
         {:ok, %HTTPoison.Response{status_code: status_code} = resp}
@@ -78,7 +103,7 @@ defmodule Ret.HttpUtils do
   end
 
   def fetch_content_type(url) do
-    case url |> retry_head_then_get_until_success([{"Range", "bytes=0-32768"}]) do
+    case url |> retry_head_then_get_until_success(headers: [{"Range", "bytes=0-32768"}]) do
       :error -> {:error, "Could not get content-type"}
       %HTTPoison.Response{headers: headers} -> {:ok, headers |> content_type_from_headers}
     end
@@ -103,6 +128,41 @@ defmodule Ret.HttpUtils do
     else
       nil
     end
+  end
+
+  def resolve_ip(host) do
+    try do
+      InetCidr.parse_address!(host)
+    rescue
+      _ ->
+        case DNS.resolve(host) do
+          {:ok, results} ->
+            # TODO We should probably be able to handle ipv6 here too.
+            results |> Enum.filter(&InetCidr.v4?/1) |> Enum.random()
+
+          _ ->
+            nil
+        end
+    end
+  end
+
+  def internal_ip?(ip_address) do
+    case ip_address do
+      nil ->
+        # Default to true for safety.
+        true
+
+      {_, _, _, _} = ipv4_address ->
+        Enum.any?(@internal_ipv4_cidr_list, fn cidr -> InetCidr.contains?(cidr, ipv4_address) end)
+
+      _ ->
+        # For safety, assume anything else is internal.
+        true
+    end
+  end
+
+  def replace_host(uri, ip_address) do
+    Map.put(uri, :host, to_string(:inet.ntoa(ip_address)))
   end
 
   defp module_config(key) do

@@ -8,6 +8,11 @@ defmodule RetWeb.Router do
     plug(RetWeb.Plugs.AddCSP)
   end
 
+  pipeline :strict_secure_headers do
+    plug(:put_secure_browser_headers)
+    plug(RetWeb.Plugs.AddCSP, strict: true)
+  end
+
   pipeline :ssl_only do
     plug(Plug.SSL, hsts: true, rewrite_on: [:x_forwarded_proto])
   end
@@ -110,6 +115,8 @@ defmodule RetWeb.Router do
 
       resources("/credentials/scopes", Api.V1.ScopesController, only: [:index])
       resources("/ret_notices", Api.V1.RetNoticeController, only: [:create])
+
+      get("/whats-new", Api.V1.WhatsNewController, :show)
     end
 
     scope "/v1", as: :api_v1 do
@@ -192,7 +199,7 @@ defmodule RetWeb.Router do
   end
 
   scope "/", RetWeb do
-    pipe_through([:secure_headers, :parsed_body, :browser] ++ if(Mix.env() == :prod, do: [:ssl_only], else: []))
+    pipe_through([:strict_secure_headers, :parsed_body, :browser] ++ if(Mix.env() == :prod, do: [:ssl_only], else: []))
 
     head("/files/:id", FileController, :head)
     get("/files/:id", FileController, :show)
