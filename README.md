@@ -1,4 +1,7 @@
 # Reticulum
+Note: **Due to our small team size, we don't support setting up Reticulum locally due to restrictions on developer credentials. Although relatively difficult and new territory, you're welcome to set up this up yourself. In addition to running Reticulum locally, you'll need to also run [Hubs](https://github.com/mozilla/hubs) and [Dialog](https://github.com/mozilla/dialog) locally because the developer Dialog server is locked down and your local Reticulum will not connect properly)**
+
+Reference [this discussion thread](https://github.com/mozilla/hubs/discussions/3323) for more information. 
 
 A hybrid game networking and web API server, focused on Social Mixed Reality.
 
@@ -21,9 +24,11 @@ Windows: https://www.postgresql.org/download/windows/
 
 Windows WSL: https://github.com/michaeltreat/Windows-Subsystem-For-Linux-Setup-Guide/blob/master/readmes/installs/PostgreSQL.md
 
-#### Erlang (v22) + Elixr + Phoenix
+#### Erlang (v22) + Elixir (v1.8) + Phoenix
 
 https://elixir-lang.org/install.html
+
+Note: On Linux, you may also have to install the erlang-src package for your distribution in order to compile dependencies successfully.
 
 https://hexdocs.pm/phoenix/installation.html
 
@@ -40,8 +45,7 @@ Run the following commands at the root of the reticulum directory:
     * If step 2 fails, you may need to change the password for the `postgres` role to match the password configured `dev.exs`.
     * From within the `psql` shell, enter `ALTER USER postgres WITH PASSWORD 'postgres';`
     * If you receive an error that the `ret_dev` database does not exist, (using psql again) enter `create database ret_dev;`
-3. from the `assets` directory, `npm install`
-4. From the project directory `mkdir -p storage/dev`
+3. From the project directory `mkdir -p storage/dev`
 
 ### 3. Start Reticulum
 
@@ -147,5 +151,4 @@ default_janus_csp_rule =
 ```
    psql-userdb="host=hubs.local dbname=ret_dev user=postgres password=postgres options='-c search_path=coturn' connect_timeout=30"
 ```
-
 

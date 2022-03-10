@@ -59,6 +59,11 @@ defmodule RetWeb.HubChannel do
     )
   end
 
+  defp perform_join(_socket, nil, _context, _params) do
+    Statix.increment("ret.channels.hub.joins.not_found")
+    {:error, %{message: "No such Hub", reason: "not_found"}}
+  end
+
   defp perform_join(socket, hub, context, params) do
     account =
       case Ret.Guardian.resource_from_token(params["auth_token"]) do
@@ -67,6 +72,7 @@ defmodule RetWeb.HubChannel do
       end
 
     hub_requires_oauth = hub.hub_bindings |> Enum.empty?() |> Kernel.not()
+
     bot_access_key = Application.get_env(:ret, :bot_access_key)
     has_valid_bot_access_key = !!(bot_access_key && params["bot_access_key"] == bot_access_key)
 
@@ -560,8 +566,10 @@ defmodule RetWeb.HubChannel do
 
     case Guardian.Phoenix.Socket.current_resource(socket) do
       %Account{} = account ->
-        url = Ret.TwitterClient.get_oauth_url(hub.hub_sid, account.account_id)
-        {:reply, {:ok, %{oauth_url: url}}, socket}
+        case Ret.TwitterClient.get_oauth_url(hub.hub_sid, account.account_id) do
+          {:error, reason} -> {:reply, {:error, %{reason: reason}}, socket}
+          url -> {:reply, {:ok, %{oauth_url: url}}, socket}
+        end
 
       _ ->
         {:reply, :error, socket}
@@ -900,12 +908,6 @@ defmodule RetWeb.HubChannel do
     assigns |> Map.put(:profile, overriden)
   end
 
-  defp join_with_hub(nil, _account, _socket, _context, _params) do
-    Statix.increment("ret.channels.hub.joins.not_found")
-
-    {:error, %{message: "No such Hub"}}
-  end
-
   defp join_with_hub(%Hub{entry_mode: :deny}, _account, _socket, _context, _params) do
     {:error, %{message: "Hub no longer accessible", reason: "closed"}}
   end
@@ -1002,7 +1004,7 @@ defmodule RetWeb.HubChannel do
        do: deny_join()
 
   defp join_with_hub(%Hub{} = hub, account, socket, context, params) do
-    hub = hub |> Hub.ensure_valid_entry_code!() |> Hub.ensure_host()
+    hub = hub |> Hub.ensure_host()
 
     hub =
       if context["embed"] && !hub.embedded do

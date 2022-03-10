@@ -18,6 +18,15 @@ defmodule RetWeb.PageController do
   @configurable_asset_files @configurable_assets |> Map.values() |> Enum.map(&elem(&1, 0))
   @configurable_asset_paths @configurable_asset_files |> Enum.map(&"/#{&1}")
 
+  @proxy_ipv4_cidr_deny_list [
+    InetCidr.parse("0.0.0.0/16"),
+    InetCidr.parse("127.0.0.0/16"),
+    InetCidr.parse("10.0.0.0/8"),
+    InetCidr.parse("172.16.0.0/12"),
+    InetCidr.parse("192.168.0.0/16"),
+    InetCidr.parse("169.254.0.0/16")
+  ]
+
   def call(conn, _params) do
     assets_host = RetWeb.Endpoint.config(:assets_url)[:host]
     link_host = RetWeb.Endpoint.config(:link_url)[:host]
@@ -189,12 +198,12 @@ defmodule RetWeb.PageController do
       |> put_hub_headers("hub")
       |> render_page("link.html", :hubs, "link-meta.html")
 
-  def render_for_path("/link/" <> hub_identifier_and_slug, _params, conn) do
-    hub_identifier = hub_identifier_and_slug |> String.split("/") |> List.first()
+  def render_for_path("/link/" <> hub_sid_and_slug, _params, conn) do
+    hub_sid = hub_sid_and_slug |> String.split("/") |> List.first()
 
     conn
     |> put_hub_headers("link")
-    |> redirect_to_hub_identifier(hub_identifier)
+    |> redirect_to_hub_sid(hub_sid)
   end
 
   def render_for_path("/signin", _params, conn), do: conn |> render_page("signin.html")
@@ -202,6 +211,9 @@ defmodule RetWeb.PageController do
 
   def render_for_path("/verify", _params, conn), do: conn |> render_page("verify.html")
   def render_for_path("/verify/", _params, conn), do: conn |> render_page("verify.html")
+
+  def render_for_path("/tokens", _params, conn), do: conn |> render_page("tokens.html")
+  def render_for_path("/tokens/", _params, conn), do: conn |> render_page("tokens.html")
 
   def render_for_path("/discord", _params, conn), do: conn |> render_page("discord.html")
   def render_for_path("/discord/", _params, conn), do: conn |> render_page("discord.html")
@@ -277,7 +289,9 @@ defmodule RetWeb.PageController do
     conn |> respond_with_configurable_asset(asset_key, path, mime_type)
   end
 
-  def render_for_path("/admin", _params, conn), do: conn |> render_page("admin.html", :admin)
+  def render_for_path("/admin", _params, conn) do
+    conn |> render_page("admin.html", :admin)
+  end
 
   def render_for_path("/robots.txt", _params, conn) do
     allow_crawlers = Application.get_env(:ret, RetWeb.Endpoint)[:allow_crawlers] || false
@@ -503,12 +517,8 @@ defmodule RetWeb.PageController do
 
   defp csp_for_script(script), do: "'sha256-#{:crypto.hash(:sha256, script) |> :base64.encode()}'"
 
-  # Redirect to the specified hub identifier, which can be a sid or an entry code
-  defp redirect_to_hub_identifier(conn, hub_identifier) do
-    # Rate limit requests for redirects.
-    :timer.sleep(500)
-
-    hub = Repo.get_by(Hub, hub_sid: hub_identifier) || Hub.get_by_entry_code_string(hub_identifier)
+  defp redirect_to_hub_sid(conn, hub_sid) do
+    hub = Repo.get_by(Hub, hub_sid: hub_sid)
 
     case hub do
       %Hub{} = hub -> conn |> redirect(to: "/#{hub.hub_sid}/#{hub.slug}")
@@ -622,46 +632,102 @@ defmodule RetWeb.PageController do
     end
   end
 
+  defp resolve_ip(host) do
+    try do
+      InetCidr.parse_address!(host)
+    rescue
+      _ ->
+        case DNS.resolve(host) do
+          {:ok, results} ->
+            # TODO We should probably be able to handle ipv6 here too.
+            results |> Enum.filter(&InetCidr.v4?/1) |> Enum.random()
+
+          _ ->
+            nil
+        end
+    end
+  end
+
+  defp ip_allowed(ip_address) do
+    case ip_address do
+      nil ->
+        # host could not be resolved to an ip address, so we deny it
+        false
+
+      {_, _, _, _} = ipv4_address ->
+        # deny if any of the denied cidrs contain this address
+        matches_any_denied_cidr =
+          Enum.any?(@proxy_ipv4_cidr_deny_list, fn cidr -> InetCidr.contains?(cidr, ipv4_address) end)
+
+        !matches_any_denied_cidr
+
+      _ ->
+        # anything else is not allowed
+        false
+    end
+  end
+
   defp cors_proxy(%Conn{request_path: "/" <> url, query_string: ""} = conn), do: cors_proxy(conn, url)
   defp cors_proxy(%Conn{request_path: "/" <> url, query_string: qs} = conn), do: cors_proxy(conn, "#{url}?#{qs}")
 
   defp cors_proxy(conn, url) do
-    cors_proxy_url = Application.get_env(:ret, RetWeb.Endpoint)[:cors_proxy_url]
-    [cors_scheme, cors_port, cors_host] = [:scheme, :port, :host] |> Enum.map(&Keyword.get(cors_proxy_url, &1))
+    %URI{authority: authority, host: host} = uri = URI.parse(url)
 
-    # Disallow CORS proxying unless request was made to the cors proxy url
-    if cors_scheme == Atom.to_string(conn.scheme) && cors_host == conn.host && cors_port == conn.port do
-      allowed_origins = Application.get_env(:ret, RetWeb.Endpoint)[:allowed_origins] |> String.split(",")
+    resolved_ip = resolve_ip(host)
 
-      opts =
-        ReverseProxyPlug.init(
-          upstream: url,
-          allowed_origins: allowed_origins,
-          proxy_url: "#{cors_scheme}://#{cors_host}:#{cors_port}",
-          client_options: [ssl: [{:versions, [:"tlsv1.2"]}]]
-        )
-
-      body = ReverseProxyPlug.read_body(conn)
-      is_head = conn |> Conn.get_req_header("x-original-method") == ["HEAD"]
-
-      %Conn{}
-      |> Map.merge(conn)
-      |> Map.put(
-        :method,
-        if is_head do
-          "HEAD"
-        else
-          conn.method
-        end
-      )
-      # Need to strip path_info since proxy plug reads it
-      |> Map.put(:path_info, [])
-      # Some domains disallow access from improper Origins
-      |> Conn.delete_req_header("origin")
-      |> ReverseProxyPlug.request(body, opts)
-      |> ReverseProxyPlug.response(conn, opts)
-    else
+    if !ip_allowed(resolved_ip) do
       conn |> send_resp(401, "Bad request.")
+    else
+      # We want to ensure that the URL we request hits the same IP that we verified above,
+      # so we replace the host with the IP address here and use this url to make the proxy request.
+      ip_url = URI.to_string(Map.put(uri, :host, to_string(:inet.ntoa(resolved_ip))))
+
+      # Disallow CORS proxying unless request was made to the cors proxy url
+      cors_proxy_url = Application.get_env(:ret, RetWeb.Endpoint)[:cors_proxy_url]
+      [cors_scheme, cors_port, cors_host] = [:scheme, :port, :host] |> Enum.map(&Keyword.get(cors_proxy_url, &1))
+      is_cors_proxy_url = cors_scheme == Atom.to_string(conn.scheme) && cors_host == conn.host && cors_port == conn.port
+
+      if is_cors_proxy_url do
+        allowed_origins = Application.get_env(:ret, RetWeb.Endpoint)[:allowed_origins] |> String.split(",")
+
+        opts =
+          ReverseProxyPlug.init(
+            upstream: ip_url,
+            allowed_origins: allowed_origins,
+            proxy_url: "#{cors_scheme}://#{cors_host}:#{cors_port}",
+            # Since we replaced the host with the IP address in ip_url above, we need to force the host
+            # used for ssl verification here so that the connection isn't rejected.
+            # Note that we have to convert the authority to a charlist, since this uses Erlang's `ssl` module
+            # internally, which expects a charlist.
+            client_options: [ssl: [{:server_name_indication, to_charlist(authority)}, {:versions, [:"tlsv1.2"]}]],
+            preserve_host_header: true
+          )
+
+        body = ReverseProxyPlug.read_body(conn)
+        is_head = conn |> Conn.get_req_header("x-original-method") == ["HEAD"]
+
+        %Conn{}
+        |> Map.merge(conn)
+        |> Map.put(
+          :method,
+          if is_head do
+            "HEAD"
+          else
+            conn.method
+          end
+        )
+        # Need to strip path_info since proxy plug reads it
+        |> Map.put(:path_info, [])
+        # Since we replaced the host with the IP address in ip_url above, we need to force the host
+        # header back to the original authority so that the proxy destination does not reject our request
+        |> Conn.put_req_header("host", authority)
+        # Some domains disallow access from improper Origins
+        |> Conn.delete_req_header("origin")
+        |> ReverseProxyPlug.request(body, opts)
+        |> ReverseProxyPlug.response(conn, opts)
+      else
+        conn |> send_resp(401, "Bad request.")
+      end
     end
   end
 

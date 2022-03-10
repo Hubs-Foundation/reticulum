@@ -15,6 +15,7 @@ defmodule Ret.PageOriginWarmer do
              cloud.html
              signin.html
              verify.html
+             tokens.html
              hub.service.js
              schema.toml
            ),

@@ -23,6 +23,10 @@ defmodule RetWeb.Router do
     )
   end
 
+  pipeline :rate_limit do
+    plug(RetWeb.Plugs.RateLimit)
+  end
+
   pipeline :browser do
     plug(:accepts, ["html"])
     plug(:put_layout, false)
@@ -104,6 +108,7 @@ defmodule RetWeb.Router do
         resources("/availability", Api.V1.SupportSubscriptionController, only: [:index])
       end
 
+      resources("/credentials/scopes", Api.V1.ScopesController, only: [:index])
       resources("/ret_notices", Api.V1.RetNoticeController, only: [:create])
     end
 
@@ -191,6 +196,24 @@ defmodule RetWeb.Router do
 
     head("/files/:id", FileController, :head)
     get("/files/:id", FileController, :show)
+  end
+
+  scope "/", RetWeb do
+    pipe_through(
+      [:secure_headers, :parsed_body, :browser] ++
+        if(Mix.env() == :prod, do: [:ssl_only, :canonicalize_domain], else: [])
+    )
+
+    get("/link", PageController, only: [:index])
+  end
+
+  scope "/", RetWeb do
+    pipe_through(
+      [:secure_headers, :parsed_body, :browser, :rate_limit] ++
+        if(Mix.env() == :prod, do: [:ssl_only, :canonicalize_domain], else: [])
+    )
+
+    get("/link/*path", PageController, only: [:index])
   end
 
   scope "/", RetWeb do

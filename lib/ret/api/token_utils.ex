@@ -97,6 +97,7 @@ defmodule Ret.Api.TokenUtils do
   defp list_credentials(account, :account) do
     Credentials.query()
     |> Credentials.where_account_is(account)
+    |> Credentials.where_token_is_not_revoked()
     |> Repo.all()
   end
 

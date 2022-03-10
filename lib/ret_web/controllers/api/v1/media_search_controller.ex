@@ -73,7 +73,7 @@ defmodule RetWeb.Api.V1.MediaSearchController do
   end
 
   def index(conn, %{"source" => source} = params)
-      when source in ["sketchfab", "poly", "tenor", "youtube_videos", "bing_videos", "bing_images", "twitch"] do
+      when source in ["sketchfab", "tenor", "youtube_videos", "bing_videos", "bing_images", "twitch"] do
     query = %Ret.MediaSearchQuery{
       source: source,
       cursor: params["cursor"],
@@ -97,7 +97,7 @@ defmodule RetWeb.Api.V1.MediaSearchController do
 
   # For Google services, increase cache duration for landing pages by using long-lived cache, due to quotas.
   defp cache_for_query(%Ret.MediaSearchQuery{source: source, q: nil})
-       when source == "youtube_videos" or source == "poly",
+       when source == "youtube_videos",
        do: :media_search_results_long
 
   defp cache_for_query(_query), do: :media_search_results
