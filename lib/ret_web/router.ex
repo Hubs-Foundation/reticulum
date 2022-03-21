@@ -127,7 +127,7 @@ defmodule RetWeb.Router do
       resources("/slack", Api.V1.SlackController, only: [:create])
     end
 
-    scope "/v1", as: :api_v1 do
+    scope "/v1/internal", as: :api_v1 do
       pipe_through([:portal_header_auth])
       get("/presence", Api.V1.PresenceController, :show)
     end
