@@ -74,6 +74,10 @@ defmodule RetWeb.Router do
     plug(RetWeb.Plugs.BotHeaderAuthorization)
   end
 
+  pipeline :portal_header_auth do
+    plug(RetWeb.Plugs.PortalHeaderAuthorization)
+  end
+
   pipeline :canonicalize_domain do
     plug(RetWeb.Plugs.RedirectToMainDomain)
   end
@@ -121,6 +125,11 @@ defmodule RetWeb.Router do
 
     scope "/v1", as: :api_v1 do
       resources("/slack", Api.V1.SlackController, only: [:create])
+    end
+
+    scope "/v1/internal", as: :api_v1 do
+      pipe_through([:portal_header_auth])
+      get("/presence", Api.V1.PresenceController, :show)
     end
 
     scope "/v1", as: :api_v1 do
