@@ -130,7 +130,7 @@ insecure_ssl = false
 storage_path = "/storage"
 ttl = 172800
 host = "https://{{SUB_DOMAIN}}.{{DOMAIN}}"
-quota_gb = "12"
+quota_gb = "{{STORAGE_QUOTA_GB}}" # example: "12"
 # ^^^ has to be string or elixir throws (ArgumentError) argument error:erlang.byte_size(#), but like why
 
 [ret."Elixir.RetWeb.Email"]
