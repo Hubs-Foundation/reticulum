@@ -166,6 +166,7 @@ postgrest_password = ""
 [ret."Elixir.RetWeb.HealthController"]
 
 [ret."Elixir.RetWeb.PageController"]
+skip_cache = true
 extra_avatar_headers = ""
 extra_index_headers = ""
 extra_room_headers = ""
