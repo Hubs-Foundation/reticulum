@@ -114,6 +114,7 @@ bot_access_key = ""
 [ret."Elixir.Ret.MediaResolver"]
 ytdl_host = "{{YTDL_HOST}}"
 photomnemonic_endpoint = "{{PHOTOMNEMONIC}}"
+sketchfab_api_key = "{{SKETCHFAB_API_KEY}}"
 
 [ret."Elixir.Ret.Speelycaptor"]
 speelycaptor_endpoint = "{{SPEELYCAPTOR}}"
