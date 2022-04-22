@@ -202,7 +202,7 @@ defmodule RetWeb.Router do
     pipe_through([:portal_header_auth, :secure_headers, :parsed_body, :api] ++ if(Mix.env() == :prod, do: [:ssl_only], else: []))
 
     scope "/v1", as: :api_v1 do
-      get("/presence", ApiInternal.PresenceController, :show)
+      get("/presence", ApiInternal.V1.PresenceController, :show)
     end
   end
 
