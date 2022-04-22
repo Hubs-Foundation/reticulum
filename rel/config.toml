@@ -18,7 +18,11 @@ app_name = "ret"
 pool = "{{SUB_DOMAIN}}"
 
 [ret."Elixir.RetWeb.Plugs.HeaderAuthorization"]
+header_name = "x-ret-admin-access-key"
 header_value = "{{HEADER_AUTHZ}}"
+
+[ret."Elixir.RetWeb.Plugs.PortalHeaderAuthorization"]
+portal_access_key = "{{PORTAL_ACCESS_KEY}}"
 
 [ret."Elixir.Ret.DiscordClient"]
 client_id = ""
