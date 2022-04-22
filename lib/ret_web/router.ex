@@ -101,6 +101,7 @@ defmodule RetWeb.Router do
     forward("/", RetWeb.Plugs.ItaProxy)
   end
 
+
   scope "/api", RetWeb do
     pipe_through(
       [:secure_headers, :parsed_body, :api] ++ if(Mix.env() == :prod, do: [:ssl_only, :canonicalize_domain], else: [])
@@ -127,9 +128,9 @@ defmodule RetWeb.Router do
       resources("/slack", Api.V1.SlackController, only: [:create])
     end
 
-    scope "/v1/internal", as: :api_v1 do
+    scope "/api-internal/v1", as: :api_v1 do
       pipe_through([:portal_header_auth])
-      get("/presence", Api.V1.PresenceController, :show)
+      get("/presence", ApiInternal.PresenceController, :show)
     end
 
     scope "/v1", as: :api_v1 do
@@ -195,6 +196,14 @@ defmodule RetWeb.Router do
 
     forward "/graphiql", Absinthe.Plug.GraphiQL, json_codec: Jason, schema: RetWeb.Schema
     forward "/", Absinthe.Plug, json_codec: Jason, schema: RetWeb.Schema
+  end
+
+  scope "/api-internal", RetWeb do
+    pipe_through([:portal_header_auth, :secure_headers, :parsed_body, :api] ++ if(Mix.env() == :prod, do: [:ssl_only], else: []))
+
+    scope "/v1", as: :api_v1 do
+      get("/presence", ApiInternal.PresenceController, :show)
+    end
   end
 
   # Directly accessible APIs.

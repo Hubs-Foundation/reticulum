@@ -1,4 +1,4 @@
-defmodule RetWeb.Api.V1.PresenceController do
+defmodule RetWeb.ApiInternal.V1.PresenceController do
   use RetWeb, :controller
 
   # Get presence count
