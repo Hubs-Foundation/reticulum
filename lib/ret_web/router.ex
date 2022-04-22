@@ -101,7 +101,6 @@ defmodule RetWeb.Router do
     forward("/", RetWeb.Plugs.ItaProxy)
   end
 
-
   scope "/api", RetWeb do
     pipe_through(
       [:secure_headers, :parsed_body, :api] ++ if(Mix.env() == :prod, do: [:ssl_only, :canonicalize_domain], else: [])
@@ -199,7 +198,9 @@ defmodule RetWeb.Router do
   end
 
   scope "/api-internal", RetWeb do
-    pipe_through([:portal_header_auth, :secure_headers, :parsed_body, :api] ++ if(Mix.env() == :prod, do: [:ssl_only], else: []))
+    pipe_through(
+      [:portal_header_auth, :secure_headers, :parsed_body, :api] ++ if(Mix.env() == :prod, do: [:ssl_only], else: [])
+    )
 
     scope "/v1", as: :api_v1 do
       get("/presence", ApiInternal.V1.PresenceController, :show)
