@@ -5,6 +5,7 @@ healthcheck(){
 
 sed -i "s/{{POD_DNS}}/ret.${POD_NS}.svc.cluster.local/g" config.toml 
 echo "update runtime configs into config.toml" 
+prefix="turkeyCfg_"; for var in $(compgen -e); do [[ $var == $prefix* ]] && sed -i "s/{{${var#$prefix}}}/${!var//\//\\\/}/g" config.toml; done 
 prefix="turkeyCfg_"; for var in $(compgen -e); do [[ $var == $prefix* ]] && sed -i "s/<${var#$prefix}>/${!var//\//\\\/}/g" config.toml; done 
 export HOME="/ret/var" LC_ALL="en_US.UTF-8 LANG=en_US.UTF-8" REPLACE_OS_VARS="true" 
 export MIX_ENV="turkey" RELEASE_CONFIG_DIR="/ret" RELEASE_MUTABLE_DIR="/ret/var" 
