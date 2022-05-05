@@ -122,9 +122,9 @@ Rooms are created with restricted permissions by default, which means you can't 
 Ret.AppConfig.set_config_value("features|permissive_rooms", true)
 ```
 
-### 8. Start the Admin Portal server in local development mode
+### 8. Start the Admin Panel server in local development mode
 
-When running locally, you will need to also run the admin portal, which routes to hubs.local:8989
+When running locally, you will need to also run the admin panel, which routes to hubs.local:8989
 Using a separate terminal instance, navigate to the `hubs/admin` folder and use:
 
 ```

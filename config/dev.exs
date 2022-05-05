@@ -114,7 +114,7 @@ config :ret, Ret.DiscordClient,
 
 config :ret, RetWeb.Api.V1.WhatsNewController, token: ""
 
-config :ret, RetWeb.Plugs.PortalHeaderAuthorization, portal_access_key: ""
+config :ret, RetWeb.Plugs.DashboardHeaderAuthorization, dashboard_access_key: ""
 
 # Allow any origin for API access in dev
 config :cors_plug, origin: ["*"]

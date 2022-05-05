@@ -74,8 +74,8 @@ defmodule RetWeb.Router do
     plug(RetWeb.Plugs.BotHeaderAuthorization)
   end
 
-  pipeline :portal_header_auth do
-    plug(RetWeb.Plugs.PortalHeaderAuthorization)
+  pipeline :dashboard_header_auth do
+    plug(RetWeb.Plugs.DashboardHeaderAuthorization)
   end
 
   pipeline :canonicalize_domain do
@@ -194,7 +194,7 @@ defmodule RetWeb.Router do
 
   scope "/api-internal", RetWeb do
     pipe_through(
-      [:portal_header_auth, :secure_headers, :parsed_body, :api] ++ if(Mix.env() == :prod, do: [:ssl_only], else: [])
+      [:dashboard_header_auth, :secure_headers, :parsed_body, :api] ++ if(Mix.env() == :prod, do: [:ssl_only], else: [])
     )
 
     scope "/v1", as: :api_internal_v1 do
