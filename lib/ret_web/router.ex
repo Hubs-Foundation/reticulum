@@ -74,8 +74,8 @@ defmodule RetWeb.Router do
     plug(RetWeb.Plugs.BotHeaderAuthorization)
   end
 
-  pipeline :portal_header_auth do
-    plug(RetWeb.Plugs.PortalHeaderAuthorization)
+  pipeline :dashboard_header_auth do
+    plug(RetWeb.Plugs.DashboardHeaderAuthorization)
   end
 
   pipeline :canonicalize_domain do
@@ -128,7 +128,7 @@ defmodule RetWeb.Router do
     end
 
     scope "/v1/internal", as: :api_v1 do
-      pipe_through([:portal_header_auth])
+      pipe_through([:dashboard_header_auth])
       get("/presence", Api.V1.PresenceController, :show)
     end
 
