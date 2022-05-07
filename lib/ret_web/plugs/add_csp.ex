@@ -32,13 +32,17 @@ defmodule RetWeb.Plugs.AddCSP do
 
     conn_with_csp = conn |> Plug.Conn.put_resp_header("content-security-policy", csp)
 
-    user_agent = conn |> Plug.Conn.get_req_header("user-agent") |> Enum.at(0, "")
-    browser_is_ie = user_agent |> String.downcase() |> String.contains?("trident")
+    if strict do
+      user_agent = conn |> Plug.Conn.get_req_header("user-agent") |> Enum.at(0, "")
+      browser_is_ie = user_agent |> String.downcase() |> String.contains?("trident")
 
-    if browser_is_ie do
-      # IE11 doesn't respect modern CSP headers that contain newer CSP features, so we tack on
-      # an older "x-..." header with a "sandbox" restriction that IE does respect.
-      conn_with_csp |> Plug.Conn.put_resp_header("x-content-security-policy", "sandbox")
+      if browser_is_ie do
+        # IE11 doesn't respect modern CSP headers that contain newer CSP features, so we tack on
+        # an older "x-..." header with a "sandbox" restriction that IE does respect.
+        conn_with_csp |> Plug.Conn.put_resp_header("x-content-security-policy", "sandbox")
+      else
+        conn_with_csp
+      end
     else
       conn_with_csp
     end
