@@ -514,10 +514,14 @@ defmodule Ret.Storage do
     end)
   end
 
+  def storage_used() do
+    Cachex.get(:storage_used, :storage_used)
+  end
+
   def in_quota?() do
     with storage_path when is_binary(storage_path) <- module_config(:storage_path),
          quota_gb when is_integer(quota_gb) and quota_gb > 0 <- module_config(:quota_gb) do
-      case Cachex.get(:storage_used, :storage_used) do
+      case storage_used() do
         {:ok, 0} -> true
         {:ok, kbytes} -> kbytes < quota_gb * 1024 * 1024
         _ -> false
