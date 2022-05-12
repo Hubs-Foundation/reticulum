@@ -14,14 +14,11 @@ defmodule RetWeb.ApiInternal.V1.StorageControllerTest do
   end
 
   test "storage endpoint responds with cached storage value", %{conn: conn} do
-    # The Ret.Storage module relies on a cached value to retrieve storage usage via Ret.StorageUsed.
-    # Since we mainly care about testing the endpoint here, we use the cache to mock the usage value
-    # and ensure that the endpoint returns it as expected.
-    Cachex.put(:storage_used, :storage_used, 0)
+    mock_storage_used(0)
     resp = request_storage(conn)
     assert resp["storage_mb"] === 0.0
 
-    Cachex.put(:storage_used, :storage_used, 10 * 1024)
+    mock_storage_used(10)
     resp = request_storage(conn)
     assert resp["storage_mb"] === 10.0
   end
@@ -38,10 +35,22 @@ defmodule RetWeb.ApiInternal.V1.StorageControllerTest do
     assert resp.status === 401
   end
 
-  defp request_storage(conn) do
+  test "storage endpoint errors when storage usage is not available", %{conn: conn} do
+    mock_storage_used(nil)
+    resp = request_storage(conn, expected_status: 503)
+    assert resp["error"] === "storage_usage_unavailable"
+  end
+
+  # The Ret.Storage module relies on a cached value to retrieve storage usage via Ret.StorageUsed.
+  # Since we mainly care about testing the endpoint here, we use the cache to mock the usage value
+  # and ensure that the endpoint returns it as expected.
+  defp mock_storage_used(nil), do: Cachex.put(:storage_used, :storage_used, nil)
+  defp mock_storage_used(storage_used_mb), do: Cachex.put(:storage_used, :storage_used, storage_used_mb * 1024)
+
+  defp request_storage(conn, opts \\ [expected_status: 200]) do
     conn
     |> put_req_header(@dashboard_access_header, @dashboard_access_key)
     |> get("/api-internal/v1/storage")
-    |> json_response(200)
+    |> json_response(opts[:expected_status])
   end
 end
