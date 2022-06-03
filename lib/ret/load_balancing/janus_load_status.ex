@@ -1,22 +1,55 @@
 defmodule Ret.JanusLoadStatus do
   use Cachex.Warmer
   use Retry
-
   def interval, do: :timer.seconds(15)
 
-  def execute(_state) do
-    with default_janus_host when is_binary(default_janus_host) and default_janus_host != "" <-
-           module_config(:default_janus_host) do
-      {:ok, [{:host_to_ccu, [{default_janus_host, 0}]}]}
-    else
-      _ ->
-        entries =
-          module_config(:janus_service_name)
-          |> Ret.Habitat.get_service_members()
-          |> Enum.map(fn {host, ip} -> Task.async(fn -> {host, janus_ip_to_ccu(ip)} end) end)
-          |> Enum.map(&Task.await(&1, 10_000))
+  require Logger
 
-        {:ok, [{:host_to_ccu, entries}]}
+  def execute(_state) do
+    if System.get_env("TURKEY_MODE") do
+      if module_config(:janus_service_name) == "" do
+        {:ok, [{:host_to_ccu, [{module_config(:default_janus_host), 0}]}]}
+      else
+        with pods when pods != [] <- get_dialog_pods() do
+          {:ok, [{:host_to_ccu, pods}]}
+        else
+          _ ->
+            Logger.warn("falling back to default_janus_host because get_dialog_pods() returned []")
+            {:ok, [{:host_to_ccu, [{module_config(:default_janus_host), 0}]}]}
+        end
+      end
+    else
+      with default_janus_host when is_binary(default_janus_host) and default_janus_host != "" <-
+             module_config(:default_janus_host) do
+        {:ok, [{:host_to_ccu, [{default_janus_host, 0}]}]}
+      else
+        _ ->
+          entries =
+            module_config(:janus_service_name)
+            |> Ret.Habitat.get_service_members()
+            |> Enum.map(fn {host, ip} -> Task.async(fn -> {host, janus_ip_to_ccu(ip)} end) end)
+            |> Enum.map(&Task.await(&1, 10_000))
+
+          {:ok, [{:host_to_ccu, entries}]}
+      end
+    end
+  end
+
+  defp get_dialog_pods() do
+    hosts =
+      "dialog.turkey-stream.svc.cluster.local"
+      |> String.to_charlist()
+      |> :inet_res.lookup(:in, :a)
+      |> Enum.map(fn {a, b, c, d} -> "#{a}.#{b}.#{c}.#{d}" end)
+
+    for host <- hosts do
+      %{body: body} = HTTPoison.get!("https://#{host}:4443/private/meta", [], hackney: [:insecure])
+      body_json = body |> Poison.decode!()
+
+      {
+        Base.encode32(host, case: :lower, padding: false) <> "." <> module_config(:janus_service_name),
+        body_json["cap"]
+      }
     end
   end
 

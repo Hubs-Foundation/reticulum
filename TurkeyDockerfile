@@ -4,7 +4,6 @@ copy . .
 RUN mix local.hex --force && mix local.rebar --force && mix deps.get
 run mix deps.clean mime --build && rm -rf _build && mix compile
 run MIX_ENV=turkey mix distillery.release
-run cp ./rel/config.toml ./_build/turkey/rel/ret/config.toml
 
 from alpine/openssl as certr
 workdir certs
