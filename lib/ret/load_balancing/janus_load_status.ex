@@ -9,12 +9,12 @@ defmodule Ret.JanusLoadStatus do
       if module_config(:janus_service_name) == "" do
         {:ok, [{:host_to_ccu, [{module_config(:default_janus_host), 0}]}]}
       else
-        pods=dialogPodSurvey()
+        pods=get_dialog_pods()
         if (pods==[]) do
+          Logger.warn("falling back to default_janus_host because get_dialog_pods() returned []")
           pods=[{module_config(:default_janus_host), 0}]
-          Logger.warn("falling back to default_janus_host because dialogPodSurvey() returned []")
         end
-        {:ok, [{:host_to_ccu, pods}]}        
+        {:ok, [{:host_to_ccu, pods}]}
       end
     else
       with default_janus_host when is_binary(default_janus_host) and default_janus_host != "" <-
@@ -30,13 +30,11 @@ defmodule Ret.JanusLoadStatus do
     end
   end
   
-  defp dialogPodSurvey() do
+  defp get_dialog_pods() do
     hosts = "dialog.turkey-stream.svc.cluster.local" |> String.to_charlist |> :inet_res.lookup(:in,:a) |> Enum.map(fn ({a,b,c,d}) -> "#{a}.#{b}.#{c}.#{d}" end)    
-    r=[]
     for host <- hosts do
       %{body: b}=HTTPoison.get!("https://#{host}:4443/private/meta",[],hackney: [:insecure])
       b_json=b|>Poison.decode!()
-      # r = Map.put(r, host, b_json["cap"])
       r={
         Base.encode32(host,case: :lower, padding: false)<>"."<>module_config(:janus_service_name), 
         b_json["cap"]
