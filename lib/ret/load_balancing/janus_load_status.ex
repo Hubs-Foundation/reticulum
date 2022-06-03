@@ -46,11 +46,11 @@ defmodule Ret.JanusLoadStatus do
 
     for host <- hosts do
       %{body: body} = HTTPoison.get!("https://#{host}:4443/private/meta", [], hackney: [:insecure])
-      body_json = b |> Poison.decode!()
+      body_json = body |> Poison.decode!()
 
       {
         Base.encode32(host, case: :lower, padding: false) <> "." <> module_config(:janus_service_name),
-        b_json["cap"]
+        body_json["cap"]
       }
     end
   end
