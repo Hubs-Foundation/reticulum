@@ -15,7 +15,7 @@ defmodule Ret.JanusLoadStatus do
         else
           _ ->
             Logger.warn("falling back to default_janus_host because get_dialog_pods() returned []")
-            {:ok, [{module_config(:default_janus_host), 0}]}
+            {:ok, [{:host_to_ccu, [{module_config(:default_janus_host), 0}]}]}
         end
       end
     else
