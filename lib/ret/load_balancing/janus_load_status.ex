@@ -10,15 +10,13 @@ defmodule Ret.JanusLoadStatus do
       if module_config(:janus_service_name) == "" do
         {:ok, [{:host_to_ccu, [{module_config(:default_janus_host), 0}]}]}
       else
-        pods = get_dialog_pods()
-
-        pods =
-          if pods == [] do
+        with pods when pods != [] <- get_dialog_pods() do
+          {:ok, [{:host_to_ccu, pods}]}
+        else
+          _ ->
             Logger.warn("falling back to default_janus_host because get_dialog_pods() returned []")
             [{module_config(:default_janus_host), 0}]
-          end
-
-        {:ok, [{:host_to_ccu, pods}]}
+        end
       end
     else
       with default_janus_host when is_binary(default_janus_host) and default_janus_host != "" <-
