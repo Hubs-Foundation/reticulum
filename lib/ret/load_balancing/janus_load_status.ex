@@ -1,22 +1,46 @@
 defmodule Ret.JanusLoadStatus do
   use Cachex.Warmer
   use Retry
-
   def interval, do: :timer.seconds(15)
 
+  require Logger
   def execute(_state) do
-    with default_janus_host when is_binary(default_janus_host) and default_janus_host != "" <-
-           module_config(:default_janus_host) do
-      {:ok, [{:host_to_ccu, [{default_janus_host, 0}]}]}
+    if (System.get_env("TURKEY_MODE")) do
+      if module_config(:janus_service_name) == "" do
+        {:ok, [{:host_to_ccu, [{module_config(:default_janus_host), 0}]}]}
+      else
+        pods=dialogPodSurvey()
+        if (pods==[]) do
+          pods=[{module_config(:default_janus_host), 0}]
+          Logger.warn("falling back to default_janus_host because dialogPodSurvey() returned []")
+        end
+        {:ok, [{:host_to_ccu, pods}]}        
+      end
     else
-      _ ->
-        entries =
-          module_config(:janus_service_name)
-          |> Ret.Habitat.get_service_members()
-          |> Enum.map(fn {host, ip} -> Task.async(fn -> {host, janus_ip_to_ccu(ip)} end) end)
-          |> Enum.map(&Task.await(&1, 10_000))
-
-        {:ok, [{:host_to_ccu, entries}]}
+      with default_janus_host when is_binary(default_janus_host) and default_janus_host != "" <-
+            module_config(:default_janus_host) do
+        {:ok, [{:host_to_ccu, [{default_janus_host, 0}]}]}
+      else
+        _ ->
+            entries = module_config(:janus_service_name) |> Ret.Habitat.get_service_members()
+              |> Enum.map(fn {host, ip} -> Task.async(fn -> {host, janus_ip_to_ccu(ip)} end) end)
+              |> Enum.map(&Task.await(&1, 10_000))
+            {:ok, [{:host_to_ccu, entries}]}        
+      end
+    end
+  end
+  
+  defp dialogPodSurvey() do
+    hosts = "dialog.turkey-stream.svc.cluster.local" |> String.to_charlist |> :inet_res.lookup(:in,:a) |> Enum.map(fn ({a,b,c,d}) -> "#{a}.#{b}.#{c}.#{d}" end)    
+    r=[]
+    for host <- hosts do
+      %{body: b}=HTTPoison.get!("https://#{host}:4443/private/meta",[],hackney: [:insecure])
+      b_json=b|>Poison.decode!()
+      # r = Map.put(r, host, b_json["cap"])
+      r={
+        Base.encode32(host,case: :lower, padding: false)<>"."<>module_config(:janus_service_name), 
+        b_json["cap"]
+      }
     end
   end
 
