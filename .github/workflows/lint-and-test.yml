@@ -38,6 +38,6 @@ jobs:
       - run: mix local.hex --force
       - run: mix local.rebar --force
       - run: mix deps.get
-      - run: mix compile --force --warnings-as-errors
+      - run: mix compile --warnings-as-errors
       - run: mix test
       - run: mix format --check-formatted '{lib,priv,test,config}/**/*.{ex,exs}'
