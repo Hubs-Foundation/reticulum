@@ -1,0 +1,43 @@
+name: lint-and-test
+
+on: [push, workflow_dispatch]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:10
+        env:
+          POSTGRES_USER: admin
+          POSTGRES_PASSWORD: admin
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: erlef/setup-beam@v1
+        with:
+          otp-version: 22
+          elixir-version: 1.8
+          
+      - uses: actions/cache@v3.0.2
+        with:
+          path: |
+            deps
+            _build
+          key: mix-${{ hashFiles('mix.lock') }}
+
+      - run: mix local.hex --force
+      - run: mix local.rebar --force
+      - run: mix deps.get
+      - run: mix compile --force --warnings-as-errors
+      - run: mix test
+      - run: mix format --check-formatted '{lib,priv,test,config}/**/*.{ex,exs}'
