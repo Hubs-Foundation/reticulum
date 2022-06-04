@@ -36,20 +36,25 @@ defmodule Ret.JanusLoadStatus do
   end
 
   defp get_dialog_pods() do
-    hosts =
-      "dialog.turkey-stream.svc.cluster.local"
-      |> String.to_charlist()
-      |> :inet_res.lookup(:in, :a)
-      |> Enum.map(fn {a, b, c, d} -> "#{a}.#{b}.#{c}.#{d}" end)
+    try do
+      hosts =
+        "dialog.turkey-stream.svc.cluster.local"
+        |> String.to_charlist()
+        |> :inet_res.lookup(:in, :a)
+        |> Enum.map(fn {a, b, c, d} -> "#{a}.#{b}.#{c}.#{d}" end)
 
-    for host <- hosts do
-      %{body: body} = HTTPoison.get!("https://#{host}:4443/private/meta", [], hackney: [:insecure])
-      body_json = body |> Poison.decode!()
+      for host <- hosts do
+        %{body: body} = HTTPoison.get!("https://#{host}:4443/private/meta", [], hackney: [:insecure])
+        body_json = body |> Poison.decode!()
 
-      {
-        Base.encode32(host, case: :lower, padding: false) <> "." <> module_config(:janus_service_name),
-        body_json["cap"]
-      }
+        {
+          Base.encode32(host <> "|" <> Ret.AppConfig.get_config_value("max_room_size"), case: :lower, padding: false) <>
+            "." <> module_config(:janus_service_name),
+          body_json["cap"]
+        }
+      end
+    rescue
+      _ -> []
     end
   end
 
