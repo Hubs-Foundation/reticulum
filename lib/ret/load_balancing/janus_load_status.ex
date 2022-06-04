@@ -48,13 +48,16 @@ defmodule Ret.JanusLoadStatus do
         body_json = body |> Poison.decode!()
 
         {
-          Base.encode32(host <> "|" <> Ret.AppConfig.get_cached_config_value("features|max_room_size"), case: :lower, padding: false) <>
+          Base.encode32(host <> "|" <> Ret.AppConfig.get_cached_config_value("features|max_room_size"),
+            case: :lower,
+            padding: false
+          ) <>
             "." <> module_config(:janus_service_name),
           body_json["cap"]
         }
       end
     rescue
-      exception -> 
+      exception ->
         Logger.warn(inspect(exception))
         []
     end
