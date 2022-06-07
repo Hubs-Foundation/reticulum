@@ -36,20 +36,34 @@ defmodule Ret.JanusLoadStatus do
   end
 
   defp get_dialog_pods() do
-    hosts =
-      "dialog.turkey-stream.svc.cluster.local"
-      |> String.to_charlist()
-      |> :inet_res.lookup(:in, :a)
-      |> Enum.map(fn {a, b, c, d} -> "#{a}.#{b}.#{c}.#{d}" end)
+    try do
+      hosts =
+        "dialog.turkey-stream.svc.cluster.local"
+        |> String.to_charlist()
+        |> :inet_res.lookup(:in, :a)
+        |> Enum.map(fn {a, b, c, d} -> "#{a}.#{b}.#{c}.#{d}" end)
 
-    for host <- hosts do
-      %{body: body} = HTTPoison.get!("https://#{host}:4443/private/meta", [], hackney: [:insecure])
-      body_json = body |> Poison.decode!()
+      for host <- hosts do
+        %{body: body} = HTTPoison.get!("https://#{host}:4443/private/meta", [], hackney: [:insecure])
+        body_json = body |> Poison.decode!()
 
-      {
-        Base.encode32(host, case: :lower, padding: false) <> "." <> module_config(:janus_service_name),
-        body_json["cap"]
-      }
+        # The cache key we construct here is a set of meta data that will be parsed by the dialog ingress proxy (dip),
+        # which will decide how to route dialog connections based on this information.
+        ret_max_room_size = Ret.AppConfig.get_cached_config_value("features|max_room_size")
+        meta_data_str = "#{host}|#{ret_max_room_size}"
+        encoded_meta_data = Base.encode32(meta_data_str, case: :lower, padding: false)
+        cache_key = "#{encoded_meta_data}.#{module_config(:janus_service_name)}"
+
+        current_load = body_json["cap"]
+
+        {cache_key, current_load}
+      end
+    rescue
+      exception ->
+        # This should only really occur in disaster scenarios,
+        # if the request to the dialog endpoint fails, or it returns an invalid response.
+        Logger.warn(inspect(exception))
+        []
     end
   end
 
