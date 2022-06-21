@@ -14,6 +14,6 @@ run mkdir -p /storage && chmod 777 /storage
 workdir ret
 copy --from=builder /_build/turkey/rel/ret/ .
 copy --from=certr /certs .
-RUN apk update && apk add --no-cache bash openssl-dev openssl jq libstdc++
+RUN apk update && apk add --no-cache bash openssl-dev openssl jq libstdc++ coreutils
 copy scripts/docker/run.sh /run.sh
 cmd bash /run.sh
