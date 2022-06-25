@@ -102,7 +102,7 @@ defmodule RetWeb.HubChannel do
           {nil, nil}
       end
 
-    has_active_invite = Ret.HubInvite.active?(params["hub_invite_id"])
+    has_active_invite = Ret.HubInvite.active?(hub, params["hub_invite_id"])
 
     params =
       params
@@ -458,8 +458,8 @@ defmodule RetWeb.HubChannel do
     hub = hub_for_socket(socket)
     account = Guardian.Phoenix.Socket.current_resource(socket)
 
-    if account |> can?(update_hub(hub)) do
-      HubInvite.revoke_invite(payload["hub_invite_id"])
+    if account |> can?(update_hub(hub)) and HubInvite.active?(hub, payload["hub_invite_id"]) do
+      HubInvite.revoke_invite(hub, payload["hub_invite_id"])
       # Hubs can only have one invite for now, so we create a new one when the old one was revoked.
       hub_invite = hub |> HubInvite.find_or_create_invite_for_hub()
       {:reply, {:ok, %{hub_invite_id: hub_invite.hub_invite_sid}}, socket}
@@ -771,9 +771,14 @@ defmodule RetWeb.HubChannel do
   end
 
   def terminate(_reason, socket) do
-    socket
-    |> SessionStat.stat_query_for_socket()
-    |> Repo.update_all(set: [ended_at: NaiveDateTime.utc_now()])
+    # enable_terminate_actions is set to false during tests. Since the GenServer is forcefully
+    # terminated when a test ends, we want to avoid running into an error that would happen if we
+    # invoked a DB mutation during termination.
+    if Application.get_env(:ret, __MODULE__)[:enable_terminate_actions] !== false do
+      socket
+      |> SessionStat.stat_query_for_socket()
+      |> Repo.update_all(set: [ended_at: NaiveDateTime.utc_now()])
+    end
 
     :ok
   end
