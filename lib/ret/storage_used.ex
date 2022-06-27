@@ -2,7 +2,6 @@ defmodule Ret.StorageUsed do
   use Cachex.Warmer
   use Retry
   require Logger
-  alias Ret.{StorageStat}
 
   def interval do
     # `du` command takes longer set the interval for longer
