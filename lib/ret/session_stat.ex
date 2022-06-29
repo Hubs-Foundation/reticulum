@@ -35,4 +35,18 @@ defmodule Ret.SessionStat do
           s.started_at >= datetime_add(^NaiveDateTime.utc_now(), -1, "week")
     )
   end
+
+  #
+  def get_aggregated_stats_for_day(_utc_timestamp) do
+
+    fragment("?::date = ?::date", test.timestamp, type(^now, :naive_datetime)
+
+
+    query = from(s in SessionStat, where: fragment("?::date <= ?::date", s.started_at, type(^now, :naive_datetime) and fragment("?::date >= ?::date", s.ended_at, type(^now, :naive_datetime))
+    Ret.Repo.aggregate( queryable, aggregate, field, opts )
+
+# Returns the average number of visits for the top 10
+query = from Post, limit: 10
+Repo.aggregate(query, :avg, :visits)
+  end
 end
