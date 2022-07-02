@@ -147,7 +147,7 @@ You can now navigate to https://hubs.local:4000/admin to access the admin contro
 dev_janus_host = "hubs.local"
 ```
 
-1. Update the Janus port in `dev.exs`:
+2. Update the Janus port in `dev.exs`:
 
 ```
 config :ret, Ret.JanusLoadStatus, default_janus_host: dev_janus_host, janus_port: 4443
