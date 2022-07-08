@@ -192,4 +192,24 @@ defmodule Ret.GLTFUtilsTest do
       assert input_gltf |> get_in(path) == output_gltf |> get_in(path)
     end
   end
+
+  test "take_bytes" do
+    input = ["foobarbazspameggs", "thequickbrownfox", "jumpedoverthelazydog"]
+
+    {bytes, rest} = GLTFUtils.take_bytes(input, 10)
+    assert "foobarbazs" == bytes
+    assert ["pameggs", "thequickbrownfox", "jumpedoverthelazydog"] == Enum.to_list(rest)
+
+    {bytes, rest} = GLTFUtils.take_bytes(input, 20)
+    assert "foobarbazspameggsthe" == bytes
+    assert ["quickbrownfox", "jumpedoverthelazydog"] == Enum.to_list(rest)
+
+    {bytes, rest} = GLTFUtils.take_bytes(input, 17)
+    assert "foobarbazspameggs" == bytes
+    assert ["thequickbrownfox", "jumpedoverthelazydog"] == Enum.to_list(rest)
+
+    {bytes, rest} = GLTFUtils.take_bytes(input, 33)
+    assert "foobarbazspameggsthequickbrownfox" == bytes
+    assert ["jumpedoverthelazydog"] == Enum.to_list(rest)
+  end
 end
