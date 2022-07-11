@@ -212,4 +212,46 @@ defmodule Ret.GLTFUtilsTest do
     assert "foobarbazspameggsthequickbrownfox" == bytes
     assert ["jumpedoverthelazydog"] == Enum.to_list(rest)
   end
+
+  @tag marked: true
+  test "replace_in_glb" do
+    replace_in_glb_file(
+      "test/fixtures/test.glb",
+      "https://uploads-prod.reticulum.io",
+      "https://foobar",
+      "test/fixtures/out.glb"
+    )
+
+    replace_in_glb_file(
+      "test/fixtures/out.glb",
+      "https://foobar",
+      "https://uploads-prod.reticulum.io",
+      "test/fixtures/reverse.glb"
+    )
+
+    refute File.read!("test/fixtures/test.glb") |> String.contains?("https://foobar")
+    assert File.read!("test/fixtures/out.glb") |> String.contains?("https://foobar")
+    refute File.read!("test/fixtures/reverse.glb") |> String.contains?("https://foobar")
+
+    assert sha1sum("test/fixtures/test.glb") != sha1sum("test/fixtures/out.glb")
+    assert sha1sum("test/fixtures/test.glb") == sha1sum("test/fixtures/reverse.glb")
+
+    File.rm!("test/fixtures/out.glb")
+    File.rm!("test/fixtures/reverse.glb")
+  end
+
+  defp replace_in_glb_file(input_file, search_string, replacement_string, output_file) do
+    {output_stream, _output_length} =
+      File.stream!(input_file, [], 1024 * 1024)
+      |> GLTFUtils.replace_in_glb(search_string, replacement_string)
+
+    output_stream
+    |> Stream.into(File.stream!(output_file))
+    |> Stream.run()
+  end
+
+  defp sha1sum(file_path) do
+    {output, 0} = System.cmd("sha1sum", [file_path])
+    String.split(output) |> Enum.at(0)
+  end
 end
