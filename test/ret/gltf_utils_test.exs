@@ -213,7 +213,6 @@ defmodule Ret.GLTFUtilsTest do
     assert ["jumpedoverthelazydog"] == Enum.to_list(rest)
   end
 
-  @tag marked: true
   test "replace_in_glb" do
     replace_in_glb_file(
       "test/fixtures/test.glb",
