@@ -196,6 +196,8 @@ defmodule Ret.GLTFUtilsTest do
   @original_file "test/fixtures/test.glb"
   @replaced_file "test/fixtures/replaced.glb"
   @reversed_file "test/fixtures/reversed.glb"
+  @old_url "https://hubs.local"
+  @new_url "https://new-domain.local"
   test "encrypted replace" do
     # This test uses store_and_replace_in_glb_file so that the entire storage flow is exercised, including encryption,
     # decryption, and fetching.
@@ -211,20 +213,20 @@ defmodule Ret.GLTFUtilsTest do
 
     store_and_replace_in_glb_file(
       @original_file,
-      "https://hubs.local",
-      "https://new-domain.local",
+      @old_url,
+      @new_url,
       @replaced_file
     )
 
     assert sha1sum(@original_file) != sha1sum(@replaced_file)
-    assert File.read!(@original_file) |> String.contains?("https://hubs.local")
-    refute File.read!(@replaced_file) |> String.contains?("https://hubs.local")
-    assert File.read!(@replaced_file) |> String.contains?("https://new-domain.local")
+    assert File.read!(@original_file) |> String.contains?(@old_url)
+    refute File.read!(@replaced_file) |> String.contains?(@old_url)
+    assert File.read!(@replaced_file) |> String.contains?(@new_url)
 
     store_and_replace_in_glb_file(
       @replaced_file,
-      "https://new-domain.local",
-      "https://hubs.local",
+      @new_url,
+      @old_url,
       @reversed_file
     )
 
