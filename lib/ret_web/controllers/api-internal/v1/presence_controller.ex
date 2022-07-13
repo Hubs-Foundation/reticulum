@@ -10,7 +10,8 @@ defmodule RetWeb.ApiInternal.V1.PresenceController do
   end
 
   def daily_max(conn, %{start_time: start_time, end_time: end_time}) do
-    max = NodeStat.max_ccu_for_timerange(start_time, end_time)
+    max = NodeStat.max_ccu_for_time_range(start_time, end_time)
+
     conn |> send_resp(200, %{max_ccu: max} |> Poison.encode!())
   end
 end
