@@ -71,7 +71,7 @@ defmodule Ret.Storage do
     end
   end
 
-  def store_string_as_owned_file(str, content_type, %Account{} = account) when is_binary(str) do
+  defp store_string_as_owned_file(str, content_type, %Account{} = account) when is_binary(str) do
     {:ok, stringio_device} = StringIO.open(str)
     str_stream = IO.binstream(stringio_device, :line)
 
