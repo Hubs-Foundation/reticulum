@@ -1,6 +1,6 @@
 defmodule Ret.GLTFUtilsTest do
   use Ret.DataCase
-  alias Ret.{GLTFUtils, OwnedFile}
+  alias Ret.{GLTFUtils, OwnedFile, Storage}
   import Ret.TestHelpers
 
   @sample_gltf %{
@@ -193,56 +193,61 @@ defmodule Ret.GLTFUtilsTest do
     end
   end
 
-  test "take_bytes" do
-    input = ["foobarbazspameggs", "thequickbrownfox", "jumpedoverthelazydog"]
+  @original_file "test/fixtures/test.glb"
+  @replaced_file "test/fixtures/replaced.glb"
+  @reversed_file "test/fixtures/reversed.glb"
+  test "encrypted replace" do
+    # This test uses store_and_replace_in_glb_file so that the entire storage flow is exercised, including encryption,
+    # decryption, and fetching.
 
-    {bytes, rest} = GLTFUtils.take_bytes(input, 10)
-    assert "foobarbazs" == bytes
-    assert ["pameggs", "thequickbrownfox", "jumpedoverthelazydog"] == Enum.to_list(rest)
-
-    {bytes, rest} = GLTFUtils.take_bytes(input, 20)
-    assert "foobarbazspameggsthe" == bytes
-    assert ["quickbrownfox", "jumpedoverthelazydog"] == Enum.to_list(rest)
-
-    {bytes, rest} = GLTFUtils.take_bytes(input, 17)
-    assert "foobarbazspameggs" == bytes
-    assert ["thequickbrownfox", "jumpedoverthelazydog"] == Enum.to_list(rest)
-
-    {bytes, rest} = GLTFUtils.take_bytes(input, 33)
-    assert "foobarbazspameggsthequickbrownfox" == bytes
-    assert ["jumpedoverthelazydog"] == Enum.to_list(rest)
-  end
-
-  test "replace_in_glb" do
-    replace_in_glb_file(
-      "test/fixtures/test.glb",
-      "https://uploads-prod.reticulum.io",
-      "https://foobar",
-      "test/fixtures/out.glb"
+    store_and_replace_in_glb_file(
+      @original_file,
+      "non-existent-string",
+      "foo",
+      @replaced_file
     )
 
-    replace_in_glb_file(
-      "test/fixtures/out.glb",
-      "https://foobar",
-      "https://uploads-prod.reticulum.io",
-      "test/fixtures/reverse.glb"
+    assert sha1sum(@original_file) == sha1sum(@replaced_file)
+
+    store_and_replace_in_glb_file(
+      @original_file,
+      "https://hubs.local",
+      "https://new-domain.local",
+      @replaced_file
     )
 
-    refute File.read!("test/fixtures/test.glb") |> String.contains?("https://foobar")
-    assert File.read!("test/fixtures/out.glb") |> String.contains?("https://foobar")
-    refute File.read!("test/fixtures/reverse.glb") |> String.contains?("https://foobar")
+    assert sha1sum(@original_file) != sha1sum(@replaced_file)
+    assert File.read!(@original_file) |> String.contains?("https://hubs.local")
+    refute File.read!(@replaced_file) |> String.contains?("https://hubs.local")
+    assert File.read!(@replaced_file) |> String.contains?("https://new-domain.local")
 
-    assert sha1sum("test/fixtures/test.glb") != sha1sum("test/fixtures/out.glb")
-    assert sha1sum("test/fixtures/test.glb") == sha1sum("test/fixtures/reverse.glb")
+    store_and_replace_in_glb_file(
+      @replaced_file,
+      "https://new-domain.local",
+      "https://hubs.local",
+      @reversed_file
+    )
 
-    File.rm!("test/fixtures/out.glb")
-    File.rm!("test/fixtures/reverse.glb")
+    assert sha1sum(@original_file) == sha1sum(@reversed_file)
+
+    File.rm!(@replaced_file)
+    File.rm!(@reversed_file)
   end
 
-  defp replace_in_glb_file(input_file, search_string, replacement_string, output_file) do
-    {output_stream, _output_length} =
-      File.stream!(input_file, [], 1024 * 1024)
-      |> GLTFUtils.replace_in_glb(search_string, replacement_string)
+  defp store_and_replace_in_glb_file(input_file, search_string, replacement_string, output_file) do
+    account = create_random_account()
+
+    key = SecureRandom.hex()
+    promotion_token = SecureRandom.hex()
+    {:ok, uuid} = Storage.store(input_file, "model/gltf-binary", key, promotion_token)
+    {:ok, owned_file} = Storage.promote(uuid, key, promotion_token, account)
+
+    {:ok, replaced_owned_file} =
+      Storage.duplicate_and_transform(owned_file, account, fn glb_stream, _total_bytes ->
+        GLTFUtils.replace_in_glb(glb_stream, search_string, replacement_string)
+      end)
+
+    {:ok, _meta, output_stream} = Storage.fetch(replaced_owned_file)
 
     output_stream
     |> Stream.into(File.stream!(output_file))

@@ -61,22 +61,22 @@ defmodule Ret.GLTFUtils do
   end
 
   # https://www.khronos.org/registry/glTF/specs/2.0/glTF-2.0.html#glb-file-format-specification
-  @glb_header_byte_count 20
   @glb_byte_boundary 4
   @glb_header "glTF"
   @glb_version <<2::little-integer-32>>
   @glb_json_type "JSON"
   @glb_padding " "
   def replace_in_glb(glb_stream, search_string, replacement_string) do
-    {header_bytes, remaining_stream} = take_bytes(glb_stream, @glb_header_byte_count)
+    glb_bytes = Enum.join(glb_stream)
 
     @glb_header <>
       @glb_version <>
       <<old_glb_length::little-integer-32>> <>
       <<old_json_length::little-integer-32>> <>
-      @glb_json_type = header_bytes
+      @glb_json_type <>
+      remaining_bytes = glb_bytes
 
-    {old_json, remaining_stream} = take_bytes(remaining_stream, old_json_length)
+    <<old_json::binary-size(old_json_length)>> <> remaining_bytes = remaining_bytes
 
     trimmed_old_json = String.trim_trailing(old_json, @glb_padding)
     new_json = String.replace(trimmed_old_json, search_string, replacement_string)
@@ -92,32 +92,6 @@ defmodule Ret.GLTFUtils do
         @glb_json_type <>
         new_padded_json
 
-    {Stream.concat([new_bytes], remaining_stream), new_glb_length}
-  end
-
-  def take_bytes(chunked_byte_stream, desired_byte_count) do
-    {acc_bytes, bytes_size, chunk_count} =
-      Enum.reduce_while(
-        chunked_byte_stream,
-        {<<>>, 0, 0},
-        fn chunk, {acc_bytes, bytes_size, chunk_count} = acc ->
-          if bytes_size < desired_byte_count do
-            {:cont, {acc_bytes <> chunk, bytes_size + byte_size(chunk), chunk_count + 1}}
-          else
-            {:halt, acc}
-          end
-        end
-      )
-
-    bytes = :binary.part(acc_bytes, 0, desired_byte_count)
-    remaining_stream = Stream.drop(chunked_byte_stream, chunk_count)
-    remaining_count = bytes_size - desired_byte_count
-
-    if remaining_count == 0 do
-      {bytes, remaining_stream}
-    else
-      remaining_bytes = :binary.part(acc_bytes, bytes_size, -remaining_count)
-      {bytes, Stream.concat([remaining_bytes], remaining_stream)}
-    end
+    {Stream.concat([new_bytes], [remaining_bytes]), new_glb_length}
   end
 end
