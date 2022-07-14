@@ -11,7 +11,7 @@ defmodule Ret.Scene do
   import Ecto.Changeset
   import Ecto.Query
 
-  alias Ret.{Repo, Scene, SceneListing, Project, Storage}
+  alias Ret.{Repo, Scene, SceneListing, Project, Storage, OwnedFile, GLTFUtils}
   alias Ret.Scene.{SceneSlug}
 
   @schema_prefix "ret0"
@@ -175,6 +175,49 @@ defmodule Ret.Scene do
       |> Repo.insert_or_update()
 
     new_scene
+  end
+
+  @rewrite_chunk_size 50
+  def rewrite_domain_for_all(old_domain_url, new_domain_url) do
+    scene_stream =
+      from(Scene, select: [:scene_id, :scene_owned_file_id, :model_owned_file_id, :account_id])
+      |> Repo.stream()
+      |> Stream.chunk_every(@rewrite_chunk_size)
+      |> Stream.flat_map(fn chunk -> Repo.preload(chunk, [:scene_owned_file, :model_owned_file, :account]) end)
+
+    Repo.transaction(fn ->
+      Enum.each(scene_stream, fn scene ->
+        %Scene{
+          scene_owned_file: old_scene_owned_file,
+          model_owned_file: old_model_owned_file,
+          account: account
+        } = scene
+
+        new_scene_owned_file =
+          Storage.create_new_owned_file_with_replaced_string(
+            old_scene_owned_file,
+            account,
+            old_domain_url,
+            new_domain_url
+          )
+
+        {:ok, new_model_owned_file} =
+          Storage.duplicate_and_transform(old_model_owned_file, account, fn glb_stream, _total_bytes ->
+            GLTFUtils.replace_in_glb(glb_stream, old_domain_url, new_domain_url)
+          end)
+
+        scene
+        |> change()
+        |> put_change(:scene_owned_file_id, new_scene_owned_file.owned_file_id)
+        |> put_change(:model_owned_file_id, new_model_owned_file.owned_file_id)
+        |> Repo.update!()
+
+        OwnedFile.set_inactive(old_scene_owned_file)
+        OwnedFile.set_inactive(old_model_owned_file)
+      end)
+
+      :ok
+    end)
   end
 
   def changeset(

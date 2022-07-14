@@ -201,6 +201,7 @@ defmodule RetWeb.Router do
       get("/presence", ApiInternal.V1.PresenceController, :show)
       get("/presence/range_max", ApiInternal.V1.PresenceController, :range_max)
       get("/storage", ApiInternal.V1.StorageController, :show)
+      post("/rewrite_assets", ApiInternal.V1.RewriteAssetsController, :post)
     end
   end
 
