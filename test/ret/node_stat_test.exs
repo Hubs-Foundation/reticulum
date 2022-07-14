@@ -3,28 +3,26 @@ defmodule Ret.NodeStatTest do
   alias Ret.{NodeStat, Repo}
 
   describe "NodeStat.max_ccu_for_time_range() tests" do
-    @tag marked: true
     test "Get max correctly for today" do
-      seed_today_node_stats([0, 10, 5])
-
       %{today: today} = get_times()
+
+      [{today, [0, 10, 5]}]
+      |> seed_node_stats()
 
       assert 10 == NodeStat.max_ccu_for_time_range(today.start_time, today.end_time)
     end
 
-    @tag marked: true
     test "Return 0 for no NodeStats collected for today" do
       # Do not seed database
       %{today: today} = get_times()
       assert 0 == NodeStat.max_ccu_for_time_range(today.start_time, today.end_time)
     end
 
-    @tag marked: true
     test "Do not return outside of time boundary" do
-      seed_today_node_stats([0, 10, 5])
-      seed_tomorrow_and_yesterday_node_stats(20)
-
       %{today: today, tomorrow: tomorrow, yesterday: yesterday} = get_times()
+
+      [{today, [0, 10, 5]}, {tomorrow, [20]}, {yesterday, [20]}]
+      |> seed_node_stats()
 
       assert 10 == NodeStat.max_ccu_for_time_range(today.start_time, today.end_time)
       assert 20 == NodeStat.max_ccu_for_time_range(yesterday.start_time, yesterday.end_time)
@@ -32,42 +30,21 @@ defmodule Ret.NodeStatTest do
     end
   end
 
-  defp seed_tomorrow_and_yesterday_node_stats(count) do
-    %{tomorrow: %{start_time: start_time_tomorrow}, yesterday: %{start_time: start_time_yesterday}} = get_times()
-    # Tomorrow
-    %NodeStat{}
-    |> NodeStat.changeset(%{
-      measured_at: start_time_tomorrow |> NaiveDateTime.truncate(:second),
-      present_sessions: count,
-      node_id: Node.self() |> to_string,
-      present_rooms: 1
-    })
-    |> Repo.insert()
+  # tuple_list = [{%{start_time}, [1,2,3]}, {%{start_time}, [1]}, ... ]
+  defp seed_node_stats(tuple_list) do
+    Enum.each(tuple_list, fn {time, count_list} ->
+      %{start_time: start_time} = time
 
-    # Yesterday
-    %NodeStat{}
-    |> NodeStat.changeset(%{
-      measured_at: start_time_yesterday |> NaiveDateTime.truncate(:second),
-      present_sessions: count,
-      node_id: Node.self() |> to_string,
-      present_rooms: 1
-    })
-    |> Repo.insert()
-  end
-
-  defp seed_today_node_stats(count_list) do
-    %{today: today} = get_times()
-
-    # Today 10, 5, 0 present_sessions
-    Enum.each(count_list, fn count ->
-      %NodeStat{}
-      |> NodeStat.changeset(%{
-        measured_at: today.start_time |> NaiveDateTime.truncate(:second),
-        present_sessions: count,
-        node_id: Node.self() |> to_string,
-        present_rooms: 1
-      })
-      |> Repo.insert()
+      Enum.each(count_list, fn count ->
+        %NodeStat{}
+        |> NodeStat.changeset(%{
+          measured_at: start_time |> NaiveDateTime.truncate(:second),
+          present_sessions: count,
+          node_id: Node.self() |> to_string,
+          present_rooms: 1
+        })
+        |> Repo.insert()
+      end)
     end)
   end
 

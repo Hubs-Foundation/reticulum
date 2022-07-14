@@ -11,7 +11,7 @@ defmodule RetWeb.ApiInternal.V1.PresenceController do
 
   # Params start_time and end_time should be in iso format such as "2000-02-28 23:00:13"
   # or what is returned from NaiveDateTime.to_string()
-  def daily_max(conn, %{"start_time" => start_time_str, "end_time" => end_time_str}) do
+  def range_max(conn, %{"start_time" => start_time_str, "end_time" => end_time_str}) do
     max =
       NodeStat.max_ccu_for_time_range(
         start_time_str |> NaiveDateTime.from_iso8601!(),
