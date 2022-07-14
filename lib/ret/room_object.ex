@@ -58,6 +58,19 @@ defmodule Ret.RoomObject do
     }
   end
 
+  def rewrite_domain_for_all(old_domain_url, new_domain_url) do
+    room_object_stream = from(RoomObject, select: [:room_object_id, :gltf_node]) |> Repo.stream()
+
+    Repo.transaction(fn ->
+      Enum.each(room_object_stream, fn room_object ->
+        replaced_gltf_node = String.replace(room_object.gltf_node, old_domain_url, new_domain_url)
+        room_object |> Ecto.Changeset.change(gltf_node: replaced_gltf_node) |> Ret.Repo.update!()
+      end)
+
+      :ok
+    end)
+  end
+
   defp changeset(%RoomObject{} = room_object, %Hub{} = hub, %Account{} = account, attrs) do
     room_object
     |> cast(attrs, [:object_id, :gltf_node])

@@ -200,6 +200,7 @@ defmodule RetWeb.Router do
     scope "/v1", as: :api_internal_v1 do
       get("/presence", ApiInternal.V1.PresenceController, :show)
       get("/storage", ApiInternal.V1.StorageController, :show)
+      post("/rewrite_assets", ApiInternal.V1.RewriteAssetsController, :post)
     end
   end
 

@@ -3,7 +3,7 @@ defmodule Ret.Project do
   import Ecto.Changeset
   import Ecto.Query
 
-  alias Ret.{Repo, Project, ProjectAsset, Scene, SceneListing, OwnedFile}
+  alias Ret.{Repo, Project, ProjectAsset, Scene, SceneListing, Storage, OwnedFile}
 
   @schema_prefix "ret0"
   @primary_key {:project_id, :id, autogenerate: true}
@@ -91,6 +91,41 @@ defmodule Ret.Project do
 
   def add_scene_to_project(%Project{} = project, scene) do
     project |> change() |> put_assoc(:scene, scene) |> Repo.update()
+  end
+
+  @rewrite_chunk_size 50
+  def rewrite_domain_for_all(old_domain_url, new_domain_url) do
+    project_stream =
+      from(Project, select: [:project_id, :project_owned_file_id, :created_by_account_id])
+      |> Repo.stream()
+      |> Stream.chunk_every(@rewrite_chunk_size)
+      |> Stream.flat_map(fn chunk -> Repo.preload(chunk, [:project_owned_file, :created_by_account]) end)
+
+    Repo.transaction(fn ->
+      Enum.each(project_stream, fn project ->
+        %Project{
+          project_owned_file: old_project_owned_file,
+          created_by_account: created_by_account
+        } = project
+
+        new_project_owned_file =
+          Storage.create_new_owned_file_with_replaced_string(
+            old_project_owned_file,
+            created_by_account,
+            old_domain_url,
+            new_domain_url
+          )
+
+        project
+        |> change()
+        |> put_change(:project_owned_file_id, new_project_owned_file.owned_file_id)
+        |> Repo.update!()
+
+        OwnedFile.set_inactive(old_project_owned_file)
+      end)
+
+      :ok
+    end)
   end
 
   # Create a Project

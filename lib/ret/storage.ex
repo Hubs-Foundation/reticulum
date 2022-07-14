@@ -71,6 +71,53 @@ defmodule Ret.Storage do
     end
   end
 
+  defp store_string_as_owned_file(str, content_type, %Account{} = account) when is_binary(str) do
+    {:ok, stringio_device} = StringIO.open(str)
+    str_stream = IO.binstream(stringio_device, :line)
+
+    content_length = byte_size(str)
+
+    key = SecureRandom.hex()
+    # This will immediately become an OwnedFile, so we don't need a promotion key.
+    promotion_key = nil
+
+    {:ok, file_uuid} =
+      store_stream(
+        str_stream,
+        content_length,
+        content_type,
+        key,
+        promotion_key,
+        owned_file_path()
+      )
+
+    owned_file_params = %{
+      owned_file_uuid: file_uuid,
+      key: key,
+      content_type: content_type,
+      content_length: content_length
+    }
+
+    %OwnedFile{}
+    |> OwnedFile.changeset(account, owned_file_params)
+    |> Repo.insert!()
+  end
+
+  def create_new_owned_file_with_replaced_string(
+        %OwnedFile{} = owned_file,
+        %Account{} = account,
+        search_string,
+        replacement_string
+      ) do
+    {:ok, %{"content_type" => content_type}, file_stream} = fetch(owned_file)
+
+    file_stream
+    |> Enum.to_list()
+    |> Enum.join("")
+    |> String.replace(search_string, replacement_string)
+    |> store_string_as_owned_file(content_type, account)
+  end
+
   def fetch(id, key) when is_binary(id) and is_binary(key) do
     fetch_blob(id, key, expiring_file_path())
   end
@@ -457,24 +504,34 @@ defmodule Ret.Storage do
     [path, meta_file_path, blob_file_path]
   end
 
-  def duplicate(%OwnedFile{owned_file_uuid: id, key: key}, %Account{} = account) do
+  def duplicate_and_transform(%OwnedFile{owned_file_uuid: id, key: key}, %Account{} = account, transform)
+      when is_function(transform, 2) do
     {:ok,
      %{
        "content_type" => content_type,
        "content_length" => content_length
      }, source_stream} = fetch_blob(id, key, owned_file_path())
 
+    {transformed_stream, transformed_length} = transform.(source_stream, content_length)
+
     new_key = SecureRandom.hex()
     new_promotion_token = SecureRandom.hex()
 
     {:ok, new_id} =
-      store_stream(source_stream, content_length, content_type, new_key, new_promotion_token, owned_file_path())
+      store_stream(
+        transformed_stream,
+        transformed_length,
+        content_type,
+        new_key,
+        new_promotion_token,
+        owned_file_path()
+      )
 
     owned_file_params = %{
       owned_file_uuid: new_id,
       key: new_key,
       content_type: content_type,
-      content_length: content_length
+      content_length: transformed_length
     }
 
     owned_file =
@@ -483,6 +540,10 @@ defmodule Ret.Storage do
       |> Repo.insert!()
 
     {:ok, owned_file}
+  end
+
+  def duplicate(%OwnedFile{} = owned_file, %Account{} = account) do
+    duplicate_and_transform(owned_file, account, fn stream, content_length -> {stream, content_length} end)
   end
 
   defp download!(url) do
