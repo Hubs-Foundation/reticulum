@@ -67,6 +67,10 @@ defmodule RetWeb.Plugs.AddCSP do
         "'self'",
         storage_url
       ],
+      "media-src" => [
+        "'self'",
+        storage_url
+      ],
       "style-src" => [
         "'self'",
         "'unsafe-inline'"
