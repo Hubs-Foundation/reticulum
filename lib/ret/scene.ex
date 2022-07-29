@@ -14,6 +14,8 @@ defmodule Ret.Scene do
   alias Ret.{Repo, Scene, SceneListing, Project, Storage, OwnedFile, GLTFUtils}
   alias Ret.Scene.{SceneSlug}
 
+  @type t :: %__MODULE__{}
+
   @schema_prefix "ret0"
   @primary_key {:scene_id, :id, autogenerate: true}
 
