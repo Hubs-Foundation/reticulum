@@ -217,8 +217,8 @@ defmodule Ret.Scene do
         OwnedFile.set_inactive(old_scene_owned_file)
         OwnedFile.set_inactive(old_model_owned_file)
 
-        Storage.delete_owned_file(old_scene_owned_file)
-        Storage.delete_owned_file(old_model_owned_file)
+        Storage.rm_files_for_owned_file(old_scene_owned_file)
+        Storage.rm_files_for_owned_file(old_model_owned_file)
 
         Repo.delete(old_scene_owned_file)
         Repo.delete(old_model_owned_file)

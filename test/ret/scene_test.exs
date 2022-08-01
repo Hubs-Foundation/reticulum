@@ -34,18 +34,24 @@ defmodule Ret.SceneTest do
         |> create_account()
         |> create_scene_with_sample_owned_files()
 
-      assert Repo.aggregate(OwnedFile, :count) === 3
+      # We expect the scene we created above to have three owned files,
+      # a model_owned_file, screenshot_owned_file, and scene_owned_file
+      3 = Repo.aggregate(OwnedFile, :count)
+      Repo.get!(OwnedFile, scene.scene_owned_file_id)
+      Repo.get!(OwnedFile, scene.screenshot_owned_file_id)
+      Repo.get!(OwnedFile, scene.model_owned_file_id)
 
       [_path, old_meta_file_path, old_blob_file_path] = Storage.paths_for_owned_file(scene.scene_owned_file)
-      assert File.exists?(old_meta_file_path)
-      assert File.exists?(old_blob_file_path)
+      true = File.exists?(old_meta_file_path)
+      true = File.exists?(old_blob_file_path)
 
       Scene.rewrite_domain_for_all(@sample_domain, dummy_domain_url())
 
       refute File.exists?(old_meta_file_path)
       refute File.exists?(old_blob_file_path)
 
-      assert Repo.aggregate(OwnedFile, :count) === 3
+      # The database should still only contain three owned files, since the old ones would have been deleted
+      assert 3 === Repo.aggregate(OwnedFile, :count)
     end
   end
 

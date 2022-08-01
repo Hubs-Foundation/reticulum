@@ -464,7 +464,8 @@ defmodule Ret.Storage do
     end
   end
 
-  def delete_owned_file(%OwnedFile{} = owned_file) do
+  @spec rm_files_for_owned_file(OwnedFile.t()) :: :ok
+  def rm_files_for_owned_file(%OwnedFile{} = owned_file) do
     [_, meta_file_path, blob_file_path] = paths_for_uuid(owned_file.owned_file_uuid, owned_file_path())
     File.rm!(meta_file_path)
     File.rm!(blob_file_path)
@@ -501,6 +502,7 @@ defmodule Ret.Storage do
     Ret.Crypto.encrypt_stream_to_file(source_stream, source_size, destination_path, key |> Ret.Crypto.hash())
   end
 
+  @spec paths_for_owned_file(OwnedFile.t()) :: [String.t(), ...]
   def paths_for_owned_file(%OwnedFile{} = owned_file) do
     paths_for_uuid(owned_file.owned_file_uuid, owned_file_path())
   end
