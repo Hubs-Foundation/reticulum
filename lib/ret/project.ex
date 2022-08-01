@@ -5,6 +5,8 @@ defmodule Ret.Project do
 
   alias Ret.{Repo, Project, ProjectAsset, Scene, SceneListing, Storage, OwnedFile}
 
+  @type t :: %__MODULE__{}
+
   @schema_prefix "ret0"
   @primary_key {:project_id, :id, autogenerate: true}
 
