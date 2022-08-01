@@ -5,6 +5,8 @@ defmodule Ret.Project do
 
   alias Ret.{Repo, Project, ProjectAsset, Scene, SceneListing, Storage, OwnedFile}
 
+  @type t :: %__MODULE__{}
+
   @schema_prefix "ret0"
   @primary_key {:project_id, :id, autogenerate: true}
 
@@ -122,6 +124,8 @@ defmodule Ret.Project do
         |> Repo.update!()
 
         OwnedFile.set_inactive(old_project_owned_file)
+        Storage.rm_files_for_owned_file(old_project_owned_file)
+        Repo.delete(old_project_owned_file)
       end)
 
       :ok

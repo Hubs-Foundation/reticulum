@@ -464,6 +464,13 @@ defmodule Ret.Storage do
     end
   end
 
+  @spec rm_files_for_owned_file(OwnedFile.t()) :: :ok
+  def rm_files_for_owned_file(%OwnedFile{} = owned_file) do
+    [_, meta_file_path, blob_file_path] = paths_for_uuid(owned_file.owned_file_uuid, owned_file_path())
+    File.rm!(meta_file_path)
+    File.rm!(blob_file_path)
+  end
+
   def uri_for(id, content_type, token \\ nil) do
     file_host = Application.get_env(:ret, Ret.Storage)[:host] || RetWeb.Endpoint.url()
     ext = MIME.extensions(content_type) |> List.first()
@@ -493,6 +500,11 @@ defmodule Ret.Storage do
 
   defp encrypt_stream_to_file(source_stream, source_size, destination_path, key) do
     Ret.Crypto.encrypt_stream_to_file(source_stream, source_size, destination_path, key |> Ret.Crypto.hash())
+  end
+
+  @spec paths_for_owned_file(OwnedFile.t()) :: [String.t(), ...]
+  def paths_for_owned_file(%OwnedFile{} = owned_file) do
+    paths_for_uuid(owned_file.owned_file_uuid, owned_file_path())
   end
 
   defp paths_for_uuid(uuid, subpath) do
