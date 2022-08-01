@@ -52,7 +52,6 @@ defmodule Ret.SceneTest do
       refute File.exists?(old_meta_file_path)
       refute File.exists?(old_blob_file_path)
 
-      # The database should still only contain three owned files, since the old ones would have been deleted
       assert 3 === Repo.aggregate(OwnedFile, :count)
     end
   end
