@@ -28,7 +28,25 @@ defmodule Ret.SceneTest do
       end
     end
 
-    test "old assets are removed"
+    test "old assets are removed" do
+      scene =
+        dummy_account_prefix()
+        |> create_account()
+        |> create_scene_with_sample_owned_files()
+
+      assert Repo.aggregate(OwnedFile, :count) === 3
+
+      [_path, old_meta_file_path, old_blob_file_path] = Storage.paths_for_owned_file(scene.scene_owned_file)
+      assert File.exists?(old_meta_file_path)
+      assert File.exists?(old_blob_file_path)
+
+      Scene.rewrite_domain_for_all(@sample_domain, dummy_domain_url())
+
+      refute File.exists?(old_meta_file_path)
+      refute File.exists?(old_blob_file_path)
+
+      assert Repo.aggregate(OwnedFile, :count) === 3
+    end
   end
 
   @spec create_scene_with_sample_owned_files(Account.t()) :: Scene.t()
