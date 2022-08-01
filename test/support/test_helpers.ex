@@ -62,6 +62,14 @@ defmodule Ret.TestHelpers do
     {:ok, owned_file: generate_temp_owned_file(account)}
   end
 
+  @spec create_owned_file(Account.t(), String.t()) :: OwnedFile.t()
+  def create_owned_file(%Account{} = account, file_contents) when is_binary(file_contents) do
+    file_path = generate_temp_file(file_contents)
+    {:ok, uuid} = Storage.store(%Plug.Upload{path: file_path}, "text/plain", "secret")
+    {:ok, owned_file} = Storage.promote(uuid, "secret", nil, account)
+    owned_file
+  end
+
   def create_scene(%Account{} = account) do
     {:ok, scene: scene} = create_scene(%{account: account, owned_file: generate_temp_owned_file(account)})
     scene

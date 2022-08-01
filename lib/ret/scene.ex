@@ -214,14 +214,11 @@ defmodule Ret.Scene do
         |> put_change(:model_owned_file_id, new_model_owned_file.owned_file_id)
         |> Repo.update!()
 
-        OwnedFile.set_inactive(old_scene_owned_file)
-        OwnedFile.set_inactive(old_model_owned_file)
-
-        Storage.rm_files_for_owned_file(old_scene_owned_file)
-        Storage.rm_files_for_owned_file(old_model_owned_file)
-
-        Repo.delete(old_scene_owned_file)
-        Repo.delete(old_model_owned_file)
+        for old_owned_file <- [old_scene_owned_file, old_model_owned_file] do
+          OwnedFile.set_inactive(old_owned_file)
+          Storage.rm_files_for_owned_file(old_owned_file)
+          Repo.delete(old_owned_file)
+        end
       end)
 
       :ok
