@@ -37,14 +37,14 @@ defmodule Ret.JanusLoadStatus do
 
   defp get_dialog_pods() do
     try do
-      hosts =
-        "dialog.turkey-stream.svc.cluster.local"
-        |> String.to_charlist()
-        |> :inet_res.lookup(:in, :a)
+      hosts = \
+        "dialog.turkey-stream.svc.cluster.local" \
+        |> String.to_charlist() \
+        |> :inet_res.lookup(:in, :a) \
         |> Enum.map(fn {a, b, c, d} -> "#{a}.#{b}.#{c}.#{d}" end)
 
       for host <- hosts do
-        %{body: body} = HTTPoison.get!("https://#{host}:7000/meta", [], hackney: [:insecure])
+        %{body: body} = HTTPoison.get!("http://#{host}:7000/meta", [], hackney: [:insecure])
         body_json = body |> Poison.decode!()
 
         # The cache key we construct here is a set of meta data that will be parsed by the dialog ingress proxy (dip),
