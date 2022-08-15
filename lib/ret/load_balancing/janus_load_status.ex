@@ -44,7 +44,7 @@ defmodule Ret.JanusLoadStatus do
         |> Enum.map(fn {a, b, c, d} -> "#{a}.#{b}.#{c}.#{d}" end)
 
       for host <- hosts do
-        %{body: body} = HTTPoison.get!("https://#{host}:4443/private/meta", [], hackney: [:insecure])
+        %{body: body} = HTTPoison.get!("https://#{host}:7000/meta", [], hackney: [:insecure])
         body_json = body |> Poison.decode!()
 
         # The cache key we construct here is a set of meta data that will be parsed by the dialog ingress proxy (dip),
