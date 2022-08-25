@@ -54,8 +54,8 @@ defmodule Ret.TestHelpers do
     {:ok, account: create_account("test"), account2: create_account("test2")}
   end
 
-  def create_admin_account(_) do
-    {:ok, admin_account: create_account("test", true)}
+  def create_admin_account(prefix) do
+    {:ok, admin_account: create_account(prefix, true)}
   end
 
   def create_owned_file(%{account: account}) do

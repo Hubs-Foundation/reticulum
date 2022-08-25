@@ -854,6 +854,10 @@ defimpl Canada.Can, for: Ret.Account do
     false
   end
 
+  def can?(%Ret.Account{is_admin: true} = admin_account, :delete_account, %Ret.Account{} = account_to_delete) do
+    admin_account.account_id !== account_to_delete.account_id
+  end
+
   @owner_actions [:update_hub, :close_hub, :embed_hub, :kick_users, :mute_users, :amplify_audio]
   @object_actions [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects, :spawn_emoji, :fly]
   @creator_actions [:update_roles]

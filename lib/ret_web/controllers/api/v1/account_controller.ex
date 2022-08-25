@@ -30,6 +30,17 @@ defmodule RetWeb.Api.V1.AccountController do
     exec_api_create(conn, params, @record_schema, &process_account_update_record/2)
   end
 
+  def delete(conn, params) do
+    current_account = Guardian.Plug.current_resource(conn)
+    account_to_delete = Ret.Account.get_account_by_id(params[:account_id])
+
+    case Ret.AccountContext.delete_account(current_account, account_to_delete) do
+      {:ok} -> conn |> put_status(:ok) |> json(%{status: "ok"})
+      {:error, :forbidden} -> conn |> put_status(:forbidden) |> json(%{error: "forbidden"}) |> halt()
+      {:error, _} -> conn |> put_status(:internal_server_error) |> json(%{error: "error"}) |> halt()
+    end
+  end
+
   defp process_account_update_record(%{"email" => email} = params, source) do
     if !Account.exists_for_email?(email) do
       {:error, [{:RECORD_DOES_NOT_EXIST, "Account with email does not exist.", source}]}

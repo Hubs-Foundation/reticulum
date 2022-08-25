@@ -38,6 +38,10 @@ defmodule Ret.Account do
   def has_admin_accounts?(), do: from(a in Account, limit: 1) |> where(is_admin: true) |> Repo.exists?()
   def exists_for_email?(email), do: account_for_email(email) != nil
 
+  def get_account_by_id(account_id) do
+    Repo.get(Account, account_id)
+  end
+
   def account_for_email(email, create_if_not_exists \\ false) do
     email |> identifier_hash_for_email |> account_for_login_identifier_hash(create_if_not_exists)
   end
