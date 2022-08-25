@@ -168,7 +168,7 @@ defmodule RetWeb.Router do
     scope "/v1", as: :api_v1 do
       pipe_through([:admin_required])
       resources("/app_configs", Api.V1.AppConfigController, only: [:index, :create])
-      resources("/accounts", Api.V1.AccountController, only: [:create])
+      resources("/accounts", Api.V1.AccountController, only: [:create, :delete])
       patch("/accounts", Api.V1.AccountController, :update)
       resources("/accounts/search", Api.V1.AccountSearchController, only: [:create])
     end
