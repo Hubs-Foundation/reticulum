@@ -2,7 +2,7 @@ defmodule RetWeb.Api.V1.AccountController do
   use RetWeb, :controller
   import RetWeb.ApiHelpers
 
-  alias Ret.{Account}
+  alias Ret.{Account, AccountContext}
   alias RetWeb.Api.V1.{AccountView}
 
   @record_schema %{
@@ -32,10 +32,10 @@ defmodule RetWeb.Api.V1.AccountController do
 
   def delete(conn, params) do
     current_account = Guardian.Plug.current_resource(conn)
-    account_to_delete = Ret.Account.get_account_by_id(params[:account_id])
+    account_to_delete = AccountContext.get_account_by_id(params[:account_id])
 
-    case Ret.AccountContext.delete_account(current_account, account_to_delete) do
-      {:ok} -> conn |> put_status(:ok) |> json(%{status: "ok"})
+    case AccountContext.delete_account(current_account, account_to_delete) do
+      :ok -> conn |> put_status(:ok) |> json(%{status: "ok"})
       {:error, :forbidden} -> conn |> put_status(:forbidden) |> json(%{error: "forbidden"}) |> halt()
       {:error, _} -> conn |> put_status(:internal_server_error) |> json(%{error: "error"}) |> halt()
     end
