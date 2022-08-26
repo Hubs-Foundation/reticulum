@@ -11,9 +11,11 @@ defmodule RetTest do
 
       Account.set_identity!(test_account, "test identity")
 
-      %Ret.OAuthProvider{}
-      |> Ecto.Changeset.change(source: :discord, account: test_account, provider_account_id: "discord-test-user")
-      |> Ret.Repo.insert_or_update()
+      Ret.Repo.insert(%Ret.OAuthProvider{
+        source: :discord,
+        account: test_account,
+        provider_account_id: "discord-test-user"
+      })
 
       Ret.Api.TokenUtils.gen_token_for_account(test_account)
 
