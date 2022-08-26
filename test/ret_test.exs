@@ -1,4 +1,4 @@
-defmodule Ret.ContextTest do
+defmodule RetTest do
   use Ret.DataCase
   import Ecto.Query, only: [from: 2]
   import Ret.TestHelpers
