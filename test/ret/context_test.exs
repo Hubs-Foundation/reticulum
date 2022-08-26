@@ -1,8 +1,8 @@
-defmodule Ret.AccountContextTest do
+defmodule Ret.ContextTest do
   use Ret.DataCase
   import Ecto.Query, only: [from: 2]
   import Ret.TestHelpers
-  alias Ret.{Account, AccountContext}
+  alias Ret.{Account}
 
   describe "account deletion" do
     test "deletes account, login, identity, oauthproviders, and api_credentials" do
@@ -17,15 +17,15 @@ defmodule Ret.AccountContextTest do
 
       Ret.Api.TokenUtils.gen_token_for_account(test_account)
 
-      assert %Account{} = AccountContext.get_account_by_id(test_account.account_id)
+      assert %Account{} = Ret.get_account_by_id(test_account.account_id)
       assert 1 === count(Ret.Login, test_account)
       assert 1 === count(Ret.Identity, test_account)
       assert 1 === count(Ret.OAuthProvider, test_account)
       assert 1 === count(Ret.Api.Credentials, test_account)
 
-      assert :ok = AccountContext.delete_account(admin_account, test_account)
+      assert :ok = Ret.delete_account(admin_account, test_account)
 
-      assert nil === AccountContext.get_account_by_id(test_account.account_id)
+      assert nil === Ret.get_account_by_id(test_account.account_id)
       assert 0 === count(Ret.Login, test_account)
       assert 0 === count(Ret.Identity, test_account)
       assert 0 === count(Ret.OAuthProvider, test_account)
