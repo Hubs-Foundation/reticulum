@@ -2,7 +2,7 @@ defmodule RetTest do
   use Ret.DataCase
   import Ecto.Query, only: [from: 2]
   import Ret.TestHelpers
-  alias Ret.{ Account, Api, Hub, Identity, Login, OAuthProvider, Repo }
+  alias Ret.{Account, Api, Identity, Login, OAuthProvider, Repo}
 
   describe "account deletion" do
     test "deletes account, login, identity, oauthproviders, and api_credentials" do
@@ -19,11 +19,11 @@ defmodule RetTest do
 
       Api.TokenUtils.gen_token_for_account(test_account)
 
-      assert %Account{} = Ret.get_account_by_id(test_account.account_id)
-      assert 1 === count(Login, test_account)
-      assert 1 === count(Identity, test_account)
-      assert 1 === count(OAuthProvider, test_account)
-      assert 1 === count(Api.Credentials, test_account)
+      %Account{} = Ret.get_account_by_id(test_account.account_id)
+      1 = count(Login, test_account)
+      1 = count(Identity, test_account)
+      1 = count(OAuthProvider, test_account)
+      1 = count(Api.Credentials, test_account)
 
       assert :ok = Ret.delete_account(admin_account, test_account)
 
