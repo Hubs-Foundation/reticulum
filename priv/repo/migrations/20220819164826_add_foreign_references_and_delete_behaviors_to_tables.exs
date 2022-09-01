@@ -13,6 +13,7 @@ defmodule Ret.Repo.Migrations.AddForeignReferencesAndDeleteBehaviorToTables do
     # table, column, foreign_table, foreign_column
     {:account_favorites, :account_id, :accounts, :account_id},
     {:api_credentials, :account_id, :accounts, :account_id},
+    {:hub_role_memberships, :account_id, :accounts, :account_id},
     {:hub_role_memberships, :hub_id, :hubs, :hub_id},
     {:hubs, :created_by_account_id, :accounts, :account_id},
     {:room_objects, :account_id, :accounts, :account_id}

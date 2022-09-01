@@ -115,6 +115,48 @@ defmodule RetTest do
       assert 0 === count(RoomObject, hub)
       assert 0 === count(WebPushSubscription, hub)
     end
+
+    test "deletes entities associated with an account, even when they belong to a hub owned by another account" do
+      {:ok, admin_account: admin_account} = create_admin_account("test_admin")
+      hub_owner = create_account("test_owner")
+      hub_user = create_account("test_user")
+
+      {:ok, hub} =
+        Repo.insert(%Hub{
+          name: "test hub",
+          slug: "fake test slug",
+          created_by_account: hub_owner
+        })
+
+      Repo.insert(%AccountFavorite{
+        hub: hub,
+        account: hub_user
+      })
+
+      Repo.insert(%HubRoleMembership{
+        hub: hub,
+        account: hub_user
+      })
+
+      Repo.insert(%RoomObject{
+        hub: hub,
+        account: hub_user,
+        object_id: "fake object id",
+        gltf_node: "fake gltf node"
+      })
+
+      1 = count_hubs(hub_owner)
+      1 = count(AccountFavorite, hub)
+      1 = count(HubRoleMembership, hub)
+      1 = count(RoomObject, hub)
+
+      assert :ok = Ret.delete_account(admin_account, hub_user)
+
+      assert 1 === count_hubs(hub_owner)
+      assert 0 === count(AccountFavorite, hub)
+      assert 0 === count(HubRoleMembership, hub)
+      assert 0 === count(RoomObject, hub)
+    end
   end
 
   defp count_hubs(account) do
