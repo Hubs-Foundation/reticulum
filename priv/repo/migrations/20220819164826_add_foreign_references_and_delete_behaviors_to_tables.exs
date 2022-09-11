@@ -1,7 +1,7 @@
 defmodule Ret.Repo.Migrations.AddForeignReferencesAndDeleteBehaviorToTables do
   use Ecto.Migration
 
-  @tables_missing_references [
+  @missing_references [
     # table, foreign_table, column
     {:hub_bindings, :hubs, :hub_id},
     {:hub_invites, :hubs, :hub_id},
@@ -9,7 +9,7 @@ defmodule Ret.Repo.Migrations.AddForeignReferencesAndDeleteBehaviorToTables do
     {:web_push_subscriptions, :hubs, :hub_id}
   ]
 
-  @tables_missing_on_delete_action [
+  @missing_on_delete_action [
     # table, column, foreign_table, foreign_column
     {:account_favorites, :account_id, :accounts, :account_id},
     {:api_credentials, :account_id, :accounts, :account_id},
@@ -20,11 +20,11 @@ defmodule Ret.Repo.Migrations.AddForeignReferencesAndDeleteBehaviorToTables do
   ]
 
   def up do
-    for {table, foreign_table, column} <- @tables_missing_references do
+    for {table, foreign_table, column} <- @missing_references do
       add_foreign_reference(table, column, foreign_table, column, on_delete: :delete_all)
     end
 
-    for {table, column, foreign_table, foreign_column} <- @tables_missing_on_delete_action do
+    for {table, column, foreign_table, foreign_column} <- @missing_on_delete_action do
       execute_drop_foreign_constraint(table, column)
 
       add_foreign_reference(table, column, foreign_table, foreign_column, on_delete: :delete_all)
@@ -32,11 +32,11 @@ defmodule Ret.Repo.Migrations.AddForeignReferencesAndDeleteBehaviorToTables do
   end
 
   def down do
-    for {table, _foreign_table, column} <- @tables_missing_references do
+    for {table, _foreign_table, column} <- @missing_references do
       execute_drop_foreign_constraint(table, column)
     end
 
-    for {table, column, foreign_table, foreign_column} <- @tables_missing_on_delete_action do
+    for {table, column, foreign_table, foreign_column} <- @missing_on_delete_action do
       execute_drop_foreign_constraint(table, column)
 
       add_foreign_reference(table, column, foreign_table, foreign_column, on_delete: :nothing)
