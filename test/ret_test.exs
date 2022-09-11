@@ -1,12 +1,14 @@
 defmodule RetTest do
   use Ret.DataCase
   import Ecto.Query, only: [from: 2]
-  import Ret.TestHelpers
+  import Ret.TestHelpers, except: [create_avatar: 1]
 
   alias Ret.{
     Account,
     AccountFavorite,
     Api,
+    Avatar,
+    AvatarListing,
     Hub,
     HubBinding,
     HubInvite,
@@ -14,8 +16,10 @@ defmodule RetTest do
     Identity,
     Login,
     OAuthProvider,
+    OwnedFile,
     Repo,
     RoomObject,
+    Storage,
     WebPushSubscription
   }
 
@@ -157,6 +161,147 @@ defmodule RetTest do
       assert 0 === count(HubRoleMembership, hub)
       assert 0 === count(RoomObject, hub)
     end
+
+    test "deletes account's avatars" do
+      {:ok, admin_account: admin_account} = create_admin_account("admin")
+      test_account = create_account("test")
+
+      [_avatar, avatar_owned_files] = create_avatar(test_account)
+
+      1 = count(Avatar, test_account)
+      7 = count(OwnedFile, test_account)
+      true = owned_files_exist?(avatar_owned_files)
+
+      assert :ok = Ret.delete_account(admin_account, test_account)
+
+      assert 0 === count(Avatar, test_account)
+      assert 0 === count(OwnedFile, test_account)
+      assert false === owned_files_exist?(avatar_owned_files)
+    end
+
+    test "listed avatars are reassigned to admin account" do
+      {:ok, admin_account: admin_account} = create_admin_account("admin")
+      target_account = create_account("target")
+
+      [avatar, avatar_owned_files] = create_avatar(target_account)
+      create_avatar_listing(avatar, target_account)
+
+      1 = count(Avatar, target_account)
+      7 = count(OwnedFile, target_account)
+      1 = count(AvatarListing, target_account)
+
+      0 = count(Avatar, admin_account)
+      0 = count(OwnedFile, admin_account)
+      0 = count(AvatarListing, admin_account)
+
+      assert :ok = Ret.delete_account(admin_account, target_account)
+
+      assert 0 === count(Avatar, target_account)
+      assert 0 === count(OwnedFile, target_account)
+      assert 0 === count(AvatarListing, target_account)
+
+      assert 1 === count(Avatar, admin_account)
+      assert 7 === count(OwnedFile, admin_account)
+      assert 1 === count(AvatarListing, admin_account)
+
+      assert true === owned_files_exist?(avatar_owned_files)
+    end
+
+    test "parent avatars are reassigned to admin account" do
+      {:ok, admin_account: admin_account} = create_admin_account("admin")
+      target_account = create_account("target")
+      other_account = create_account("other")
+
+      [avatar, avatar_owned_files] = create_avatar(target_account)
+      create_child_avatar(avatar, other_account)
+
+      1 = count(Avatar, target_account)
+      7 = count(OwnedFile, target_account)
+
+      1 = count(Avatar, other_account)
+      0 = count(OwnedFile, other_account)
+
+      0 = count(Avatar, admin_account)
+      0 = count(OwnedFile, admin_account)
+
+      assert :ok = Ret.delete_account(admin_account, target_account)
+
+      assert 0 === count(Avatar, target_account)
+      assert 0 === count(OwnedFile, target_account)
+
+      assert 1 === count(Avatar, other_account)
+      assert 0 === count(OwnedFile, other_account)
+
+      assert 1 === count(Avatar, admin_account)
+      assert 7 === count(OwnedFile, admin_account)
+
+      assert true === owned_files_exist?(avatar_owned_files)
+    end
+  end
+
+  defp create_avatar(account) do
+    avatar_owned_files = 1..7 |> Enum.map(fn _ -> generate_temp_owned_file(account) end)
+
+    [
+      gltf_owned_file,
+      bin_owned_file,
+      thumbnail_owned_file,
+      base_map_owned_file,
+      emissive_map_owned_file,
+      normal_map_owned_file,
+      orm_map_owned_file
+    ] = avatar_owned_files
+
+    {:ok, avatar} =
+      Repo.insert(%Avatar{
+        account_id: account.account_id,
+        name: "fake avatar",
+        slug: "fake-avatar-slug",
+        avatar_sid: "fake-avatar-sid",
+        gltf_owned_file: gltf_owned_file,
+        bin_owned_file: bin_owned_file,
+        thumbnail_owned_file: thumbnail_owned_file,
+        base_map_owned_file: base_map_owned_file,
+        emissive_map_owned_file: emissive_map_owned_file,
+        normal_map_owned_file: normal_map_owned_file,
+        orm_map_owned_file: orm_map_owned_file
+      })
+
+    [avatar, avatar_owned_files]
+  end
+
+  defp create_avatar_listing(%Avatar{} = avatar, %Account{} = account) do
+    Repo.insert(%AvatarListing{
+      avatar_id: avatar.avatar_id,
+      account_id: account.account_id,
+      name: "fake avatar listing",
+      slug: "fake-avatar-listing-slug",
+      avatar_listing_sid: "fake-avatar-listing-sid",
+      gltf_owned_file: avatar.gltf_owned_file,
+      bin_owned_file: avatar.bin_owned_file,
+      thumbnail_owned_file: avatar.thumbnail_owned_file,
+      base_map_owned_file: avatar.base_map_owned_file,
+      emissive_map_owned_file: avatar.emissive_map_owned_file,
+      normal_map_owned_file: avatar.normal_map_owned_file,
+      orm_map_owned_file: avatar.orm_map_owned_file
+    })
+  end
+
+  defp create_child_avatar(%Avatar{} = avatar, %Account{} = account) do
+    Repo.insert(%Avatar{
+      account_id: account.account_id,
+      parent_avatar_id: avatar.avatar_id,
+      name: "fake child avatar",
+      slug: "fake-child-avatar-slug",
+      avatar_sid: "fake-child-avatar-sid"
+    })
+  end
+
+  defp owned_files_exist?(owned_files) when is_list(owned_files) do
+    Enum.all?(owned_files, fn owned_file ->
+      [_base_path, meta_file_path, blob_file_path] = Storage.paths_for_owned_file(owned_file)
+      File.exists?(meta_file_path) and File.exists?(blob_file_path)
+    end)
   end
 
   defp count_hubs(account) do
