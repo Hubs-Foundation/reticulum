@@ -22,6 +22,8 @@ defmodule RetTest do
     ProjectAsset,
     Repo,
     RoomObject,
+    Scene,
+    SceneListing,
     Sids,
     Storage,
     WebPushSubscription
@@ -262,6 +264,110 @@ defmodule RetTest do
       assert 0 === count(Asset, target_account)
       assert 0 === count(OwnedFile, target_account)
     end
+
+    test "deletes scenes" do
+      {:ok, admin_account: admin_account} = create_admin_account("admin")
+      target_account = create_account("target")
+
+      project = create_project(target_account)
+      create_scene(project, target_account)
+
+      1 = count(Project, target_account)
+      1 = count(Scene, target_account)
+      5 = count(OwnedFile, target_account)
+
+      assert :ok = Ret.delete_account(admin_account, target_account)
+
+      assert 0 === count(Project, target_account)
+      assert 0 === count(Scene, target_account)
+      assert 0 === count(OwnedFile, target_account)
+    end
+
+    test "deletes parent scenes" do
+      {:ok, admin_account: admin_account} = create_admin_account("admin")
+      target_account = create_account("target")
+      other_account = create_account("other")
+
+      project = create_project(target_account)
+      scene = create_scene(project, target_account)
+      other_project = create_project(other_account)
+      other_project |> Ecto.Changeset.change(parent_scene_id: scene.scene_id) |> Repo.update!()
+      other_scene = create_scene(other_project, other_account)
+      other_scene |> Ecto.Changeset.change(parent_scene_id: scene.scene_id) |> Repo.update!()
+
+      1 = count(Project, target_account)
+      1 = count(Scene, target_account)
+      1 = count(Project, other_account)
+      1 = count(Scene, other_account)
+
+      assert :ok = Ret.delete_account(admin_account, target_account)
+
+      assert 0 === count(Project, target_account)
+      assert 0 === count(Scene, target_account)
+      assert 1 === count(Project, other_account)
+      assert 1 === count(Scene, other_account)
+    end
+
+    test "listed scenes are reassigned to admin account" do
+      {:ok, admin_account: admin_account} = create_admin_account("admin")
+      target_account = create_account("target")
+
+      project = create_project(target_account)
+      scene = create_scene(project, target_account)
+      scene_listing = create_scene_listing(scene)
+
+      1 = count(Project, target_account)
+      1 = count(Scene, target_account)
+
+      5 = count(OwnedFile, target_account)
+      true = target_account.account_id === scene.account_id
+      true = scene.scene_id === scene_listing.scene_id
+
+      assert :ok = Ret.delete_account(admin_account, target_account)
+      updated_scene = Repo.get!(Scene, scene.scene_id)
+      updated_scene_listing = Repo.get!(SceneListing, scene_listing.scene_listing_id)
+
+      assert 0 === count(Project, target_account)
+      assert 0 === count(Scene, target_account)
+
+      assert 3 = count(OwnedFile, admin_account)
+      assert admin_account.account_id === updated_scene.account_id
+      assert scene.scene_id === updated_scene_listing.scene_id
+    end
+  end
+
+  defp create_scene_listing(%Scene{} = scene) do
+    {:ok, scene_listing} =
+      Repo.insert(%SceneListing{
+        scene_id: scene.scene_id,
+        name: "fake scene listing",
+        slug: "fake-scene-listing-slug",
+        scene_owned_file: scene.scene_owned_file,
+        screenshot_owned_file: scene.screenshot_owned_file,
+        model_owned_file: scene.model_owned_file
+      })
+
+    scene_listing
+  end
+
+  defp create_scene(%Project{} = project, %Account{} = account) do
+    scene_owned_files = 1..3 |> Enum.map(fn _ -> generate_temp_owned_file(account) end)
+
+    [scene_owned_file, screenshot_owned_file, model_owned_file] = scene_owned_files
+
+    {:ok, scene} =
+      Repo.insert(%Scene{
+        account_id: account.account_id,
+        name: "fake scene",
+        slug: "fake-scene-slug",
+        scene_owned_file: scene_owned_file,
+        screenshot_owned_file: screenshot_owned_file,
+        model_owned_file: model_owned_file
+      })
+
+    project |> Ecto.Changeset.change(scene_id: scene.scene_id) |> Repo.update!()
+
+    scene
   end
 
   defp create_project(%Account{} = account) do

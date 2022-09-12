@@ -1,7 +1,7 @@
 defmodule Ret do
   import Canada, only: [can?: 2]
   import Ecto.Query
-  alias Ret.{Account, Asset, Avatar, AvatarListing, OwnedFile, Project, Repo, Storage}
+  alias Ret.{Account, Asset, Avatar, AvatarListing, OwnedFile, Project, Repo, Scene, SceneListing, Storage}
 
   def get_account_by_id(account_id) do
     Repo.get(Account, account_id)
@@ -9,10 +9,12 @@ defmodule Ret do
 
   @asset_file_columns [:asset_owned_file, :thumbnail_owned_file]
   @project_file_columns [:project_owned_file, :thumbnail_owned_file]
+  @scene_file_columns [:scene_owned_file, :screenshot_owned_file, :model_owned_file]
   def delete_account(%Account{} = acting_account, %Account{} = account_to_delete) do
     if can?(acting_account, delete_account(account_to_delete)) do
       reassign_avatar_listings(account_to_delete, acting_account)
       reassign_parent_avatars(account_to_delete, acting_account)
+      reassign_scene_listings(account_to_delete, acting_account)
 
       delete_entities_with_owned_files(
         from(avatar in Avatar, where: avatar.account_id == ^account_to_delete.account_id),
@@ -27,6 +29,11 @@ defmodule Ret do
       delete_entities_with_owned_files(
         from(project in Project, where: project.created_by_account_id == ^account_to_delete.account_id),
         @project_file_columns
+      )
+
+      delete_entities_with_owned_files(
+        from(scene in Scene, where: scene.account_id == ^account_to_delete.account_id),
+        @scene_file_columns
       )
 
       case Repo.delete(account_to_delete) do
@@ -104,6 +111,35 @@ defmodule Ret do
             o.owned_file_id == avatar_or_listing.normal_map_owned_file_id or
             o.owned_file_id == avatar_or_listing.orm_map_owned_file_id,
         where: avatar_or_listing.account_id == ^old_account.account_id
+      ),
+      set: [account_id: new_account.account_id]
+    )
+  end
+
+  defp reassign_scene_listings(%Account{} = old_account, %Account{} = new_account) do
+    reassign_owned_files_for_scene_listings(old_account, new_account)
+
+    Repo.update_all(
+      from(sc in Scene,
+        join: sl in SceneListing,
+        on: sc.scene_id == sl.scene_id,
+        where: sc.account_id == ^old_account.account_id
+      ),
+      set: [account_id: new_account.account_id]
+    )
+  end
+
+  defp reassign_owned_files_for_scene_listings(%Account{} = old_account, %Account{} = new_account) do
+    Repo.update_all(
+      from(o in OwnedFile,
+        join: sl in SceneListing,
+        join: sc in Scene,
+        on:
+          (o.owned_file_id == sl.model_owned_file_id or
+             o.owned_file_id == sl.screenshot_owned_file_id or
+             o.owned_file_id == sl.scene_owned_file_id) and
+            sl.scene_id == sc.scene_id,
+        where: sc.account_id == ^old_account.account_id
       ),
       set: [account_id: new_account.account_id]
     )
