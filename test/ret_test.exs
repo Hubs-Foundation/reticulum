@@ -1,12 +1,13 @@
 defmodule RetTest do
   use Ret.DataCase
   import Ecto.Query, only: [from: 2]
-  import Ret.TestHelpers, except: [create_avatar: 1]
+  import Ret.TestHelpers, only: [create_admin_account: 1, create_account: 1, generate_temp_owned_file: 1]
 
   alias Ret.{
     Account,
     AccountFavorite,
     Api,
+    Asset,
     Avatar,
     AvatarListing,
     Hub,
@@ -17,8 +18,11 @@ defmodule RetTest do
     Login,
     OAuthProvider,
     OwnedFile,
+    Project,
+    ProjectAsset,
     Repo,
     RoomObject,
+    Sids,
     Storage,
     WebPushSubscription
   }
@@ -101,7 +105,7 @@ defmodule RetTest do
         auth: "fake-auth-key"
       })
 
-      1 = count_hubs(test_account)
+      1 = count(Hub, test_account)
       1 = count(AccountFavorite, hub)
       1 = count(HubBinding, hub)
       1 = count(HubInvite, hub)
@@ -111,7 +115,7 @@ defmodule RetTest do
 
       assert :ok = Ret.delete_account(admin_account, test_account)
 
-      assert 0 === count_hubs(test_account)
+      assert 0 === count(Hub, test_account)
       assert 0 === count(AccountFavorite, hub)
       assert 0 === count(HubBinding, hub)
       assert 0 === count(HubInvite, hub)
@@ -149,14 +153,14 @@ defmodule RetTest do
         gltf_node: "fake gltf node"
       })
 
-      1 = count_hubs(hub_owner)
+      1 = count(Hub, hub_owner)
       1 = count(AccountFavorite, hub)
       1 = count(HubRoleMembership, hub)
       1 = count(RoomObject, hub)
 
       assert :ok = Ret.delete_account(admin_account, hub_user)
 
-      assert 1 === count_hubs(hub_owner)
+      assert 1 === count(Hub, hub_owner)
       assert 0 === count(AccountFavorite, hub)
       assert 0 === count(HubRoleMembership, hub)
       assert 0 === count(RoomObject, hub)
@@ -237,9 +241,71 @@ defmodule RetTest do
 
       assert true === owned_files_exist?(avatar_owned_files)
     end
+
+    test "deletes projects and assets" do
+      {:ok, admin_account: admin_account} = create_admin_account("admin")
+      target_account = create_account("target")
+
+      project = create_project(target_account)
+      create_project_asset(project, create_asset(target_account))
+      create_asset(target_account)
+
+      1 = count(Project, target_account)
+      1 = count(ProjectAsset, project)
+      2 = count(Asset, target_account)
+      6 = count(OwnedFile, target_account)
+
+      assert :ok = Ret.delete_account(admin_account, target_account)
+
+      assert 0 === count(Project, target_account)
+      assert 0 === count(ProjectAsset, project)
+      assert 0 === count(Asset, target_account)
+      assert 0 === count(OwnedFile, target_account)
+    end
   end
 
-  defp create_avatar(account) do
+  defp create_project(%Account{} = account) do
+    project_owned_files = 1..2 |> Enum.map(fn _ -> generate_temp_owned_file(account) end)
+
+    [project_owned_file, thumbnail_owned_file] = project_owned_files
+
+    {:ok, project} =
+      Repo.insert(%Project{
+        created_by_account_id: account.account_id,
+        name: "fake project",
+        project_owned_file: project_owned_file,
+        thumbnail_owned_file: thumbnail_owned_file
+      })
+
+    project
+  end
+
+  defp create_asset(%Account{} = account) do
+    asset_owned_files = 1..2 |> Enum.map(fn _ -> generate_temp_owned_file(account) end)
+
+    [asset_owned_file, thumbnail_owned_file] = asset_owned_files
+
+    {:ok, asset} =
+      Repo.insert(%Asset{
+        account_id: account.account_id,
+        name: "fake asset",
+        asset_sid: "fake-asset-sid-#{Sids.generate_sid()}",
+        type: :image,
+        asset_owned_file: asset_owned_file,
+        thumbnail_owned_file: thumbnail_owned_file
+      })
+
+    asset
+  end
+
+  defp create_project_asset(%Project{} = project, %Asset{} = asset) do
+    Repo.insert(%ProjectAsset{
+      project_id: project.project_id,
+      asset_id: asset.asset_id
+    })
+  end
+
+  defp create_avatar(%Account{} = account) do
     avatar_owned_files = 1..7 |> Enum.map(fn _ -> generate_temp_owned_file(account) end)
 
     [
@@ -304,9 +370,9 @@ defmodule RetTest do
     end)
   end
 
-  defp count_hubs(account) do
+  defp count(queryable, %Account{} = account) when queryable in [Hub, Project] do
     Ret.Repo.aggregate(
-      from(h in Hub, where: h.created_by_account_id == ^account.account_id),
+      from(record in queryable, where: record.created_by_account_id == ^account.account_id),
       :count
     )
   end
@@ -321,6 +387,13 @@ defmodule RetTest do
   defp count(queryable, %Hub{} = hub) do
     Ret.Repo.aggregate(
       from(record in queryable, where: record.hub_id == ^hub.hub_id),
+      :count
+    )
+  end
+
+  defp count(queryable, %Project{} = project) do
+    Ret.Repo.aggregate(
+      from(record in queryable, where: record.project_id == ^project.project_id),
       :count
     )
   end

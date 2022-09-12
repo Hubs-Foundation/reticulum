@@ -1,17 +1,27 @@
 defmodule Ret do
   import Canada, only: [can?: 2]
   import Ecto.Query
-  alias Ret.{Account, Avatar, AvatarListing, OwnedFile, Repo, Storage}
+  alias Ret.{Account, Asset, Avatar, AvatarListing, OwnedFile, Project, Repo, Storage}
 
   def get_account_by_id(account_id) do
     Repo.get(Account, account_id)
   end
 
+  @asset_file_columns [:asset_owned_file, :thumbnail_owned_file]
+  @project_file_columns [:project_owned_file, :thumbnail_owned_file]
   def delete_account(%Account{} = acting_account, %Account{} = account_to_delete) do
     if can?(acting_account, delete_account(account_to_delete)) do
       reassign_avatar_listings(account_to_delete, acting_account)
       reassign_parent_avatars(account_to_delete, acting_account)
-      delete_avatars_for_account(account_to_delete)
+
+      for {query, file_columns} <- [
+            {from(avatar in Avatar, where: avatar.account_id == ^account_to_delete.account_id), Avatar.file_columns()},
+            {from(asset in Asset, where: asset.account_id == ^account_to_delete.account_id), @asset_file_columns},
+            {from(project in Project, where: project.created_by_account_id == ^account_to_delete.account_id),
+             @project_file_columns}
+          ] do
+        delete_entities_with_owned_files(query, file_columns)
+      end
 
       case Repo.delete(account_to_delete) do
         {:ok, _} -> :ok
@@ -22,20 +32,19 @@ defmodule Ret do
     end
   end
 
-  defp delete_avatars_for_account(%Account{} = account) do
-    account_avatars_query = from(avatar in Avatar, where: avatar.account_id == ^account.account_id)
-    account_avatars = Repo.all(account_avatars_query) |> Repo.preload(Avatar.file_columns())
+  defp delete_entities_with_owned_files(query, file_columns) when is_list(file_columns) do
+    entities = Repo.all(query) |> Repo.preload(file_columns)
 
-    account_avatar_owned_files =
-      account_avatars
-      |> Enum.flat_map(fn avatar ->
-        Avatar.file_columns()
-        |> Enum.map(fn column -> Map.fetch!(avatar, column) end)
+    entity_owned_files =
+      entities
+      |> Enum.flat_map(fn entity ->
+        file_columns
+        |> Enum.map(fn column -> Map.fetch!(entity, column) end)
         |> Enum.filter(fn owned_file -> owned_file != nil end)
       end)
 
-    Repo.delete_all(account_avatars_query)
-    delete_owned_files(account_avatar_owned_files)
+    Repo.delete_all(query)
+    delete_owned_files(entity_owned_files)
   end
 
   defp delete_owned_files(owned_files) when is_list(owned_files) do
