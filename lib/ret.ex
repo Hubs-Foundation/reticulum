@@ -14,14 +14,20 @@ defmodule Ret do
       reassign_avatar_listings(account_to_delete, acting_account)
       reassign_parent_avatars(account_to_delete, acting_account)
 
-      for {query, file_columns} <- [
-            {from(avatar in Avatar, where: avatar.account_id == ^account_to_delete.account_id), Avatar.file_columns()},
-            {from(asset in Asset, where: asset.account_id == ^account_to_delete.account_id), @asset_file_columns},
-            {from(project in Project, where: project.created_by_account_id == ^account_to_delete.account_id),
-             @project_file_columns}
-          ] do
-        delete_entities_with_owned_files(query, file_columns)
-      end
+      delete_entities_with_owned_files(
+        from(avatar in Avatar, where: avatar.account_id == ^account_to_delete.account_id),
+        Avatar.file_columns()
+      )
+
+      delete_entities_with_owned_files(
+        from(asset in Asset, where: asset.account_id == ^account_to_delete.account_id),
+        @asset_file_columns
+      )
+
+      delete_entities_with_owned_files(
+        from(project in Project, where: project.created_by_account_id == ^account_to_delete.account_id),
+        @project_file_columns
+      )
 
       case Repo.delete(account_to_delete) do
         {:ok, _} -> :ok
