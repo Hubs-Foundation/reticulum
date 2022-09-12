@@ -25,23 +25,23 @@ defmodule Ret do
   defp delete_avatars_for_account(%Account{} = account) do
     account_avatars_query = from(avatar in Avatar, where: avatar.account_id == ^account.account_id)
     account_avatars = Repo.all(account_avatars_query) |> Repo.preload(Avatar.file_columns())
-
-    account_avatar_owned_files =
-      account_avatars
-      |> Enum.flat_map(fn avatar ->
-        Avatar.file_columns()
-        |> Enum.map(fn column -> Map.fetch!(avatar, column) end)
-        |> Enum.filter(fn owned_file -> owned_file != nil end)
-      end)
-
+    account_avatar_owned_files = Enum.flat_map(account_avatars, &avatar_owned_files/1)
     Repo.delete_all(account_avatars_query)
     delete_owned_files(account_avatar_owned_files)
   end
 
+  defp avatar_owned_files(%Avatar{} = avatar) do
+    for column <- Avatar.file_columns(),
+        owned_file = Map.fetch!(avatar, column),
+        do: owned_file
+  end
+
   defp delete_owned_files(owned_files) when is_list(owned_files) do
-    for owned_file <- owned_files, do: OwnedFile.set_inactive(owned_file)
-    for owned_file <- owned_files, do: Storage.rm_files_for_owned_file(owned_file)
-    for owned_file <- owned_files, do: Repo.delete(owned_file)
+    for owned_file <- owned_files do
+      OwnedFile.set_inactive(owned_file)
+      Storage.rm_files_for_owned_file(owned_file)
+      Repo.delete(owned_file)
+    end
   end
 
   defp reassign_avatar_listings(%Account{} = old_account, %Account{} = new_account) do
