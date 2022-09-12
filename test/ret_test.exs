@@ -180,7 +180,7 @@ defmodule RetTest do
 
       assert 0 === count(Avatar, test_account)
       assert 0 === count(OwnedFile, test_account)
-      assert false === owned_files_exist?(avatar_owned_files)
+      refute owned_files_exist?(avatar_owned_files)
     end
 
     test "listed avatars are reassigned to admin account" do
@@ -208,7 +208,7 @@ defmodule RetTest do
       assert 7 === count(OwnedFile, admin_account)
       assert 1 === count(AvatarListing, admin_account)
 
-      assert true === owned_files_exist?(avatar_owned_files)
+      assert owned_files_exist?(avatar_owned_files)
     end
 
     test "parent avatars are reassigned to admin account" do
@@ -239,7 +239,7 @@ defmodule RetTest do
       assert 1 === count(Avatar, admin_account)
       assert 7 === count(OwnedFile, admin_account)
 
-      assert true === owned_files_exist?(avatar_owned_files)
+      assert owned_files_exist?(avatar_owned_files)
     end
 
     test "deletes projects and assets" do

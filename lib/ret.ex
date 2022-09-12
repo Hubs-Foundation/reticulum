@@ -40,23 +40,23 @@ defmodule Ret do
 
   defp delete_entities_with_owned_files(query, file_columns) when is_list(file_columns) do
     entities = Repo.all(query) |> Repo.preload(file_columns)
-
-    entity_owned_files =
-      entities
-      |> Enum.flat_map(fn entity ->
-        file_columns
-        |> Enum.map(fn column -> Map.fetch!(entity, column) end)
-        |> Enum.filter(fn owned_file -> owned_file != nil end)
-      end)
-
+    entity_owned_files = Enum.flat_map(entities, fn entity -> entity_owned_files(entity, file_columns) end)
     Repo.delete_all(query)
     delete_owned_files(entity_owned_files)
   end
 
+  defp entity_owned_files(entity, file_columns) do
+    for column <- file_columns,
+        owned_file = Map.fetch!(entity, column),
+        do: owned_file
+  end
+
   defp delete_owned_files(owned_files) when is_list(owned_files) do
-    for owned_file <- owned_files, do: OwnedFile.set_inactive(owned_file)
-    for owned_file <- owned_files, do: Storage.rm_files_for_owned_file(owned_file)
-    for owned_file <- owned_files, do: Repo.delete(owned_file)
+    for owned_file <- owned_files do
+      OwnedFile.set_inactive(owned_file)
+      Storage.rm_files_for_owned_file(owned_file)
+      Repo.delete(owned_file)
+    end
   end
 
   defp reassign_avatar_listings(%Account{} = old_account, %Account{} = new_account) do
