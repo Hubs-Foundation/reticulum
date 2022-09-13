@@ -290,10 +290,17 @@ defmodule RetTest do
 
       project = create_project(target_account)
       scene = create_scene(project, target_account)
-      other_project = create_project(other_account)
-      other_project |> Ecto.Changeset.change(parent_scene_id: scene.scene_id) |> Repo.update!()
-      other_scene = create_scene(other_project, other_account)
-      other_scene |> Ecto.Changeset.change(parent_scene_id: scene.scene_id) |> Repo.update!()
+
+      other_project =
+        other_account
+        |> create_project()
+        |> Ecto.Changeset.change(parent_scene_id: scene.scene_id)
+        |> Repo.update!()
+
+      other_project
+      |> create_scene(other_account)
+      |> Ecto.Changeset.change(parent_scene_id: scene.scene_id)
+      |> Repo.update!()
 
       1 = count(Project, target_account)
       1 = count(Scene, target_account)
