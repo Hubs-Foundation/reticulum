@@ -10,8 +10,6 @@ link_host = "hubs-link.local"
 # To run reticulum across a LAN for local testing, uncomment and change the line below to the LAN IP
 # host = cors_proxy_host = "192.168.1.27"
 
-dev_janus_host = "dev-janus.reticulum.io"
-
 # For development, we disable any cache and enable
 # debugging and code reloading.
 #
@@ -124,10 +122,14 @@ config :ret,
   upload_encryption_key: "a8dedeb57adafa7821027d546f016efef5a501bd",
   bot_access_key: ""
 
+hubs_admin_internal_hostname = System.get_env("HUBS_ADMIN_INTERNAL_HOSTNAME") || host
+hubs_client_internal_hostname = System.get_env("HUBS_CLIENT_INTERNAL_HOSTNAME") || host
+spoke_internal_hostname = System.get_env("SPOKE_INTERNAL_HOSTNAME") || host
+
 config :ret, Ret.PageOriginWarmer,
-  hubs_page_origin: "https://#{host}:8080",
-  admin_page_origin: "https://#{host}:8989",
-  spoke_page_origin: "https://#{host}:9090",
+  admin_page_origin: "https://#{hubs_admin_internal_hostname}:8989",
+  hubs_page_origin: "https://#{hubs_client_internal_hostname}:8080",
+  spoke_page_origin: "https://#{spoke_internal_hostname}:9090",
   insecure_ssl: true
 
 config :ret, Ret.HttpUtils, insecure_ssl: true
@@ -202,7 +204,10 @@ config :sentry,
 
 config :ret, Ret.Habitat, ip: "127.0.0.1", http_port: 9631
 
-config :ret, Ret.JanusLoadStatus, default_janus_host: dev_janus_host, janus_port: 443
+dialog_hostname = System.get_env("DIALOG_HOSTNAME") || "dev-janus.reticulum.io"
+dialog_port = String.to_integer(System.get_env("DIALOG_PORT") || "443")
+
+config :ret, Ret.JanusLoadStatus, default_janus_host: dialog_hostname, janus_port: dialog_port
 
 config :ret, Ret.RoomAssigner, balancer_weights: [{600, 1}, {300, 50}, {0, 500}]
 
