@@ -112,7 +112,7 @@ defmodule Ret do
             o.owned_file_id == avatar_or_listing.emissive_map_owned_file_id or
             o.owned_file_id == avatar_or_listing.normal_map_owned_file_id or
             o.owned_file_id == avatar_or_listing.orm_map_owned_file_id,
-        where: avatar_or_listing.account_id == ^old_account.account_id
+        where: o.account_id == ^old_account.account_id
       ),
       set: [account_id: new_account.account_id]
     )
