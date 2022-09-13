@@ -188,25 +188,23 @@ defmodule RetTest do
       target_account = create_account("target")
 
       [avatar, avatar_owned_files] = create_avatar(target_account)
-      create_avatar_listing(avatar, target_account)
+      create_avatar_listing(avatar)
 
       1 = count(Avatar, target_account)
       7 = count(OwnedFile, target_account)
-      1 = count(AvatarListing, target_account)
 
       0 = count(Avatar, admin_account)
       0 = count(OwnedFile, admin_account)
-      0 = count(AvatarListing, admin_account)
+      1 = count(AvatarListing)
 
       assert :ok = Ret.delete_account(admin_account, target_account)
 
       assert 0 === count(Avatar, target_account)
       assert 0 === count(OwnedFile, target_account)
-      assert 0 === count(AvatarListing, target_account)
 
       assert 1 === count(Avatar, admin_account)
       assert 7 === count(OwnedFile, admin_account)
-      assert 1 === count(AvatarListing, admin_account)
+      assert 1 === count(AvatarListing)
 
       assert owned_files_exist?(avatar_owned_files)
     end
@@ -336,10 +334,9 @@ defmodule RetTest do
     [avatar, avatar_owned_files]
   end
 
-  defp create_avatar_listing(%Avatar{} = avatar, %Account{} = account) do
+  defp create_avatar_listing(%Avatar{} = avatar) do
     Repo.insert(%AvatarListing{
       avatar_id: avatar.avatar_id,
-      account_id: account.account_id,
       name: "fake avatar listing",
       slug: "fake-avatar-listing-slug",
       avatar_listing_sid: "fake-avatar-listing-sid",
@@ -396,5 +393,9 @@ defmodule RetTest do
       from(record in queryable, where: record.project_id == ^project.project_id),
       :count
     )
+  end
+
+  defp count(queryable) do
+    Ret.Repo.aggregate(queryable, :count)
   end
 end
