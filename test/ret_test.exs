@@ -353,8 +353,8 @@ defmodule RetTest do
 
       assert :ok = Ret.delete_account(admin_account, target_account)
 
-      0 = count(OwnedFile, target_account)
-      false = owned_files_exist?(owned_files)
+      assert 0 === count(OwnedFile, target_account)
+      refute owned_files_exist?(owned_files)
     end
   end
 
