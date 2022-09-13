@@ -36,6 +36,8 @@ defmodule Ret do
         @scene_file_columns
       )
 
+      delete_owned_files(Repo.all(from(o in OwnedFile, where: o.account_id == ^account_to_delete.account_id)))
+
       case Repo.delete(account_to_delete) do
         {:ok, _} -> :ok
         {:error, _} -> {:error, :failed}

@@ -334,6 +334,21 @@ defmodule RetTest do
       assert admin_account.account_id === updated_scene.account_id
       assert scene.scene_id === updated_scene_listing.scene_id
     end
+
+    test "deletes owned files" do
+      {:ok, admin_account: admin_account} = create_admin_account("admin")
+      target_account = create_account("target")
+
+      owned_files = 1..3 |> Enum.map(fn _ -> generate_temp_owned_file(target_account) end)
+
+      3 = count(OwnedFile, target_account)
+      true = owned_files_exist?(owned_files)
+
+      assert :ok = Ret.delete_account(admin_account, target_account)
+
+      0 = count(OwnedFile, target_account)
+      false = owned_files_exist?(owned_files)
+    end
   end
 
   defp create_scene_listing(%Scene{} = scene) do
