@@ -45,7 +45,7 @@ defmodule Ret do
   end
 
   defp reassign_avatar_listings(%Account{} = old_account, %Account{} = new_account) do
-    reassign_owned_files_for_avatar_or_listing(AvatarListing, old_account, new_account)
+    reassign_owned_files_for_avatars_or_listings(AvatarListing, old_account, new_account)
 
     Repo.update_all(
       from(av in Avatar,
@@ -63,7 +63,7 @@ defmodule Ret do
   end
 
   defp reassign_parent_avatars(%Account{} = old_account, %Account{} = new_account) do
-    reassign_owned_files_for_avatar_or_listing(Avatar, old_account, new_account)
+    reassign_owned_files_for_avatars_or_listings(Avatar, old_account, new_account)
 
     Repo.update_all(
       from(a1 in Avatar,
@@ -75,20 +75,20 @@ defmodule Ret do
     )
   end
 
-  defp reassign_owned_files_for_avatar_or_listing(schema, %Account{} = old_account, %Account{} = new_account)
+  defp reassign_owned_files_for_avatars_or_listings(schema, %Account{} = old_account, %Account{} = new_account)
        when schema in [Avatar, AvatarListing] do
     Repo.update_all(
       from(o in OwnedFile,
-        join: avatar_or_lisiting in ^schema,
+        join: avatar_or_listing in ^schema,
         on:
-          o.owned_file_id == avatar_or_lisiting.gltf_owned_file_id or
-            o.owned_file_id == avatar_or_lisiting.bin_owned_file_id or
-            o.owned_file_id == avatar_or_lisiting.thumbnail_owned_file_id or
-            o.owned_file_id == avatar_or_lisiting.base_map_owned_file_id or
-            o.owned_file_id == avatar_or_lisiting.emissive_map_owned_file_id or
-            o.owned_file_id == avatar_or_lisiting.normal_map_owned_file_id or
-            o.owned_file_id == avatar_or_lisiting.orm_map_owned_file_id,
-        where: avatar_or_lisiting.account_id == ^old_account.account_id
+          o.owned_file_id == avatar_or_listing.gltf_owned_file_id or
+            o.owned_file_id == avatar_or_listing.bin_owned_file_id or
+            o.owned_file_id == avatar_or_listing.thumbnail_owned_file_id or
+            o.owned_file_id == avatar_or_listing.base_map_owned_file_id or
+            o.owned_file_id == avatar_or_listing.emissive_map_owned_file_id or
+            o.owned_file_id == avatar_or_listing.normal_map_owned_file_id or
+            o.owned_file_id == avatar_or_listing.orm_map_owned_file_id,
+        where: avatar_or_listing.account_id == ^old_account.account_id
       ),
       set: [account_id: new_account.account_id]
     )
