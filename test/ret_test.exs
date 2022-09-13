@@ -346,7 +346,7 @@ defmodule RetTest do
       {:ok, admin_account: admin_account} = create_admin_account("admin")
       target_account = create_account("target")
 
-      owned_files = 1..3 |> Enum.map(fn _ -> generate_temp_owned_file(target_account) end)
+      owned_files = generate_temp_owned_files(3, target_account)
 
       3 = count(OwnedFile, target_account)
       true = owned_files_exist?(owned_files)
@@ -373,7 +373,7 @@ defmodule RetTest do
   end
 
   defp create_scene(%Project{} = project, %Account{} = account) do
-    scene_owned_files = 1..3 |> Enum.map(fn _ -> generate_temp_owned_file(account) end)
+    scene_owned_files = generate_temp_owned_files(3, account)
 
     [scene_owned_file, screenshot_owned_file, model_owned_file] = scene_owned_files
 
@@ -393,7 +393,7 @@ defmodule RetTest do
   end
 
   defp create_project(%Account{} = account) do
-    project_owned_files = 1..2 |> Enum.map(fn _ -> generate_temp_owned_file(account) end)
+    project_owned_files = generate_temp_owned_files(2, account)
 
     [project_owned_file, thumbnail_owned_file] = project_owned_files
 
@@ -409,7 +409,7 @@ defmodule RetTest do
   end
 
   defp create_asset(%Account{} = account) do
-    asset_owned_files = 1..2 |> Enum.map(fn _ -> generate_temp_owned_file(account) end)
+    asset_owned_files = generate_temp_owned_files(2, account)
 
     [asset_owned_file, thumbnail_owned_file] = asset_owned_files
 
@@ -434,7 +434,7 @@ defmodule RetTest do
   end
 
   defp create_avatar(%Account{} = account) do
-    avatar_owned_files = 1..7 |> Enum.map(fn _ -> generate_temp_owned_file(account) end)
+    avatar_owned_files = generate_temp_owned_files(7, account)
 
     [
       gltf_owned_file,
@@ -496,6 +496,10 @@ defmodule RetTest do
       [_base_path, meta_file_path, blob_file_path] = Storage.paths_for_owned_file(owned_file)
       File.exists?(meta_file_path) and File.exists?(blob_file_path)
     end)
+  end
+
+  defp generate_temp_owned_files(num_files, %Account{} = account) when is_integer(num_files) do
+    Stream.repeatedly(fn -> generate_temp_owned_file(account) end) |> Enum.take(num_files)
   end
 
   defp count(queryable, %Account{} = account) when queryable in [Hub, Project] do
