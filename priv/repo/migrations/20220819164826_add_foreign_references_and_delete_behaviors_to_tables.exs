@@ -12,11 +12,13 @@ defmodule Ret.Repo.Migrations.AddForeignReferencesAndDeleteBehaviorToTables do
   @missing_on_delete_action [
     # table, column, foreign_table, foreign_column
     {:account_favorites, :account_id, :accounts, :account_id},
+    {:account_favorites, :hub_id, :hubs, :hub_id},
     {:api_credentials, :account_id, :accounts, :account_id},
     {:hub_role_memberships, :account_id, :accounts, :account_id},
     {:hub_role_memberships, :hub_id, :hubs, :hub_id},
     {:hubs, :created_by_account_id, :accounts, :account_id},
-    {:room_objects, :account_id, :accounts, :account_id}
+    {:room_objects, :account_id, :accounts, :account_id},
+    {:room_objects, :hub_id, :hubs, :hub_id}
   ]
 
   def up do

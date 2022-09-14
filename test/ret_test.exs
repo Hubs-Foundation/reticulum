@@ -166,6 +166,46 @@ defmodule RetTest do
       assert 0 === count(RoomObject, hub)
     end
 
+    test "deletes entities associated with hub, even when they belong to a hub owned by another account" do
+      {:ok, admin_account: admin_account} = create_admin_account("test_admin")
+      hub_owner = create_account("test_owner")
+      hub_user = create_account("test_user")
+
+      {:ok, hub} =
+        Repo.insert(%Hub{
+          name: "test hub",
+          slug: "fake test slug",
+          created_by_account: hub_owner
+        })
+
+      Repo.insert(%AccountFavorite{
+        hub: hub,
+        account: hub_user
+      })
+
+      Repo.insert(%HubRoleMembership{
+        hub: hub,
+        account: hub_user
+      })
+
+      Repo.insert(%RoomObject{
+        hub: hub,
+        account: hub_user,
+        object_id: "fake object id",
+        gltf_node: "fake gltf node"
+      })
+
+      1 = count(AccountFavorite, hub_user)
+      1 = count(HubRoleMembership, hub_user)
+      1 = count(RoomObject, hub_user)
+
+      assert :ok = Ret.delete_account(admin_account, hub_owner)
+
+      assert 0 === count(AccountFavorite, hub_user)
+      assert 0 === count(HubRoleMembership, hub_user)
+      assert 0 === count(RoomObject, hub_user)
+    end
+
     test "deletes account's avatars" do
       {:ok, admin_account: admin_account} = create_admin_account("admin")
       test_account = create_account("test")
