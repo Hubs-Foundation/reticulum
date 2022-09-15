@@ -321,6 +321,47 @@ defmodule RetTest do
       assert 0 === count(OwnedFile, target_account)
     end
 
+    test "deletes scene with a project that shares files" do
+      {:ok, admin_account: admin_account} = create_admin_account("admin")
+      target_account = create_account("target")
+
+      [
+        json_owned_file,
+        image_owned_file,
+        model_owned_file
+      ] = 1..3 |> Enum.map(fn _ -> generate_temp_owned_file(target_account) end)
+
+      {:ok, project} =
+        Repo.insert(%Project{
+          created_by_account_id: target_account.account_id,
+          name: "fake project",
+          project_owned_file: json_owned_file,
+          thumbnail_owned_file: image_owned_file
+        })
+
+      {:ok, scene} =
+        Repo.insert(%Scene{
+          account_id: target_account.account_id,
+          name: "fake scene",
+          slug: "fake-scene-slug",
+          scene_owned_file: json_owned_file,
+          screenshot_owned_file: image_owned_file,
+          model_owned_file: model_owned_file
+        })
+
+      project |> Ecto.Changeset.change(scene_id: scene.scene_id) |> Repo.update!()
+
+      1 = count(Project, target_account)
+      1 = count(Scene, target_account)
+      3 = count(OwnedFile, target_account)
+
+      assert :ok = Ret.delete_account(admin_account, target_account)
+
+      assert 0 === count(Project, target_account)
+      assert 0 === count(Scene, target_account)
+      assert 0 === count(OwnedFile, target_account)
+    end
+
     test "deletes parent scenes" do
       {:ok, admin_account: admin_account} = create_admin_account("admin")
       target_account = create_account("target")
