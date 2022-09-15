@@ -32,7 +32,7 @@ defmodule RetWeb.Api.V1.AccountController do
 
   def delete(conn, params) do
     current_account = Guardian.Plug.current_resource(conn)
-    account_to_delete = Ret.get_account_by_id(params[:account_id])
+    account_to_delete = Ret.get_account_by_id(params["id"])
 
     case Ret.delete_account(current_account, account_to_delete) do
       :ok -> conn |> put_status(:ok) |> json(%{status: "ok"})
