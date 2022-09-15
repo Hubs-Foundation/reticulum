@@ -26,15 +26,17 @@ defmodule Ret do
         @asset_file_columns
       )
 
-      delete_entities_with_owned_files(
-        from(project in Project, where: project.created_by_account_id == ^account_to_delete.account_id),
-        @project_file_columns
-      )
+      project_query = from(project in Project, where: project.created_by_account_id == ^account_to_delete.account_id)
+      scene_query = from(scene in Scene, where: scene.account_id == ^account_to_delete.account_id)
 
-      delete_entities_with_owned_files(
-        from(scene in Scene, where: scene.account_id == ^account_to_delete.account_id),
-        @scene_file_columns
-      )
+      project_and_scene_owned_files =
+        collect_owned_files(project_query, @project_file_columns) ++
+          collect_owned_files(scene_query, @scene_file_columns)
+
+      Repo.delete_all(project_query)
+      Repo.delete_all(scene_query)
+
+      delete_owned_files(project_and_scene_owned_files)
 
       case Repo.delete(account_to_delete) do
         {:ok, _} -> :ok
@@ -43,6 +45,11 @@ defmodule Ret do
     else
       {:error, :forbidden}
     end
+  end
+
+  defp collect_owned_files(query, file_columns) when is_list(file_columns) do
+    entities = Repo.all(query) |> Repo.preload(file_columns)
+    Enum.flat_map(entities, fn entity -> entity_owned_files(entity, file_columns) end)
   end
 
   defp delete_entities_with_owned_files(query, file_columns) when is_list(file_columns) do
@@ -59,7 +66,9 @@ defmodule Ret do
   end
 
   defp delete_owned_files(owned_files) when is_list(owned_files) do
-    for owned_file <- owned_files do
+    uniq_owned_files = owned_files |> Enum.uniq_by(fn owned_file -> owned_file.owned_file_id end)
+
+    for owned_file <- uniq_owned_files do
       OwnedFile.set_inactive(owned_file)
       Storage.rm_files_for_owned_file(owned_file)
       Repo.delete(owned_file)
