@@ -854,7 +854,11 @@ defimpl Canada.Can, for: Ret.Account do
     false
   end
 
-  def can?(%Ret.Account{is_admin: true} = admin_account, :delete_account, %Ret.Account{} = account_to_delete) do
+  def can?(
+        %Ret.Account{is_admin: true} = admin_account,
+        :delete_account,
+        %Ret.Account{is_admin: false} = account_to_delete
+      ) do
     admin_account.account_id !== account_to_delete.account_id
   end
 

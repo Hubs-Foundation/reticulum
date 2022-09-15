@@ -435,6 +435,38 @@ defmodule RetTest do
       assert 0 === count(OwnedFile, target_account)
       refute owned_files_exist?(owned_files)
     end
+
+    test "only admin accounts can delete accounts" do
+      test_account = create_account("test")
+      target_account = create_account("target")
+
+      1 = count(Account, target_account)
+
+      assert {:error, :forbidden} = Ret.delete_account(test_account, target_account)
+
+      1 = count(Account, target_account)
+    end
+
+    test "cannot delete admin account" do
+      {:ok, admin_account: admin_account} = create_admin_account("admin")
+      {:ok, admin_account: other_account} = create_admin_account("other")
+
+      1 = count(Account, other_account)
+
+      assert {:error, :forbidden} = Ret.delete_account(admin_account, other_account)
+
+      1 = count(Account, other_account)
+    end
+
+    test "cannot delete own account" do
+      {:ok, admin_account: admin_account} = create_admin_account("admin")
+
+      1 = count(Account, admin_account)
+
+      assert {:error, :forbidden} = Ret.delete_account(admin_account, admin_account)
+
+      1 = count(Account, admin_account)
+    end
   end
 
   defp create_scene_listing(%Scene{} = scene) do
