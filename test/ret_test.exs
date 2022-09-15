@@ -416,7 +416,7 @@ defmodule RetTest do
       assert 0 === count(Project, target_account)
       assert 0 === count(Scene, target_account)
 
-      assert 3 = count(OwnedFile, admin_account)
+      assert 3 === count(OwnedFile, admin_account)
       assert admin_account.account_id === updated_scene.account_id
       assert scene.scene_id === updated_scene_listing.scene_id
     end
@@ -444,7 +444,7 @@ defmodule RetTest do
 
       assert {:error, :forbidden} = Ret.delete_account(test_account, target_account)
 
-      1 = count(Account, target_account)
+      assert 1 === count(Account, target_account)
     end
 
     test "cannot delete admin account" do
@@ -455,7 +455,7 @@ defmodule RetTest do
 
       assert {:error, :forbidden} = Ret.delete_account(admin_account, other_account)
 
-      1 = count(Account, other_account)
+      assert 1 === count(Account, other_account)
     end
 
     test "cannot delete own account" do
@@ -465,7 +465,7 @@ defmodule RetTest do
 
       assert {:error, :forbidden} = Ret.delete_account(admin_account, admin_account)
 
-      1 = count(Account, admin_account)
+      assert 1 === count(Account, admin_account)
     end
   end
 
