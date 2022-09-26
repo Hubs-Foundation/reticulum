@@ -39,7 +39,9 @@ defmodule Ret.Hub do
     (1 <<< 2) => :spawn_drawing,
     (1 <<< 3) => :pin_objects,
     (1 <<< 4) => :spawn_emoji,
-    (1 <<< 5) => :fly
+    (1 <<< 5) => :fly,
+    (1 <<< 6) => :voice_chat,
+    (1 <<< 7) => :text_chat,
   }
 
   @member_permissions_keys @member_permissions |> Map.values()
@@ -50,7 +52,9 @@ defmodule Ret.Hub do
     spawn_drawing: true,
     pin_objects: true,
     spawn_emoji: true,
-    fly: true
+    fly: true,
+    voice_chat: true,
+    text_chat: true
   }
 
   @default_restrictive_member_permissions %{
@@ -59,7 +63,9 @@ defmodule Ret.Hub do
     spawn_drawing: false,
     pin_objects: false,
     spawn_emoji: false,
-    fly: false
+    fly: false,
+    voice_chat: false,
+    text_chat: false
   }
 
   def hub_preloads() do
@@ -810,7 +816,9 @@ defmodule Ret.Hub do
       spawn_and_move_media: account |> can?(spawn_and_move_media(hub)),
       pin_objects: account |> can?(pin_objects(hub)),
       spawn_emoji: account |> can?(spawn_emoji(hub)),
-      fly: account |> can?(fly(hub))
+      fly: account |> can?(fly(hub)),
+      voice_chat: account |> can?(voice_chat(hub)),
+      text_chat: account |> can?(text_chat(hub))
     }
   end
 
@@ -855,7 +863,7 @@ defimpl Canada.Can, for: Ret.Account do
   end
 
   @owner_actions [:update_hub, :close_hub, :embed_hub, :kick_users, :mute_users, :amplify_audio]
-  @object_actions [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects, :spawn_emoji, :fly]
+  @object_actions [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects, :spawn_emoji, :fly, :voice_chat, :text_chat]
   @creator_actions [:update_roles]
 
   # Always deny all actions to disabled accounts
@@ -883,7 +891,7 @@ defimpl Canada.Can, for: Ret.Account do
 
   # Bound hubs - Moderator actions
   def can?(%Ret.Account{} = account, action, %Ret.Hub{hub_bindings: hub_bindings})
-      when hub_bindings |> length > 0 and action in [:kick_users, :mute_users, :amplify_audio] do
+      when hub_bindings |> length > 0 and action in [:kick_users, :mute_users, :amplify_audio, :voice_chat, :text_chat] do
     hub_bindings |> Enum.any?(&(account |> Ret.HubBinding.can_moderate_users?(&1)))
   end
 
@@ -951,7 +959,7 @@ end
 defimpl Canada.Can, for: Ret.OAuthProvider do
   alias Ret.{AppConfig, Hub}
 
-  @object_actions [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects, :spawn_emoji, :fly]
+  @object_actions [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects, :spawn_emoji, :fly, :voice_chat, :text_chat]
   @special_actions [:update_hub, :update_roles, :close_hub, :embed_hub, :kick_users, :mute_users, :amplify_audio]
 
   # Always deny access to non-enterable hubs
@@ -1013,7 +1021,7 @@ defimpl Canada.Can, for: Atom do
   def can?(_, :join_hub, %Ret.Hub{hub_bindings: []}),
     do: !AppConfig.get_cached_config_value("features|require_account_for_join")
 
-  @object_actions [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects, :spawn_emoji, :fly]
+  @object_actions [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects, :spawn_emoji, :fly, :voice_chat, :text_chat]
   # Object permissions for anonymous users are based on member permission settings
   def can?(_account, action, hub) when action in @object_actions do
     hub |> Hub.has_member_permission?(action)
