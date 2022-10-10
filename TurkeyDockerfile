@@ -2,8 +2,7 @@
 FROM elixir:1.14-alpine as builder
 RUN apk add --no-cache nodejs yarn git build-base
 copy . .
-# use latest for all deps
-run rm mix.lock && echo "import Config" > ./config/runtime.exs && ls -lha ./config/
+run echo "import Config" > ./config/runtime.exs && ls -lha ./config/
 RUN mix local.hex --force && mix local.rebar --force && mix deps.get
 run mix deps.clean mime --build && rm -rf _build && mix compile
 # COPY config/runtime.exs config/
