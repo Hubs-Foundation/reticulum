@@ -16,7 +16,7 @@ healthcheck &
 # TURKEY_MODE=1 exec /ret/bin/ret foreground
 python d2e.py > /ret/releases/1.0.0/runtime.exs
 
-echo "config.toml" && cat /ret/config.toml
-echo "runtime.exs" && cat /ret/releases/1.0.0/runtime.exs
+# echo "\nconfig.toml" && cat /ret/config.toml
+# echo "\nruntime.exs" && cat /ret/releases/1.0.0/runtime.exs
 
 TURKEY_MODE=1 exec /ret/bin/ret start
