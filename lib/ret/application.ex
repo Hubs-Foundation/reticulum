@@ -249,7 +249,7 @@ defmodule Ret.Application do
       ),
 
       # Start the PubSub system
-      {Phoenix.PubSub, [name: Ret.PubSub, adapter: Phoenix.PubSub.PG2, pool_size: 4]},
+      {Phoenix.PubSub, [name: Ret.PubSub, adapter: Phoenix.PubSub.PG2]},
 
       supervisor(TheEnd.Of.Phoenix, [[timeout: 10_000, endpoint: RetWeb.Endpoint]])
     ]
