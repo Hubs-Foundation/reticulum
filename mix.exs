@@ -35,7 +35,7 @@ defmodule Ret.Mixfile do
     [
       {:ecto_boot_migration, "~> 0.2.0"},
       {:phoenix, "~> 1.4.0"},
-      {:phoenix_pubsub, "~> 1.1"},
+      {:phoenix_pubsub, "~> 2.1"},
       {:phoenix_ecto, "~> 4.0"},
       {:plug, "~> 1.7"},
       # Avoid 3.4.0 for now bc https://github.com/elixir-ecto/ecto/issues/3246
