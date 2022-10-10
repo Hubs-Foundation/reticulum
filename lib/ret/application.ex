@@ -65,7 +65,7 @@ defmodule Ret.Application do
     # Define workers and child supervisors to be supervised
     children = [
       # Start the PubSub system
-      {Phoenix.PubSub, [name: Ret.PubSub, adapter: Phoenix.PubSub.PG2, pool_size: 4]},
+      {Phoenix.PubSub, [name: Ret.PubSub, adapter: Phoenix.PubSub.PG2]},
       # Start the Ecto repository
       supervisor(Ret.Repo, []),
       supervisor(RetWeb.Endpoint, []),
