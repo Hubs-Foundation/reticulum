@@ -14,5 +14,5 @@ export NODE_NAME="${POD_IP}" NODE_COOKIE="foobar"
 echo "NODE_NAME=$NODE_NAME" 
 healthcheck &
 # TURKEY_MODE=1 exec /ret/bin/ret foreground
-python d2e.py > $(ls /ret/releases/*/runtime.exs)
+python d2e.py > /ret/releases/1.0.0/runtime.exs
 TURKEY_MODE=1 exec /ret/bin/ret start

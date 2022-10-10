@@ -37,10 +37,10 @@ defmodule Ret.JanusLoadStatus do
 
   defp get_dialog_pods() do
     try do
-      hosts = \
-        "dialog.turkey-stream.svc.cluster.local" \
-        |> String.to_charlist() \
-        |> :inet_res.lookup(:in, :a) \
+      hosts =
+        "dialog.turkey-stream.svc.cluster.local"
+        |> String.to_charlist()
+        |> :inet_res.lookup(:in, :a)
         |> Enum.map(fn {a, b, c, d} -> "#{a}.#{b}.#{c}.#{d}" end)
 
       for host <- hosts do

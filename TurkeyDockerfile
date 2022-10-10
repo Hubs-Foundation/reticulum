@@ -20,4 +20,4 @@ copy --from=builder /_build/turkey/rel/ret/ .
 copy --from=certr /certs .
 RUN apk update && apk add --no-cache bash openssl-dev openssl jq libstdc++ coreutils curl
 copy --from=builder /scripts/docker/ /ret/
-cmd python d2e.py > /ret/releases/1.0.0/runtime.exs && TURKEY_MODE=1 exec /ret/bin/ret start
+cmd run.sh
