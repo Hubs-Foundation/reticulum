@@ -11,5 +11,9 @@ jobs:
     with:
       registry: mozillareality
       dockerfile: TurkeyDockerfile
+      bio_script_path: scripts/hab-wrap-and-push.sh
     secrets:
       DOCKER_HUB_PWD: ${{ secrets.DOCKER_HUB_PWD }}
+      BLDR_HAB_TOKEN: ${{ secrets.BLDR_HAB_TOKEN }}
+      BLDR_RET_TOKEN: ${{ secrets.BLDR_RET_TOKEN }}
+      BLDR_RET_PUB_B64: ${{ secrets.BLDR_RET_PUB_B64 }}
