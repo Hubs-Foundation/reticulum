@@ -1,22 +1,69 @@
 defmodule Ret.JanusLoadStatus do
   use Cachex.Warmer
   use Retry
-
   def interval, do: :timer.seconds(15)
 
-  def execute(_state) do
-    with default_janus_host when is_binary(default_janus_host) and default_janus_host != "" <-
-           module_config(:default_janus_host) do
-      {:ok, [{:host_to_ccu, [{default_janus_host, 0}]}]}
-    else
-      _ ->
-        entries =
-          module_config(:janus_service_name)
-          |> Ret.Habitat.get_service_members()
-          |> Enum.map(fn {host, ip} -> Task.async(fn -> {host, janus_ip_to_ccu(ip)} end) end)
-          |> Enum.map(&Task.await(&1, 10_000))
+  require Logger
 
-        {:ok, [{:host_to_ccu, entries}]}
+  def execute(_state) do
+    if System.get_env("TURKEY_MODE") do
+      if module_config(:janus_service_name) == "" do
+        {:ok, [{:host_to_ccu, [{module_config(:default_janus_host), 0}]}]}
+      else
+        with pods when pods != [] <- get_dialog_pods() do
+          {:ok, [{:host_to_ccu, pods}]}
+        else
+          _ ->
+            Logger.warn("falling back to default_janus_host because get_dialog_pods() returned []")
+            {:ok, [{:host_to_ccu, [{module_config(:default_janus_host), 0}]}]}
+        end
+      end
+    else
+      with default_janus_host when is_binary(default_janus_host) and default_janus_host != "" <-
+             module_config(:default_janus_host) do
+        {:ok, [{:host_to_ccu, [{default_janus_host, 0}]}]}
+      else
+        _ ->
+          entries =
+            module_config(:janus_service_name)
+            |> Ret.Habitat.get_service_members()
+            |> Enum.map(fn {host, ip} -> Task.async(fn -> {host, janus_ip_to_ccu(ip)} end) end)
+            |> Enum.map(&Task.await(&1, 10_000))
+
+          {:ok, [{:host_to_ccu, entries}]}
+      end
+    end
+  end
+
+  defp get_dialog_pods() do
+    try do
+      hosts =
+        "dialog.turkey-stream.svc.cluster.local"
+        |> String.to_charlist()
+        |> :inet_res.lookup(:in, :a)
+        |> Enum.map(fn {a, b, c, d} -> "#{a}.#{b}.#{c}.#{d}" end)
+
+      for host <- hosts do
+        %{body: body} = HTTPoison.get!("http://#{host}:7000/meta")
+        body_json = body |> Poison.decode!()
+
+        # The cache key we construct here is a set of meta data that will be parsed by the dialog ingress proxy (dip),
+        # which will decide how to route dialog connections based on this information.
+        ret_max_room_size = Ret.AppConfig.get_cached_config_value("features|max_room_size")
+        meta_data_str = "#{host}|#{ret_max_room_size}"
+        encoded_meta_data = Base.encode32(meta_data_str, case: :lower, padding: false)
+        cache_key = "#{encoded_meta_data}.#{module_config(:janus_service_name)}"
+
+        current_load = body_json["cap"]
+
+        {cache_key, current_load}
+      end
+    rescue
+      exception ->
+        # This should only really occur in disaster scenarios,
+        # if the request to the dialog endpoint fails, or it returns an invalid response.
+        Logger.warn(inspect(exception))
+        []
     end
   end
 

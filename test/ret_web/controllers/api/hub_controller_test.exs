@@ -28,7 +28,7 @@ defmodule RetWeb.HubControllerTest do
     disabled_account |> Ecto.Changeset.change(state: :disabled) |> Ret.Repo.update!()
 
     conn
-    |> put_auth_header_for_account("disabled_account@mozilla.com")
+    |> put_auth_header_for_email("disabled_account@mozilla.com")
     |> create_hub("Test Hub")
     |> response(401)
   end

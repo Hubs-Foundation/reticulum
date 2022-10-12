@@ -4,31 +4,25 @@ pkg_version="1.0.1"
 pkg_maintainer="Mozilla Mixed Reality <mixreality@mozilla.com>"
 pkg_upstream_url="http://github.com/mozilla/reticulum"
 pkg_license=('MPL-2.0')
-
 pkg_deps=(
     core/coreutils/8.30/20190115012313
     core/bash/4.4.19/20190115012619
     core/which/2.21/20190430084037
     mozillareality/erlang/22.0
 )
-
 pkg_build_deps=(
     core/coreutils/8.30/20190115012313
     core/git/2.23.0
     mozillareality/erlang/22.0
     core/elixir/1.8.0
 )
-
 pkg_exports=(
    [port]=phx.port
 )
-
 pkg_description="A moral imperative."
-
 do_verify() {
     return 0
 }
-
 do_prepare() {
     export LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
     export MIX_ENV=prod
@@ -40,7 +34,6 @@ do_prepare() {
 
     return 0
 }
-
 do_build() {
     mix local.hex --force
     mix local.rebar --force
@@ -49,7 +42,6 @@ do_build() {
     rm -rf _build
     mix compile
 }
-
 do_install() {
     rm -rf _build/prod/rel/ret/releases
     MIX_ENV=prod mix distillery.release
@@ -65,11 +57,9 @@ do_install() {
 
     # TODO 1.9 releases chmod 0655 elixir, bin/erl
 }
-
 do_strip() {
     return 0
 }
-
 do_end() {
     return 0
 }

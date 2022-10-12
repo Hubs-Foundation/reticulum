@@ -10,8 +10,6 @@ link_host = "hubs-link.local"
 # To run reticulum across a LAN for local testing, uncomment and change the line below to the LAN IP
 # host = cors_proxy_host = "192.168.1.27"
 
-dev_janus_host = "dev-janus.reticulum.io"
-
 # For development, we disable any cache and enable
 # debugging and code reloading.
 #
@@ -25,8 +23,8 @@ config :ret, RetWeb.Endpoint,
     port: 4000,
     otp_app: :ret,
     cipher_suite: :strong,
-    keyfile: "#{System.get_env("PWD")}/priv/dev-ssl.key",
-    certfile: "#{System.get_env("PWD")}/priv/dev-ssl.cert"
+    keyfile: "#{File.cwd!()}/priv/dev-ssl.key",
+    certfile: "#{File.cwd!()}/priv/dev-ssl.cert"
   ],
   cors_proxy_url: [scheme: "https", host: cors_proxy_host, port: 4000],
   assets_url: [scheme: "https", host: assets_host, port: 4000],
@@ -35,17 +33,10 @@ config :ret, RetWeb.Endpoint,
   debug_errors: true,
   code_reloader: true,
   check_origin: false,
+  # This config value is for local development only.
   secret_key_base: "txlMOtlaY5x3crvOCko4uV5PM29ul3zGo1oBGNO3cDXx+7GHLKqt0gR9qzgThxb5",
   allowed_origins: "*",
-  allow_crawlers: true,
-  watchers: [
-    node: [
-      "node_modules/brunch/bin/brunch",
-      "watch",
-      "--stdin",
-      cd: Path.expand("../assets", __DIR__)
-    ]
-  ]
+  allow_crawlers: true
 
 # ## SSL Support
 #
@@ -119,17 +110,26 @@ config :ret, Ret.DiscordClient,
   client_secret: "",
   bot_token: ""
 
+config :ret, RetWeb.Api.V1.WhatsNewController, token: ""
+
+config :ret, RetWeb.Plugs.DashboardHeaderAuthorization, dashboard_access_key: ""
+
 # Allow any origin for API access in dev
 config :cors_plug, origin: ["*"]
 
 config :ret,
+  # This config value is for local development only.
   upload_encryption_key: "a8dedeb57adafa7821027d546f016efef5a501bd",
   bot_access_key: ""
 
+hubs_admin_internal_hostname = System.get_env("HUBS_ADMIN_INTERNAL_HOSTNAME") || host
+hubs_client_internal_hostname = System.get_env("HUBS_CLIENT_INTERNAL_HOSTNAME") || host
+spoke_internal_hostname = System.get_env("SPOKE_INTERNAL_HOSTNAME") || host
+
 config :ret, Ret.PageOriginWarmer,
-  hubs_page_origin: "https://#{host}:8080",
-  admin_page_origin: "https://#{host}:8989",
-  spoke_page_origin: "https://#{host}:9090",
+  admin_page_origin: "https://#{hubs_admin_internal_hostname}:8989",
+  hubs_page_origin: "https://#{hubs_client_internal_hostname}:8080",
+  spoke_page_origin: "https://#{spoke_internal_hostname}:9090",
   insecure_ssl: true
 
 config :ret, Ret.HttpUtils, insecure_ssl: true
@@ -140,7 +140,6 @@ config :ret, Ret.MediaResolver,
   deviantart_client_secret: nil,
   imgur_mashape_api_key: nil,
   imgur_client_id: nil,
-  google_poly_api_key: nil,
   youtube_api_key: nil,
   sketchfab_api_key: nil,
   ytdl_host: nil,
@@ -149,6 +148,7 @@ config :ret, Ret.MediaResolver,
 config :ret, Ret.Speelycaptor, speelycaptor_endpoint: "https://1dhaogh2hd.execute-api.us-west-1.amazonaws.com/public"
 
 config :ret, Ret.Storage,
+  host: "https://#{host}:4000",
   storage_path: "storage/dev",
   ttl: 60 * 60 * 24
 
@@ -184,12 +184,14 @@ config :ret, Ret.OAuthToken, oauth_token_key: ""
 
 config :ret, Ret.Guardian,
   issuer: "ret",
+  # This config value is for local development only.
   secret_key: "47iqPEdWcfE7xRnyaxKDLt9OGEtkQG3SycHBEMOuT2qARmoESnhc76IgCUjaQIwX",
   ttl: {12, :weeks}
 
 config :web_push_encryption, :vapid_details,
   subject: "mailto:admin@mozilla.com",
   public_key: "BAb03820kHYuqIvtP6QuCKZRshvv_zp5eDtqkuwCUAxASBZMQbFZXzv8kjYOuLGF16A3k8qYnIN10_4asB-Aw7w",
+  # This config value is for local development only.
   private_key: "w76tXh1d3RBdVQ5eINevXRwW6Ow6uRcBa8tBDOXfmxM"
 
 config :sentry,
@@ -202,7 +204,10 @@ config :sentry,
 
 config :ret, Ret.Habitat, ip: "127.0.0.1", http_port: 9631
 
-config :ret, Ret.JanusLoadStatus, default_janus_host: dev_janus_host, janus_port: 443
+dialog_hostname = System.get_env("DIALOG_HOSTNAME") || "dev-janus.reticulum.io"
+dialog_port = String.to_integer(System.get_env("DIALOG_PORT") || "443")
+
+config :ret, Ret.JanusLoadStatus, default_janus_host: dialog_hostname, janus_port: dialog_port
 
 config :ret, Ret.RoomAssigner, balancer_weights: [{600, 1}, {300, 50}, {0, 500}]
 

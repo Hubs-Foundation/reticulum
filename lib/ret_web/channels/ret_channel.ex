@@ -24,6 +24,11 @@ defmodule RetWeb.RetChannel do
     socket |> handle_join(hub_id)
   end
 
+  def handle_in("change_hub", %{"hub_id" => hub_id}, socket) do
+    {:ok, _} = Presence.update(socket, socket.assigns.session_id, %{hub_id: hub_id})
+    {:noreply, socket}
+  end
+
   def handle_in("refresh_perms_token", _params, socket) do
     account = Guardian.Phoenix.Socket.current_resource(socket)
 

@@ -23,6 +23,10 @@ defmodule Ret.TestHelpers do
 
   def auth_with_account(conn, account) do
     {:ok, token, _claims} = account |> Ret.Guardian.encode_and_sign()
+    put_auth_header_for_token(conn, token)
+  end
+
+  def put_auth_header_for_token(conn, token) do
     conn |> Plug.Conn.put_req_header("authorization", "bearer: " <> token)
   end
 
@@ -56,6 +60,14 @@ defmodule Ret.TestHelpers do
 
   def create_owned_file(%{account: account}) do
     {:ok, owned_file: generate_temp_owned_file(account)}
+  end
+
+  @spec create_owned_file(Account.t(), String.t()) :: OwnedFile.t()
+  def create_owned_file(%Account{} = account, file_contents) when is_binary(file_contents) do
+    file_path = generate_temp_file(file_contents)
+    {:ok, uuid} = Storage.store(%Plug.Upload{path: file_path}, "text/plain", "secret")
+    {:ok, owned_file} = Storage.promote(uuid, "secret", nil, account)
+    owned_file
   end
 
   def create_scene(%Account{} = account) do
@@ -204,12 +216,25 @@ defmodule Ret.TestHelpers do
     File.rm_rf(Application.get_env(:ret, Storage)[:storage_path])
   end
 
-  def put_auth_header_for_account(conn, email) do
-    {:ok, token, _claims} =
-      email
-      |> Ret.Account.find_or_create_account_for_email()
-      |> Ret.Guardian.encode_and_sign()
+  def put_auth_header_for_email(conn, email) do
+    put_auth_header_for_account(conn, Ret.Account.find_or_create_account_for_email(email))
+  end
+
+  def put_auth_header_for_account(conn, account) do
+    {:ok, token, _claims} = Ret.Guardian.encode_and_sign(account)
 
     conn |> Plug.Conn.put_req_header("authorization", "bearer: " <> token)
+  end
+
+  def assign_creator(hub, account) do
+    hub
+    |> Ret.Repo.preload(created_by_account: [])
+    |> Ret.Hub.changeset_for_creator_assignment(account, hub.creator_assignment_token)
+    |> Ret.Repo.update!()
+  end
+
+  def merge_module_config(app, key, configs) do
+    current_config = Application.get_env(app, key, %{})
+    Application.put_env(app, key, Map.merge(current_config, configs))
   end
 end

@@ -28,15 +28,15 @@ defmodule Ret.HubInvite do
     end
   end
 
-  def revoke_invite(hub_invite_sid) when is_binary(hub_invite_sid) do
-    hub_invite = HubInvite |> Repo.get_by(hub_invite_sid: hub_invite_sid)
+  def revoke_invite(%Hub{} = hub, hub_invite_sid) when is_binary(hub_invite_sid) do
+    hub_invite = HubInvite |> Repo.get_by(hub_id: hub.hub_id, hub_invite_sid: hub_invite_sid)
     change(hub_invite, state: :revoked) |> Repo.update!()
   end
 
-  def active?(nil = _hub_invite_sid), do: false
+  def active?(_hub, nil = _hub_invite_sid), do: false
 
-  def active?(hub_invite_sid) do
-    case Ret.HubInvite |> Ret.Repo.get_by(hub_invite_sid: hub_invite_sid) do
+  def active?(hub, hub_invite_sid) do
+    case Ret.HubInvite |> Ret.Repo.get_by(hub_id: hub.hub_id, hub_invite_sid: hub_invite_sid) do
       nil -> false
       %Ret.HubInvite{state: :revoked} -> false
       %Ret.HubInvite{state: :active} -> true

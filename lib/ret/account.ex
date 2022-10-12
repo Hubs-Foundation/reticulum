@@ -6,6 +6,8 @@ defmodule Ret.Account do
 
   import Canada, only: [can?: 2]
 
+  @type t :: %__MODULE__{}
+
   @schema_prefix "ret0"
   @primary_key {:account_id, :id, autogenerate: true}
   @account_preloads [:login, :identity]
@@ -22,6 +24,14 @@ defmodule Ret.Account do
     has_many(:projects, Ret.Project, foreign_key: :created_by_account_id)
     has_many(:assets, Ret.Asset, foreign_key: :account_id)
     timestamps()
+  end
+
+  def query do
+    from(account in Account)
+  end
+
+  def where_account_id_is(query, id) do
+    from(account in query, where: account.account_id == ^id)
   end
 
   def has_accounts?(), do: from(a in Account, limit: 1) |> Repo.exists?()

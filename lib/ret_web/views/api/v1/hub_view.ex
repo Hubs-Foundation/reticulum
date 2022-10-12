@@ -34,7 +34,9 @@ defmodule RetWeb.Api.V1.HubView do
           user_data: hub.user_data,
           slug: hub.slug,
           allow_promotion: hub.allow_promotion,
-          entry_code: hub.entry_code,
+          # The entry code feature has been removed. We return 0 here to
+          # maintain compatibility with older clients.
+          entry_code: 0,
           entry_mode: hub.entry_mode,
           host: hub.host,
           port: Ret.Hub.janus_port(),
@@ -65,7 +67,9 @@ defmodule RetWeb.Api.V1.HubView do
           user_data: hub.user_data,
           slug: hub.slug,
           allow_promotion: hub.allow_promotion,
-          entry_code: hub.entry_code,
+          # The entry code feature has been removed. We return 0 here to
+          # maintain compatibility with older clients.
+          entry_code: 0,
           entry_mode: hub.entry_mode,
           host: hub.host,
           port: Ret.Hub.janus_port(),

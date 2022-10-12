@@ -59,6 +59,11 @@ defmodule RetWeb.HubChannel do
     )
   end
 
+  defp perform_join(_socket, nil, _context, _params) do
+    Statix.increment("ret.channels.hub.joins.not_found")
+    {:error, %{message: "No such Hub", reason: "not_found"}}
+  end
+
   defp perform_join(socket, hub, context, params) do
     account =
       case Ret.Guardian.resource_from_token(params["auth_token"]) do
@@ -67,6 +72,7 @@ defmodule RetWeb.HubChannel do
       end
 
     hub_requires_oauth = hub.hub_bindings |> Enum.empty?() |> Kernel.not()
+
     bot_access_key = Application.get_env(:ret, :bot_access_key)
     has_valid_bot_access_key = !!(bot_access_key && params["bot_access_key"] == bot_access_key)
 
@@ -96,7 +102,7 @@ defmodule RetWeb.HubChannel do
           {nil, nil}
       end
 
-    has_active_invite = Ret.HubInvite.active?(params["hub_invite_id"])
+    has_active_invite = Ret.HubInvite.active?(hub, params["hub_invite_id"])
 
     params =
       params
@@ -228,8 +234,12 @@ defmodule RetWeb.HubChannel do
 
   def handle_in("events:begin_recording", _payload, socket), do: socket |> set_presence_flag(:recording, true)
   def handle_in("events:end_recording", _payload, socket), do: socket |> set_presence_flag(:recording, false)
+  def handle_in("events:raise_hand", _payload, socket), do: socket |> set_presence_flag(:hand_raised, true)
+  def handle_in("events:lower_hand", _payload, socket), do: socket |> set_presence_flag(:hand_raised, false)
   def handle_in("events:begin_streaming", _payload, socket), do: socket |> set_presence_flag(:streaming, true)
   def handle_in("events:end_streaming", _payload, socket), do: socket |> set_presence_flag(:streaming, false)
+  def handle_in("events:begin_typing", _payload, socket), do: socket |> set_presence_flag(:typing, true)
+  def handle_in("events:end_typing", _payload, socket), do: socket |> set_presence_flag(:typing, false)
 
   def handle_in("message" = event, %{"type" => type} = payload, socket) do
     account = Guardian.Phoenix.Socket.current_resource(socket)
@@ -448,8 +458,8 @@ defmodule RetWeb.HubChannel do
     hub = hub_for_socket(socket)
     account = Guardian.Phoenix.Socket.current_resource(socket)
 
-    if account |> can?(update_hub(hub)) do
-      HubInvite.revoke_invite(payload["hub_invite_id"])
+    if account |> can?(update_hub(hub)) and HubInvite.active?(hub, payload["hub_invite_id"]) do
+      HubInvite.revoke_invite(hub, payload["hub_invite_id"])
       # Hubs can only have one invite for now, so we create a new one when the old one was revoked.
       hub_invite = hub |> HubInvite.find_or_create_invite_for_hub()
       {:reply, {:ok, %{hub_invite_id: hub_invite.hub_invite_sid}}, socket}
@@ -560,8 +570,10 @@ defmodule RetWeb.HubChannel do
 
     case Guardian.Phoenix.Socket.current_resource(socket) do
       %Account{} = account ->
-        url = Ret.TwitterClient.get_oauth_url(hub.hub_sid, account.account_id)
-        {:reply, {:ok, %{oauth_url: url}}, socket}
+        case Ret.TwitterClient.get_oauth_url(hub.hub_sid, account.account_id) do
+          {:error, reason} -> {:reply, {:error, %{reason: reason}}, socket}
+          url -> {:reply, {:ok, %{oauth_url: url}}, socket}
+        end
 
       _ ->
         {:reply, :error, socket}
@@ -759,9 +771,14 @@ defmodule RetWeb.HubChannel do
   end
 
   def terminate(_reason, socket) do
-    socket
-    |> SessionStat.stat_query_for_socket()
-    |> Repo.update_all(set: [ended_at: NaiveDateTime.utc_now()])
+    # enable_terminate_actions is set to false during tests. Since the GenServer is forcefully
+    # terminated when a test ends, we want to avoid running into an error that would happen if we
+    # invoked a DB mutation during termination.
+    if Application.get_env(:ret, __MODULE__)[:enable_terminate_actions] !== false do
+      socket
+      |> SessionStat.stat_query_for_socket()
+      |> Repo.update_all(set: [ended_at: NaiveDateTime.utc_now()])
+    end
 
     :ok
   end
@@ -807,7 +824,7 @@ defmodule RetWeb.HubChannel do
     |> maybe_override_identifiers(account)
     |> Map.put(:roles, hub |> Hub.roles_for_account(account))
     |> Map.put(:permissions, hub |> Hub.perms_for_account(account))
-    |> Map.take([:presence, :profile, :context, :roles, :permissions, :streaming, :recording])
+    |> Map.take([:presence, :profile, :context, :roles, :permissions, :streaming, :recording, :hand_raised, :typing])
   end
 
   # Hubs Bot can set their own display name.
@@ -898,12 +915,6 @@ defmodule RetWeb.HubChannel do
       })
 
     assigns |> Map.put(:profile, overriden)
-  end
-
-  defp join_with_hub(nil, _account, _socket, _context, _params) do
-    Statix.increment("ret.channels.hub.joins.not_found")
-
-    {:error, %{message: "No such Hub"}}
   end
 
   defp join_with_hub(%Hub{entry_mode: :deny}, _account, _socket, _context, _params) do
@@ -1002,7 +1013,7 @@ defmodule RetWeb.HubChannel do
        do: deny_join()
 
   defp join_with_hub(%Hub{} = hub, account, socket, context, params) do
-    hub = hub |> Hub.ensure_valid_entry_code!() |> Hub.ensure_host()
+    hub = hub |> Hub.ensure_host()
 
     hub =
       if context["embed"] && !hub.embedded do

@@ -29,7 +29,7 @@ defmodule RetWeb.Email do
       |> subject(email_subject)
       |> text_body(email_body)
 
-    if admin_email do
+    if admin_email && !System.get_env("TURKEY_MODE") do
       email |> put_header("Return-Path", admin_email)
     else
       email

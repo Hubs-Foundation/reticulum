@@ -4,6 +4,7 @@ pool = "default"
 [phx]
 port = 4000
 ip = "127.0.0.1"
+# This config value is for local development only.
 secret_key = "txlMOtlaY5x3crvOCko4uV5PM29ul3zGo1oBGNO3cDXx+7GHLKqt0gR9qzgThxb5"
 url_host_prefix = ""
 static_url_host_prefix = ""
@@ -12,9 +13,11 @@ secondary_url_host = ""
 allow_crawlers = true
 
 [guardian]
+# This config value is for local development only.
 secret_key = "txlMOtlaY5x3crvOCko4uV5PM29ul3zGo1oBGNO3cDXx+7GHLKqt0gR9qzgThxb5"
 
 [erlang]
+# This config value is for local development only.
 node_cookie = "txlMOtlaY5x3crvOCko4uV5PM29ul3zGo1oBGNO3cDXx+7GHLKqt0gR9qzgThxb5"
 
 [habitat]

@@ -14,13 +14,12 @@ defmodule Ret.MediaResolver do
 
   require Logger
 
-  alias Ret.{CachedFile, MediaResolverQuery, Statix}
+  alias Ret.{CachedFile, MediaResolverQuery, Statix, HttpUtils}
 
   @ytdl_valid_status_codes [200, 500]
 
   @youtube_rate_limit %{scale: 8_000, limit: 1}
   @sketchfab_rate_limit %{scale: 60_000, limit: 15}
-  @poly_rate_limit %{scale: 60_000, limit: 1000}
   @max_await_for_rate_limit_s 120
 
   @non_video_root_hosts [
@@ -34,7 +33,29 @@ defmodule Ret.MediaResolver do
   def resolve(%MediaResolverQuery{url: url} = query) when is_binary(url) do
     uri = url |> URI.parse()
     root_host = get_root_host(uri.host)
-    resolve(query |> Map.put(:url, uri), root_host)
+    query = Map.put(query, :url, uri)
+
+    # TODO: We could end up running maybe_fallback_to_screenshot_opengraph_or_nothing
+    #       twice in a row. These resolve functions can be simplified so that we can
+    #       more easily track individual failures and only fallback when necessary.
+    #       Also make sure they have a uniform response shape for indicating an
+    #       error.
+    case resolve(query, root_host) do
+      :forbidden ->
+        :forbidden
+
+      :error ->
+        maybe_fallback_to_screenshot_opengraph_or_nothing(query)
+
+      {:error, _reason} ->
+        maybe_fallback_to_screenshot_opengraph_or_nothing(query)
+
+      {:commit, nil} ->
+        maybe_fallback_to_screenshot_opengraph_or_nothing(query)
+
+      commit ->
+        commit
+    end
   end
 
   def resolve(%MediaResolverQuery{url: %URI{host: nil}}, _root_host) do
@@ -53,13 +74,6 @@ defmodule Ret.MediaResolver do
        |> URI.encode_query()
      )
      |> resolved()}
-  end
-
-  # Necessary short circuit around google.com root_host to skip YT-DL check for Poly
-  def resolve(%MediaResolverQuery{url: %URI{host: "poly.google.com"}} = query, root_host) do
-    rate_limited_resolve(query, root_host, @poly_rate_limit, fn ->
-      resolve_non_video(query, root_host)
-    end)
   end
 
   def resolve(%MediaResolverQuery{} = query, root_host) when root_host in @non_video_root_hosts do
@@ -96,7 +110,21 @@ defmodule Ret.MediaResolver do
   end
 
   def resolve(%MediaResolverQuery{} = query, root_host) do
-    resolve_with_ytdl(query, root_host, query |> ytdl_format(root_host))
+    # If we fall through all the known hosts above, we must validate the resolved ip for this host
+    # to ensure that it is allowed.
+    resolved_ip = HttpUtils.resolve_ip(query.url.host)
+
+    case resolved_ip do
+      nil ->
+        :error
+
+      resolved_ip ->
+        if HttpUtils.internal_ip?(resolved_ip) do
+          :forbidden
+        else
+          resolve_with_ytdl(query, root_host, query |> ytdl_format(root_host))
+        end
+    end
   end
 
   def resolve_with_ytdl(%MediaResolverQuery{} = query, root_host, ytdl_format) do
@@ -191,6 +219,7 @@ defmodule Ret.MediaResolver do
             {:offline_stream, body}
 
           String.contains?(body, "HTTPError 429") ->
+            Statix.increment("ret.media_resolver.ytdl.rate_limited")
             {:rate_limited, body}
 
           true ->
@@ -275,43 +304,6 @@ defmodule Ret.MediaResolver do
   end
 
   defp resolve_non_video(
-         %MediaResolverQuery{url: %URI{host: "poly.google.com", path: "/view/" <> asset_id} = uri},
-         "google.com"
-       ) do
-    [uri, meta] =
-      with api_key when is_binary(api_key) <- module_config(:google_poly_api_key) do
-        Statix.increment("ret.media_resolver.poly.requests")
-
-        payload =
-          "https://poly.googleapis.com/v1/assets/#{asset_id}?key=#{api_key}"
-          |> retry_get_until_success
-          |> Map.get(:body)
-          |> Poison.decode!()
-
-        meta =
-          %{expected_content_type: "model/gltf"}
-          |> Map.put(:name, payload["displayName"])
-          |> Map.put(:author, payload["authorName"])
-          |> Map.put(:license, payload["license"])
-
-        formats = payload |> Map.get("formats")
-
-        uri =
-          (Enum.find(formats, &(&1["formatType"] == "GLTF2")) || Enum.find(formats, &(&1["formatType"] == "GLTF")))
-          |> Kernel.get_in(["root", "url"])
-          |> URI.parse()
-
-        Statix.increment("ret.media_resolver.poly.ok")
-
-        [uri, meta]
-      else
-        _err -> [uri, nil]
-      end
-
-    {:commit, uri |> resolved(meta)}
-  end
-
-  defp resolve_non_video(
          %MediaResolverQuery{url: %URI{path: "/models/" <> model_id}} = query,
          "sketchfab.com" = root_host
        ) do
@@ -331,15 +323,41 @@ defmodule Ret.MediaResolver do
     end)
   end
 
-  defp resolve_non_video(%MediaResolverQuery{url: %URI{host: host} = uri, version: version}, _root_host) do
+  defp resolve_non_video(%MediaResolverQuery{} = query, _root_host) do
+    maybe_fallback_to_screenshot_opengraph_or_nothing(query)
+  end
+
+  defp maybe_fallback_to_screenshot_opengraph_or_nothing(
+         %MediaResolverQuery{url: %URI{host: host}, version: _version} = query
+       ) do
+    # We fell back because we did not match any of the known hosts above, or ytdl resolution failed. So, we need to
+    # validate the IP for this host before making further requests.
+    resolved_ip = HttpUtils.resolve_ip(host)
+
+    case resolved_ip do
+      nil ->
+        :error
+
+      resolved_ip ->
+        if HttpUtils.internal_ip?(resolved_ip) do
+          :forbidden
+        else
+          fallback_to_screenshot_opengraph_or_nothing(query)
+        end
+    end
+  end
+
+  defp fallback_to_screenshot_opengraph_or_nothing(%MediaResolverQuery{url: %URI{host: host} = uri, version: version}) do
     photomnemonic_endpoint = module_config(:photomnemonic_endpoint)
 
     # Crawl og tags for hubs rooms + scenes
     is_local_url = host === RetWeb.Endpoint.host()
 
-    case uri |> URI.to_string() |> retry_head_then_get_until_success([{"Range", "bytes=0-32768"}]) do
+    case uri
+         |> URI.to_string()
+         |> retry_head_then_get_until_success(headers: [{"Range", "bytes=0-32768"}], append_browser_user_agent: true) do
       :error ->
-        nil
+        :error
 
       %HTTPoison.Response{headers: headers} ->
         content_type = headers |> content_type_from_headers
@@ -375,7 +393,7 @@ defmodule Ret.MediaResolver do
 
           case Download.from(url, path: path) do
             {:ok, _path} -> {:ok, %{content_type: "image/png"}}
-            error -> {:error, error}
+            _error -> :error
           end
         end
       )
@@ -392,7 +410,9 @@ defmodule Ret.MediaResolver do
   end
 
   defp opengraph_result_for_uri(uri) do
-    case uri |> URI.to_string() |> retry_get_until_success([{"Range", "bytes=0-32768"}]) do
+    case uri
+         |> URI.to_string()
+         |> retry_get_until_success(headers: [{"Range", "bytes=0-32768"}], append_browser_user_agent: true) do
       :error ->
         :error
 
@@ -429,41 +449,56 @@ defmodule Ret.MediaResolver do
         _err -> [uri, nil]
       end
 
-    {:commit, uri |> resolved(meta)}
+    {:commit, resolved(uri, meta)}
+  end
+
+  defp get_sketchfab_model_zip_url(%{model_id: model_id, api_key: api_key}) do
+    case "https://api.sketchfab.com/v3/models/#{model_id}/download"
+         |> retry_get_until_success(headers: [{"Authorization", "Token #{api_key}"}], cap_ms: 15_000, expiry_ms: 15_000) do
+      :error ->
+        {:error, "Failed to get sketchfab metadata"}
+
+      response ->
+        case response |> Map.get(:body) |> Poison.decode() do
+          {:ok, json} ->
+            {:ok, Kernel.get_in(json, ["gltf", "url"])}
+
+          _ ->
+            {:error, "Failed to get sketchfab metadata"}
+        end
+    end
+  end
+
+  def download_sketchfab_model_to_path(%{model_id: model_id, api_key: api_key, path: path}) do
+    case get_sketchfab_model_zip_url(%{model_id: model_id, api_key: api_key}) do
+      {:ok, zip_url} ->
+        Download.from(zip_url, path: path)
+        {:ok, %{content_type: "model/gltf+zip"}}
+
+      {:error, error} ->
+        {:error, error}
+
+      _ ->
+        {:error, "Failed to get sketchfab url"}
+    end
   end
 
   defp resolve_sketchfab_model(model_id, api_key, version \\ 1) do
-    cached_file_result =
-      CachedFile.fetch(
-        "sketchfab-#{model_id}-#{version}",
-        fn path ->
-          Statix.increment("ret.media_resolver.sketchfab.requests")
+    loader = fn path ->
+      Statix.increment("ret.media_resolver.sketchfab.requests")
 
-          res =
-            "https://api.sketchfab.com/v3/models/#{model_id}/download"
-            |> retry_get_until_success([{"Authorization", "Token #{api_key}"}])
+      case download_sketchfab_model_to_path(%{model_id: model_id, api_key: api_key, path: path}) do
+        {:ok, metadata} ->
+          Statix.increment("ret.media_resolver.sketchfab.ok")
+          {:ok, metadata}
 
-          case res do
-            :error ->
-              Statix.increment("ret.media_resolver.sketchfab.errors")
+        {:error, _} ->
+          Statix.increment("ret.media_resolver.sketchfab.errors")
+          :error
+      end
+    end
 
-              :error
-
-            res ->
-              Statix.increment("ret.media_resolver.sketchfab.ok")
-
-              zip_url =
-                res
-                |> Map.get(:body)
-                |> Poison.decode!()
-                |> Kernel.get_in(["gltf", "url"])
-
-              Download.from(zip_url, path: path)
-
-              {:ok, %{content_type: "model/gltf+zip"}}
-          end
-        end
-      )
+    cached_file_result = CachedFile.fetch("sketchfab-#{model_id}-#{version}", loader)
 
     case cached_file_result do
       {:ok, uri} -> [uri, %{expected_content_type: "model/gltf+zip"}]
@@ -498,7 +533,7 @@ defmodule Ret.MediaResolver do
     with headers when is_list(headers) <- get_imgur_headers() do
       image_data =
         imgur_api_url
-        |> retry_get_until_success(headers)
+        |> retry_get_until_success(headers: headers)
         |> Map.get(:body)
         |> Poison.decode!()
         |> Kernel.get_in(["data", "images"])

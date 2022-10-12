@@ -8,6 +8,11 @@ defmodule RetWeb.Router do
     plug(RetWeb.Plugs.AddCSP)
   end
 
+  pipeline :strict_secure_headers do
+    plug(:put_secure_browser_headers)
+    plug(RetWeb.Plugs.AddCSP, strict: true)
+  end
+
   pipeline :ssl_only do
     plug(Plug.SSL, hsts: true, rewrite_on: [:x_forwarded_proto])
   end
@@ -23,6 +28,10 @@ defmodule RetWeb.Router do
     )
   end
 
+  pipeline :rate_limit do
+    plug(RetWeb.Plugs.RateLimit)
+  end
+
   pipeline :browser do
     plug(:accepts, ["html"])
     plug(:put_layout, false)
@@ -30,6 +39,10 @@ defmodule RetWeb.Router do
 
   pipeline :api do
     plug(:accepts, ["json"])
+  end
+
+  pipeline :public_api_access do
+    plug(RetWeb.Plugs.RequirePublicApiAccess)
   end
 
   pipeline :proxy_api do
@@ -61,8 +74,17 @@ defmodule RetWeb.Router do
     plug(RetWeb.Plugs.BotHeaderAuthorization)
   end
 
+  pipeline :dashboard_header_auth do
+    plug(RetWeb.Plugs.DashboardHeaderAuthorization)
+  end
+
   pipeline :canonicalize_domain do
     plug(RetWeb.Plugs.RedirectToMainDomain)
+  end
+
+  pipeline :graphql do
+    plug RetWeb.ApiTokenAuthPipeline
+    plug RetWeb.AddAbsintheContext
   end
 
   scope "/health", RetWeb do
@@ -95,7 +117,10 @@ defmodule RetWeb.Router do
         resources("/availability", Api.V1.SupportSubscriptionController, only: [:index])
       end
 
+      resources("/credentials/scopes", Api.V1.ScopesController, only: [:index])
       resources("/ret_notices", Api.V1.RetNoticeController, only: [:create])
+
+      get("/whats-new", Api.V1.WhatsNewController, :show)
     end
 
     scope "/v1", as: :api_v1 do
@@ -112,10 +137,17 @@ defmodule RetWeb.Router do
       resources("/hubs", Api.V1.HubController, only: [:create, :delete])
     end
 
+    # Must be defined before :show for scenes
+    scope "/v1", as: :api_v1 do
+      pipe_through([:auth_required])
+      get("/scenes/projectless", Api.V1.SceneController, :index_projectless)
+    end
+
     scope "/v1", as: :api_v1 do
       pipe_through([:auth_optional])
       resources("/media/search", Api.V1.MediaSearchController, only: [:index])
       resources("/avatars", Api.V1.AvatarController, only: [:show])
+
       resources("/scenes", Api.V1.SceneController, only: [:show])
     end
 
@@ -142,6 +174,37 @@ defmodule RetWeb.Router do
     end
   end
 
+  scope "/api/v2_alpha", RetWeb do
+    pipe_through(
+      [:secure_headers, :parsed_body, :api, :public_api_access, :auth_required] ++
+        if(Mix.env() == :prod, do: [:ssl_only, :canonicalize_domain], else: [])
+    )
+
+    resources("/credentials", Api.V2.CredentialsController, only: [:create, :index, :update, :show])
+  end
+
+  scope "/api/v2_alpha", as: :api_v2_alpha do
+    pipe_through(
+      [:parsed_body, :api, :public_api_access, :graphql] ++ if(Mix.env() == :prod, do: [:ssl_only], else: [])
+    )
+
+    forward "/graphiql", Absinthe.Plug.GraphiQL, json_codec: Jason, schema: RetWeb.Schema
+    forward "/", Absinthe.Plug, json_codec: Jason, schema: RetWeb.Schema
+  end
+
+  scope "/api-internal", RetWeb do
+    pipe_through(
+      [:dashboard_header_auth, :secure_headers, :parsed_body, :api] ++ if(Mix.env() == :prod, do: [:ssl_only], else: [])
+    )
+
+    scope "/v1", as: :api_internal_v1 do
+      get("/presence", ApiInternal.V1.PresenceController, :show)
+      get("/presence/range_max", ApiInternal.V1.PresenceController, :range_max)
+      get("/storage", ApiInternal.V1.StorageController, :show)
+      post("/rewrite_assets", ApiInternal.V1.RewriteAssetsController, :post)
+    end
+  end
+
   # Directly accessible APIs.
   # Permit direct file uploads without intermediate ALB/Cloudfront/CDN proxying.
   scope "/api", RetWeb do
@@ -153,10 +216,28 @@ defmodule RetWeb.Router do
   end
 
   scope "/", RetWeb do
-    pipe_through([:secure_headers, :parsed_body, :browser] ++ if(Mix.env() == :prod, do: [:ssl_only], else: []))
+    pipe_through([:strict_secure_headers, :parsed_body, :browser] ++ if(Mix.env() == :prod, do: [:ssl_only], else: []))
 
     head("/files/:id", FileController, :head)
     get("/files/:id", FileController, :show)
+  end
+
+  scope "/", RetWeb do
+    pipe_through(
+      [:secure_headers, :parsed_body, :browser] ++
+        if(Mix.env() == :prod, do: [:ssl_only, :canonicalize_domain], else: [])
+    )
+
+    get("/link", PageController, only: [:index])
+  end
+
+  scope "/", RetWeb do
+    pipe_through(
+      [:secure_headers, :parsed_body, :browser, :rate_limit] ++
+        if(Mix.env() == :prod, do: [:ssl_only, :canonicalize_domain], else: [])
+    )
+
+    get("/link/*path", PageController, only: [:index])
   end
 
   scope "/", RetWeb do

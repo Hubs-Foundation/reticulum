@@ -47,6 +47,10 @@ defmodule Ret.OwnedFile do
     get_by_uuid_and_account(owned_file_uuid, account_id) |> set_state(:inactive)
   end
 
+  def set_inactive(%OwnedFile{} = owned_file) do
+    set_state(owned_file, :inactive)
+  end
+
   def get_by_uuid_and_account(owned_file_uuid, account_id) do
     OwnedFile
     |> where(owned_file_uuid: ^owned_file_uuid, account_id: ^account_id)

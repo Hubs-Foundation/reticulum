@@ -21,7 +21,7 @@ defmodule Ret.Speelycaptor do
   def convert(_path, _content_type), do: nil
 
   defp upload_and_convert_mp4(endpoint, upload_url, path, key) do
-    case retry_put_until_success(upload_url, {:file, path}, [], 30_000, 120_000) do
+    case retry_put_until_success(upload_url, {:file, path}, cap_ms: 30_000, expiry_ms: 120_000) do
       %HTTPoison.Response{} ->
         query = %{
           key: key,
@@ -30,9 +30,8 @@ defmodule Ret.Speelycaptor do
 
         case retry_get_until_success(
                "#{endpoint}/convert?#{URI.encode_query(query)}",
-               [],
-               30_000,
-               120_000
+               cap_ms: 30_000,
+               expiry_ms: 120_000
              ) do
           %HTTPoison.Response{body: body} ->
             url = body |> Poison.decode!() |> Map.get("url")

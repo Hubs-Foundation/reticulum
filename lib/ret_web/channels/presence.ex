@@ -25,6 +25,13 @@ defmodule RetWeb.Presence do
     |> Enum.sum()
   end
 
+  # Get number of hub room connections: lobby, ghosts, and in-room avatars
+  def present_ccu_in_room_count do
+    RetWeb.Presence.present_hub_sids()
+    |> Enum.filter(fn sid -> sid !== "admin" end)
+    |> length
+  end
+
   def has_present_members? do
     present_member_count() > 0
   end

@@ -8,6 +8,8 @@ use Mix.Config
 # General application configuration
 config :ret, ecto_repos: [Ret.Repo, Ret.SessionLockRepo]
 
+config :ret, RetWeb.Plugs.PostgrestProxy, hostname: System.get_env("POSTGREST_INTERNAL_HOSTNAME") || "localhost"
+
 config :phoenix, :format_encoders, "json-api": Jason
 config :phoenix, :json_library, Jason
 
@@ -28,6 +30,7 @@ config :mime, :types, %{
 # Configures the endpoint
 config :ret, RetWeb.Endpoint,
   url: [host: "localhost"],
+  # This config value is for local development only.
   secret_key_base: "txlMOtlaY5x3crvOCko4uV5PM29ul3zGo1oBGNO3cDXx+7GHLKqt0gR9qzgThxb5",
   render_errors: [view: RetWeb.ErrorView, accepts: ~w(html json)],
   pubsub: [name: Ret.PubSub, adapter: Phoenix.PubSub.PG2]

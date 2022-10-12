@@ -1,8 +1,9 @@
 defmodule Ret.NodeStat do
   use Ecto.Schema
   import Ecto.Changeset
+  import Ecto.Query
 
-  alias Ret.NodeStat
+  alias Ret.{NodeStat, Repo}
   @schema_prefix "ret0"
   @primary_key false
 
@@ -21,5 +22,19 @@ defmodule Ret.NodeStat do
       :present_sessions,
       :present_rooms
     ])
+  end
+
+  def max_ccu_for_time_range(start_time, end_time) do
+    start_time_truncated = start_time |> NaiveDateTime.truncate(:second)
+    end_time_truncated = end_time |> NaiveDateTime.truncate(:second)
+
+    max_ccu =
+      from(ns in NodeStat,
+        select: max(ns.present_sessions),
+        where: ns.measured_at >= ^start_time_truncated and ns.measured_at < ^end_time_truncated
+      )
+      |> Repo.one()
+
+    if max_ccu === nil, do: 0, else: max_ccu
   end
 end

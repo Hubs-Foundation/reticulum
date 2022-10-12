@@ -6,29 +6,11 @@ defmodule Ret.HubTest do
 
   setup [:create_account, :create_owned_file, :create_scene]
 
-  test "new hub should have entry code", %{scene: scene} do
-    {:ok, hub} = %Hub{} |> Hub.changeset(scene, %{name: "Test Hub"}) |> Repo.insert()
-
-    assert hub.entry_code > 0
-    assert hub |> Hub.entry_code_expired?() == false
-  end
-
-  test "should generate a new entry code when code is expired/empty", %{scene: scene} do
-    {:ok, hub} = %Hub{} |> Hub.changeset(scene, %{name: "Test Hub"}) |> Repo.insert()
-    hub = hub |> Ecto.Changeset.change(entry_code: nil) |> Repo.update!()
-
-    assert hub |> Hub.entry_code_expired?() == true
-
-    hub = hub |> Hub.ensure_valid_entry_code!()
-    assert hub.entry_code > 0
-    assert hub |> Hub.entry_code_expired?() == false
-  end
-
   test "should deny permissions for non-creator", %{scene: scene} do
     {:ok, hub} = %Hub{} |> Hub.changeset(scene, %{name: "Test Hub"}) |> Repo.insert()
     hub = hub |> Repo.preload([:hub_bindings, :hub_role_memberships])
 
-    %{join_hub: true, update_hub: false, close_hub: false, mute_users: false} =
+    %{join_hub: true, update_hub: false, close_hub: false, mute_users: false, amplify_audio: false} =
       hub |> Hub.perms_for_account(Ret.Account.account_for_email("non-creator@mozilla.com"))
   end
 
@@ -36,7 +18,8 @@ defmodule Ret.HubTest do
     {:ok, hub} = %Hub{} |> Hub.changeset(scene, %{name: "Test Hub"}) |> Repo.insert()
     hub = hub |> Repo.preload([:hub_bindings])
 
-    %{join_hub: true, update_hub: false, close_hub: false, mute_users: false} = hub |> Hub.perms_for_account(nil)
+    %{join_hub: true, update_hub: false, close_hub: false, mute_users: false, amplify_audio: false} =
+      hub |> Hub.perms_for_account(nil)
   end
 
   test "should deny entry for closed hub, allow entry for re-opened hub", %{scene: scene} do
@@ -63,7 +46,8 @@ defmodule Ret.HubTest do
 
     hub = hub |> Repo.preload([:hub_bindings, :hub_role_memberships])
 
-    %{join_hub: true, update_hub: true, close_hub: true, mute_users: true} = hub |> Hub.perms_for_account(account)
+    %{join_hub: true, update_hub: true, close_hub: true, mute_users: true, amplify_audio: true} =
+      hub |> Hub.perms_for_account(account)
   end
 
   test "should have creator assignment token if no account assigned", %{scene: scene} do
