@@ -122,11 +122,13 @@ defmodule RetWeb.OIDCAuthChannel do
          redirect_uri: get_redirect_uri(),
          code: oauth_code,
          scope: "openid profile"
-       ]}
+      ]}
 
-    headers = [{"content-type", "application/x-www-form-urlencoded"}]
+    options = [
+      headers: [{"content-type", "application/x-www-form-urlencoded"}]
+    ]
 
-    case Ret.HttpUtils.retry_post_until_success("#{module_config(:token_endpoint)}", body, headers) do
+    case Ret.HttpUtils.retry_post_until_success("#{module_config(:token_endpoint)}", body, options) do
       %HTTPoison.Response{body: body} -> body |> Poison.decode()
       _ -> {:error, "Failed to fetch tokens"}
     end
