@@ -99,11 +99,9 @@ defmodule RetWeb.OIDCAuthChannel do
 
       {:reply, :ok, socket}
     else
-      # intentionally not exposing the nature of the error, can uncomment this to return more details to the client
-      # {:error, error} ->
-      #   {:reply, {:error, %{message: error}}, socket}
-
-      _ ->
+      {:error, error} ->
+        # Error message is very limited https://github.com/ueberauth/guardian/issues/711
+        Logger.warn("OIDC error: #{inspect(error)}")
         {:reply, {:error, %{message: "error fetching or verifying token"}}, socket}
     end
   end
