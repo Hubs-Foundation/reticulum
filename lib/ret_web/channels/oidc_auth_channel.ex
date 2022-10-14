@@ -144,7 +144,7 @@ defmodule RetWeb.OIDCAuthChannel do
     {:noreply, socket}
   end
 
-  # Only send creddentials back down to the original socket that started the request
+  # Only send credentials back down to the original socket that started the request
   def handle_out(
         "auth_credentials" = event,
         %{credentials: credentials, user_info: user_info, verification_info: verification_info},
