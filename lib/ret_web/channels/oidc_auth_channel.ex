@@ -61,6 +61,8 @@ defmodule RetWeb.OIDCAuthChannel do
 
     "oidc:" <> expected_topic_key = socket.topic
 
+    allowed_algos = Application.get_env(:ret, Ret.RemoteOIDCToken)[:allowed_algos]
+
     with {:ok,
           %{
             "topic_key" => topic_key,
@@ -78,7 +80,7 @@ defmodule RetWeb.OIDCAuthChannel do
             "aud" => _aud,
             "nonce" => nonce,
             "sub" => remote_user_id
-          } = id_token} <- RemoteOIDCToken.decode_and_verify(raw_id_token) do
+          } = id_token} <- RemoteOIDCToken.decode_and_verify(raw_id_token, %{}, allowed_algos: allowed_algos) do
       # TODO we may want to verify some more fields like issuer and expiration time
 
       displayname =
