@@ -1,6 +1,8 @@
 defmodule RetWeb.OIDCAuthChannel do
   @moduledoc "Ret Web Channel for OpenID Connect Authentication"
 
+  require Logger
+
   use RetWeb, :channel
   import Canada, only: [can?: 2]
 
