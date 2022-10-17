@@ -863,7 +863,16 @@ defimpl Canada.Can, for: Ret.Account do
   end
 
   @owner_actions [:update_hub, :close_hub, :embed_hub, :kick_users, :mute_users, :amplify_audio]
-  @object_actions [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects, :spawn_emoji, :fly, :voice_chat, :text_chat]
+  @object_actions [
+    :spawn_and_move_media,
+    :spawn_camera,
+    :spawn_drawing,
+    :pin_objects,
+    :spawn_emoji,
+    :fly,
+    :voice_chat,
+    :text_chat
+  ]
   @creator_actions [:update_roles]
 
   # Always deny all actions to disabled accounts
@@ -959,7 +968,16 @@ end
 defimpl Canada.Can, for: Ret.OAuthProvider do
   alias Ret.{AppConfig, Hub}
 
-  @object_actions [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects, :spawn_emoji, :fly, :voice_chat, :text_chat]
+  @object_actions [
+    :spawn_and_move_media,
+    :spawn_camera,
+    :spawn_drawing,
+    :pin_objects,
+    :spawn_emoji,
+    :fly,
+    :voice_chat,
+    :text_chat
+  ]
   @special_actions [:update_hub, :update_roles, :close_hub, :embed_hub, :kick_users, :mute_users, :amplify_audio]
 
   # Always deny access to non-enterable hubs
@@ -1021,7 +1039,16 @@ defimpl Canada.Can, for: Atom do
   def can?(_, :join_hub, %Ret.Hub{hub_bindings: []}),
     do: !AppConfig.get_cached_config_value("features|require_account_for_join")
 
-  @object_actions [:spawn_and_move_media, :spawn_camera, :spawn_drawing, :pin_objects, :spawn_emoji, :fly, :voice_chat, :text_chat]
+  @object_actions [
+    :spawn_and_move_media,
+    :spawn_camera,
+    :spawn_drawing,
+    :pin_objects,
+    :spawn_emoji,
+    :fly,
+    :voice_chat,
+    :text_chat
+  ]
   # Object permissions for anonymous users are based on member permission settings
   def can?(_account, action, hub) when action in @object_actions do
     hub |> Hub.has_member_permission?(action)
