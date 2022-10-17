@@ -41,7 +41,7 @@ defmodule Ret.Hub do
     (1 <<< 4) => :spawn_emoji,
     (1 <<< 5) => :fly,
     (1 <<< 6) => :voice_chat,
-    (1 <<< 7) => :text_chat,
+    (1 <<< 7) => :text_chat
   }
 
   @member_permissions_keys @member_permissions |> Map.values()
@@ -64,8 +64,8 @@ defmodule Ret.Hub do
     pin_objects: false,
     spawn_emoji: false,
     fly: false,
-    voice_chat: false,
-    text_chat: false
+    voice_chat: true,
+    text_chat: true
   }
 
   def hub_preloads() do
