@@ -12,6 +12,8 @@ jobs:
       registry: mozillareality
       dockerfile: TurkeyDockerfile
       bio_script_path: scripts/hab-wrap-and-push.sh
+      personal_k8s_deployment: reticulum
+      personal_k8s_deployment_container: reticulum
     secrets:
       DOCKER_HUB_PWD: ${{ secrets.DOCKER_HUB_PWD }}
       BLDR_HAB_TOKEN: ${{ secrets.BLDR_HAB_TOKEN }}
