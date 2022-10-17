@@ -238,6 +238,7 @@ config :ret, Ret.Coturn, realm: "ret"
 config :ret, RetWeb.OIDCAuthChannel,
   auth_endpoint: "https://oidctest.wsweet.org/oauth2/authorize",
   token_endpoint: "https://oidctest.wsweet.org/oauth2/token",
+  userinfo_endpoint: "https://oidctest.wsweet.org/oauth2/userinfo",
   scopes: "openid profile email",
   client_id: "private",
   client_secret: "tardis"

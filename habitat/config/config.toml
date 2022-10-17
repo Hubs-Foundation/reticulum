@@ -306,6 +306,7 @@ public_tls_ports = "{{ cfg.turn.public_tls_ports }}"
 [ret."Elixir.RetWeb.OIDCAuthChannel"]
 auth_endpoint = {{ toToml auth_endpoint }}
 token_endpoint = {{ toToml token_endpoint }}
+userinfo_endpoint = {{ toToml userinfo_endpoint }}
 scopes = {{ toToml scopes }}
 client_id = {{ toToml client_id }}
 client_secret = {{ toToml client_secret }}

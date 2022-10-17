@@ -40,6 +40,13 @@ defmodule RetWeb.OIDCAuthChannel do
       })
   end
 
+  def fetch_user_info(access_token) do
+    "#{module_config(:userinfo_endpoint)}"
+    |> Ret.HttpUtils.retry_get_until_success(headers: [{"authorization", "Bearer #{access_token}"}])
+    |> Map.get(:body)
+    |> Poison.decode!()
+  end
+
   def handle_in("auth_request", _payload, socket) do
     if Map.get(socket.assigns, :nonce) do
       {:reply, {:error, "Already started an auth request on this session"}, socket}
@@ -74,7 +81,7 @@ defmodule RetWeb.OIDCAuthChannel do
          when topic_key == expected_topic_key <- OAuthToken.decode_and_verify(state),
          {:ok,
           %{
-            "access_token" => _access_token,
+            "access_token" => access_token,
             "id_token" => raw_id_token
           }} <- fetch_oidc_tokens(code),
          {:ok,
@@ -85,16 +92,9 @@ defmodule RetWeb.OIDCAuthChannel do
           } = id_token} <- RemoteOIDCToken.decode_and_verify(raw_id_token, %{}, allowed_algos: allowed_algos) do
       # TODO we may want to verify some more fields like issuer and expiration time
 
-      displayname =
-        id_token
-        |> Map.get(
-          "preferred_username",
-          id_token |> Map.get("name", remote_user_id)
-        )
-
       broadcast_credentials_and_payload(
         remote_user_id,
-        %{displayName: displayname},
+        %{oidc: fetch_user_info(access_token)},
         %{session_id: session_id, nonce: nonce},
         socket
       )
@@ -102,7 +102,7 @@ defmodule RetWeb.OIDCAuthChannel do
       {:reply, :ok, socket}
     else
       {:error, error} ->
-        # Error message is very limited https://github.com/ueberauth/guardian/issues/711
+        # Error messages from Guardian are very limited https://github.com/ueberauth/guardian/issues/711
         Logger.warn("OIDC error: #{inspect(error)}")
         {:reply, {:error, %{message: "error fetching or verifying token"}}, socket}
     end
@@ -121,7 +121,7 @@ defmodule RetWeb.OIDCAuthChannel do
          grant_type: "authorization_code",
          redirect_uri: get_redirect_uri(),
          code: oauth_code,
-         scope: "openid profile"
+         scope: "openid profile email roles"
       ]}
 
     options = [
