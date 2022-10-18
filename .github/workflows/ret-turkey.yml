@@ -16,6 +16,7 @@ jobs:
       personal_k8s_deployment_container: reticulum
     secrets:
       DOCKER_HUB_PWD: ${{ secrets.DOCKER_HUB_PWD }}
+      GCP_TURKEYGITOPS_SA_JSON: ${{ secrets.GCP_TURKEYGITOPS_SA_JSON  }}
       BLDR_HAB_TOKEN: ${{ secrets.BLDR_HAB_TOKEN }}
       BLDR_RET_TOKEN: ${{ secrets.BLDR_RET_TOKEN }}
       BLDR_RET_PUB_B64: ${{ secrets.BLDR_RET_PUB_B64 }}
