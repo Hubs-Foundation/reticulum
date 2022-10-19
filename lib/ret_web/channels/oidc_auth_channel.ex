@@ -38,7 +38,7 @@ defmodule RetWeb.OIDCAuthChannel do
         response_type: "code",
         response_mode: "query",
         client_id: RemoteOIDCClient.get_client_id(),
-        scope: "openid profile",
+        scope: RemoteOIDCClient.get_scopes(),
         state: state,
         nonce: nonce,
         redirect_uri: get_redirect_uri()
