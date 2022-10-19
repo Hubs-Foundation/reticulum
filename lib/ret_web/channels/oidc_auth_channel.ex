@@ -12,8 +12,12 @@ defmodule RetWeb.OIDCAuthChannel do
 
   # Ref https://openid.net/specs/openid-connect-core-1_0.html#StandardClaims
   @standard_claims ["sub", "name", "given_name", "family_name", "middle_name", "nickname",
-  "preferred_username", "profile", "picture", "website", "email", "email_verified", "gender",
-  "birthdate", "zoneinfo", "locale", "phone_number", "phone_number_verified", "address", "updated_at"]
+    "preferred_username", "profile", "picture", "website", "email", "email_verified", "gender",
+    "birthdate", "zoneinfo", "locale", "phone_number", "phone_number_verified", "address", "updated_at"]
+
+  # Intersection of possible values for JSON signing https://www.rfc-editor.org/rfc/rfc7518#section-3.1
+  # and algorithms supported by JOSE https://hexdocs.pm/jose/JOSE.JWS.html#module-algorithms
+  @supported_algorithms ["HS256", "HS384", "HS512", "RS256", "RS384", "RS512", "ES256", "ES384", "ES512", "PS256", "PS384", "PS512"]
 
   def join("oidc:" <> _topic_key, _payload, socket) do
     # Expire channel in 5 minutes
@@ -75,8 +79,6 @@ defmodule RetWeb.OIDCAuthChannel do
 
     "oidc:" <> expected_topic_key = socket.topic
 
-    allowed_algos = ["RS256"]
-
     with {:ok,
           %{
             "topic_key" => topic_key,
@@ -94,7 +96,7 @@ defmodule RetWeb.OIDCAuthChannel do
             "aud" => _aud,
             "nonce" => nonce,
             "sub" => remote_user_id
-          } = id_token} <- RemoteOIDCToken.decode_and_verify(raw_id_token, %{}, allowed_algos: allowed_algos) do
+          } = id_token} <- RemoteOIDCToken.decode_and_verify(raw_id_token, %{}, allowed_algos: @supported_algorithms) do
 
       # The OIDC user info endpoint is optional so assume info will be in the id token instead and filter for just the standard claims
       user_info = fetch_user_info(access_token) || :maps.filter(fn key, _val -> key in @standard_claims end, id_token)
