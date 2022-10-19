@@ -22,9 +22,9 @@ defmodule Ret.RemoteOIDCTokenSecretsFetcher do
   end
 
   def fetch_verifying_secret(mod, %{"kid" => kid, "typ" => "JWT"}, _opts) do
-    # TODO implement read through cache that hits discovery endpoint instead of hardcoding keys in config as per https://openid.net/specs/openid-connect-core-1_0.html#RotateSigKeys
-    case Application.get_env(:ret, mod)[:verification_secret_jwk_set]
-         |> Poison.decode!()
+    # TODO force cache to refresh when unknown kid found to support key rotation
+    # as per https://openid.net/specs/openid-connect-core-1_0.html#RotateSigKeys
+    case Ret.RemoteOIDCClient.get_jwks()
          |> Map.get("keys")
          |> Enum.find(&(Map.get(&1, "kid") == kid)) do
       nil -> {:error, :invalid_key_id}
