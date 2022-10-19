@@ -44,7 +44,7 @@ defmodule RetWeb.OIDCAuthChannel do
       })
   end
 
-  def fetch_user_info(access_token) do
+  defp fetch_user_info(access_token) do
     # user info endpoint is optional
     case RemoteOIDCClient.get_userinfo_endpoint() do
       nil -> nil
@@ -120,7 +120,7 @@ defmodule RetWeb.OIDCAuthChannel do
     {:noreply, socket}
   end
 
-  def fetch_oidc_tokens(oauth_code) do
+  defp fetch_oidc_tokens(oauth_code) do
     body =
       {:form,
        [
