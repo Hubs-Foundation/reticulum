@@ -26,7 +26,6 @@ defmodule RetWeb.OIDCAuthChannel do
     # Rate limit joins to reduce attack surface
     :timer.sleep(500)
 
-    Statix.increment("ret.channels.oidc.joins.ok")
     {:ok, %{session_id: socket.assigns.session_id}, socket}
   end
 
