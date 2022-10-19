@@ -210,6 +210,6 @@ config :ret, Ret.Coturn, realm: "ret"
 # OIDC test server https://oidctest.wsweet.org/
 config :ret, Ret.RemoteOIDCClient,
   openid_configuration: "https://oidctest.wsweet.org/.well-known/openid-configuration",
-  scopes: "openid profile email",
+  scopes: "openid profile email roles",
   client_id: "private",
   client_secret: "tardis"
