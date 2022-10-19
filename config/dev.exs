@@ -234,17 +234,8 @@ config :ret, Ret.StatsJob, node_stats_enabled: false, node_gauges_enabled: false
 config :ret, Ret.Coturn, realm: "ret"
 
 # OIDC test server https://oidctest.wsweet.org/
-
-config :ret, RetWeb.OIDCAuthChannel,
-  auth_endpoint: "https://oidctest.wsweet.org/oauth2/authorize",
-  token_endpoint: "https://oidctest.wsweet.org/oauth2/token",
-  userinfo_endpoint: "https://oidctest.wsweet.org/oauth2/userinfo",
+config :ret, Ret.RemoteOIDCClient,
+  openid_configuration: "https://oidctest.wsweet.org/.well-known/openid-configuration",
   scopes: "openid profile email",
   client_id: "private",
   client_secret: "tardis"
-
-config :ret, Ret.RemoteOIDCToken,
-  allowed_algos: ["RS256"],
-  verification_secret_jwk_set: """
-  {"keys":[{"kty":"RSA","use":"sig","kid":"oidctest","e":"AQAB","n":"wsnaUGh8VkwaR4-ZdUduiDtE9BZ1WqhkvgDzOyTmjcmsuKg7y5WhqTSk3haSi2PStzel_4i6-_3QZbKoCgfBE8mi5yOjzkn3iW-EzKY2SdQbk-0p8OSrSgbArM5wnfXK80Vui_f_K78fd_Nu3_I7uvuUoml4LIJWAsNFbavjHuWJPe6vQB3-_HsxIgQEe9U79ir2ksgTj_BJOGCTOhXoCaPAXF5U4BGi9DAXXkx_RTxd3JkQMqyIUSE3biUnrJt7pFVkzaFa5xQ07TmYiHYPBj-iiG_WaA1emuPWbsZoDYKKRsutkmm9auJLA04FbvmSBvCvuBx9A27bzPXO-0Oez6E6DxXDM4386kJQjgrFC_YIR7VRe4KEB6ylnfIpp6BQD3wmVLqKyC6_I1MRFNoHWh-8jUnuXoI9sLrx6QwwtUtQT6cXjEaW_qeQPal0OMXsUKMRGK6dG47KAAsrjWkkkufIUSU9GUbdVfAm_CePu9fRBE4tkaZn1mXXqGmDMRFosspu6aGfiKF3G7GnkRroKHdaqX2NM0y1e0gSjFppmjE__fd2azigsvXR7c8wZreNs5ZwC6OWcfERB7fB4BML7CkPtvFmLvg81Se-q1WacXRIXMzNyhpkHQA4mkheG4WIyrj43WOgxI5iLLJkTeS0b2QkKzoa9_OQMBKUzFyVat0"}]}
-  """

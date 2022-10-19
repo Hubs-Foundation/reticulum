@@ -6,9 +6,14 @@ defmodule RetWeb.OIDCAuthChannel do
   use RetWeb, :channel
   import Canada, only: [can?: 2]
 
-  alias Ret.{Statix, Account, OAuthToken, RemoteOIDCToken}
+  alias Ret.{Statix, Account, OAuthToken, RemoteOIDCClient, RemoteOIDCToken}
 
   intercept(["auth_credentials"])
+
+  # Ref https://openid.net/specs/openid-connect-core-1_0.html#StandardClaims
+  @standard_claims ["sub", "name", "given_name", "family_name", "middle_name", "nickname",
+  "preferred_username", "profile", "picture", "website", "email", "email_verified", "gender",
+  "birthdate", "zoneinfo", "locale", "phone_number", "phone_number_verified", "address", "updated_at"]
 
   def join("oidc:" <> _topic_key, _payload, socket) do
     # Expire channel in 5 minutes
@@ -21,18 +26,14 @@ defmodule RetWeb.OIDCAuthChannel do
     {:ok, %{session_id: socket.assigns.session_id}, socket}
   end
 
-  defp module_config(key) do
-    Application.get_env(:ret, __MODULE__)[key]
-  end
-
   defp get_redirect_uri(), do: RetWeb.Endpoint.url() <> "/verify"
 
   defp get_authorize_url(state, nonce) do
-    "#{module_config(:auth_endpoint)}?" <>
+    RemoteOIDCClient.get_auth_endpoint() <> "?" <>
       URI.encode_query(%{
         response_type: "code",
         response_mode: "query",
-        client_id: module_config(:client_id),
+        client_id: RemoteOIDCClient.get_client_id(),
         scope: "openid profile",
         state: state,
         nonce: nonce,
@@ -41,10 +42,14 @@ defmodule RetWeb.OIDCAuthChannel do
   end
 
   def fetch_user_info(access_token) do
-    "#{module_config(:userinfo_endpoint)}"
-    |> Ret.HttpUtils.retry_get_until_success(headers: [{"authorization", "Bearer #{access_token}"}])
-    |> Map.get(:body)
-    |> Poison.decode!()
+    # user info endpoint is optional
+    case RemoteOIDCClient.get_userinfo_endpoint() do
+      nil -> nil
+      url -> url
+        |> Ret.HttpUtils.retry_get_until_success(headers: [{"authorization", "Bearer #{access_token}"}])
+        |> Map.get(:body)
+        |> Poison.decode!()
+    end
   end
 
   def handle_in("auth_request", _payload, socket) do
@@ -70,7 +75,7 @@ defmodule RetWeb.OIDCAuthChannel do
 
     "oidc:" <> expected_topic_key = socket.topic
 
-    allowed_algos = Application.get_env(:ret, Ret.RemoteOIDCToken)[:allowed_algos]
+    allowed_algos = ["RS256"]
 
     with {:ok,
           %{
@@ -90,11 +95,13 @@ defmodule RetWeb.OIDCAuthChannel do
             "nonce" => nonce,
             "sub" => remote_user_id
           } = id_token} <- RemoteOIDCToken.decode_and_verify(raw_id_token, %{}, allowed_algos: allowed_algos) do
-      # TODO we may want to verify some more fields like issuer and expiration time
+
+      # The OIDC user info endpoint is optional so assume info will be in the id token instead and filter for just the standard claims
+      user_info = fetch_user_info(access_token) || :maps.filter(fn key, _val -> key in @standard_claims end, id_token)
 
       broadcast_credentials_and_payload(
         remote_user_id,
-        %{oidc: fetch_user_info(access_token)},
+        %{oidc: user_info},
         %{session_id: session_id, nonce: nonce},
         socket
       )
@@ -116,19 +123,19 @@ defmodule RetWeb.OIDCAuthChannel do
     body =
       {:form,
        [
-         client_id: module_config(:client_id),
-         client_secret: module_config(:client_secret),
-         grant_type: "authorization_code",
-         redirect_uri: get_redirect_uri(),
-         code: oauth_code,
-         scope: "openid profile email roles"
+          client_id: RemoteOIDCClient.get_client_id(),
+          client_secret: RemoteOIDCClient.get_client_secret(),
+          grant_type: "authorization_code",
+          redirect_uri: get_redirect_uri(),
+          code: oauth_code,
+          scope: RemoteOIDCClient.get_scopes()
       ]}
 
     options = [
       headers: [{"content-type", "application/x-www-form-urlencoded"}]
     ]
 
-    case Ret.HttpUtils.retry_post_until_success("#{module_config(:token_endpoint)}", body, options) do
+    case Ret.HttpUtils.retry_post_until_success(RemoteOIDCClient.get_token_endpoint(), body, options) do
       %HTTPoison.Response{body: body} -> body |> Poison.decode()
       _ -> {:error, "Failed to fetch tokens"}
     end
