@@ -54,7 +54,14 @@ defmodule RetWeb.ApiInternal.V1.ChangeLoginEmailControllerTest do
 
   test "email changes must be authenticated", %{conn: conn} do
     Account.find_or_create_account_for_email("alice@reticulum.io")
-    assert %{status: 401} = conn |> post("/api-internal/v1/change_email_for_login", %{"old_email" => "alice@reticulum.io", "new_email" => "bob@reticulum.io"})
+
+    assert %{status: 401} =
+             conn
+             |> post("/api-internal/v1/change_email_for_login", %{
+               "old_email" => "alice@reticulum.io",
+               "new_email" => "bob@reticulum.io"
+             })
+
     assert Account.exists_for_email?("alice@reticulum.io")
     refute Account.exists_for_email?("bob@reticulum.io")
   end

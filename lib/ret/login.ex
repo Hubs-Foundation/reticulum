@@ -29,6 +29,7 @@ defmodule Ret.Login do
     old_identifier_hash = Account.identifier_hash_for_email(old_email)
     new_identifier_hash = Account.identifier_hash_for_email(new_email)
     login = Repo.get_by(Login, identifier_hash: old_identifier_hash)
+
     case update_identifier_hash_for_login(login, new_identifier_hash) do
       {:error, :no_login} -> {:error, :no_account_for_old_email}
       {:error, :new_identifier_hash_is_not_unique} -> {:error, :new_email_already_in_use}
@@ -42,15 +43,18 @@ defmodule Ret.Login do
   end
 
   defp update_identifier_hash_for_login(%Login{} = login, new_identifier_hash) do
-    result = login
-    |> cast(%{identifier_hash: new_identifier_hash}, [:identifier_hash])
-    |> unique_constraint(:identifier_hash)
-    |> Ret.Repo.update()
+    result =
+      login
+      |> cast(%{identifier_hash: new_identifier_hash}, [:identifier_hash])
+      |> unique_constraint(:identifier_hash)
+      |> Ret.Repo.update()
 
     case result do
-      {:error, %Ecto.Changeset{errors: [ identifier_hash: { _, [{:constraint, :unique}, _] } ] } } ->
+      {:error, %Ecto.Changeset{errors: [identifier_hash: {_, [{:constraint, :unique}, _]}]}} ->
         {:error, :new_identifier_hash_is_not_unique}
-      _ -> result
+
+      _ ->
+        result
     end
   end
 end
