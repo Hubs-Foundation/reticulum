@@ -97,11 +97,16 @@ defmodule RetWeb.OIDCAuthChannel do
             "sub" => remote_user_id
           } = id_token} <- RemoteOIDCToken.decode_and_verify(raw_id_token, %{}, allowed_algos: @supported_algorithms) do
 
-      # The OIDC user info endpoint is optional, so if it missing we assume info will be in the id token instead and filter for just the standard claims
+      # Searchable identifier is unique to the OIDC provider and user
+      identifier_hash = RemoteOIDCClient.get_openid_configuration_uri() <> "#" <> remote_user_id
+        |> Account.identifier_hash_for_email()
+
+      # The OIDC user info endpoint is optional, so if it missing we assume info will be in the id token instead
+      # and filter for just the standard claims
       user_info = fetch_user_info(access_token) || :maps.filter(fn key, _val -> key in @standard_claims end, id_token)
 
       broadcast_credentials_and_payload(
-        remote_user_id,
+        identifier_hash,
         %{oidc: user_info},
         %{session_id: session_id, nonce: nonce},
         socket
