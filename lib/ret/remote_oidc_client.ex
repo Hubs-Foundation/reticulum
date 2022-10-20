@@ -7,7 +7,7 @@ defmodule Ret.RemoteOIDCClient do
 
   require Logger
 
-  defp get_openid_configuration_uri() do
+  def get_openid_configuration_uri() do
     Application.get_env(:ret, __MODULE__)[:openid_configuration]
   end
 
@@ -41,8 +41,6 @@ defmodule Ret.RemoteOIDCClient do
     Logger.info("Downloaded JWKS: #{inspect(result)}")
     result
   end
-
-  # Public methods
 
   def get_jwks() do
     :persistent_term.get(:openid_jwks_cache, nil) || download_jwks()
