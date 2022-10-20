@@ -4,7 +4,7 @@ defmodule RetWeb.AuthChannel do
   use RetWeb, :channel
   import Canada, only: [can?: 2]
 
-  alias Ret.{Statix, LoginToken, Account, Crypto}
+  alias Ret.{Statix, LoginToken, Account, Crypto, AppConfig}
 
   intercept(["auth_credentials"])
 
@@ -25,8 +25,10 @@ defmodule RetWeb.AuthChannel do
 
       account = email |> Account.account_for_email()
       account_disabled = account && account.state == :disabled
+      # Accounts can only be created if the general setting is enabled and the server is not in OIDC mode
+      can_create_email_accounts = can?(nil, create_account(nil)) && !AppConfig.get_config_bool("auth|use_oidc")
 
-      if !account_disabled && (can?(nil, create_account(nil)) || !!account) do
+      if !account_disabled && (can_create_email_accounts || !!account) do
         # Create token + send email
         %LoginToken{token: token, payload_key: payload_key} = LoginToken.new_login_token_for_email(email)
 
@@ -98,7 +100,9 @@ defmodule RetWeb.AuthChannel do
   defp broadcast_credentials_and_payload(nil, _payload, _socket), do: nil
 
   defp broadcast_credentials_and_payload(identifier_hash, payload, socket) do
-    account = identifier_hash |> Account.account_for_login_identifier_hash(can?(nil, create_account(nil)))
+    # Accounts can only be created if the general setting is enabled and the server is not in OIDC mode
+    can_create_email_accounts = can?(nil, create_account(nil)) && !AppConfig.get_config_bool("auth|use_oidc")
+    account = identifier_hash |> Account.account_for_login_identifier_hash(can_create_email_accounts)
     credentials = account |> Account.credentials_for_account()
     broadcast!(socket, "auth_credentials", %{credentials: credentials, payload: payload})
   end
