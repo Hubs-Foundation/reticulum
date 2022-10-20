@@ -6,7 +6,7 @@ defmodule RetWeb.OIDCAuthChannel do
   use RetWeb, :channel
   import Canada, only: [can?: 2]
 
-  alias Ret.{Statix, Account, OAuthToken, RemoteOIDCClient, RemoteOIDCToken}
+  alias Ret.{Statix, Account, OAuthToken, RemoteOIDCClient, RemoteOIDCToken, AppConfig}
 
   intercept(["auth_credentials"])
 
@@ -59,14 +59,18 @@ defmodule RetWeb.OIDCAuthChannel do
     if Map.get(socket.assigns, :nonce) do
       {:reply, {:error, "Already started an auth request on this session"}, socket}
     else
-      "oidc:" <> topic_key = socket.topic
-      oidc_state = Ret.OAuthToken.token_for_oidc_request(topic_key, socket.assigns.session_id)
-      nonce = SecureRandom.uuid()
-      authorize_url = get_authorize_url(oidc_state, nonce)
+      if AppConfig.get_config_bool("auth|use_oidc") do
+        "oidc:" <> topic_key = socket.topic
+        oidc_state = Ret.OAuthToken.token_for_oidc_request(topic_key, socket.assigns.session_id)
+        nonce = SecureRandom.uuid()
+        authorize_url = get_authorize_url(oidc_state, nonce)
 
-      socket = socket |> assign(:nonce, nonce)
+        socket = socket |> assign(:nonce, nonce)
 
-      {:reply, {:ok, %{authorize_url: authorize_url}}, socket}
+        {:reply, {:ok, %{authorize_url: authorize_url}}, socket}
+      else
+        {:reply, {:error, %{message: "OpenID Connect not enabled"}}, socket}
+      end
     end
   end
 
