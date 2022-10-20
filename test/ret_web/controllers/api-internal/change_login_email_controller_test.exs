@@ -14,9 +14,20 @@ defmodule RetWeb.ApiInternal.V1.ChangeLoginEmailControllerTest do
     end)
   end
 
-  test "email addresses must be valid", %{conn: _conn} do
-    # TODO
-    assert true
+  test "new email addresses must be valid", %{conn: conn} do
+    Account.find_or_create_account_for_email("alice@reticulum.io")
+    assert Account.exists_for_email?("alice@reticulum.io")
+    assert %{status: 400} = post_change_email_for_login(conn, "not_an_email_address", "alice@reticulum.io")
+    refute Account.exists_for_email?("not_an_email_address")
+    assert Account.exists_for_email?("alice@reticulum.io")
+  end
+
+  test "email addresses validation only applies to new emails", %{conn: conn} do
+    Account.find_or_create_account_for_email("not_an_email_address")
+    assert Account.exists_for_email?("not_an_email_address")
+    assert %{status: 200} = post_change_email_for_login(conn, "alice@reticulum.io", "not_an_email_address")
+    assert Account.exists_for_email?("alice@reticulum.io")
+    refute Account.exists_for_email?("not_an_email_address")
   end
 
   test "account emails can be changed", %{conn: conn} do

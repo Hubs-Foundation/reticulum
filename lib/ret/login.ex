@@ -37,7 +37,7 @@ defmodule Ret.Login do
     end
   end
 
-  defp update_identifier_hash_for_login(nil, new_identifier_hash) do
+  defp update_identifier_hash_for_login(nil, _new_identifier_hash) do
     {:error, :no_login}
   end
 
