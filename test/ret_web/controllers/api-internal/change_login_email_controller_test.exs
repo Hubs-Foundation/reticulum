@@ -32,7 +32,13 @@ defmodule RetWeb.ApiInternal.V1.ChangeLoginEmailControllerTest do
   test "emails cannot be shared between multiple accounts", %{conn: conn} do
     Account.find_or_create_account_for_email("alice@reticulum.io")
     Account.find_or_create_account_for_email("bob@reticulum.io")
-    assert %{status: 500} = post_change_email_for_login(conn, "bob@reticulum.io", "alice@reticulum.io")
+    assert %{status: 409} = post_change_email_for_login(conn, "bob@reticulum.io", "alice@reticulum.io")
+  end
+
+  test "email changes are rejected if old_email is not associated with an account", %{conn: conn} do
+    assert %{status: 409} = post_change_email_for_login(conn, "bob@reticulum.io", "alice@reticulum.io")
+    Account.find_or_create_account_for_email("bob@reticulum.io")
+    assert %{status: 409} = post_change_email_for_login(conn, "bob@reticulum.io", "alice@reticulum.io")
   end
 
   test "email changes must be authenticated", %{conn: conn} do

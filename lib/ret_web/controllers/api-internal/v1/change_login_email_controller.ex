@@ -11,10 +11,18 @@ defmodule RetWeb.ApiInternal.V1.ChangeLoginEmailController do
          false <- is_empty_or_whitespace(new_email),
            true <- is_valid_email_address(old_email),
            true <- is_valid_email_address(new_email),
-         {:ok, _} <- Login.update_identifier_hash(%{old_email: old_email, new_email: new_email}) do
+         :ok <- Login.update_identifier_hash(%{old_email: old_email, new_email: new_email}) do
       send_resp(conn, 200, %{success: true} |> Poison.encode!())
     else
-      _err -> send_resp(conn, 500, %{error: :change_login_email_failed} |> Poison.encode!())
+
+      {:error, :new_email_already_in_use} ->
+        send_resp(conn, 409, %{error: :new_email_already_in_use} |> Poison.encode!())
+
+      {:error, :no_account_for_old_email } ->
+        send_resp(conn, 409, %{error: :no_account_for_old_email} |> Poison.encode!())
+
+      {:error, _ } ->
+        send_resp(conn, 500, %{error: :failed_to_update_email} |> Poison.encode!())
     end
   end
 
