@@ -1,7 +1,7 @@
 defmodule RetWeb.ApiInternal.V1.ChangeLoginEmailController do
   use RetWeb, :controller
 
-  alias Ret.Login
+  alias Ret.ChangeEmailForLogin
 
   def post(conn, %{"old_email" => old_email, "new_email" => new_email})
       when is_binary(old_email) and is_binary(new_email) do
@@ -10,7 +10,7 @@ defmodule RetWeb.ApiInternal.V1.ChangeLoginEmailController do
     with false <- is_empty_or_whitespace(old_email),
          false <- is_empty_or_whitespace(new_email),
          true <- is_valid_email_address(new_email),
-         :ok <- Login.update_identifier_hash(%{old_email: old_email, new_email: new_email}) do
+         :ok <- ChangeEmailForLogin.change_email_for_login(%{old_email: old_email, new_email: new_email}) do
       send_resp(conn, 200, %{success: true} |> Poison.encode!())
     else
       {:error, :new_email_already_in_use} ->
