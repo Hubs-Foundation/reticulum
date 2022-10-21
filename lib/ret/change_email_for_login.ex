@@ -4,9 +4,7 @@ defmodule Ret.ChangeEmailForLogin do
   alias Ecto.Changeset
 
   def change_email_for_login(%{old_email: old_email, new_email: new_email} = _) do
-    old_identifier_hash = Account.identifier_hash_for_email(old_email)
-    login_or_nil = Repo.get_by(Login, identifier_hash: old_identifier_hash)
-    change_email_for_login(login_or_nil, new_email)
+    change_email_for_login(Repo.get_by(Login, identifier_hash: Account.identifier_hash_for_email(old_email)), new_email)
   end
 
   defp change_email_for_login(nil, _new_email) do
@@ -14,10 +12,8 @@ defmodule Ret.ChangeEmailForLogin do
   end
 
   defp change_email_for_login(%Login{} = login, new_email) do
-    new_identifier_hash = Account.identifier_hash_for_email(new_email)
-
     login
-    |> cast(%{identifier_hash: new_identifier_hash}, [:identifier_hash])
+    |> cast(%{identifier_hash: Account.identifier_hash_for_email(new_email)}, [:identifier_hash])
     |> unique_constraint(:identifier_hash)
     |> Repo.update()
     |> case do
