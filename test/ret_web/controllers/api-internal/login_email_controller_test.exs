@@ -1,5 +1,6 @@
 defmodule RetWeb.ApiInternal.V1.LoginEmailControllerTest do
   use RetWeb.ConnCase
+
   import Ret.TestHelpers
   alias Ret.Account
 
