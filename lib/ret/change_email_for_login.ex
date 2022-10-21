@@ -13,7 +13,7 @@ defmodule Ret.ChangeEmailForLogin do
 
   defp change_email_for_login(%Login{} = login, new_email) do
     login
-    |> cast(%{identifier_hash: Account.identifier_hash_for_email(new_email)}, [:identifier_hash])
+    |> change(identifier_hash: Account.identifier_hash_for_email(new_email))
     |> unique_constraint(:identifier_hash)
     |> Repo.update()
     |> case do
