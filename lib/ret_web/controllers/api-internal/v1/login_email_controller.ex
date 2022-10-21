@@ -1,10 +1,10 @@
-defmodule RetWeb.ApiInternal.V1.ChangeLoginEmailController do
+defmodule RetWeb.ApiInternal.V1.LoginEmailController do
   use RetWeb, :controller
 
   alias Ret.ChangeEmailForLogin
   alias Plug.Conn.Status
 
-  def post(conn, %{"old_email" => old_email, "new_email" => new_email})
+  def update(conn, %{"old_email" => old_email, "new_email" => new_email})
       when is_binary(old_email) and is_binary(new_email) do
     case ChangeEmailForLogin.change_email_for_login(%{old_email: old_email, new_email: new_email}) do
       :ok ->
