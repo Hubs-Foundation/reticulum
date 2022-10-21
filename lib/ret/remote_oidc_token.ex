@@ -21,7 +21,7 @@ defmodule Ret.RemoteOIDCTokenSecretsFetcher do
     {:error, :not_implemented}
   end
 
-  def fetch_verifying_secret(mod, %{"kid" => kid, "typ" => "JWT"}, _opts) do
+  def fetch_verifying_secret(_mod, %{"kid" => kid, "typ" => "JWT"}, _opts) do
     # TODO force cache to refresh when unknown kid found to support key rotation
     # as per https://openid.net/specs/openid-connect-core-1_0.html#RotateSigKeys
     case Ret.RemoteOIDCClient.get_jwks()

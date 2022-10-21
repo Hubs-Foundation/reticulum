@@ -6,7 +6,7 @@ defmodule RetWeb.OIDCAuthChannel do
   use RetWeb, :channel
   import Canada, only: [can?: 2]
 
-  alias Ret.{Statix, Account, OAuthToken, RemoteOIDCClient, RemoteOIDCToken, AppConfig}
+  alias Ret.{Account, OAuthToken, RemoteOIDCClient, RemoteOIDCToken, AppConfig}
 
   intercept(["auth_credentials"])
 
