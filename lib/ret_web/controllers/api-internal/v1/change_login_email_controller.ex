@@ -2,36 +2,36 @@ defmodule RetWeb.ApiInternal.V1.ChangeLoginEmailController do
   use RetWeb, :controller
 
   alias Ret.ChangeEmailForLogin
+  alias Plug.Conn.Status
 
   def post(conn, %{"old_email" => old_email, "new_email" => new_email})
       when is_binary(old_email) and is_binary(new_email) do
-    conn = put_resp_header(conn, "content-type", "application/json")
+    case ChangeEmailForLogin.change_email_for_login(%{old_email: old_email, new_email: new_email}) do
+      :ok ->
+        conn
+        |> put_status(Status.code(:ok))
+        |> json(%{success: true})
 
-    with false <- is_empty_or_whitespace(old_email),
-         false <- is_empty_or_whitespace(new_email),
-         true <- is_valid_email_address(new_email),
-         :ok <- ChangeEmailForLogin.change_email_for_login(%{old_email: old_email, new_email: new_email}) do
-      send_resp(conn, 200, %{success: true} |> Poison.encode!())
-    else
-      {:error, :new_email_already_in_use} ->
-        send_resp(conn, 409, %{error: :new_email_already_in_use} |> Poison.encode!())
-
-      {:error, :no_account_for_old_email} ->
-        send_resp(conn, 409, %{error: :no_account_for_old_email} |> Poison.encode!())
-
-      {:error, _} ->
-        send_resp(conn, 500, %{error: :failed_to_update_email} |> Poison.encode!())
-
-      _ ->
-        send_resp(conn, 400, %{error: :invalid_parameters} |> Poison.encode!())
+      {:error, reason} ->
+        conn
+        |> put_status(status_code_for_error(reason))
+        |> json(%{error: reason})
     end
   end
 
-  defp is_empty_or_whitespace(str) do
-    String.trim(str) === ""
+  defp status_code_for_error(:new_email_already_in_use) do
+    Status.code(:conflict)
   end
 
-  defp is_valid_email_address(str) do
-    str =~ ~r/\S+@\S+/
+  defp status_code_for_error(:no_account_for_old_email) do
+    Status.code(:not_found)
+  end
+
+  defp status_code_for_error(:invalid_parameters) do
+    Status.code(:bad_request)
+  end
+
+  defp status_code_for_error(:failed_to_update_login) do
+    Status.code(:internal_server_error)
   end
 end
