@@ -101,13 +101,14 @@ defmodule RetWeb.OIDCAuthChannel do
         |> Account.identifier_hash_for_email()
 
       # The OIDC user info endpoint is optional, so if it missing we assume info will be in the id token instead
-      # and filter for just the standard claims
+      # and filter for just the permitted claims
+      all_claims = fetch_user_info(access_token) || id_token
       permitted_claims = RemoteOIDCClient.get_permitted_claims()
-      user_info = fetch_user_info(access_token) || :maps.filter(fn key, _val -> key in permitted_claims end, id_token)
+      filtered_claims = :maps.filter(fn key, _val -> key in permitted_claims end, all_claims)
 
       broadcast_credentials_and_payload(
         identifier_hash,
-        %{oidc: user_info},
+        %{oidc: filtered_claims},
         %{session_id: session_id, nonce: nonce},
         socket
       )
