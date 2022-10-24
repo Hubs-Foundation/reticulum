@@ -84,4 +84,8 @@ defmodule Ret.RemoteOIDCClient do
     Application.get_env(:ret, __MODULE__)[:client_secret]
   end
 
+  def get_additional_authorization_parameters() do
+    Application.get_env(:ret, __MODULE__)[:additional_authorization_parameters]
+  end
+
 end
