@@ -36,7 +36,7 @@ defmodule RetWeb.OIDCAuthChannel do
         state: state,
         nonce: nonce,
         redirect_uri: get_redirect_uri()
-      })
+      }) <> RemoteOIDCClient.get_additional_authorization_parameters()
   end
 
   defp fetch_user_info(access_token) do
