@@ -239,4 +239,5 @@ config :ret, Ret.RemoteOIDCClient,
   scopes: "openid profile email roles",
   permitted_claims: ["sub", "email", "name", "preferred_username", "roles"],
   client_id: "private",
-  client_secret: "tardis"
+  client_secret: "tardis",
+  additional_authorization_parameters: "&prompt=select_account"
