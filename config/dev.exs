@@ -237,8 +237,6 @@ config :ret, Ret.Coturn, realm: "ret"
 config :ret, Ret.RemoteOIDCClient,
   openid_configuration: "https://oidctest.wsweet.org/.well-known/openid-configuration",
   scopes: "openid profile email roles",
-  permitted_claims: ["sub", "name", "given_name", "family_name", "middle_name", "nickname",
-  "preferred_username", "profile", "picture", "website", "email", "email_verified", "gender",
-  "birthdate", "zoneinfo", "locale", "phone_number", "phone_number_verified", "address", "updated_at"],
+  permitted_claims: ["sub", "email", "name", "preferred_username", "roles"],
   client_id: "private",
   client_secret: "tardis"
