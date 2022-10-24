@@ -10,11 +10,6 @@ defmodule RetWeb.OIDCAuthChannel do
 
   intercept(["auth_credentials"])
 
-  # Ref https://openid.net/specs/openid-connect-core-1_0.html#StandardClaims
-  @standard_claims ["sub", "name", "given_name", "family_name", "middle_name", "nickname",
-    "preferred_username", "profile", "picture", "website", "email", "email_verified", "gender",
-    "birthdate", "zoneinfo", "locale", "phone_number", "phone_number_verified", "address", "updated_at"]
-
   # Intersection of possible values for JSON signing https://www.rfc-editor.org/rfc/rfc7518#section-3.1
   # and algorithms supported by JOSE https://hexdocs.pm/jose/JOSE.JWS.html#module-algorithms
   @supported_algorithms ["HS256", "HS384", "HS512", "RS256", "RS384", "RS512", "ES256", "ES384", "ES512", "PS256", "PS384", "PS512"]
@@ -107,7 +102,8 @@ defmodule RetWeb.OIDCAuthChannel do
 
       # The OIDC user info endpoint is optional, so if it missing we assume info will be in the id token instead
       # and filter for just the standard claims
-      user_info = fetch_user_info(access_token) || :maps.filter(fn key, _val -> key in @standard_claims end, id_token)
+      permitted_claims = RemoteOIDCClient.get_permitted_claims()
+      user_info = fetch_user_info(access_token) || :maps.filter(fn key, _val -> key in permitted_claims end, id_token)
 
       broadcast_credentials_and_payload(
         identifier_hash,

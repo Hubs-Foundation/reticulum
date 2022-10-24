@@ -306,6 +306,7 @@ public_tls_ports = "{{ cfg.turn.public_tls_ports }}"
 [ret."Elixir.Ret.RemoteOIDCClient"]
 openid_configuration = {{ toToml openid_configuration }}
 scopes = {{ toToml scopes }}
+permitted_claims = {{ toToml permitted_claims }}
 client_id = {{ toToml client_id }}
 client_secret = {{ toToml client_secret }}
 {{/with}}
