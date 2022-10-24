@@ -72,6 +72,10 @@ defmodule Ret.RemoteOIDCClient do
     Application.get_env(:ret, __MODULE__)[:scopes]
   end
 
+  def get_permitted_claims() do
+    Application.get_env(:ret, __MODULE__)[:permitted_claims]
+  end
+
   def get_client_id() do
     Application.get_env(:ret, __MODULE__)[:client_id]
   end

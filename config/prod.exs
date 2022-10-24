@@ -164,3 +164,11 @@ config :ret, Ret.StatsJob, node_stats_enabled: false, node_gauges_enabled: false
 
 # Default repo check and page check to off so for polycosm hosts database + s3 hits can go idle
 config :ret, RetWeb.HealthController, check_repo: false
+
+config :ret, Ret.RemoteOIDCClient,
+  # Conventional default scopes
+  scopes: "openid profile email",
+  # Standard claims https://openid.net/specs/openid-connect-core-1_0.html#StandardClaims
+  permitted_claims: ["sub", "name", "given_name", "family_name", "middle_name", "nickname",
+  "preferred_username", "profile", "picture", "website", "email", "email_verified", "gender",
+  "birthdate", "zoneinfo", "locale", "phone_number", "phone_number_verified", "address", "updated_at"]
