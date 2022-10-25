@@ -37,6 +37,10 @@ defmodule RetWeb.Schema.RoomTypes do
     field(:spawn_emoji, :boolean)
     @desc "Allows non-admin participants to toggle fly mode"
     field(:fly, :boolean)
+    @desc "Allows non-admin participants to use the voice chat"
+    field(:voice_chat, :boolean)
+    @desc "Allows non-admin participants to use the text chat"
+    field(:text_chat, :boolean)
   end
 
   @desc "Permissions for participants in the room"
@@ -53,6 +57,10 @@ defmodule RetWeb.Schema.RoomTypes do
     field(:spawn_emoji, :boolean)
     @desc "Allows non-admin participants to toggle fly mode"
     field(:fly, :boolean)
+    @desc "Allows non-admin participants to use the voice chat"
+    field(:voice_chat, :boolean)
+    @desc "Allows non-admin participants to use the text chat"
+    field(:text_chat, :boolean)
   end
 
   @desc "A room"
