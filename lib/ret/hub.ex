@@ -900,7 +900,7 @@ defimpl Canada.Can, for: Ret.Account do
 
   # Bound hubs - Moderator actions
   def can?(%Ret.Account{} = account, action, %Ret.Hub{hub_bindings: hub_bindings})
-      when hub_bindings |> length > 0 and action in [:kick_users, :mute_users, :amplify_audio, :voice_chat, :text_chat] do
+      when hub_bindings |> length > 0 and action in [:kick_users, :mute_users, :amplify_audio] do
     hub_bindings |> Enum.any?(&(account |> Ret.HubBinding.can_moderate_users?(&1)))
   end
 
