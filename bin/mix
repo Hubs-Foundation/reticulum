@@ -1,3 +1,3 @@
 #!/bin/bash
 basedir=$(dirname $0)
-docker-compose -f $basedir/../../../docker-compose.yml exec reticulum mix $*
+docker-compose -f $basedir/../../../docker-compose.yml exec reticulum mix "$@"
