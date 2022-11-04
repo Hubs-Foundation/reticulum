@@ -13,9 +13,10 @@ defmodule Ret.SceneListing do
   alias Ret.{Repo, SceneListing, Scene}
   alias Ret.SceneListing.{SceneListingSlug}
 
+  @type t :: %__MODULE__{}
+
   @schema_prefix "ret0"
   @primary_key {:scene_listing_id, :id, autogenerate: true}
-
   schema "scene_listings" do
     field(:scene_listing_sid, :string)
     field(:slug, SceneListingSlug.Type)

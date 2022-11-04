@@ -2,9 +2,10 @@ defmodule Ret.ProjectAsset do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @type t :: %__MODULE__{}
+
   @schema_prefix "ret0"
   @primary_key {:project_asset_id, :id, autogenerate: true}
-
   schema "project_assets" do
     belongs_to(:project, Ret.Project, references: :project_id)
     belongs_to(:asset, Ret.Asset, references: :asset_id)

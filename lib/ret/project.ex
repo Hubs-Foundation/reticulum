@@ -9,7 +9,6 @@ defmodule Ret.Project do
 
   @schema_prefix "ret0"
   @primary_key {:project_id, :id, autogenerate: true}
-
   schema "projects" do
     field(:project_sid, :string)
     field(:name, :string)

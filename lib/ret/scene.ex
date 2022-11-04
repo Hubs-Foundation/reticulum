@@ -18,18 +18,6 @@ defmodule Ret.Scene do
 
   @schema_prefix "ret0"
   @primary_key {:scene_id, :id, autogenerate: true}
-
-  @scene_preloads [
-    :parent_scene,
-    :parent_scene_listing,
-    :account,
-    :project,
-    :model_owned_file,
-    :screenshot_owned_file,
-    :scene_owned_file
-  ]
-  def scene_preloads, do: @scene_preloads
-
   schema "scenes" do
     field(:scene_sid, :string)
     field(:slug, SceneSlug.Type)
@@ -56,6 +44,17 @@ defmodule Ret.Scene do
 
     timestamps()
   end
+
+  def scene_preloads,
+    do: [
+      :parent_scene,
+      :parent_scene_listing,
+      :account,
+      :project,
+      :model_owned_file,
+      :screenshot_owned_file,
+      :scene_owned_file
+    ]
 
   def scene_or_scene_listing_by_sid(sid) do
     Scene |> Repo.get_by(scene_sid: sid) ||

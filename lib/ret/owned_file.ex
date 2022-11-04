@@ -4,9 +4,10 @@ defmodule Ret.OwnedFile do
   import Ecto.Changeset
   alias Ret.{Repo, OwnedFile, Account}
 
+  @type t :: %__MODULE__{}
+
   @schema_prefix "ret0"
   @primary_key {:owned_file_id, :id, autogenerate: true}
-
   schema "owned_files" do
     field(:owned_file_uuid, :string)
     field(:key, :string)

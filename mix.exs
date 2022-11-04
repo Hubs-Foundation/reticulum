@@ -91,7 +91,8 @@ defmodule Ret.Mixfile do
       {:ex_rated, "~> 1.3.3"},
       {:mix_test_watch, "~> 1.0", only: :dev, runtime: false},
       {:ex_json_schema, "~> 0.7.3"},
-      {:observer_cli, "~> 1.5"}
+      {:observer_cli, "~> 1.5"},
+      {:stream_data, "~> 0.5", github: "whatyouhide/stream_data", ref: "c7ef8ef", only: [:dev, :test]}
     ]
   end
 
