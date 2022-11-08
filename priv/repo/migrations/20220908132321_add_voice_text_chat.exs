@@ -1,4 +1,4 @@
-defmodule Ret.Repo.Migrations.AddFlyPermission do
+defmodule Ret.Repo.Migrations.AddVoiceChatPermission do
   use Ecto.Migration
 
   def up do
