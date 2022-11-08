@@ -1,10 +1,8 @@
 defmodule RetWeb.ApiInternal.V1.LoginEmailController do
   use RetWeb, :controller
 
-  alias Ret.ChangeEmailForLogin
-
   def update(conn, %{"old_email" => old_email, "new_email" => new_email}) do
-    case ChangeEmailForLogin.change_email_for_login(%{old_email: old_email, new_email: new_email}) do
+    case Ret.change_email_for_login(%{old_email: old_email, new_email: new_email}) do
       :ok ->
         json(conn, %{success: true})
 
