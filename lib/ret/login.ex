@@ -1,13 +1,15 @@
 defmodule Ret.Login do
   use Ecto.Schema
+
   import Ecto.Changeset
+  alias Ret.Account
 
   @schema_prefix "ret0"
   @primary_key {:login_id, :id, autogenerate: true}
 
   schema "logins" do
     field(:identifier_hash, :string)
-    belongs_to(:account, Ret.Account, references: :account_id)
+    belongs_to(:account, Account, references: :account_id)
 
     timestamps()
   end
