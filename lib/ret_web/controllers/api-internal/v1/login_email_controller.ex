@@ -17,7 +17,7 @@ defmodule RetWeb.ApiInternal.V1.LoginEmailController do
     [
       new_email_already_in_use: :conflict,
       no_account_for_old_email: :not_found,
-      invalid_parameters: :bad_request,
+      invalid_parameters: :bad_request
     ]
   end
 end
