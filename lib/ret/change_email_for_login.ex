@@ -1,10 +1,8 @@
 defmodule Ret.ChangeEmailForLogin do
-  import Ecto.Changeset
   alias Ret.{Account, Login, Repo}
-  alias Ecto.Changeset
 
-  def change_email_for_login(%{old_email: old_email, new_email: new_email} = _) do
-    if empty_or_whitespace?(old_email) or not valid_email_address?(new_email) do
+  def change_email_for_login(%{old_email: old_email, new_email: new_email}) do
+    if not valid_email_address?(new_email) do
       {:error, :invalid_parameters}
     else
       change_email_for_login(
@@ -20,11 +18,11 @@ defmodule Ret.ChangeEmailForLogin do
 
   defp change_email_for_login(%Login{} = login, new_email) do
     login
-    |> change(identifier_hash: Account.identifier_hash_for_email(new_email))
-    |> unique_constraint(:identifier_hash)
+    |> Ecto.Changeset.change(identifier_hash: Account.identifier_hash_for_email(new_email))
+    |> Ecto.Changeset.unique_constraint(:identifier_hash)
     |> Repo.update()
     |> case do
-      {:error, %Changeset{errors: [identifier_hash: {_, [{:constraint, :unique}, _]}]}} ->
+      {:error, %Ecto.Changeset{errors: [identifier_hash: {_, [{:constraint, :unique}, _]}]}} ->
         {:error, :new_email_already_in_use}
 
       {:error, _} ->
@@ -33,10 +31,6 @@ defmodule Ret.ChangeEmailForLogin do
       {:ok, _} ->
         :ok
     end
-  end
-
-  defp empty_or_whitespace?(string) do
-    String.trim(string) === ""
   end
 
   defp valid_email_address?(string) do
