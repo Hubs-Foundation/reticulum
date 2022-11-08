@@ -8,7 +8,7 @@ defmodule RetWeb.ApiInternal.V1.LoginEmailController do
 
       {:error, reason} ->
         conn
-        |> put_status(status_code_for_error()[reason])
+        |> put_status(status_code_for_error()[reason] || :internal_server_error)
         |> json(%{error: reason})
     end
   end
@@ -18,7 +18,6 @@ defmodule RetWeb.ApiInternal.V1.LoginEmailController do
       new_email_already_in_use: :conflict,
       no_account_for_old_email: :not_found,
       invalid_parameters: :bad_request,
-      failed_to_update_login: :internal_server_error
     ]
   end
 end

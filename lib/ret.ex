@@ -32,9 +32,6 @@ defmodule Ret do
       {:error, %Ecto.Changeset{errors: [identifier_hash: {_, [{:constraint, :unique}, _]}]}} ->
         {:error, :new_email_already_in_use}
 
-      {:error, _} ->
-        {:error, :failed_to_update_login}
-
       {:ok, _} ->
         :ok
     end
