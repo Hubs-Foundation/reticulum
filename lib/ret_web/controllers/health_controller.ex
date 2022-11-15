@@ -2,8 +2,7 @@ defmodule RetWeb.HealthController do
   use RetWeb, :controller
   import Ecto.Query
 
-  def index(conn, _params) do    
-    
+  def index(conn, _params) do
     # Check database
     if module_config(:check_repo) do
       from(h in Ret.Hub, limit: 0) |> Ret.Repo.all()
@@ -23,6 +22,7 @@ defmodule RetWeb.HealthController do
         {:ok} -> send_resp(conn, 200, "ok")
       else
         _ -> send_resp(conn, 500, "ERROR")
+      end
     end
   end
 
