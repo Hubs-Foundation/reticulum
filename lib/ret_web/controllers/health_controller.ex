@@ -21,7 +21,8 @@ defmodule RetWeb.HealthController do
       storage_path = Application.get_env(:ret, Ret.Storage)[:storage_path]
       File.ls!("#{storage_path}/")
     end
-    {:ok, _} -> {send_resp(conn, 200, "ok")}
+    
+    send_resp(conn, 200, "ok")
   end
 
   defp module_config(key) do

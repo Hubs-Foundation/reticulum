@@ -211,7 +211,6 @@ defmodule Ret.Storage do
   end
 
   defp fetch_blob(id, key, subpath) do
-    Logger.info("fetch_blob: #{id}, #{key}, #{subpath}")
     with storage_path when is_binary(storage_path) <- module_config(:storage_path),
          {:ok, uuid} <- Ecto.UUID.cast(id),
          [_file_path, meta_file_path, blob_file_path] <- paths_for_uuid(uuid, subpath),
