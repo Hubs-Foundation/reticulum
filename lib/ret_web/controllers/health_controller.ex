@@ -18,8 +18,8 @@ defmodule RetWeb.HealthController do
 
     # check storage
     if System.get_env("TURKEY_MODE") do
-      # path=Application.get_env(:ret, Storage)[:storage_path]
-      case File.ls("/storage/") do
+      storage_path = Application.get_env(:ret, Ret.Storage)[:storage_path]
+      case File.ls("#{storage_path}/") do
         {:ok, _} -> {send_resp(conn, 200, "ok")}
         {_, ex} -> {send_resp(conn, 500, ex)}
       end
