@@ -28,7 +28,6 @@ defmodule RetWeb.ApiInternal.V1.LoadAssetController do
         
     token =
       %{}
-      |> Ret.Account.add_global_perms_for_account(account)
       |> Map.put(:account_id, account.account_id)
       |> Ret.PermsToken.token_for_perms()
       
