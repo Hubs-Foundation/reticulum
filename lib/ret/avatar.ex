@@ -226,7 +226,13 @@ defmodule Ret.Avatar do
   defp collapse_remote_avatar!(avatar, _base_uri), do: avatar
 
   def import_from_url!(uri, account) do
-    IO.puts("uri: #{uri}, account: #{account}")
+    try do
+      IO.puts("uri: #{inspect(uri)}, account: #{inspect(account)}")
+    rescue
+      exception ->
+        IO.puts("avatar.import_from_url err: #{exception}")
+    end
+    
     remote_avatar = uri |> fetch_remote_avatar!() |> collapse_remote_avatar!(uri)
     [imported_from_host, imported_from_port] = [:host, :port] |> Enum.map(&(uri |> URI.parse() |> Map.get(&1)))
     imported_from_sid = remote_avatar["avatar_id"]

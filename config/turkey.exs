@@ -11,3 +11,6 @@ config :sentry,
   tags: %{
     env: "turkey"
   }
+
+  config :logger, level: :warn
+  
