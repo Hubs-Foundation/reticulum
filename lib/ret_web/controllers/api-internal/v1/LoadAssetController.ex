@@ -26,10 +26,7 @@ defmodule RetWeb.ApiInternal.V1.LoadAssetController do
     #     send_resp(conn, 400, "unknown type: #{type}")
     # end
         
-    token =
-      %{}
-      |> Map.put(:account_id, account.account_id)
-      |> Ret.PermsToken.token_for_perms()
+    {:ok, token, _params} = account |> Ret.Guardian.encode_and_sign()
       
     IO.puts("~~~~~~token: #{token}~~~~~~~~~~~~~~~~~~~~~~~~")
       
@@ -44,6 +41,6 @@ defmodule RetWeb.ApiInternal.V1.LoadAssetController do
     #   exception ->
     #     send_resp(conn, 500, exception)
     # end
-    # send_resp(conn, 200, token)
+    send_resp(conn, 200, token)
   end
 end
