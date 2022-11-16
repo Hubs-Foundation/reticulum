@@ -15,17 +15,25 @@ defmodule RetWeb.ApiInternal.V1.LoadAssetController do
     account = Ret.Account.account_for_email(email) 
     IO.puts("account: #{inspect(account)}")
     
-    IO.puts("type: #{type}")
+    # IO.puts("type: #{type}")
 
-    case type do
-      "avatar" ->
-        Ret.Avatar.import_from_url!(uri, account)
-      "scene" ->
-        Ret.Scene.import_from_url!(uri, account)
-      _ ->
-        send_resp(conn, 400, "unknown type: #{type}")
-    end
+    # case type do
+    #   "avatar" ->
+    #     Ret.Avatar.import_from_url!(uri, account)
+    #   "scene" ->
+    #     Ret.Scene.import_from_url!(uri, account)
+    #   _ ->
+    #     send_resp(conn, 400, "unknown type: #{type}")
+    # end
         
+    token =
+      %{}
+      |> Ret.Account.add_global_perms_for_account(account)
+      |> Map.put(:account_id, account.account_id)
+      |> Ret.PermsToken.token_for_perms()
+      
+    IO.puts("~~~~~~token: #{token}~~~~~~~~~~~~~~~~~~~~~~~~")
+      
     # token = Ret.Api.TokenUtils.gen_token_for_account(acct)    
     # IO.puts("token: #{inspect(token)}")
     
