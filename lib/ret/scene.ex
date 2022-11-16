@@ -134,6 +134,7 @@ defmodule Ret.Scene do
   end
 
   def import_from_url!(uri, account) do
+    IO.puts("uri: #{uri}, account: #{account}")
     remote_scene = uri |> fetch_remote_scene!()
     [imported_from_host, imported_from_port] = [:host, :port] |> Enum.map(&(uri |> URI.parse() |> Map.get(&1)))
     imported_from_sid = remote_scene["scene_id"]
