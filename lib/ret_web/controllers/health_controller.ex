@@ -22,8 +22,9 @@ defmodule RetWeb.HealthController do
         storage_path = Application.get_env(:ret, Ret.Storage)[:storage_path]
         File.ls!("#{storage_path}/")
       rescue
-        IO.puts("Ret.Storage failed! todo -- call turkeyorch")
-      end      
+        exception ->
+          IO.puts("Ret.Storage failed! #{exception} todo -- call turkeyorch")
+      end
     end
     
     send_resp(conn, 200, "ok")
