@@ -3,7 +3,7 @@ defmodule RetWeb.ApiInternal.V1.GenUserTokenController do
 
   use RetWeb, :controller
     
-  def update(conn, %{"email" => email}) do    
+  def post(conn, %{"email" => email}) do    
     try do
       acct = Ret.Account.account_for_email(email) 
       token = Ret.Api.TokenUtils.gen_token_for_account(acct)
