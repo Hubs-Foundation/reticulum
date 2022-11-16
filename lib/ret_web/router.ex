@@ -202,7 +202,7 @@ defmodule RetWeb.Router do
       get("/storage", ApiInternal.V1.StorageController, :show)
       post("/rewrite_assets", ApiInternal.V1.RewriteAssetsController, :post)
       put("/change_email_for_login", ApiInternal.V1.LoginEmailController, :update)
-      post("/gen_user_token", ApiInternal.V1.GenUserTokenController, :post)      
+      post("/load_asset", ApiInternal.V1.LoadAssetController, :post)
     end
   end
 
