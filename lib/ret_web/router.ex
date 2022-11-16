@@ -202,10 +202,7 @@ defmodule RetWeb.Router do
       get("/storage", ApiInternal.V1.StorageController, :show)
       post("/rewrite_assets", ApiInternal.V1.RewriteAssetsController, :post)
       put("/change_email_for_login", ApiInternal.V1.LoginEmailController, :update)
-      
-      resources("/scenes", Api.V1.SceneController, only: [:create, :update])
-      resources("/avatars", Api.V1.AvatarController, only: [:create, :update, :delete])
-      
+      post("/gen_user_token", ApiInternal.V1.GenUserTokenController, :post)      
     end
   end
 
