@@ -18,8 +18,12 @@ defmodule RetWeb.HealthController do
 
     # check storage
     if System.get_env("TURKEY_MODE") do
-      storage_path = Application.get_env(:ret, Ret.Storage)[:storage_path]
-      File.ls!("#{storage_path}/")
+      try do
+        storage_path = Application.get_env(:ret, Ret.Storage)[:storage_path]
+        File.ls!("#{storage_path}/")
+      rescue
+        IO.puts("Ret.Storage failed! todo -- call turkeyorch")
+      end      
     end
     
     send_resp(conn, 200, "ok")
