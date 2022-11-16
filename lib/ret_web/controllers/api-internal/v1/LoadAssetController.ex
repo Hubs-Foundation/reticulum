@@ -3,12 +3,13 @@ defmodule RetWeb.ApiInternal.V1.LoadAssetController do
 
   use RetWeb, :controller
     
-  def post(conn, %{"admin-email" => email, "uri"=> uri_string, "type" => type}) when is_binary(email) do
+  def post(conn, %{"admin-email" => email, "uri"=> uri_string, "type" => type}) 
+    when is_binary(email) and is_binary(uri_string) and is_binary(type) do
     IO.puts("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
     # IO.puts(inspect(conn))
     IO.puts("email: #{email}")
     
-    uri = URI.encode(uri_string)
+    uri = URI.parse(uri_string)
     IO.puts("uri: #{inspect(uri)}")
 
     account = Ret.Account.account_for_email(email) 
