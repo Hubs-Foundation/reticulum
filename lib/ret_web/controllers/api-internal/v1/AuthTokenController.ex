@@ -9,7 +9,7 @@ defmodule RetWeb.ApiInternal.V1.AuthTokenController do
         {:ok, "-", nil}
       else
         email
-        |> Ret.Account.account_for_email()
+        |> Ret.Account.find_or_create_account_for_email()
         |> Ret.Guardian.encode_and_sign()
       end
 
