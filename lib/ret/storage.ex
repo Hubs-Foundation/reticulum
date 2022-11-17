@@ -476,13 +476,11 @@ defmodule Ret.Storage do
     ext = MIME.extensions(content_type) |> List.first()
     filename = [id, ext] |> Enum.reject(&is_nil/1) |> Enum.join(".")
 
-    "#{file_host}/files/#{filename}#{
-      if token do
-        "?" <> URI.encode_query(token: token)
-      else
-        ""
-      end
-    }"
+    "#{file_host}/files/#{filename}#{if token do
+      "?" <> URI.encode_query(token: token)
+    else
+      ""
+    end}"
     |> URI.parse()
   end
 

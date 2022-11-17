@@ -232,7 +232,7 @@ defmodule Ret.Avatar do
       exception ->
         IO.puts("avatar.import_from_url err: #{exception}")
     end
-    
+
     remote_avatar = uri |> fetch_remote_avatar!() |> collapse_remote_avatar!(uri)
     [imported_from_host, imported_from_port] = [:host, :port] |> Enum.map(&(uri |> URI.parse() |> Map.get(&1)))
     imported_from_sid = remote_avatar["avatar_id"]

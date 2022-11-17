@@ -12,5 +12,4 @@ config :sentry,
     env: "turkey"
   }
 
-  config :logger, level: :warn
-  
+config :logger, level: :warn

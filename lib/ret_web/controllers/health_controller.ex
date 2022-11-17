@@ -26,7 +26,7 @@ defmodule RetWeb.HealthController do
           IO.puts("Ret.Storage failed! #{exception} todo -- call turkeyorch")
       end
     end
-    
+
     send_resp(conn, 200, "ok")
   end
 
