@@ -37,11 +37,11 @@ defmodule Ret do
     end
   end
 
-  defp valid_email_address?(string) do
-    string =~ ~r/\S+@\S+/
-  end
-
   @spec turkey_mode? :: boolean
   def turkey_mode?,
     do: Application.fetch_env!(:ret, :turkey_mode?)
+
+  defp valid_email_address?(string) do
+    string =~ ~r/\S+@\S+/
+  end
 end
