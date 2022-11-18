@@ -60,6 +60,10 @@ config :peerage, log_results: false
 
 config :statix, prefix: "ret"
 
+config :ret,
+  ecto_repos: [Ret.Repo, Ret.SessionLockRepo],
+  turkey_mode?: System.get_env("TURKEY_MODE") === "1"
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{Mix.env()}.exs"
