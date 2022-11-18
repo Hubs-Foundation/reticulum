@@ -5,7 +5,7 @@ defmodule RetWeb.ApiInternal.V1.AuthTokenController do
 
   def post(conn, %{"email" => email}) when is_binary(email) do
     {:ok, token, _params} =
-      if !System.get_env("TURKEY_MODE") do
+      if not Ret.turkey_mode?() do
         {:ok, "-", nil}
       else
         email
