@@ -7,10 +7,6 @@ use Mix.Config
 
 # General application configuration
 
-config :ret,
-  ecto_repos: [Ret.Repo, Ret.SessionLockRepo],
-  turkey_mode?: System.get_env("TURKEY_MODE") === "1"
-
 config :ret, RetWeb.Plugs.PostgrestProxy, hostname: System.get_env("POSTGREST_INTERNAL_HOSTNAME") || "localhost"
 
 config :phoenix, :format_encoders, "json-api": Jason
