@@ -236,6 +236,7 @@ defmodule RetWeb.Schema.RoomTypes do
       arg(:member_permissions, :input_member_permissions)
       @desc "Arbitrary json data associated with this room"
       arg(:user_data, :json)
+
       # TODO: add/remove owner
 
       resolve(&Resolvers.RoomResolver.update_room/3)

@@ -110,9 +110,13 @@ defmodule RetWeb.Plugs.AddCSP do
 
     ret_direct_connect =
       if is_subdomain do
-        "https://*.#{ret_domain}:#{ret_port} wss://*.#{ret_domain}:#{ret_port} wss://*.#{ret_domain}:#{janus_port} https://*.#{ret_domain}:#{janus_port} #{default_janus_csp_rule}"
+        "https://*.#{ret_domain}:#{ret_port} wss://*.#{ret_domain}:#{ret_port} wss://*.#{ret_domain}:#{janus_port} https://*.#{
+          ret_domain
+        }:#{janus_port} #{default_janus_csp_rule}"
       else
-        "https://#{ret_host}:#{ret_port} wss://#{ret_host}:#{janus_port} wss://#{ret_host}:#{ret_port} https://#{ret_host}:#{janus_port} #{default_janus_csp_rule}"
+        "https://#{ret_host}:#{ret_port} wss://#{ret_host}:#{janus_port} wss://#{ret_host}:#{ret_port} https://#{
+          ret_host
+        }:#{janus_port} #{default_janus_csp_rule}"
       end
 
     %{
