@@ -6,7 +6,9 @@
 use Mix.Config
 
 # General application configuration
-config :ret, ecto_repos: [Ret.Repo, Ret.SessionLockRepo]
+
+config :ret,
+  ecto_repos: [Ret.Repo, Ret.SessionLockRepo]
 
 config :ret, RetWeb.Plugs.PostgrestProxy, hostname: System.get_env("POSTGREST_INTERNAL_HOSTNAME") || "localhost"
 

@@ -28,6 +28,7 @@ defmodule Ret.MediaSearch do
   @scene_page_size 23
   @max_face_count 60000
   @max_collection_face_count 200_000
+
   # see sketchfab bug about max_filesizes params broken
   # @max_file_size_bytes 20 * 1024 * 1024 
   # @max_collection_file_size_bytes 100 * 1024 * 1024
