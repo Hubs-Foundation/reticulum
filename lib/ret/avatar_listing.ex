@@ -13,9 +13,10 @@ defmodule Ret.AvatarListing do
   alias Ret.{AvatarListing, OwnedFile, Avatar, Account}
   alias AvatarListing.{AvatarListingSlug}
 
+  @type t :: %__MODULE__{}
+
   @schema_prefix "ret0"
   @primary_key {:avatar_listing_id, :id, autogenerate: true}
-
   schema "avatar_listings" do
     field(:avatar_listing_sid, :string)
     field(:slug, AvatarListingSlug.Type)

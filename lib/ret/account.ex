@@ -6,12 +6,13 @@ defmodule Ret.Account do
 
   import Canada, only: [can?: 2]
 
+  @type id :: pos_integer
   @type t :: %__MODULE__{}
+
+  @account_preloads [:login, :identity]
 
   @schema_prefix "ret0"
   @primary_key {:account_id, :id, autogenerate: true}
-  @account_preloads [:login, :identity]
-
   schema "accounts" do
     field(:min_token_issued_at, :utc_datetime)
     field(:is_admin, :boolean)

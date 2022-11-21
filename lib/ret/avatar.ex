@@ -14,21 +14,13 @@ defmodule Ret.Avatar do
   alias Ret.{Avatar, AvatarListing, Repo, OwnedFile, Account, Sids, Storage}
   alias Ret.Avatar.{AvatarSlug}
 
-  @schema_prefix "ret0"
-  @primary_key {:avatar_id, :id, autogenerate: true}
+  @type t :: %__MODULE__{}
 
-  @image_columns [
-    :base_map_owned_file,
-    :emissive_map_owned_file,
-    :normal_map_owned_file,
-    :orm_map_owned_file
-  ]
-
+  @image_columns [:base_map_owned_file, :emissive_map_owned_file, :normal_map_owned_file, :orm_map_owned_file]
   @file_columns [:gltf_owned_file, :bin_owned_file, :thumbnail_owned_file] ++ @image_columns
 
-  def image_columns, do: @image_columns
-  def file_columns, do: @file_columns
-
+  @schema_prefix "ret0"
+  @primary_key {:avatar_id, :id, autogenerate: true}
   schema "avatars" do
     field(:avatar_sid, :string)
     field(:slug, AvatarSlug.Type)
@@ -65,6 +57,10 @@ defmodule Ret.Avatar do
 
     timestamps()
   end
+
+  def file_columns, do: @file_columns
+
+  def image_columns, do: @image_columns
 
   def load_parents(nil, _preload_fields), do: nil
 

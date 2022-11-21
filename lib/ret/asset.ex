@@ -6,9 +6,10 @@ defmodule Ret.Asset do
   alias Ecto.{Multi}
   alias Ret.{Repo, Asset, ProjectAsset}
 
+  @type t :: %__MODULE__{}
+
   @schema_prefix "ret0"
   @primary_key {:asset_id, :id, autogenerate: true}
-
   schema "assets" do
     field(:asset_sid, :string)
     field(:name, :string)
