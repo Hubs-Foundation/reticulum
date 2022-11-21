@@ -237,10 +237,29 @@ defmodule RetWeb.Schema.RoomTypes do
       @desc "Arbitrary json data associated with this room"
       arg(:user_data, :json)
 
-      # TODO: add/remove owner
-
       resolve(&Resolvers.RoomResolver.update_room/3)
     end
+
+    @desc "Add an owner to the room specified by the given id"
+    field :add_owner, :room do
+      @desc "The id of the room"
+      arg(:id, non_null(:string))
+      @desc "The session id of the user to promote"
+      arg(:session_id, non_null(:string))
+
+      resolve(&Resolvers.RoomResolver.add_owner/3)
+    end
+
+    @desc "Remove an owner to the room specified by the given id"
+    field :remove_owner, :room do
+      @desc "The id of the room"
+      arg(:id, non_null(:string))
+      @desc "The session id of the user to demote"
+      arg(:session_id, non_null(:string))
+
+      resolve(&Resolvers.RoomResolver.remove_owner/3)
+    end
+
   end
 
   object :room_subscriptions do

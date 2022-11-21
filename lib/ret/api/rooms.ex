@@ -104,4 +104,20 @@ defmodule Ret.Api.Rooms do
 
     RetWeb.Endpoint.broadcast("hub:" <> hub.hub_sid, "hub_refresh", payload)
   end
+
+  def authed_update_owner(event, hub_sid, %Credentials{} = credentials, params) when event in ["add_owner", "remove_owner"] do
+    hub = Hub |> Repo.get_by(hub_sid: hub_sid)
+    if is_nil(hub) do
+      {:error, "Cannot find room with id: " <> hub_sid}
+    else
+      if can?(credentials, update_room(hub)) do
+        case RetWeb.Endpoint.broadcast("hub:" <> hub.hub_sid, event, %{ "session_id" => params.session_id }) do
+          {:error, reason} -> {:error, reason}
+          :ok -> {:ok, hub}
+        end
+      else
+        {:error, :invalid_credentials}
+      end
+    end
+  end
 end
