@@ -106,7 +106,7 @@ defmodule Ret.Api.Rooms do
   end
 
   def authed_update_owner(event, hub_sid, %Credentials{} = credentials, params) when event in ["add_owner", "remove_owner"] do
-    hub = Hub |> Repo.get_by(hub_sid: hub_sid)
+    hub = Hub |> Repo.get_by(hub_sid: hub_sid) |> Repo.preload([:hub_role_memberships, :hub_bindings])
     if is_nil(hub) do
       {:error, "Cannot find room with id: " <> hub_sid}
     else
