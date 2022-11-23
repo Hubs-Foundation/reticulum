@@ -14,13 +14,13 @@ defmodule Ret.Repo.Migrations.DeleteOrphanedDataFromTablesMissingReferences do
           {:oauth_providers, :account_id, :accounts},
           {:web_push_subscriptions, :hub_id, :hubs}
         ] do
-      execute("""
+      execute """
       DELETE FROM #{table}
       WHERE NOT EXISTS
         (SELECT *
            FROM "#{foreign_table}"
           WHERE "#{table}"."#{column}" = "#{foreign_table}"."#{column}")
-      """)
+      """
     end
   end
 

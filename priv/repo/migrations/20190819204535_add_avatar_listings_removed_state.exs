@@ -6,9 +6,7 @@ defmodule Ret.Repo.Migrations.AddAvatarListingsRemovedState do
   @disable_ddl_transaction true
 
   def up do
-    Ecto.Migration.execute(
-      "ALTER TYPE ret0.avatar_listing_state ADD VALUE IF NOT EXISTS 'removed'"
-    )
+    execute "ALTER TYPE ret0.avatar_listing_state ADD VALUE IF NOT EXISTS 'removed'"
 
     flush()
 
