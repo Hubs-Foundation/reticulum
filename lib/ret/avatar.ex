@@ -27,51 +27,61 @@ defmodule Ret.Avatar do
   @schema_prefix "ret0"
   @primary_key {:avatar_id, :id, autogenerate: true}
   schema "avatars" do
-    field(:avatar_sid, :string)
-    field(:slug, AvatarSlug.Type)
+    field :avatar_sid, :string
+    field :slug, AvatarSlug.Type
+    field :name, :string
+    field :description, :string
+    field :attributions, :map
+    field :allow_remixing, :boolean
+    field :allow_promotion, :boolean
+    field :imported_from_host, :string
+    field :imported_from_port, :integer
+    field :imported_from_sid, :string
+    field :state, Avatar.State
+    field :reviewed_at, :utc_datetime
 
-    field(:name, :string)
-    field(:description, :string)
-    field(:attributions, :map)
+    belongs_to :account, Account, references: :account_id
 
-    belongs_to(:account, Account, references: :account_id)
-    belongs_to(:parent_avatar, Avatar, references: :avatar_id, on_replace: :nilify)
+    belongs_to :parent_avatar, Avatar,
+      references: :avatar_id,
+      on_replace: :nilify
 
-    belongs_to(:parent_avatar_listing, AvatarListing,
+    belongs_to :parent_avatar_listing, AvatarListing,
       references: :avatar_listing_id,
       on_replace: :nilify
-    )
 
-    has_many(:avatar_listings, AvatarListing,
+    belongs_to :gltf_owned_file, OwnedFile,
+      references: :owned_file_id,
+      on_replace: :nilify
+
+    belongs_to :bin_owned_file, OwnedFile,
+      references: :owned_file_id,
+      on_replace: :nilify
+
+    belongs_to :thumbnail_owned_file, OwnedFile,
+      references: :owned_file_id,
+      on_replace: :nilify
+
+    belongs_to :base_map_owned_file, OwnedFile,
+      references: :owned_file_id,
+      on_replace: :nilify
+
+    belongs_to :emissive_map_owned_file, OwnedFile,
+      references: :owned_file_id,
+      on_replace: :nilify
+
+    belongs_to :normal_map_owned_file, OwnedFile,
+      references: :owned_file_id,
+      on_replace: :nilify
+
+    belongs_to :orm_map_owned_file, OwnedFile,
+      references: :owned_file_id,
+      on_replace: :nilify
+
+    has_many :avatar_listings, AvatarListing,
       foreign_key: :avatar_id,
       references: :avatar_id,
       on_replace: :nilify
-    )
-
-    field(:allow_remixing, :boolean)
-    field(:allow_promotion, :boolean)
-
-    field(:imported_from_host, :string)
-    field(:imported_from_port, :integer)
-    field(:imported_from_sid, :string)
-
-    belongs_to(:gltf_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
-    belongs_to(:bin_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
-    belongs_to(:thumbnail_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
-
-    belongs_to(:base_map_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
-
-    belongs_to(:emissive_map_owned_file, OwnedFile,
-      references: :owned_file_id,
-      on_replace: :nilify
-    )
-
-    belongs_to(:normal_map_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
-    belongs_to(:orm_map_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
-
-    field(:state, Avatar.State)
-
-    field(:reviewed_at, :utc_datetime)
 
     timestamps()
   end
@@ -183,16 +193,15 @@ defmodule Ret.Avatar do
   end
 
   def delete_avatar_and_delist_listings(avatar) do
-    Ecto.Multi.new()
-    |> Ecto.Multi.update_all(
-      :update_all,
-      from(l in AvatarListing,
+    query =
+      from l in AvatarListing,
         join: a in Avatar,
         on: l.avatar_id == a.avatar_id,
-        where: l.avatar_id == ^avatar.avatar_id and l.account_id == ^avatar.account_id
-      ),
-      set: [state: :delisted, avatar_id: nil]
-    )
+        where: l.avatar_id == ^avatar.avatar_id,
+        where: l.account_id == ^avatar.account_id
+
+    Ecto.Multi.new()
+    |> Ecto.Multi.update_all(:update_all, query, set: [state: :delisted, avatar_id: nil])
     |> Ecto.Multi.delete(:delete, avatar)
     |> Repo.transaction()
   end

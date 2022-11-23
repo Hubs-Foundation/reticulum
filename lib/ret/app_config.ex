@@ -16,9 +16,11 @@ defmodule Ret.AppConfig do
   }
 
   schema "app_configs" do
-    field(:key, :string)
-    field(:value, :map)
-    belongs_to(:owned_file, Ret.OwnedFile, references: :owned_file_id)
+    field :key, :string
+    field :value, :map
+
+    belongs_to :owned_file, Ret.OwnedFile, references: :owned_file_id
+
     timestamps()
   end
 

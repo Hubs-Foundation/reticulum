@@ -9,11 +9,12 @@ defmodule Ret.CachedFile do
   @primary_key {:cached_file_id, :id, autogenerate: true}
 
   schema "cached_files" do
-    field(:cache_key, :string)
-    field(:file_uuid, :string)
-    field(:file_key, :string)
-    field(:file_content_type, :string)
-    field(:accessed_at, :naive_datetime)
+    field :cache_key, :string
+    field :file_uuid, :string
+    field :file_key, :string
+    field :file_content_type, :string
+    field :accessed_at, :naive_datetime
+
     timestamps()
   end
 
@@ -25,7 +26,7 @@ defmodule Ret.CachedFile do
     # Use a PostgreSQL advisory lock on the cache key as a mutex across all
     # nodes for accessing this cache key
     Ret.Locking.exec_after_lock(cache_key, fn ->
-      case CachedFile |> where(cache_key: ^cache_key) |> Repo.one() do
+      case Repo.one(from CachedFile, where: [cache_key: ^cache_key]) do
         %CachedFile{
           file_uuid: file_uuid,
           file_content_type: file_content_type,
@@ -88,17 +89,17 @@ defmodule Ret.CachedFile do
   def vacuum(%{expiration: expiration}) do
     Ret.Locking.exec_if_lockable(:cached_file_vacuum, fn ->
       cached_files_to_delete =
-        from(f in CachedFile, where: f.accessed_at() < ^expiration) |> Repo.all()
+        Repo.all(from f in CachedFile, where: f.accessed_at() < ^expiration)
 
       keys = Enum.map(cached_files_to_delete, fn v -> v.cache_key end)
 
       case Storage.vacuum(%{cached_files: cached_files_to_delete}) do
         {:ok, %{vacuumed: vacuumed, errors: []}} ->
-          Repo.delete_all(from(c in CachedFile, where: c.cache_key in ^keys))
+          Repo.delete_all(from c in CachedFile, where: c.cache_key in ^keys)
           %{vacuumed: vacuumed, errors: []}
 
         {:ok, %{vacuumed: vacuumed, errors: errors}} ->
-          Repo.delete_all(from(c in CachedFile, where: c.cache_key in ^keys))
+          Repo.delete_all(from c in CachedFile, where: c.cache_key in ^keys)
           # If a CachedFile is backed by a file in expiring_storage_path, then this version of
           # the Storage.vacuum task will not delete the underlying files.
           Logger.info(

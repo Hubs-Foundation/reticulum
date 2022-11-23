@@ -6,7 +6,7 @@ defmodule Ret.DbWarmerJob do
   def warm_db_if_has_ccu do
     if RetWeb.Presence.has_present_members?() do
       # Ping DB to keep up
-      from(h in Ret.Hub, limit: 0) |> Ret.Repo.all()
+      Ret.Repo.all(from h in Ret.Hub, limit: 0)
     end
   end
 end

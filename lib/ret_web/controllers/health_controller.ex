@@ -5,7 +5,7 @@ defmodule RetWeb.HealthController do
   def index(conn, _params) do
     # Check database
     if module_config(:check_repo) do
-      from(h in Ret.Hub, limit: 0) |> Ret.Repo.all()
+      Ret.Repo.all(from Ret.Hub, limit: 0)
     end
 
     # Check page cache

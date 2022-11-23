@@ -9,10 +9,11 @@ defmodule Ret.HubBinding do
   @primary_key {:hub_binding_id, :id, autogenerate: true}
 
   schema "hub_bindings" do
-    field(:type, HubBinding.Type)
-    field(:community_id, :string)
-    field(:channel_id, :string)
-    belongs_to(:hub, Hub, references: :hub_id)
+    field :type, HubBinding.Type
+    field :community_id, :string
+    field :channel_id, :string
+
+    belongs_to :hub, Hub, references: :hub_id
 
     timestamps()
   end

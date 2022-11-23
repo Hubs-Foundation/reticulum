@@ -77,9 +77,11 @@ defmodule Ret.WebPushSubscriptionTest do
     WebPushSubscription.unsubscribe_from_hub(hub, @stub_subscription)
 
     existing =
-      WebPushSubscription
-      |> where([t], t.endpoint == "endpoint" and t.hub_id == ^hub_id)
-      |> Repo.one()
+      Repo.one(
+        from sub in WebPushSubscription,
+          where: sub.endpoint == "endpoint",
+          where: sub.hub_id == ^hub_id
+      )
 
     assert existing == nil
   end

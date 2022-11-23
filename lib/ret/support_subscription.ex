@@ -8,8 +8,8 @@ defmodule Ret.SupportSubscription do
   @primary_key {:support_subscription_id, :id, autogenerate: true}
 
   schema "support_subscriptions" do
-    field(:channel, :string)
-    field(:identifier, :string)
+    field :channel, :string
+    field :identifier, :string
 
     timestamps()
   end

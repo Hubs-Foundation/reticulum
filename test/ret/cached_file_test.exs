@@ -183,7 +183,7 @@ defmodule Ret.CachedFileTest do
   end
 
   defp cached_file(cache_key) do
-    CachedFile |> where(cache_key: ^cache_key) |> Repo.one()
+    Repo.one(from CachedFile, where: [cache_key: ^cache_key])
   end
 
   defp changeset(struct, params) do

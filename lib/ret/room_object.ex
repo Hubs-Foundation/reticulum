@@ -8,11 +8,11 @@ defmodule Ret.RoomObject do
   @primary_key {:room_object_id, :id, autogenerate: true}
 
   schema "room_objects" do
-    field(:object_id, :string)
-    field(:gltf_node, EncryptedField)
+    field :object_id, :string
+    field :gltf_node, EncryptedField
 
-    belongs_to(:hub, Hub, references: :hub_id)
-    belongs_to(:account, Account, references: :account_id)
+    belongs_to :hub, Hub, references: :hub_id
+    belongs_to :account, Account, references: :account_id
 
     timestamps()
   end
@@ -25,27 +25,34 @@ defmodule Ret.RoomObject do
     attrs = attrs |> Map.put(:gltf_node, attrs |> Map.get(:gltf_node) |> Poison.encode!())
 
     room_object =
-      RoomObject
-      |> where([t], t.hub_id == ^hub_id and t.object_id == ^object_id)
-      |> preload(:hub)
-      |> preload(:account)
-      |> Repo.one()
+      Repo.one(
+        from object in RoomObject,
+          where: object.hub_id == ^hub_id,
+          where: object.object_id == ^object_id,
+          preload: [:account, :hub]
+      )
 
     changeset(room_object || %RoomObject{}, hub, account, attrs) |> Repo.insert_or_update!()
   end
 
   def perform_unpin(%Hub{hub_id: hub_id}, object_id) do
-    RoomObject
-    |> where([t], t.hub_id == ^hub_id and t.object_id == ^object_id)
-    |> Repo.delete_all()
+    Repo.delete_all(
+      from object in RoomObject,
+        where: object.hub_id == ^hub_id,
+        where: object.object_id == ^object_id
+    )
   end
 
   def gltf_for_hub_id(hub_id) do
+    query =
+      from object in RoomObject,
+        where: object.hub_id == ^hub_id,
+        select: object.gltf_node
+
     nodes =
-      RoomObject
-      |> where([t], t.hub_id == ^hub_id)
+      query
       |> Repo.all()
-      |> Enum.map(&(&1.gltf_node |> Poison.decode!()))
+      |> Enum.map(&Jason.decode!/1)
 
     node_indices =
       if length(nodes) == 0 do
@@ -63,7 +70,7 @@ defmodule Ret.RoomObject do
   end
 
   def rewrite_domain_for_all(old_domain_url, new_domain_url) do
-    room_object_stream = from(RoomObject, select: [:room_object_id, :gltf_node]) |> Repo.stream()
+    room_object_stream = Repo.stream(from RoomObject, select: [:room_object_id, :gltf_node])
 
     Repo.transaction(fn ->
       Enum.each(room_object_stream, fn room_object ->

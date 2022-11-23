@@ -18,41 +18,56 @@ defmodule Ret.AvatarListing do
   @schema_prefix "ret0"
   @primary_key {:avatar_listing_id, :id, autogenerate: true}
   schema "avatar_listings" do
-    field(:avatar_listing_sid, :string)
-    field(:slug, AvatarListingSlug.Type)
-    field(:order, :integer)
-    field(:state, AvatarListing.State)
-    field(:tags, :map)
-    belongs_to(:avatar, Avatar, references: :avatar_id)
-    timestamps()
+    field :avatar_listing_sid, :string
+    field :slug, AvatarListingSlug.Type
+    field :order, :integer
+    field :state, AvatarListing.State
+    field :tags, :map
+
+    belongs_to :avatar, Avatar, references: :avatar_id
 
     # Properties cloned from avatars
-    field(:name, :string)
-    field(:description, :string)
-    field(:attributions, :map)
+    field :name, :string
+    field :description, :string
+    field :attributions, :map
 
-    belongs_to(:account, Account, references: :account_id)
-    belongs_to(:parent_avatar_listing, AvatarListing, references: :avatar_listing_id)
+    belongs_to :account, Account, references: :account_id
+    belongs_to :parent_avatar_listing, AvatarListing, references: :avatar_listing_id
 
-    has_many(:child_avatars, Avatar,
+    belongs_to :gltf_owned_file, OwnedFile,
+      references: :owned_file_id,
+      on_replace: :nilify
+
+    belongs_to :bin_owned_file, OwnedFile,
+      references: :owned_file_id,
+      on_replace: :nilify
+
+    belongs_to :thumbnail_owned_file, OwnedFile,
+      references: :owned_file_id,
+      on_replace: :nilify
+
+    belongs_to :base_map_owned_file, OwnedFile,
+      references: :owned_file_id,
+      on_replace: :nilify
+
+    belongs_to :emissive_map_owned_file, OwnedFile,
+      references: :owned_file_id,
+      on_replace: :nilify
+
+    belongs_to :normal_map_owned_file, OwnedFile,
+      references: :owned_file_id,
+      on_replace: :nilify
+
+    belongs_to :orm_map_owned_file, OwnedFile,
+      references: :owned_file_id,
+      on_replace: :nilify
+
+    has_many :child_avatars, Avatar,
       references: :avatar_listing_id,
       foreign_key: :parent_avatar_listing_id,
       on_replace: :nilify
-    )
 
-    belongs_to(:gltf_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
-    belongs_to(:bin_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
-    belongs_to(:thumbnail_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
-
-    belongs_to(:base_map_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
-
-    belongs_to(:emissive_map_owned_file, OwnedFile,
-      references: :owned_file_id,
-      on_replace: :nilify
-    )
-
-    belongs_to(:normal_map_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
-    belongs_to(:orm_map_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
+    timestamps()
   end
 
   def has_any_in_filter?(filter) do

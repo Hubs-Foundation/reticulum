@@ -8,8 +8,9 @@ defmodule Ret.Identity do
   @primary_key {:identity_id, :id, autogenerate: true}
 
   schema "identities" do
-    field(:name, :string)
-    belongs_to(:account, Ret.Account, references: :account_id)
+    field :name, :string
+
+    belongs_to :account, Ret.Account, references: :account_id
 
     timestamps()
   end

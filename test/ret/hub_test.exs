@@ -200,9 +200,7 @@ defmodule Ret.HubTest do
 
     hub = hub |> Hub.add_owner!(account)
 
-    assert HubRoleMembership
-           |> where(hub_id: ^hub.hub_id)
-           |> Repo.aggregate(:count, :hub_role_membership_id) === 0
+    refute Repo.exists?(from HubRoleMembership, where: [hub_id: ^hub.hub_id])
   end
 
   test "double adding the same account doesn't fail", %{
@@ -220,8 +218,6 @@ defmodule Ret.HubTest do
     hub = hub |> Hub.add_owner!(account2)
     hub = hub |> Hub.add_owner!(account2)
 
-    assert HubRoleMembership
-           |> where(hub_id: ^hub.hub_id)
-           |> Repo.aggregate(:count, :hub_role_membership_id) === 1
+    assert Repo.one(from HubRoleMembership, where: [hub_id: ^hub.hub_id])
   end
 end

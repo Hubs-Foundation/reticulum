@@ -12,10 +12,12 @@ defmodule Ret.Repo.Migrations.AddAvatarListingsRemovedState do
 
     flush()
 
-    repo().update_all(
-      from(l in AvatarListing, where: l.state == ^:delisted and not is_nil(l.avatar_id)),
-      set: [state: :removed]
-    )
+    query =
+      from l in AvatarListing,
+        where: l.state == ^:delisted,
+        where: not is_nil(l.avatar_id)
+
+    repo().update_all(query, set: [state: :removed])
   end
 
   def down do

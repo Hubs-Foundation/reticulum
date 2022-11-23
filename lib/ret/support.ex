@@ -9,10 +9,13 @@ defmodule Ret.Support do
 
   def request_support_for_hub(hub) do
     if Support.available?() do
-      SupportSubscription
-      |> where(channel: "slack")
+      query =
+        from sub in SupportSubscription,
+          where: [channel: "slack"],
+          select: sub.identifier
+
+      query
       |> Repo.all()
-      |> Enum.map(&Map.get(&1, :identifier))
       |> notify_slack_handles_of_hub_support(hub)
     end
   end

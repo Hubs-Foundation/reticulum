@@ -17,8 +17,8 @@ defmodule Ret do
   }
 
   import Canada, only: [can?: 2]
+  import Ecto.Query, only: [from: 2]
   import Ret.Schema, only: [is_serial_id: 1]
-  require Ecto.Query
 
   def change_email_for_login(%{old_email: old_email, new_email: new_email}) do
     if not valid_email_address?(new_email) do
@@ -98,32 +98,34 @@ defmodule Ret do
   end
 
   @spec account_owned_file_query(Account.id()) :: Ecto.Query.t()
-  defp account_owned_file_query(account_id) when is_serial_id(account_id),
-    do: Ecto.Query.where(OwnedFile, account_id: ^account_id)
+  defp account_owned_file_query(account_id) when is_serial_id(account_id) do
+    from OwnedFile, where: [account_id: ^account_id]
+  end
 
   @spec asset_query(Account.id()) :: Ecto.Query.t()
-  defp asset_query(account_id) when is_serial_id(account_id),
-    do: Ecto.Query.where(Asset, account_id: ^account_id)
+  defp asset_query(account_id) when is_serial_id(account_id) do
+    from Asset, where: [account_id: ^account_id]
+  end
 
   @spec avatar_owned_file_query(Account.id()) :: Ecto.Query.t()
-  defp avatar_owned_file_query(account_id) when is_serial_id(account_id),
-    do:
-      Ecto.Query.from(owned_file in OwnedFile,
-        join: avatar in Avatar,
-        on:
-          owned_file.owned_file_id == avatar.gltf_owned_file_id or
-            owned_file.owned_file_id == avatar.bin_owned_file_id or
-            owned_file.owned_file_id == avatar.thumbnail_owned_file_id or
-            owned_file.owned_file_id == avatar.base_map_owned_file_id or
-            owned_file.owned_file_id == avatar.emissive_map_owned_file_id or
-            owned_file.owned_file_id == avatar.normal_map_owned_file_id or
-            owned_file.owned_file_id == avatar.orm_map_owned_file_id,
-        where: avatar.account_id == ^account_id
-      )
+  defp avatar_owned_file_query(account_id) when is_serial_id(account_id) do
+    from owned_file in OwnedFile,
+      join: avatar in Avatar,
+      on:
+        owned_file.owned_file_id == avatar.gltf_owned_file_id or
+          owned_file.owned_file_id == avatar.bin_owned_file_id or
+          owned_file.owned_file_id == avatar.thumbnail_owned_file_id or
+          owned_file.owned_file_id == avatar.base_map_owned_file_id or
+          owned_file.owned_file_id == avatar.emissive_map_owned_file_id or
+          owned_file.owned_file_id == avatar.normal_map_owned_file_id or
+          owned_file.owned_file_id == avatar.orm_map_owned_file_id,
+      where: avatar.account_id == ^account_id
+  end
 
   @spec avatar_query(Account.id()) :: Ecto.Query.t()
-  defp avatar_query(account_id) when is_serial_id(account_id),
-    do: Ecto.Query.where(Avatar, account_id: ^account_id)
+  defp avatar_query(account_id) when is_serial_id(account_id) do
+    from Avatar, where: [account_id: ^account_id]
+  end
 
   @spec delete_avatars_multi(Ecto.Multi.t(), Account.id(), Keyword.t()) :: Ecto.Multi.t()
   defp delete_avatars_multi(%Ecto.Multi{} = multi, account_id, reassignment)
@@ -213,58 +215,55 @@ defmodule Ret do
   end
 
   @spec listed_avatar_query(Account.id()) :: Ecto.Query.t()
-  defp listed_avatar_query(account_id) when is_serial_id(account_id),
-    do:
-      Ecto.Query.from(avatar in Avatar,
-        join: listing in AvatarListing,
-        on: avatar.avatar_id == listing.avatar_id,
-        where: avatar.account_id == ^account_id
-      )
+  defp listed_avatar_query(account_id) when is_serial_id(account_id) do
+    from avatar in Avatar,
+      join: listing in AvatarListing,
+      on: avatar.avatar_id == listing.avatar_id,
+      where: avatar.account_id == ^account_id
+  end
 
   @spec listed_scene_query(Account.id()) :: Ecto.Query.t()
-  defp listed_scene_query(account_id) when is_serial_id(account_id),
-    do:
-      Ecto.Query.from(scene in Scene,
-        join: listing in SceneListing,
-        on: scene.scene_id == listing.scene_id,
-        where: scene.account_id == ^account_id
-      )
+  defp listed_scene_query(account_id) when is_serial_id(account_id) do
+    from scene in Scene,
+      join: listing in SceneListing,
+      on: scene.scene_id == listing.scene_id,
+      where: scene.account_id == ^account_id
+  end
 
   @spec parent_avatar_query(Account.id()) :: Ecto.Query.t()
-  defp parent_avatar_query(account_id) when is_serial_id(account_id),
-    do:
-      Ecto.Query.from(parent_avatar in Avatar,
-        join: child_avatar in Avatar,
-        on: parent_avatar.avatar_id == child_avatar.parent_avatar_id,
-        where: parent_avatar.account_id == ^account_id
-      )
+  defp parent_avatar_query(account_id) when is_serial_id(account_id) do
+    from parent_avatar in Avatar,
+      join: child_avatar in Avatar,
+      on: parent_avatar.avatar_id == child_avatar.parent_avatar_id,
+      where: parent_avatar.account_id == ^account_id
+  end
 
   @spec parent_scene_query(Account.id()) :: Ecto.Query.t()
-  defp parent_scene_query(account_id) when is_serial_id(account_id),
-    do:
-      Ecto.Query.from(parent_scene in Scene,
-        join: child_scene in Scene,
-        on: parent_scene.scene_id == child_scene.parent_scene_id,
-        where: parent_scene.account_id == ^account_id
-      )
+  defp parent_scene_query(account_id) when is_serial_id(account_id) do
+    from parent_scene in Scene,
+      join: child_scene in Scene,
+      on: parent_scene.scene_id == child_scene.parent_scene_id,
+      where: parent_scene.account_id == ^account_id
+  end
 
   @spec project_query(Account.id()) :: Ecto.Query.t()
-  defp project_query(account_id) when is_serial_id(account_id),
-    do: Ecto.Query.where(Project, created_by_account_id: ^account_id)
+  defp project_query(account_id) when is_serial_id(account_id) do
+    from Project, where: [created_by_account_id: ^account_id]
+  end
 
   @spec scene_owned_file_query(Account.id()) :: Ecto.Query.t()
-  defp scene_owned_file_query(account_id) when is_serial_id(account_id),
-    do:
-      Ecto.Query.from(owned_file in OwnedFile,
-        join: scene in Scene,
-        on:
-          owned_file.owned_file_id == scene.model_owned_file_id or
-            owned_file.owned_file_id == scene.screenshot_owned_file_id or
-            owned_file.owned_file_id == scene.scene_owned_file_id,
-        where: scene.account_id == ^account_id
-      )
+  defp scene_owned_file_query(account_id) when is_serial_id(account_id) do
+    from owned_file in OwnedFile,
+      join: scene in Scene,
+      on:
+        owned_file.owned_file_id == scene.model_owned_file_id or
+          owned_file.owned_file_id == scene.screenshot_owned_file_id or
+          owned_file.owned_file_id == scene.scene_owned_file_id,
+      where: scene.account_id == ^account_id
+  end
 
   @spec scene_query(Account.id()) :: Ecto.Query.t()
-  defp scene_query(account_id) when is_serial_id(account_id),
-    do: Ecto.Query.where(Scene, account_id: ^account_id)
+  defp scene_query(account_id) when is_serial_id(account_id) do
+    from Scene, where: [account_id: ^account_id]
+  end
 end

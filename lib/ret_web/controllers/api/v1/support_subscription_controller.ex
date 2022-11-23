@@ -36,10 +36,7 @@ defmodule RetWeb.Api.V1.SupportSubscriptionController do
   end
 
   def delete(conn, %{"id" => identifier}) do
-    SupportSubscription
-    |> where(identifier: ^identifier)
-    |> Repo.delete_all()
-
+    Repo.delete_all(from SupportSubscription, where: [identifier: ^identifier])
     conn |> send_resp(200, "OK")
   end
 end

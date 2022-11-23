@@ -8,9 +8,11 @@ defmodule Ret.HubInvite do
   @primary_key {:hub_invite_id, :id, autogenerate: true}
 
   schema "hub_invites" do
-    field(:hub_invite_sid, :string)
-    field(:state, HubInvite.State)
-    belongs_to(:hub, Hub, references: :hub_id)
+    field :hub_invite_sid, :string
+    field :state, HubInvite.State
+
+    belongs_to :hub, Hub, references: :hub_id
+
     timestamps()
   end
 

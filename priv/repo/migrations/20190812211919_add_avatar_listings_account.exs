@@ -19,12 +19,13 @@ defmodule Ret.Repo.Migrations.AddAvatarListingsAccount do
 
     flush()
 
-    from(l in "avatar_listings",
-      join: a in Avatar,
-      on: a.avatar_id == l.avatar_id,
-      update: [set: [account_id: a.account_id]]
-    )
-    |> repo().update_all([])
+    query =
+      from l in "avatar_listings",
+        join: a in Avatar,
+        on: a.avatar_id == l.avatar_id,
+        update: [set: [account_id: a.account_id]]
+
+    repo().update_all(query, [])
   end
 
   def down do
