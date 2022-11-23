@@ -57,8 +57,12 @@ defmodule Ret.CachedFileTest do
       assert %CachedFile{cache_key: "ccc"} = cached_file("ccc")
 
       # The underlying asset has been vacuumed
-      assert {:error, :not_found} = Storage.fetch(aaa.file_uuid, aaa.file_key, Storage.cached_file_path())
-      assert {:error, :not_found} = Storage.fetch(bbb.file_uuid, bbb.file_key, Storage.cached_file_path())
+      assert {:error, :not_found} =
+               Storage.fetch(aaa.file_uuid, aaa.file_key, Storage.cached_file_path())
+
+      assert {:error, :not_found} =
+               Storage.fetch(bbb.file_uuid, bbb.file_key, Storage.cached_file_path())
+
       assert {:ok, _meta, _stream} = Storage.fetch(ccc)
     end
   end
@@ -66,7 +70,8 @@ defmodule Ret.CachedFileTest do
   test "CachedFiles are migrated from expiring storage to cached storage" do
     cache_key = "abc"
 
-    %CachedFile{file_uuid: file_uuid, file_key: file_key} = cached_file = put_file_in_expiring_storage(cache_key, "abc")
+    %CachedFile{file_uuid: file_uuid, file_key: file_key} =
+      cached_file = put_file_in_expiring_storage(cache_key, "abc")
 
     # This line ensures the file is stored in the expiring_file_path
     {:ok, _meta, _stream} = Storage.fetch(file_uuid, file_key, Storage.expiring_file_path())
@@ -81,7 +86,8 @@ defmodule Ret.CachedFileTest do
   test "CachedFiles are migrated from expiring storage to cached storage only once" do
     cache_key = "foobarbaz"
 
-    %CachedFile{file_uuid: file_uuid, file_key: file_key} = cached_file = put_file_in_expiring_storage(cache_key, "abc")
+    %CachedFile{file_uuid: file_uuid, file_key: file_key} =
+      cached_file = put_file_in_expiring_storage(cache_key, "abc")
 
     # This line ensures the file is stored in the expiring_file_path
     {:ok, _meta, _stream} = Storage.fetch(file_uuid, file_key, Storage.expiring_file_path())
@@ -128,14 +134,20 @@ defmodule Ret.CachedFileTest do
       assert %CachedFile{cache_key: "ccc"} = cached_file("ccc")
 
       # The underlying asset has been vacuumed
-      assert {:error, :not_found} = Storage.fetch(aaa.file_uuid, aaa.file_key, Storage.cached_file_path())
-      assert {:error, :not_found} = Storage.fetch(bbb.file_uuid, bbb.file_key, Storage.cached_file_path())
-      assert {:error, :not_found} = Storage.fetch(expiring.file_uuid, expiring.file_key, Storage.cached_file_path())
+      assert {:error, :not_found} =
+               Storage.fetch(aaa.file_uuid, aaa.file_key, Storage.cached_file_path())
+
+      assert {:error, :not_found} =
+               Storage.fetch(bbb.file_uuid, bbb.file_key, Storage.cached_file_path())
+
+      assert {:error, :not_found} =
+               Storage.fetch(expiring.file_uuid, expiring.file_key, Storage.cached_file_path())
 
       assert {:ok, _meta, _stream} = Storage.fetch(ccc)
 
       # The expiring file will exist until vacuumed independently
-      assert {:ok, _meta, _stream} = Storage.fetch(expiring.file_uuid, expiring.file_key, Storage.expiring_file_path())
+      assert {:ok, _meta, _stream} =
+               Storage.fetch(expiring.file_uuid, expiring.file_key, Storage.expiring_file_path())
     end
   end
 
@@ -143,7 +155,10 @@ defmodule Ret.CachedFileTest do
     {:ok, path} = Temp.path()
     file_key = SecureRandom.hex()
     {:ok, %{content_type: content_type}} = write_large_file_to_path(contents).(path)
-    {:ok, file_uuid} = Storage.store(path, content_type, file_key, nil, Storage.expiring_file_path())
+
+    {:ok, file_uuid} =
+      Storage.store(path, content_type, file_key, nil, Storage.expiring_file_path())
+
     File.rm_rf(path)
 
     {:ok, cached_file} =
@@ -161,7 +176,10 @@ defmodule Ret.CachedFileTest do
   end
 
   defp shift(%{now: now, shift_options: shift_options}) do
-    now |> Timex.shift(shift_options) |> Timex.to_naive_datetime() |> NaiveDateTime.truncate(:second)
+    now
+    |> Timex.shift(shift_options)
+    |> Timex.to_naive_datetime()
+    |> NaiveDateTime.truncate(:second)
   end
 
   defp cached_file(cache_key) do

@@ -26,7 +26,11 @@ defmodule Ret.CachedFile do
     # nodes for accessing this cache key
     Ret.Locking.exec_after_lock(cache_key, fn ->
       case CachedFile |> where(cache_key: ^cache_key) |> Repo.one() do
-        %CachedFile{file_uuid: file_uuid, file_content_type: file_content_type, file_key: file_key} ->
+        %CachedFile{
+          file_uuid: file_uuid,
+          file_content_type: file_content_type,
+          file_key: file_key
+        } ->
           Storage.uri_for(file_uuid, file_content_type, file_key)
 
         nil ->
@@ -50,7 +54,8 @@ defmodule Ret.CachedFile do
                file_uuid: file_uuid,
                file_key: file_key,
                file_content_type: content_type,
-               accessed_at: Timex.now() |> Timex.to_naive_datetime() |> NaiveDateTime.truncate(:second)
+               accessed_at:
+                 Timex.now() |> Timex.to_naive_datetime() |> NaiveDateTime.truncate(:second)
              })
              |> Repo.insert() do
         Storage.uri_for(file_uuid, content_type, file_key)
@@ -82,7 +87,9 @@ defmodule Ret.CachedFile do
 
   def vacuum(%{expiration: expiration}) do
     Ret.Locking.exec_if_lockable(:cached_file_vacuum, fn ->
-      cached_files_to_delete = from(f in CachedFile, where: f.accessed_at() < ^expiration) |> Repo.all()
+      cached_files_to_delete =
+        from(f in CachedFile, where: f.accessed_at() < ^expiration) |> Repo.all()
+
       keys = Enum.map(cached_files_to_delete, fn v -> v.cache_key end)
 
       case Storage.vacuum(%{cached_files: cached_files_to_delete}) do
@@ -94,11 +101,17 @@ defmodule Ret.CachedFile do
           Repo.delete_all(from(c in CachedFile, where: c.cache_key in ^keys))
           # If a CachedFile is backed by a file in expiring_storage_path, then this version of
           # the Storage.vacuum task will not delete the underlying files.
-          Logger.info("Removing #{length(errors)} cached files without finding underlying assets.")
+          Logger.info(
+            "Removing #{length(errors)} cached files without finding underlying assets."
+          )
+
           %{vacuumed: vacuumed, errors: errors}
 
         _ ->
-          Logger.info("Failed to vacuum cached files. #{length(cached_files_to_delete)} files will not be deleted.")
+          Logger.info(
+            "Failed to vacuum cached files. #{length(cached_files_to_delete)} files will not be deleted."
+          )
+
           %{vacuumed: [], errors: cached_files_to_delete}
       end
     end)

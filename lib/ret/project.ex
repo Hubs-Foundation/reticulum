@@ -17,7 +17,11 @@ defmodule Ret.Project do
     belongs_to(:thumbnail_owned_file, Ret.OwnedFile, references: :owned_file_id)
 
     belongs_to(:parent_scene, Scene, references: :scene_id, on_replace: :nilify)
-    belongs_to(:parent_scene_listing, SceneListing, references: :scene_listing_id, on_replace: :nilify)
+
+    belongs_to(:parent_scene_listing, SceneListing,
+      references: :scene_listing_id,
+      on_replace: :nilify
+    )
 
     many_to_many(:assets, Ret.Asset,
       join_through: Ret.ProjectAsset,
@@ -100,7 +104,9 @@ defmodule Ret.Project do
       from(Project, select: [:project_id, :project_owned_file_id, :created_by_account_id])
       |> Repo.stream()
       |> Stream.chunk_every(@rewrite_chunk_size)
-      |> Stream.flat_map(fn chunk -> Repo.preload(chunk, [:project_owned_file, :created_by_account]) end)
+      |> Stream.flat_map(fn chunk ->
+        Repo.preload(chunk, [:project_owned_file, :created_by_account])
+      end)
 
     Repo.transaction(fn ->
       Enum.each(project_stream, fn project ->

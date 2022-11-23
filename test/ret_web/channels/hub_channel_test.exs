@@ -32,13 +32,19 @@ defmodule RetWeb.HubChannelTest do
       disabled_account |> Ecto.Changeset.change(state: :disabled) |> Ret.Repo.update!()
 
       {:error, %{reason: "join_denied"}} =
-        subscribe_and_join(socket, "hub:#{hub.hub_sid}", join_params_for_account(disabled_account))
+        subscribe_and_join(
+          socket,
+          "hub:#{hub.hub_sid}",
+          join_params_for_account(disabled_account)
+        )
     end
   end
 
   describe "presence" do
     test "joining hub registers in presence", %{socket: socket, hub: hub} do
-      {:ok, %{session_id: session_id}, socket} = subscribe_and_join(socket, "hub:#{hub.hub_sid}", @default_join_params)
+      {:ok, %{session_id: session_id}, socket} =
+        subscribe_and_join(socket, "hub:#{hub.hub_sid}", @default_join_params)
+
       :timer.sleep(100)
       presence = socket |> Presence.list()
       assert presence[session_id]
@@ -71,7 +77,8 @@ defmodule RetWeb.HubChannelTest do
     test "join is denied when joining with an invalid invite", %{socket: socket} do
       %{hub: hub} = create_invite_only_hub()
 
-      {:error, %{reason: "join_denied"}} = join_hub(socket, hub, join_params_for_hub_invite_id("invalid_invite_id"))
+      {:error, %{reason: "join_denied"}} =
+        join_hub(socket, hub, join_params_for_hub_invite_id("invalid_invite_id"))
     end
 
     test "join is denied when joining with a revoked invite", %{socket: socket} do
@@ -79,7 +86,8 @@ defmodule RetWeb.HubChannelTest do
 
       Ret.HubInvite.revoke_invite(hub, hub_invite.hub_invite_sid)
 
-      {:error, %{reason: "join_denied"}} = join_hub(socket, hub, join_params_for_hub_invite(hub_invite))
+      {:error, %{reason: "join_denied"}} =
+        join_hub(socket, hub, join_params_for_hub_invite(hub_invite))
     end
 
     test "join is denied when joining with a mismatched invite", %{socket: socket} do
@@ -106,7 +114,8 @@ defmodule RetWeb.HubChannelTest do
       |> assert_reply(:ok, %{})
 
       # Join is still denied with invalid invite
-      {:error, %{reason: "join_denied"}} = join_hub(socket, hub, join_params_for_hub_invite_id("invalid_invite_id"))
+      {:error, %{reason: "join_denied"}} =
+        join_hub(socket, hub, join_params_for_hub_invite_id("invalid_invite_id"))
 
       # Join is still allowed with original invite
       {:ok, _context, _socket} = join_hub(socket, hub, join_params_for_hub_invite(hub_invite))
@@ -131,10 +140,12 @@ defmodule RetWeb.HubChannelTest do
       assert response_payload |> Map.keys() |> length === 0
 
       # Joining hub_two is still denied with invalid invite
-      {:error, %{reason: "join_denied"}} = join_hub(socket, hub_two, join_params_for_hub_invite_id("invalid_invite_id"))
+      {:error, %{reason: "join_denied"}} =
+        join_hub(socket, hub_two, join_params_for_hub_invite_id("invalid_invite_id"))
 
       # Joining hub_two still allowed with original invite
-      {:ok, _context, _socket} = join_hub(socket, hub_two, join_params_for_hub_invite(hub_two_invite))
+      {:ok, _context, _socket} =
+        join_hub(socket, hub_two, join_params_for_hub_invite(hub_two_invite))
     end
 
     test "revoke can be performed by hub creator", %{socket: socket} do

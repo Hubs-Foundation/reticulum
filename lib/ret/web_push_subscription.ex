@@ -35,12 +35,17 @@ defmodule Ret.WebPushSubscription do
         %Hub{hub_id: hub_id},
         subscription
       ) do
-    with %WebPushSubscription{} = web_push_subscription <- find_by_hub_id_and_subscription(hub_id, subscription) do
+    with %WebPushSubscription{} = web_push_subscription <-
+           find_by_hub_id_and_subscription(hub_id, subscription) do
       web_push_subscription |> Repo.delete!()
     end
   end
 
-  def maybe_send(%WebPushSubscription{endpoint: endpoint, p256dh: p256dh, auth: auth} = web_push_subscription, body) do
+  def maybe_send(
+        %WebPushSubscription{endpoint: endpoint, p256dh: p256dh, auth: auth} =
+          web_push_subscription,
+        body
+      ) do
     if may_send?(web_push_subscription) do
       subscription = %{
         endpoint: endpoint,

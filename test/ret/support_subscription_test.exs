@@ -6,7 +6,9 @@ defmodule Ret.SupportSubscriptionTest do
   test "support availability" do
     assert Support.available?() == false
 
-    %SupportSubscription{} |> SupportSubscription.changeset(%{identifier: "csr"}) |> Ret.Repo.insert!()
+    %SupportSubscription{}
+    |> SupportSubscription.changeset(%{identifier: "csr"})
+    |> Ret.Repo.insert!()
 
     assert Support.available?() == true
   end

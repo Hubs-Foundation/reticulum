@@ -158,7 +158,10 @@ defmodule Ret.GLTFUtilsTest do
 
   test "replace only base texture", %{temp_owned_file: temp_owned_file} do
     input_gltf = @sample_gltf
-    output_gltf = input_gltf |> GLTFUtils.with_default_material_override(%{base_map_owned_file: temp_owned_file})
+
+    output_gltf =
+      input_gltf
+      |> GLTFUtils.with_default_material_override(%{base_map_owned_file: temp_owned_file})
 
     img_url = temp_owned_file |> OwnedFile.uri_for() |> URI.to_string()
     assert img_url == output_gltf |> get_in(["images", Access.at(2), "uri"])
@@ -170,7 +173,10 @@ defmodule Ret.GLTFUtilsTest do
 
   test "replace ORM texture", %{temp_owned_file: temp_owned_file} do
     input_gltf = @sample_gltf
-    output_gltf = input_gltf |> GLTFUtils.with_default_material_override(%{orm_map_owned_file: temp_owned_file})
+
+    output_gltf =
+      input_gltf
+      |> GLTFUtils.with_default_material_override(%{orm_map_owned_file: temp_owned_file})
 
     img_url = temp_owned_file |> OwnedFile.uri_for() |> URI.to_string()
     assert img_url == output_gltf |> get_in(["images", Access.at(1), "uri"])
@@ -182,7 +188,10 @@ defmodule Ret.GLTFUtilsTest do
 
   test "replace multiple ORM texture", %{temp_owned_file: temp_owned_file} do
     input_gltf = @multi_orm_gltf
-    output_gltf = input_gltf |> GLTFUtils.with_default_material_override(%{orm_map_owned_file: temp_owned_file})
+
+    output_gltf =
+      input_gltf
+      |> GLTFUtils.with_default_material_override(%{orm_map_owned_file: temp_owned_file})
 
     img_url = temp_owned_file |> OwnedFile.uri_for() |> URI.to_string()
     assert img_url == output_gltf |> get_in(["images", Access.at(1), "uri"])

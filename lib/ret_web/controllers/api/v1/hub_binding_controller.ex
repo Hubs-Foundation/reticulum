@@ -5,7 +5,8 @@ defmodule RetWeb.Api.V1.HubBindingController do
 
   def create(
         conn,
-        %{"hub_binding" => %{"hub_id" => _, "type" => _, "community_id" => _, "channel_id" => _}} = params
+        %{"hub_binding" => %{"hub_id" => _, "type" => _, "community_id" => _, "channel_id" => _}} =
+          params
       ) do
     {result, _} = HubBinding.bind_hub(params["hub_binding"])
 

@@ -8,7 +8,9 @@ defmodule Ret.Repo.Migrations.AddImportedFromColumns do
       add(:imported_from_sid, :string)
     end
 
-    create(index(:avatars, [:imported_from_host, :imported_from_port, :imported_from_sid], unique: true))
+    create(
+      index(:avatars, [:imported_from_host, :imported_from_port, :imported_from_sid], unique: true)
+    )
 
     alter table("scenes") do
       add(:imported_from_host, :string)
@@ -16,6 +18,8 @@ defmodule Ret.Repo.Migrations.AddImportedFromColumns do
       add(:imported_from_sid, :string)
     end
 
-    create(index(:scenes, [:imported_from_host, :imported_from_port, :imported_from_sid], unique: true))
+    create(
+      index(:scenes, [:imported_from_host, :imported_from_port, :imported_from_sid], unique: true)
+    )
   end
 end

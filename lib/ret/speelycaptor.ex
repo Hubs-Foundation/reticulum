@@ -2,7 +2,8 @@ defmodule Ret.Speelycaptor do
   import Ret.HttpUtils
 
   def convert(%Plug.Upload{path: path, content_type: "video/" <> _tail}, "video/mp4") do
-    with speelycaptor_endpoint when is_binary(speelycaptor_endpoint) <- module_config(:speelycaptor_endpoint) do
+    with speelycaptor_endpoint when is_binary(speelycaptor_endpoint) <-
+           module_config(:speelycaptor_endpoint) do
       case retry_get_until_success("#{speelycaptor_endpoint}/init") do
         %HTTPoison.Response{body: body} ->
           resp_body = body |> Poison.decode!()

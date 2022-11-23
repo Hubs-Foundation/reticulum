@@ -27,11 +27,13 @@ defmodule Ret.ChangeEmailForLoginTest do
       Account.find_or_create_account_for_email(@alpha)
       Account.find_or_create_account_for_email(@bravo)
 
-      {:error, :new_email_already_in_use} = Ret.change_email_for_login(%{new_email: @bravo, old_email: @alpha})
+      {:error, :new_email_already_in_use} =
+        Ret.change_email_for_login(%{new_email: @bravo, old_email: @alpha})
     end
 
     test "validates that the old email is in use" do
-      {:error, :no_account_for_old_email} = Ret.change_email_for_login(%{new_email: @bravo, old_email: @alpha})
+      {:error, :no_account_for_old_email} =
+        Ret.change_email_for_login(%{new_email: @bravo, old_email: @alpha})
     end
   end
 end

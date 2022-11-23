@@ -36,7 +36,10 @@ defmodule Ret.Account do
   end
 
   def has_accounts?(), do: from(a in Account, limit: 1) |> Repo.exists?()
-  def has_admin_accounts?(), do: from(a in Account, limit: 1) |> where(is_admin: true) |> Repo.exists?()
+
+  def has_admin_accounts?(),
+    do: from(a in Account, limit: 1) |> where(is_admin: true) |> Repo.exists?()
+
   def exists_for_email?(email), do: account_for_email(email) != nil
 
   def account_for_email(email, create_if_not_exists \\ false) do
@@ -108,7 +111,8 @@ defmodule Ret.Account do
     end)
   end
 
-  def oauth_provider_for_source(%Ret.Account{} = account, oauth_provider_source) when is_atom(oauth_provider_source) do
+  def oauth_provider_for_source(%Ret.Account{} = account, oauth_provider_source)
+      when is_atom(oauth_provider_source) do
     account.oauth_providers
     |> Enum.find(fn provider ->
       provider.source == oauth_provider_source

@@ -45,7 +45,12 @@ defmodule Ret.AvatarListing do
     belongs_to(:thumbnail_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
 
     belongs_to(:base_map_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
-    belongs_to(:emissive_map_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
+
+    belongs_to(:emissive_map_owned_file, OwnedFile,
+      references: :owned_file_id,
+      on_replace: :nilify
+    )
+
     belongs_to(:normal_map_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
     belongs_to(:orm_map_owned_file, OwnedFile, references: :owned_file_id, on_replace: :nilify)
   end

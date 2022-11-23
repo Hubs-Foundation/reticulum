@@ -37,6 +37,8 @@ defmodule Ret.Repo.Migrations.CreateAvatarListings do
       add(:reviewed_at, :utc_datetime, null: true)
     end
 
-    create(index(:avatars, [:reviewed_at], where: "reviewed_at is null or reviewed_at < updated_at"))
+    create(
+      index(:avatars, [:reviewed_at], where: "reviewed_at is null or reviewed_at < updated_at")
+    )
   end
 end

@@ -10,7 +10,12 @@ defmodule RetWeb.Api.V1.AccountSearchController do
       record = Phoenix.View.render(AccountView, "show.json", account: account)
       conn |> send_resp(200, %{data: [record]} |> Poison.encode!())
     else
-      _ -> conn |> send_resp(404, %{errors: [%{code: :NOT_FOUND, detail: "No accounts found."}]} |> Poison.encode!())
+      _ ->
+        conn
+        |> send_resp(
+          404,
+          %{errors: [%{code: :NOT_FOUND, detail: "No accounts found."}]} |> Poison.encode!()
+        )
     end
   end
 end

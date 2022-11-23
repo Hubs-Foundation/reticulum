@@ -28,7 +28,8 @@ defmodule Ret.StorageUsed do
         {lines, 0} ->
           line = lines |> String.split("\n") |> Enum.at(1)
 
-          {:ok, [_FS, _kb, used, _Avail], _RestStr} = :io_lib.fread('~s~d~d~d', line |> to_charlist)
+          {:ok, [_FS, _kb, used, _Avail], _RestStr} =
+            :io_lib.fread('~s~d~d~d', line |> to_charlist)
 
           {:ok, [{:storage_used, used}]}
 

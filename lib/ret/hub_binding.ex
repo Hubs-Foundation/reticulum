@@ -17,7 +17,10 @@ defmodule Ret.HubBinding do
     timestamps()
   end
 
-  def bind_hub(%{"community_id" => community_id, "channel_id" => channel_id, "type" => _, "hub_id" => _} = params) do
+  def bind_hub(
+        %{"community_id" => community_id, "channel_id" => channel_id, "type" => _, "hub_id" => _} =
+          params
+      ) do
     hub_binding = HubBinding |> Repo.get_by(community_id: community_id, channel_id: channel_id)
 
     (hub_binding || %HubBinding{})
@@ -42,12 +45,18 @@ defmodule Ret.HubBinding do
 
   def can_manage_channel?(%Ret.Account{} = account, %Ret.HubBinding{type: type} = hub_binding) do
     chat_client = get_chat_client(type)
-    account |> matching_oauth_provider(hub_binding) |> chat_client.has_permission?(hub_binding, :manage_channels)
+
+    account
+    |> matching_oauth_provider(hub_binding)
+    |> chat_client.has_permission?(hub_binding, :manage_channels)
   end
 
   def can_moderate_users?(%Ret.Account{} = account, %Ret.HubBinding{type: type} = hub_binding) do
     chat_client = get_chat_client(type)
-    account |> matching_oauth_provider(hub_binding) |> chat_client.has_permission?(hub_binding, :kick_members)
+
+    account
+    |> matching_oauth_provider(hub_binding)
+    |> chat_client.has_permission?(hub_binding, :kick_members)
   end
 
   def member_of_channel?(%Ret.Account{} = account, %Ret.HubBinding{} = hub_binding) do
@@ -72,7 +81,10 @@ defmodule Ret.HubBinding do
 
   def member_of_channel?(_, _), do: false
 
-  def fetch_display_name(%Ret.OAuthProvider{source: source} = oauth_provider, %Ret.HubBinding{} = hub_binding) do
+  def fetch_display_name(
+        %Ret.OAuthProvider{source: source} = oauth_provider,
+        %Ret.HubBinding{} = hub_binding
+      ) do
     chat_client = get_chat_client(source)
     chat_client.fetch_display_name(oauth_provider, hub_binding)
   end

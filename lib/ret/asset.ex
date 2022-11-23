@@ -33,8 +33,15 @@ defmodule Ret.Asset do
     |> Repo.insert()
   end
 
-  def create_asset_and_project_asset(account, project, asset_owned_file, thumbnail_owned_file, params) do
-    asset_changeset = Asset.changeset(%Asset{}, account, asset_owned_file, thumbnail_owned_file, params)
+  def create_asset_and_project_asset(
+        account,
+        project,
+        asset_owned_file,
+        thumbnail_owned_file,
+        params
+      ) do
+    asset_changeset =
+      Asset.changeset(%Asset{}, account, asset_owned_file, thumbnail_owned_file, params)
 
     multi =
       Multi.new()

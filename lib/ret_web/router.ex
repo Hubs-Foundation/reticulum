@@ -103,7 +103,8 @@ defmodule RetWeb.Router do
 
   scope "/api", RetWeb do
     pipe_through(
-      [:secure_headers, :parsed_body, :api] ++ if(Mix.env() == :prod, do: [:ssl_only, :canonicalize_domain], else: [])
+      [:secure_headers, :parsed_body, :api] ++
+        if(Mix.env() == :prod, do: [:ssl_only, :canonicalize_domain], else: [])
     )
 
     scope "/v1", as: :api_v1 do
@@ -114,6 +115,7 @@ defmodule RetWeb.Router do
 
       scope "/support" do
         resources("/subscriptions", Api.V1.SupportSubscriptionController, only: [:create, :delete])
+
         resources("/availability", Api.V1.SupportSubscriptionController, only: [:index])
       end
 
@@ -159,7 +161,9 @@ defmodule RetWeb.Router do
       resources("/assets", Api.V1.AssetsController, only: [:create, :delete])
       post("/twitter/tweets", Api.V1.TwitterController, :tweets)
 
-      resources("/projects", Api.V1.ProjectController, only: [:index, :show, :create, :update, :delete]) do
+      resources("/projects", Api.V1.ProjectController,
+        only: [:index, :show, :create, :update, :delete]
+      ) do
         post("/publish", Api.V1.ProjectController, :publish)
         resources("/assets", Api.V1.ProjectAssetsController, only: [:index, :create, :delete])
       end
@@ -180,12 +184,15 @@ defmodule RetWeb.Router do
         if(Mix.env() == :prod, do: [:ssl_only, :canonicalize_domain], else: [])
     )
 
-    resources("/credentials", Api.V2.CredentialsController, only: [:create, :index, :update, :show])
+    resources("/credentials", Api.V2.CredentialsController,
+      only: [:create, :index, :update, :show]
+    )
   end
 
   scope "/api/v2_alpha", as: :api_v2_alpha do
     pipe_through(
-      [:parsed_body, :api, :public_api_access, :graphql] ++ if(Mix.env() == :prod, do: [:ssl_only], else: [])
+      [:parsed_body, :api, :public_api_access, :graphql] ++
+        if(Mix.env() == :prod, do: [:ssl_only], else: [])
     )
 
     forward "/graphiql", Absinthe.Plug.GraphiQL, json_codec: Jason, schema: RetWeb.Schema
@@ -194,7 +201,8 @@ defmodule RetWeb.Router do
 
   scope "/api-internal", RetWeb do
     pipe_through(
-      [:dashboard_header_auth, :secure_headers, :parsed_body, :api] ++ if(Mix.env() == :prod, do: [:ssl_only], else: [])
+      [:dashboard_header_auth, :secure_headers, :parsed_body, :api] ++
+        if(Mix.env() == :prod, do: [:ssl_only], else: [])
     )
 
     scope "/v1", as: :api_internal_v1 do
@@ -210,7 +218,9 @@ defmodule RetWeb.Router do
   # Directly accessible APIs.
   # Permit direct file uploads without intermediate ALB/Cloudfront/CDN proxying.
   scope "/api", RetWeb do
-    pipe_through([:secure_headers, :parsed_body, :api] ++ if(Mix.env() == :prod, do: [:ssl_only], else: []))
+    pipe_through(
+      [:secure_headers, :parsed_body, :api] ++ if(Mix.env() == :prod, do: [:ssl_only], else: [])
+    )
 
     scope "/v1", as: :api_v1 do
       resources("/media", Api.V1.MediaController, only: [:create])
@@ -218,7 +228,10 @@ defmodule RetWeb.Router do
   end
 
   scope "/", RetWeb do
-    pipe_through([:strict_secure_headers, :parsed_body, :browser] ++ if(Mix.env() == :prod, do: [:ssl_only], else: []))
+    pipe_through(
+      [:strict_secure_headers, :parsed_body, :browser] ++
+        if(Mix.env() == :prod, do: [:ssl_only], else: [])
+    )
 
     head("/files/:id", FileController, :head)
     get("/files/:id", FileController, :show)

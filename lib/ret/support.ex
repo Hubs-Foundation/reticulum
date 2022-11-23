@@ -30,13 +30,16 @@ defmodule Ret.Support do
     at_handles = handles |> Enum.map(fn h -> "@#{h}" end)
 
     message =
-      "*Incoming support request*\nOn call: #{at_handles |> Enum.join(" ")}\n<#{RetWeb.Endpoint.url()}/#{hub.hub_sid}|Enter Now>"
+      "*Incoming support request*\nOn call: #{at_handles |> Enum.join(" ")}\n<#{
+        RetWeb.Endpoint.url()
+      }/#{hub.hub_sid}|Enter Now>"
 
     notify_slack(":quest", message)
   end
 
   defp notify_slack(emoji, message) do
-    with slack_url when is_binary(slack_url) and slack_url != "" <- module_config(:slack_webhook_url) do
+    with slack_url when is_binary(slack_url) and slack_url != "" <-
+           module_config(:slack_webhook_url) do
       payload =
         %{
           "icon_emoji" => emoji,

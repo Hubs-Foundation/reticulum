@@ -161,7 +161,10 @@ defmodule RetWeb.FileController do
           {:ok, conn, ranges, is_partial} ->
             conn =
               conn
-              |> put_resp_content_type(content_type |> RetWeb.ContentType.sanitize_content_type(), nil)
+              |> put_resp_content_type(
+                content_type |> RetWeb.ContentType.sanitize_content_type(),
+                nil
+              )
               |> put_resp_header("content-length", "#{ranges |> total_range_length}")
               |> put_resp_header("cache-control", "public, max-age=31536000")
               |> put_resp_header("accept-ranges", "bytes")
@@ -236,7 +239,10 @@ defmodule RetWeb.FileController do
         if length(parsed_ranges) === 1 do
           conn =
             conn
-            |> put_resp_header("content-range", "bytes #{response_ranges_for_ranges(parsed_ranges)}/#{content_length}")
+            |> put_resp_header(
+              "content-range",
+              "bytes #{response_ranges_for_ranges(parsed_ranges)}/#{content_length}"
+            )
 
           {:ok, conn, parsed_ranges, true}
         else

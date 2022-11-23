@@ -11,14 +11,21 @@ defmodule RetWeb.Api.V1.AssetsController do
 
     thumbnail_result =
       if params["thumbnail_file_id"] && params["thumbnail_access_token"] do
-        Storage.promote(params["thumbnail_file_id"], params["thumbnail_access_token"], nil, account)
+        Storage.promote(
+          params["thumbnail_file_id"],
+          params["thumbnail_access_token"],
+          nil,
+          account
+        )
       else
         {:ok, nil}
       end
 
-    with {:ok, asset_owned_file} <- Storage.promote(params["file_id"], params["access_token"], nil, account),
+    with {:ok, asset_owned_file} <-
+           Storage.promote(params["file_id"], params["access_token"], nil, account),
          {:ok, thumbnail_owned_file} <- thumbnail_result,
-         {:ok, asset} <- Asset.create_asset(account, asset_owned_file, thumbnail_owned_file, params) do
+         {:ok, asset} <-
+           Asset.create_asset(account, asset_owned_file, thumbnail_owned_file, params) do
       render(conn, "show.json", asset: asset)
     else
       {:error, error} -> render_error_json(conn, error)

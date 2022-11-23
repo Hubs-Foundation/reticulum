@@ -33,12 +33,22 @@ defmodule Ret.Scene do
     field(:imported_from_sid, :string)
 
     belongs_to(:parent_scene, Scene, references: :scene_id, on_replace: :nilify)
-    belongs_to(:parent_scene_listing, SceneListing, references: :scene_listing_id, on_replace: :nilify)
+
+    belongs_to(:parent_scene_listing, SceneListing,
+      references: :scene_listing_id,
+      on_replace: :nilify
+    )
+
     has_one(:project, Project, foreign_key: :scene_id)
 
     belongs_to(:account, Ret.Account, references: :account_id)
     belongs_to(:model_owned_file, Ret.OwnedFile, references: :owned_file_id, on_replace: :nilify)
-    belongs_to(:screenshot_owned_file, Ret.OwnedFile, references: :owned_file_id, on_replace: :nilify)
+
+    belongs_to(:screenshot_owned_file, Ret.OwnedFile,
+      references: :owned_file_id,
+      on_replace: :nilify
+    )
+
     belongs_to(:scene_owned_file, Ret.OwnedFile, references: :owned_file_id, on_replace: :nilify)
     field(:state, Scene.State)
 
@@ -58,14 +68,18 @@ defmodule Ret.Scene do
 
   def scene_or_scene_listing_by_sid(sid) do
     Scene |> Repo.get_by(scene_sid: sid) ||
-      SceneListing |> Repo.get_by(scene_listing_sid: sid) |> Repo.preload(scene: Scene.scene_preloads())
+      SceneListing
+      |> Repo.get_by(scene_listing_sid: sid)
+      |> Repo.preload(scene: Scene.scene_preloads())
   end
 
   def projectless_scenes_for_account(account) do
     Repo.all(
       from(s in Scene,
         left_join: project in assoc(s, :project),
-        where: s.account_id == ^account.account_id and is_nil(s.scene_owned_file_id) and is_nil(project),
+        where:
+          s.account_id == ^account.account_id and is_nil(s.scene_owned_file_id) and
+            is_nil(project),
         preload: ^Scene.scene_preloads(),
         order_by: [desc: s.updated_at]
       )
@@ -75,7 +89,9 @@ defmodule Ret.Scene do
   def to_sid(nil), do: nil
   def to_sid(%Scene{} = scene), do: scene.scene_sid
   def to_sid(%SceneListing{} = scene_listing), do: scene_listing.scene_listing_sid
-  def to_url(%t{} = s) when t in [Scene, SceneListing], do: "#{RetWeb.Endpoint.url()}/scenes/#{s |> to_sid}/#{s.slug}"
+
+  def to_url(%t{} = s) when t in [Scene, SceneListing],
+    do: "#{RetWeb.Endpoint.url()}/scenes/#{s |> to_sid}/#{s.slug}"
 
   defp fetch_remote_scene!(uri) do
     %{body: body} = HTTPoison.get!(uri)
@@ -122,7 +138,9 @@ defmodule Ret.Scene do
           |> Repo.insert!()
 
         %Project{}
-        |> Project.changeset(account, scene_owned_file, screenshot_owned_file, %{name: new_scene.name})
+        |> Project.changeset(account, scene_owned_file, screenshot_owned_file, %{
+          name: new_scene.name
+        })
         |> put_assoc(:scene, new_scene)
         |> Repo.insert!()
 
@@ -134,15 +152,21 @@ defmodule Ret.Scene do
 
   def import_from_url!(uri, account) do
     remote_scene = uri |> fetch_remote_scene!()
-    [imported_from_host, imported_from_port] = [:host, :port] |> Enum.map(&(uri |> URI.parse() |> Map.get(&1)))
+
+    [imported_from_host, imported_from_port] =
+      [:host, :port] |> Enum.map(&(uri |> URI.parse() |> Map.get(&1)))
+
     imported_from_sid = remote_scene["scene_id"]
 
     [model_owned_file, screenshot_owned_file] =
-      [remote_scene["model_url"], remote_scene["screenshot_url"]] |> Storage.owned_files_from_urls!(account)
+      [remote_scene["model_url"], remote_scene["screenshot_url"]]
+      |> Storage.owned_files_from_urls!(account)
 
     scene_owned_file =
       if remote_scene["scene_project_url"] do
-        [remote_scene["scene_project_url"]] |> Storage.owned_files_from_urls!(account) |> Enum.at(0)
+        [remote_scene["scene_project_url"]]
+        |> Storage.owned_files_from_urls!(account)
+        |> Enum.at(0)
       else
         nil
       end
@@ -184,7 +208,9 @@ defmodule Ret.Scene do
       from(Scene, select: [:scene_id, :scene_owned_file_id, :model_owned_file_id, :account_id])
       |> Repo.stream()
       |> Stream.chunk_every(@rewrite_chunk_size)
-      |> Stream.flat_map(fn chunk -> Repo.preload(chunk, [:scene_owned_file, :model_owned_file, :account]) end)
+      |> Stream.flat_map(fn chunk ->
+        Repo.preload(chunk, [:scene_owned_file, :model_owned_file, :account])
+      end)
 
     Repo.transaction(fn ->
       Enum.each(scene_stream, fn scene ->
@@ -203,7 +229,8 @@ defmodule Ret.Scene do
           )
 
         {:ok, new_model_owned_file} =
-          Storage.duplicate_and_transform(old_model_owned_file, account, fn glb_stream, _total_bytes ->
+          Storage.duplicate_and_transform(old_model_owned_file, account, fn glb_stream,
+                                                                            _total_bytes ->
             GLTFUtils.replace_in_glb(glb_stream, old_domain_url, new_domain_url)
           end)
 

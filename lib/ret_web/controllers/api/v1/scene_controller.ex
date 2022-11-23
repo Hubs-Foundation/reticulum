@@ -25,14 +25,22 @@ defmodule RetWeb.Api.V1.SceneController do
     account = Guardian.Plug.current_resource(conn)
 
     case scene_sid |> get_scene() do
-      %t{} = s when t in [Scene, SceneListing] -> conn |> render("show.json", scene: s, account: account)
-      _ -> conn |> send_resp(404, "not found")
+      %t{} = s when t in [Scene, SceneListing] ->
+        conn |> render("show.json", scene: s, account: account)
+
+      _ ->
+        conn |> send_resp(404, "not found")
     end
   end
 
   def index_projectless(conn, _params) do
     account = Guardian.Plug.current_resource(conn)
-    conn |> render("index.json", scenes: Scene.projectless_scenes_for_account(account), account: account)
+
+    conn
+    |> render("index.json",
+      scenes: Scene.projectless_scenes_for_account(account),
+      account: account
+    )
   end
 
   def update(conn, %{"id" => scene_sid, "scene" => params}) do
@@ -102,14 +110,16 @@ defmodule RetWeb.Api.V1.SceneController do
         account
       )
 
-    promotion_error = owned_file_results |> Map.values() |> Enum.filter(&(elem(&1, 0) == :error)) |> Enum.at(0)
+    promotion_error =
+      owned_file_results |> Map.values() |> Enum.filter(&(elem(&1, 0) == :error)) |> Enum.at(0)
 
     # Legacy
     params = params |> Map.put_new("attributions", %{"extras" => params["attribution"]})
 
     case promotion_error do
       nil ->
-        %{model: {:ok, model_file}, screenshot: {:ok, screenshot_file}, scene: {:ok, scene_file}} = owned_file_results
+        %{model: {:ok, model_file}, screenshot: {:ok, screenshot_file}, scene: {:ok, scene_file}} =
+          owned_file_results
 
         {result, scene} =
           scene

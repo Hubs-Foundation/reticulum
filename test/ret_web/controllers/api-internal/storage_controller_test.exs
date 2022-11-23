@@ -6,10 +6,14 @@ defmodule RetWeb.ApiInternal.V1.StorageControllerTest do
   @dashboard_access_key "test-key"
 
   setup_all do
-    merge_module_config(:ret, RetWeb.Plugs.DashboardHeaderAuthorization, %{dashboard_access_key: @dashboard_access_key})
+    merge_module_config(:ret, RetWeb.Plugs.DashboardHeaderAuthorization, %{
+      dashboard_access_key: @dashboard_access_key
+    })
 
     on_exit(fn ->
-      Ret.TestHelpers.merge_module_config(:ret, RetWeb.Plugs.DashboardHeaderAuthorization, %{dashboard_access_key: nil})
+      Ret.TestHelpers.merge_module_config(:ret, RetWeb.Plugs.DashboardHeaderAuthorization, %{
+        dashboard_access_key: nil
+      })
     end)
   end
 
@@ -45,7 +49,9 @@ defmodule RetWeb.ApiInternal.V1.StorageControllerTest do
   # Since we mainly care about testing the endpoint here, we use the cache to mock the usage value
   # and ensure that the endpoint returns it as expected.
   defp mock_storage_used(nil), do: Cachex.put(:storage_used, :storage_used, nil)
-  defp mock_storage_used(storage_used_mb), do: Cachex.put(:storage_used, :storage_used, storage_used_mb * 1024)
+
+  defp mock_storage_used(storage_used_mb),
+    do: Cachex.put(:storage_used, :storage_used, storage_used_mb * 1024)
 
   defp request_storage(conn, opts \\ [expected_status: 200]) do
     conn

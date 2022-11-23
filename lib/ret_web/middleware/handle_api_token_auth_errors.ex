@@ -18,7 +18,8 @@ defmodule RetWeb.Middleware.HandleApiTokenAuthErrors do
     resolution
   end
 
-  def call(%{context: %{api_token_auth_errors: errors}} = resolution, _) when is_list(errors) and length(errors) > 0 do
+  def call(%{context: %{api_token_auth_errors: errors}} = resolution, _)
+      when is_list(errors) and length(errors) > 0 do
     {type, reason} = Enum.at(errors, 0)
     put_error_result(resolution, type, reason)
   end

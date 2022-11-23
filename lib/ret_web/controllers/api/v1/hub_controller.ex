@@ -78,7 +78,8 @@ defmodule RetWeb.Api.V1.HubController do
 
   defp maybe_add_new_scene(changeset, nil), do: changeset
 
-  defp maybe_add_new_scene(changeset, scene), do: changeset |> Hub.add_new_scene_to_changeset(scene)
+  defp maybe_add_new_scene(changeset, scene),
+    do: changeset |> Hub.add_new_scene_to_changeset(scene)
 
   def delete(conn, %{"id" => hub_sid}) do
     Hub

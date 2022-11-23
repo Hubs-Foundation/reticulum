@@ -17,7 +17,11 @@ defmodule Ret.RoomObject do
     timestamps()
   end
 
-  def perform_pin!(%Hub{hub_id: hub_id} = hub, %Account{} = account, %{object_id: object_id} = attrs) do
+  def perform_pin!(
+        %Hub{hub_id: hub_id} = hub,
+        %Account{} = account,
+        %{object_id: object_id} = attrs
+      ) do
     attrs = attrs |> Map.put(:gltf_node, attrs |> Map.get(:gltf_node) |> Poison.encode!())
 
     room_object =

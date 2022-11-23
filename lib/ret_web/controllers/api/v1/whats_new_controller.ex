@@ -74,7 +74,9 @@ defmodule RetWeb.Api.V1.WhatsNewController do
     resp_body |> Poison.decode() |> extract_pull_requests
   end
 
-  defp extract_pull_requests({:ok, %{"data" => data}}), do: data["repository"]["pullRequests"]["edges"]
+  defp extract_pull_requests({:ok, %{"data" => data}}),
+    do: data["repository"]["pullRequests"]["edges"]
+
   defp extract_pull_requests(_), do: []
 
   defp format_pull_request(%{"node" => pull_request}) do

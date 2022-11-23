@@ -32,7 +32,8 @@ defmodule Ret.Repo.Migrations.CreateAvatars do
 
     create(
       constraint(:avatars, :gltf_or_parent,
-        check: "parent_avatar_id is not null or (gltf_owned_file_id is not null and bin_owned_file_id is not null)"
+        check:
+          "parent_avatar_id is not null or (gltf_owned_file_id is not null and bin_owned_file_id is not null)"
       )
     )
 

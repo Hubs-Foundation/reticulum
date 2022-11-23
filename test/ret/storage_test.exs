@@ -39,10 +39,14 @@ defmodule Ret.StorageTest do
     assert_fetch_result(result, "text/plain", "test")
   end
 
-  test "should not be able to promote a file with an invalid promotion token", %{temp_file: temp_file} do
+  test "should not be able to promote a file with an invalid promotion token", %{
+    temp_file: temp_file
+  } do
     account = Ret.Repo.insert!(%Ret.Account{})
 
-    {:ok, uuid} = Storage.store(%Plug.Upload{path: temp_file}, "text/plain", "secret", "promotion_secret")
+    {:ok, uuid} =
+      Storage.store(%Plug.Upload{path: temp_file}, "text/plain", "secret", "promotion_secret")
+
     {:error, :not_allowed} = Storage.promote(uuid, "secret", "invalid_promotion_secret", account)
   end
 
@@ -55,7 +59,8 @@ defmodule Ret.StorageTest do
 
     owned_file_id = owned_file.owned_file_id
 
-    {:ok, %OwnedFile{owned_file_id: ^owned_file_id}} = Storage.promote(uuid, "secret", nil, account)
+    {:ok, %OwnedFile{owned_file_id: ^owned_file_id}} =
+      Storage.promote(uuid, "secret", nil, account)
   end
 
   test "should be able to promote multiple files", %{

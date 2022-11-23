@@ -65,7 +65,8 @@ defmodule RetWeb.Api.V1.AccountController do
           account
         end
 
-      {:ok, {200, Phoenix.View.render(AccountView, "create.json", account: account, email: email)}}
+      {:ok,
+       {200, Phoenix.View.render(AccountView, "create.json", account: account, email: email)}}
     end
   end
 
@@ -82,7 +83,8 @@ defmodule RetWeb.Api.V1.AccountController do
           account
         end
 
-      {:ok, {200, Phoenix.View.render(AccountView, "create.json", account: account, email: email)}}
+      {:ok,
+       {200, Phoenix.View.render(AccountView, "create.json", account: account, email: email)}}
     end
   end
 end

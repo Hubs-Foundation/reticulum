@@ -49,7 +49,8 @@ defmodule RetWeb.ProjectsControllerTest do
 
   @tag :authenticated
   test "projects show works when logged in", %{conn: conn, project: project} do
-    response = conn |> get(api_v1_project_path(conn, :show, project.project_sid)) |> json_response(200)
+    response =
+      conn |> get(api_v1_project_path(conn, :show, project.project_sid)) |> json_response(200)
 
     %{
       "thumbnail_url" => thumbnail_url,
@@ -115,7 +116,9 @@ defmodule RetWeb.ProjectsControllerTest do
       }
     }
 
-    conn |> patch(api_v1_project_path(conn, :update, project.project_sid, params)) |> response(401)
+    conn
+    |> patch(api_v1_project_path(conn, :update, project.project_sid, params))
+    |> response(401)
   end
 
   @tag :authenticated
@@ -135,7 +138,10 @@ defmodule RetWeb.ProjectsControllerTest do
       }
     }
 
-    response = conn |> patch(api_v1_project_path(conn, :update, project.project_sid, params)) |> json_response(200)
+    response =
+      conn
+      |> patch(api_v1_project_path(conn, :update, project.project_sid, params))
+      |> json_response(200)
 
     %{
       "thumbnail_url" => thumbnail_url,
@@ -176,11 +182,15 @@ defmodule RetWeb.ProjectsControllerTest do
     assert project.scene == nil
 
     response_project =
-      conn |> post(api_v1_project_project_path(conn, :publish, project.project_sid, params)) |> json_response(200)
+      conn
+      |> post(api_v1_project_project_path(conn, :publish, project.project_sid, params))
+      |> json_response(200)
 
     new_scene_sid = response_project["scene"]["scene_id"]
 
-    updated_project = Project |> Repo.get_by(project_sid: project.project_sid) |> Repo.preload([:scene])
+    updated_project =
+      Project |> Repo.get_by(project_sid: project.project_sid) |> Repo.preload([:scene])
+
     assert updated_project.scene.scene_sid == new_scene_sid
     assert response_project["name"] == "Test Project"
     assert response_project["scene"]["name"] == "Test Publish"
@@ -189,7 +199,9 @@ defmodule RetWeb.ProjectsControllerTest do
     params = params |> put_in([:scene, :name], "Test Republish")
 
     response_project =
-      conn |> post(api_v1_project_project_path(conn, :publish, project.project_sid, params)) |> json_response(200)
+      conn
+      |> post(api_v1_project_project_path(conn, :publish, project.project_sid, params))
+      |> json_response(200)
 
     assert response_project["scene"]["name"] == "Test Republish"
     assert response_project["scene"]["scene_id"] == new_scene_sid

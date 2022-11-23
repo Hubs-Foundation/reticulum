@@ -184,8 +184,18 @@ defmodule RetWeb.MediaSearchControllerTest do
 
     entries = resp["entries"]
     assert length(entries) == 2
-    assert length(Enum.filter(entries, fn e -> e["id"] == private_hub.hub_sid && e["type"] == "room" end)) == 1
-    assert length(Enum.filter(entries, fn e -> e["id"] == private_hub_2.hub_sid && e["type"] == "room" end)) == 1
+
+    assert length(
+             Enum.filter(entries, fn e ->
+               e["id"] == private_hub.hub_sid && e["type"] == "room"
+             end)
+           ) == 1
+
+    assert length(
+             Enum.filter(entries, fn e ->
+               e["id"] == private_hub_2.hub_sid && e["type"] == "room"
+             end)
+           ) == 1
   end
 
   test "Search for a user's own favorites should not return closed hubs", %{
@@ -220,10 +230,11 @@ defmodule RetWeb.MediaSearchControllerTest do
     assert entry["type"] == "room"
   end
 
-  test "Search for a user's own favorites should return an empty list if they have no favorites", %{
-    conn: conn,
-    account_3: account
-  } do
+  test "Search for a user's own favorites should return an empty list if they have no favorites",
+       %{
+         conn: conn,
+         account_3: account
+       } do
     resp =
       conn
       |> auth_with_account(account)

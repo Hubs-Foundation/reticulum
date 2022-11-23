@@ -31,7 +31,8 @@ defmodule Ret.TwitterClient do
         {:error, reason}
 
       _ ->
-        "#{@twitter_api_base}/oauth/authorize?" <> URI.encode_query(%{oauth_token: token_response["oauth_token"]})
+        "#{@twitter_api_base}/oauth/authorize?" <>
+          URI.encode_query(%{oauth_token: token_response["oauth_token"]})
     end
   end
 
@@ -103,7 +104,9 @@ defmodule Ret.TwitterClient do
   end
 
   def available?() do
-    !!(module_config(:consumer_key) && module_config(:consumer_secret) && module_config(:access_token) &&
+    !!(module_config(:consumer_key) &&
+         module_config(:consumer_secret) &&
+         module_config(:access_token) &&
          module_config(:access_token_secret))
   end
 
@@ -138,7 +141,14 @@ defmodule Ret.TwitterClient do
     post(url, [{"status", body}, {"media_ids", "#{media_id}"}], creds, :json)
   end
 
-  defp post(url, params, creds, response_type \\ :urlencoded, cap_ms \\ 5_000, expiry_ms \\ 10_000) do
+  defp post(
+         url,
+         params,
+         creds,
+         response_type \\ :urlencoded,
+         cap_ms \\ 5_000,
+         expiry_ms \\ 10_000
+       ) do
     params = OAuther.sign("post", url, params, creds)
     encoded_params = URI.encode_query(params)
 

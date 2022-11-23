@@ -101,7 +101,13 @@ defmodule RetWeb.Api.V1.ProjectController do
 
   def publish(conn, %{"project_id" => project_sid, "scene" => scene_params}) do
     account = Guardian.Plug.current_resource(conn)
-    conn |> publish_project(scene_params, project_sid |> Project.project_by_sid_for_account(account), account)
+
+    conn
+    |> publish_project(
+      scene_params,
+      project_sid |> Project.project_by_sid_for_account(account),
+      account
+    )
   end
 
   def publish(conn, %{"project_id" => _project_sid}) do
@@ -124,11 +130,26 @@ defmodule RetWeb.Api.V1.ProjectController do
     {:ok, conn} =
       Repo.transaction(fn ->
         with {:ok, model_owned_file} <-
-               Storage.promote(scene_params["model_file_id"], scene_params["model_file_token"], nil, account),
+               Storage.promote(
+                 scene_params["model_file_id"],
+                 scene_params["model_file_token"],
+                 nil,
+                 account
+               ),
              {:ok, screenshot_owned_file} <-
-               Storage.promote(scene_params["screenshot_file_id"], scene_params["screenshot_file_token"], nil, account),
+               Storage.promote(
+                 scene_params["screenshot_file_id"],
+                 scene_params["screenshot_file_token"],
+                 nil,
+                 account
+               ),
              {:ok, scene_owned_file} <-
-               Storage.promote(scene_params["scene_file_id"], scene_params["scene_file_token"], nil, account),
+               Storage.promote(
+                 scene_params["scene_file_id"],
+                 scene_params["scene_file_token"],
+                 nil,
+                 account
+               ),
              scene_changes <-
                scene
                |> Scene.changeset(
@@ -141,11 +162,17 @@ defmodule RetWeb.Api.V1.ProjectController do
                ),
              {:ok, updated_project} <- project |> Project.add_scene_to_project(scene_changes),
              scene <- updated_project.scene do
-          if scene.allow_promotion, do: Task.async(fn -> scene |> Ret.Support.send_notification_of_new_scene() end)
+          if scene.allow_promotion,
+            do: Task.async(fn -> scene |> Ret.Support.send_notification_of_new_scene() end)
+
           conn |> render("show.json", project: updated_project |> preload())
         else
           {:error, :not_found} ->
-            conn |> render_error_json(400, "You must provide a valid model, screenshot, and scene file")
+            conn
+            |> render_error_json(
+              400,
+              "You must provide a valid model, screenshot, and scene file"
+            )
 
           {:error, error} ->
             conn |> render_error_json(error)

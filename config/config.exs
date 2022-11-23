@@ -10,7 +10,8 @@ use Mix.Config
 config :ret,
   ecto_repos: [Ret.Repo, Ret.SessionLockRepo]
 
-config :ret, RetWeb.Plugs.PostgrestProxy, hostname: System.get_env("POSTGREST_INTERNAL_HOSTNAME") || "localhost"
+config :ret, RetWeb.Plugs.PostgrestProxy,
+  hostname: System.get_env("POSTGREST_INTERNAL_HOSTNAME") || "localhost"
 
 config :phoenix, :format_encoders, "json-api": Jason
 config :phoenix, :json_library, Jason

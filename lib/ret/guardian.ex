@@ -19,7 +19,10 @@ defmodule Ret.Guardian do
     issued_at_utc_datetime = DateTime.from_unix!(issued_at, :second) |> DateTime.to_iso8601()
 
     Account
-    |> where([a], a.account_id == ^account_id and a.min_token_issued_at <= ^issued_at_utc_datetime)
+    |> where(
+      [a],
+      a.account_id == ^account_id and a.min_token_issued_at <= ^issued_at_utc_datetime
+    )
     |> Repo.one()
     |> Repo.preload([:oauth_providers, :identity])
     |> result_for_account

@@ -41,7 +41,9 @@ defmodule Ret.ProjectTest do
       Repo.get!(OwnedFile, project.project_owned_file_id)
       Repo.get!(OwnedFile, project.thumbnail_owned_file_id)
 
-      [_path, old_meta_file_path, old_blob_file_path] = Storage.paths_for_owned_file(project.project_owned_file)
+      [_path, old_meta_file_path, old_blob_file_path] =
+        Storage.paths_for_owned_file(project.project_owned_file)
+
       true = File.exists?(old_meta_file_path)
       true = File.exists?(old_blob_file_path)
 
@@ -60,7 +62,9 @@ defmodule Ret.ProjectTest do
     thumbnail_owned_file = generate_temp_owned_file(account)
 
     %Project{}
-    |> Project.changeset(account, project_owned_file, thumbnail_owned_file, %{name: DummyData.project_name()})
+    |> Project.changeset(account, project_owned_file, thumbnail_owned_file, %{
+      name: DummyData.project_name()
+    })
     |> Repo.insert!()
     |> Repo.preload([:project_owned_file])
   end
