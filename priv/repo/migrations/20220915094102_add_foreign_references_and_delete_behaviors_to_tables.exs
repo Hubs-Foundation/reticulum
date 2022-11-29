@@ -26,6 +26,8 @@ defmodule Ret.Repo.Migrations.AddForeignReferencesAndDeleteBehaviorToTables do
       alter table(table) do
         modify(column, references(foreign_table, column: column, on_delete: :delete_all))
       end
+
+      execute("SELECT ret0_admin.create_or_replace_admin_view('#{table}')")
     end
 
     for {table, column, foreign_table, foreign_column} <- @missing_on_delete_action do
@@ -34,6 +36,8 @@ defmodule Ret.Repo.Migrations.AddForeignReferencesAndDeleteBehaviorToTables do
       alter table(table) do
         modify(column, references(foreign_table, column: foreign_column, on_delete: :delete_all))
       end
+
+      execute("SELECT ret0_admin.create_or_replace_admin_view('#{table}')")
     end
   end
 
