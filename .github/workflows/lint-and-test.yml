@@ -4,8 +4,8 @@ on: [push, workflow_dispatch]
 
 jobs:
   lint-and-test:
-    runs-on: ubuntu-latest
-    
+    runs-on: ubuntu-20.04
+
     services:
       postgres:
         image: postgres:10
@@ -19,7 +19,7 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
-    
+
     steps:
       - uses: actions/checkout@v3
 
@@ -27,7 +27,7 @@ jobs:
         with:
           otp-version: 22
           elixir-version: 1.8
-          
+
       - uses: actions/cache@v3.0.2
         with:
           path: |
