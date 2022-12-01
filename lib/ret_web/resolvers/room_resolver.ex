@@ -146,4 +146,29 @@ defmodule RetWeb.Resolvers.RoomResolver do
   def update_room(_parent, _args, _resolutions) do
     resolver_error(:unauthorized, "Unauthorized access")
   end
+
+  def add_owner(_parent, %{id: hub_sid} = args, %{
+        context: %{
+          credentials: %Credentials{} = credentials
+        }
+      }) do
+    Ret.Api.Rooms.authed_update_owner("add_owner", hub_sid, credentials, args)
+  end
+
+  def add_owner(_parent, _args, _resolutions) do
+    resolver_error(:unauthorized, "Unauthorized access")
+  end
+
+  def remove_owner(_parent, %{id: hub_sid} = args, %{
+      context: %{
+        credentials: %Credentials{} = credentials
+      }
+    }) do
+    Ret.Api.Rooms.authed_update_owner("remove_owner", hub_sid, credentials, args)
+  end
+
+  def remove_owner(_parent, _args, _resolutions) do
+    resolver_error(:unauthorized, "Unauthorized access")
+  end
+
 end
