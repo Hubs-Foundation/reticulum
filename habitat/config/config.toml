@@ -301,6 +301,19 @@ realm = "{{ cfg.turn.realm }}"
 public_tls_ports = "{{ cfg.turn.public_tls_ports }}"
 {{/if}}
 
+{{#if cfg.oidc }}
+{{#with cfg.oidc }}
+[ret."Elixir.Ret.RemoteOIDCClient"]
+openid_configuration = {{ toToml openid_configuration }}
+scopes = {{ toToml scopes }}
+permitted_claims = {{ toToml permitted_claims }}
+client_id = {{ toToml client_id }}
+client_secret = {{ toToml client_secret }}
+additional_authorization_parameters = {{ toToml additional_authorization_parameters }}
+
+{{/with}}
+{{/if}}
+
 [web_push_encryption.vapid_details]
 subject = "{{ cfg.web_push.subject }}"
 public_key = "{{ cfg.web_push.public_key }}"
