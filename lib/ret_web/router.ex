@@ -4,12 +4,20 @@ defmodule RetWeb.Router do
   use Sentry.Plug
 
   pipeline :secure_headers do
-    plug(:put_secure_browser_headers)
+    plug(:put_secure_browser_headers, %{
+      "cross-origin-opener-policy" => "same-origin",
+      "cross-origin-resource-policy" => "require-corp"
+    })
+
     plug(RetWeb.Plugs.AddCSP)
   end
 
   pipeline :strict_secure_headers do
-    plug(:put_secure_browser_headers)
+    plug(:put_secure_browser_headers, %{
+      "cross-origin-opener-policy" => "same-origin",
+      "cross-origin-resource-policy" => "require-corp"
+    })
+
     plug(RetWeb.Plugs.AddCSP, strict: true)
   end
 
