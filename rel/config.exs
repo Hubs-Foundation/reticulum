@@ -27,24 +27,24 @@ environment :dev do
   # It is recommended that you build with MIX_ENV=prod and pass
   # the --env flag to Distillery explicitly if you want to use
   # dev mode.
-  set(dev_mode: true)
-  set(include_erts: false)
-  set(cookie: :"=!x&pbYZ[lT[2XdWU)=JWm9vC~,ym5U<6sUOAinLIIGF@!t1J/UY:es{Pok_0(Y@")
-  set(no_dot_erlang: true)
+  set dev_mode: true
+  set include_erts: false
+  set cookie: :"=!x&pbYZ[lT[2XdWU)=JWm9vC~,ym5U<6sUOAinLIIGF@!t1J/UY:es{Pok_0(Y@"
+  set no_dot_erlang: true
 end
 
 environment :prod do
-  set(include_erts: true)
-  set(include_src: false)
-  set(no_dot_erlang: true)
-  set(vm_args: "rel/prod.vm_args")
+  set include_erts: true
+  set include_src: false
+  set no_dot_erlang: true
+  set vm_args: "rel/prod.vm_args"
 end
 
 environment :turkey do
-  set(include_erts: true)
-  set(include_src: false)
-  set(no_dot_erlang: true)
-  set(vm_args: "rel/prod.vm_args")
+  set include_erts: true
+  set include_src: false
+  set no_dot_erlang: true
+  set vm_args: "rel/prod.vm_args"
 end
 
 # You may define one or more releases in this file.
@@ -53,19 +53,15 @@ end
 # will be used by default
 
 release :ret do
-  set(version: System.get_env("RELEASE_VERSION") || current_version(:ret))
+  set version: System.get_env("RELEASE_VERSION") || current_version(:ret)
 
-  set(
-    applications: [
-      :runtime_tools
-    ]
-  )
+  set applications: [
+        :runtime_tools
+      ]
 
-  set(commands: [])
+  set commands: []
 
-  set(
-    config_providers: [
-      {Toml.Provider, [path: "${RELEASE_CONFIG_DIR}/config.toml"]}
-    ]
-  )
+  set config_providers: [
+        {Toml.Provider, [path: "${RELEASE_CONFIG_DIR}/config.toml"]}
+      ]
 end
