@@ -25,7 +25,7 @@ defmodule RetWeb.HubChannel do
   alias RetWeb.{Presence}
   alias RetWeb.Api.V1.{HubView}
 
-  intercept([
+  intercept [
     "hub_refresh",
     "mute",
     "add_owner",
@@ -36,7 +36,7 @@ defmodule RetWeb.HubChannel do
     # See internal_naf_event_for/2
     "maybe-naf",
     "maybe-nafr"
-  ])
+  ]
 
   def join("hub:" <> hub_sid, %{"profile" => profile, "context" => context} = params, socket) do
     hub =

@@ -3,7 +3,7 @@ defmodule RetWeb.Api.V1.AvatarController do
 
   alias Ret.{Account, Repo, Avatar, AvatarListing, Storage, GLTFUtils}
 
-  plug(RetWeb.Plugs.RateLimit when action in [:create, :update])
+  plug RetWeb.Plugs.RateLimit when action in [:create, :update]
 
   defp get_avatar(avatar_sid, preloads \\ []) do
     avatar_sid

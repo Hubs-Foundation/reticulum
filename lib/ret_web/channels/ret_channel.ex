@@ -6,7 +6,7 @@ defmodule RetWeb.RetChannel do
   alias Ret.{Account, Statix}
   alias RetWeb.{Presence}
 
-  intercept(["presence_diff"])
+  intercept ["presence_diff"]
 
   def join("ret", %{"hub_id" => hub_id, "token" => token}, socket) do
     case Ret.Guardian.resource_from_token(token) do

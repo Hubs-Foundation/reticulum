@@ -6,7 +6,7 @@ defmodule RetWeb.LinkChannel do
   alias Ret.{Statix}
   alias RetWeb.{Presence}
 
-  intercept(["link_response"])
+  intercept ["link_response"]
 
   def join("link:" <> link_code, _payload, socket) do
     if Regex.match?(~r/\A[0-9A-Z]{4,6}\z/, link_code) do

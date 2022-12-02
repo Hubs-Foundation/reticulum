@@ -6,10 +6,10 @@ defmodule RetWeb.Api.V1.HubController do
   import Canada, only: [can?: 2]
 
   # Limit to 1 TPS
-  plug(RetWeb.Plugs.RateLimit)
+  plug RetWeb.Plugs.RateLimit
 
   # Only allow access to remove hubs with secret header
-  plug(RetWeb.Plugs.HeaderAuthorization when action in [:delete])
+  plug RetWeb.Plugs.HeaderAuthorization when action in [:delete]
 
   def create(conn, %{"hub" => _hub_params} = params) do
     Hub.create_new_room(params["hub"], false)

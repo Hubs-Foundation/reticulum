@@ -110,8 +110,9 @@ defmodule RetWeb.HubChannelTest do
       {:ok, _context, socket} = join_hub(socket, hub, join_params_for_hub_invite(hub_invite))
 
       # Attempt to revoke invite
-      push(socket, "revoke_invite", %{hub_invite_id: hub_invite.hub_invite_sid})
-      |> assert_reply(:ok, %{})
+      assert_reply push(socket, "revoke_invite", %{hub_invite_id: hub_invite.hub_invite_sid}),
+                   :ok,
+                   %{}
 
       # Join is still denied with invalid invite
       {:error, %{reason: "join_denied"}} =
@@ -133,8 +134,9 @@ defmodule RetWeb.HubChannelTest do
 
       # Attempt to revoke invite associated with hub_two, using channel associated with hub_one
       %{payload: response_payload} =
-        push(socket, "revoke_invite", %{hub_invite_id: hub_two_invite.hub_invite_sid})
-        |> assert_reply(:ok, %{})
+        assert_reply push(socket, "revoke_invite", %{hub_invite_id: hub_two_invite.hub_invite_sid}),
+                     :ok,
+                     %{}
 
       # Response payload should be empty when a revoke is ignored
       assert response_payload |> Map.keys() |> length === 0

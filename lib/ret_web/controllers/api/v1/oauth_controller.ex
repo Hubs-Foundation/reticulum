@@ -15,7 +15,7 @@ defmodule RetWeb.Api.V1.OAuthController do
 
   import Canada, only: [can?: 2]
 
-  plug(RetWeb.Plugs.RateLimit when action in [:show])
+  plug RetWeb.Plugs.RateLimit when action in [:show]
 
   def show(conn, %{
         "type" => "twitter",

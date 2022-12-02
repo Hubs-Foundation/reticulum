@@ -3,9 +3,8 @@ defmodule RetWeb.Endpoint do
   use Sentry.Phoenix.Endpoint
   use Absinthe.Phoenix.Endpoint
 
-  socket("/socket", RetWeb.SessionSocket,
+  socket "/socket", RetWeb.SessionSocket,
     websocket: [check_origin: {RetWeb.Endpoint, :allowed_origin?, []}]
-  )
 
   def get_cors_origins,
     do: Application.get_env(:ret, RetWeb.Endpoint)[:allowed_origins] |> String.split(",")
@@ -25,24 +24,24 @@ defmodule RetWeb.Endpoint do
   # Code reloading can be explicitly enabled under the
   # :code_reloader configuration of your endpoint.
   if code_reloading? do
-    socket("/phoenix/live_reload/socket", Phoenix.LiveReloader.Socket)
-    plug(Phoenix.LiveReloader)
-    plug(Phoenix.CodeReloader)
+    socket "/phoenix/live_reload/socket", Phoenix.LiveReloader.Socket
+    plug Phoenix.LiveReloader
+    plug Phoenix.CodeReloader
   end
 
-  plug(Plug.RequestId)
-  plug(Plug.Logger)
+  plug Plug.RequestId
+  plug Plug.Logger
 
-  plug(Plug.MethodOverride)
+  plug Plug.MethodOverride
 
   # We need to handle HEAD for the FileController, but pushing the Plug.Head into the router pipeline
   # prevents matching on HEAD. So this new plug sends a GET as Plug.Head but also adds a x-original-method request
   # header
-  plug(RetWeb.Plugs.Head)
+  plug RetWeb.Plugs.Head
 
-  plug(CORSPlug, origin: &RetWeb.Endpoint.get_cors_origins/0)
-  plug(RetWeb.Plugs.AddVary)
-  plug(RetWeb.Router)
+  plug CORSPlug, origin: &RetWeb.Endpoint.get_cors_origins/0
+  plug RetWeb.Plugs.AddVary
+  plug RetWeb.Router
 
   @doc """
   Callback invoked for dynamically configuring the endpoint.

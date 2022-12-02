@@ -1,10 +1,10 @@
 defmodule RetWeb.SessionSocket do
   use Phoenix.Socket
 
-  channel("ret", RetWeb.RetChannel)
-  channel("hub:*", RetWeb.HubChannel)
-  channel("link:*", RetWeb.LinkChannel)
-  channel("auth:*", RetWeb.AuthChannel)
+  channel "ret", RetWeb.RetChannel
+  channel "hub:*", RetWeb.HubChannel
+  channel "link:*", RetWeb.LinkChannel
+  channel "auth:*", RetWeb.AuthChannel
 
   def id(socket) do
     "session:#{socket.assigns.session_id}"

@@ -14,7 +14,7 @@ defmodule RetWeb.Api.V2.CredentialsController do
     ]
 
   # Limit to 1 TPS
-  plug(RetWeb.Plugs.RateLimit when action in [:create, :update])
+  plug RetWeb.Plugs.RateLimit when action in [:create, :update]
 
   def index(conn, %{"app" => _anything} = _params) do
     handle_list_credentials_result(

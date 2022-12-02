@@ -4,7 +4,7 @@ defmodule RetWeb.Api.V1.AssetsController do
   alias Ret.{Asset, Repo, Storage}
 
   # Limit to 1 TPS
-  plug(RetWeb.Plugs.RateLimit when action in [:create])
+  plug RetWeb.Plugs.RateLimit when action in [:create]
 
   def create(conn, %{"asset" => params}) do
     account = Guardian.Plug.current_resource(conn)

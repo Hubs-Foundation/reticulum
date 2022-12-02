@@ -3,7 +3,7 @@ defmodule RetWeb.Api.V1.SceneController do
 
   alias Ret.{Account, Repo, Scene, SceneListing, Storage}
 
-  plug(RetWeb.Plugs.RateLimit when action in [:create, :update])
+  plug RetWeb.Plugs.RateLimit when action in [:create, :update]
 
   defp preload(%Scene{} = a) do
     a |> Repo.preload(Scene.scene_preloads())

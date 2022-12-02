@@ -3,7 +3,7 @@ defmodule RetWeb.Api.V1.SlackController do
   alias Ret.{Hub, HubBinding}
 
   # Limit to 1 TPS
-  plug(RetWeb.Plugs.RateLimit)
+  plug RetWeb.Plugs.RateLimit
 
   @slack_api_base "https://slack.com"
   @help_prefix "Hi! I'm the Hubs bot. I connect Slack channels with rooms on Hubs (https://hubs.mozilla.com/). Type `/hubs help` for more information."

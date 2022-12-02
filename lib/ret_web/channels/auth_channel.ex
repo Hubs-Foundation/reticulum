@@ -6,7 +6,7 @@ defmodule RetWeb.AuthChannel do
 
   alias Ret.{Statix, LoginToken, Account, Crypto}
 
-  intercept(["auth_credentials"])
+  intercept ["auth_credentials"]
 
   def join("auth:" <> _topic_key, _payload, socket) do
     # Expire channel in 5 minutes

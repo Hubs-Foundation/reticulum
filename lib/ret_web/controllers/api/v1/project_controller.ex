@@ -4,7 +4,7 @@ defmodule RetWeb.Api.V1.ProjectController do
   alias Ret.{Project, Repo, Storage, Scene, SceneListing}
 
   # Limit to 1 TPS
-  plug(RetWeb.Plugs.RateLimit when action in [:create])
+  plug RetWeb.Plugs.RateLimit when action in [:create]
 
   defp preload(project) do
     project
