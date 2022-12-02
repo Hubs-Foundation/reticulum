@@ -87,32 +87,38 @@ defmodule Ret.Hub do
   end
 
   schema "hubs" do
-    field(:name, :string)
-    field(:description, :string)
-    field(:hub_sid, :string)
-    field(:host, :string)
-    field(:last_active_at, :utc_datetime)
-    field(:creator_assignment_token, :string)
-    field(:embed_token, :string)
-    field(:embedded, :boolean)
-    field(:member_permissions, :integer)
-    field(:default_environment_gltf_bundle_url, :string)
-    field(:slug, HubSlug.Type)
-    field(:max_occupant_count, :integer, default: 0)
-    field(:spawned_object_types, :integer, default: 0)
-    field(:entry_mode, Ret.Hub.EntryMode)
-    field(:user_data, :map)
-    belongs_to(:scene, Ret.Scene, references: :scene_id, on_replace: :nilify)
-    belongs_to(:scene_listing, Ret.SceneListing, references: :scene_listing_id, on_replace: :nilify)
-    has_many(:web_push_subscriptions, Ret.WebPushSubscription, foreign_key: :hub_id)
-    belongs_to(:created_by_account, Ret.Account, references: :account_id)
-    has_many(:hub_invites, Ret.HubInvite, foreign_key: :hub_id)
-    has_many(:hub_bindings, Ret.HubBinding, foreign_key: :hub_id)
-    has_many(:hub_role_memberships, Ret.HubRoleMembership, foreign_key: :hub_id)
+    field :name, :string
+    field :description, :string
+    field :hub_sid, :string
+    field :host, :string
+    field :last_active_at, :utc_datetime
+    field :creator_assignment_token, :string
+    field :embed_token, :string
+    field :embedded, :boolean
+    field :member_permissions, :integer
+    field :default_environment_gltf_bundle_url, :string
+    field :slug, HubSlug.Type
+    field :max_occupant_count, :integer, default: 0
+    field :spawned_object_types, :integer, default: 0
+    field :entry_mode, Ret.Hub.EntryMode
+    field :user_data, :map
+    field :allow_promotion, :boolean
+    field :room_size, :integer
 
-    field(:allow_promotion, :boolean)
+    belongs_to :created_by_account, Ret.Account, references: :account_id
 
-    field(:room_size, :integer)
+    belongs_to :scene, Ret.Scene,
+      references: :scene_id,
+      on_replace: :nilify
+
+    belongs_to :scene_listing, Ret.SceneListing,
+      references: :scene_listing_id,
+      on_replace: :nilify
+
+    has_many :web_push_subscriptions, Ret.WebPushSubscription, foreign_key: :hub_id
+    has_many :hub_invites, Ret.HubInvite, foreign_key: :hub_id
+    has_many :hub_bindings, Ret.HubBinding, foreign_key: :hub_id
+    has_many :hub_role_memberships, Ret.HubRoleMembership, foreign_key: :hub_id
 
     timestamps()
   end
@@ -221,7 +227,11 @@ defmodule Ret.Hub do
 
   defp scene_change_from_params(%{scene_id: _id, scene_url: _url}) do
     {:error,
-     %{key: :scene_id, message: "Cannot specify both scene_id and scene_url. Choose one or the other (or neither)."}}
+     %{
+       key: :scene_id,
+       message:
+         "Cannot specify both scene_id and scene_url. Choose one or the other (or neither)."
+     }}
   end
 
   defp scene_change_from_params(%{scene_url: nil}) do
@@ -237,7 +247,8 @@ defmodule Ret.Hub do
 
     case url |> URI.parse() do
       %URI{host: ^endpoint_host, path: "/scenes/" <> scene_path} ->
-        scene_or_scene_listing = scene_path |> String.split("/") |> Enum.at(0) |> Scene.scene_or_scene_listing_by_sid()
+        scene_or_scene_listing =
+          scene_path |> String.split("/") |> Enum.at(0) |> Scene.scene_or_scene_listing_by_sid()
 
         if is_nil(scene_or_scene_listing) do
           {:error, %{key: :scene_url, message: "Cannot find scene with url: " <> url}}
@@ -348,28 +359,37 @@ defmodule Ret.Hub do
   end
 
   def get_my_rooms(account, params) do
-    Hub
-    |> where([h], h.created_by_account_id == ^account.account_id and h.entry_mode in ^["allow", "invite"])
-    |> order_by(desc: :inserted_at)
-    |> preload(^Hub.hub_preloads())
-    |> Repo.paginate(params)
+    query =
+      from h in Hub,
+        where: h.created_by_account_id == ^account.account_id,
+        where: h.entry_mode in [^:allow, ^:invite],
+        order_by: [desc: :inserted_at],
+        preload: ^Hub.hub_preloads()
+
+    Repo.paginate(query, params)
   end
 
   def get_favorite_rooms(account, params) do
-    Hub
-    |> where([h], h.entry_mode in ^["allow", "invite"])
-    |> join(:inner, [h], f in AccountFavorite, on: f.hub_id == h.hub_id and f.account_id == ^account.account_id)
-    |> order_by([h, f], desc: f.last_activated_at)
-    |> preload(^Hub.hub_preloads())
-    |> Repo.paginate(params)
+    query =
+      from h in Hub,
+        where: h.entry_mode in [^:allow, ^:invite],
+        join: fav in AccountFavorite,
+        on: fav.hub_id == h.hub_id and fav.account_id == ^account.account_id,
+        order_by: [desc: fav.last_activated_at],
+        preload: ^Hub.hub_preloads()
+
+    Repo.paginate(query, params)
   end
 
   def get_public_rooms(params) do
-    Hub
-    |> where([h], h.allow_promotion and h.entry_mode in ^["allow", "invite"])
-    |> order_by(desc: :inserted_at)
-    |> preload(^Hub.hub_preloads())
-    |> Repo.paginate(params)
+    query =
+      from h in Hub,
+        where: h.allow_promotion,
+        where: h.entry_mode in [^:allow, ^:invite],
+        order_by: [desc: :inserted_at],
+        preload: ^Hub.hub_preloads()
+
+    Repo.paginate(query, params)
   end
 
   def changeset(%Hub{} = hub, %Scene{} = scene, attrs) do
@@ -408,7 +428,9 @@ defmodule Ret.Hub do
   end
 
   def member_permissions_from_attrs(%{} = attrs) do
-    attrs["member_permissions"] |> Map.new(fn {k, v} -> {String.to_atom(k), v} end) |> member_permissions_to_int
+    attrs["member_permissions"]
+    |> Map.new(fn {k, v} -> {String.to_atom(k), v} end)
+    |> member_permissions_to_int
   end
 
   defp add_member_permissions_update_to_changeset(changeset, hub, member_permissions) do
@@ -435,7 +457,10 @@ defmodule Ret.Hub do
 
   def add_promotion_to_changeset(changeset, attrs) do
     changeset
-    |> put_change(:allow_promotion, Map.get(attrs, "allow_promotion", false) || Map.get(attrs, :allow_promotion, false))
+    |> put_change(
+      :allow_promotion,
+      Map.get(attrs, "allow_promotion", false) || Map.get(attrs, :allow_promotion, false)
+    )
   end
 
   def maybe_add_entry_mode_to_changeset(changeset, attrs) do
@@ -469,7 +494,8 @@ defmodule Ret.Hub do
     |> validate_required([:max_occupant_count])
   end
 
-  def changeset_for_seen_embedded_hub(%Hub{} = hub), do: hub |> cast(%{embedded: true}, [:embedded])
+  def changeset_for_seen_embedded_hub(%Hub{} = hub),
+    do: hub |> cast(%{embedded: true}, [:embedded])
 
   # NOTE occupant_count is 1 when there is 1 *other* user in the room with you, so active is when >= 1.
   defp maybe_add_last_active_at_to_changeset(changeset, occupant_count) when occupant_count >= 1,
@@ -538,10 +564,15 @@ defmodule Ret.Hub do
   def add_account_to_changeset(changeset, nil), do: changeset
 
   def add_account_to_changeset(changeset, %Account{} = account) do
-    changeset |> put_assoc(:created_by_account, account) |> put_change(:creator_assignment_token, nil)
+    changeset
+    |> put_assoc(:created_by_account, account)
+    |> put_change(:creator_assignment_token, nil)
   end
 
-  def send_push_messages_for_join(%Hub{web_push_subscriptions: subscriptions} = hub, endpoint_to_skip \\ nil) do
+  def send_push_messages_for_join(
+        %Hub{web_push_subscriptions: subscriptions} = hub,
+        endpoint_to_skip \\ nil
+      ) do
     body = hub |> push_message_for_join
 
     for subscription <- subscriptions |> Enum.filter(&(&1.endpoint != endpoint_to_skip)) do
@@ -550,7 +581,13 @@ defmodule Ret.Hub do
   end
 
   defp push_message_for_join(%Hub{} = hub) do
-    %{type: "join", hub_name: hub.name, hub_id: hub.hub_sid, hub_url: hub |> url_for, image: hub |> image_url_for}
+    %{
+      type: "join",
+      hub_name: hub.name,
+      hub_id: hub.hub_sid,
+      hub_url: hub |> url_for,
+      image: hub |> image_url_for
+    }
     |> Poison.encode!()
   end
 
@@ -575,7 +612,10 @@ defmodule Ret.Hub do
   def member_count_for(hub_sid) do
     RetWeb.Presence.list("hub:#{hub_sid}")
     |> Enum.filter(fn {_, %{metas: m}} ->
-      m |> Enum.any?(fn %{presence: p, context: c} -> p == :room and !(c != nil and Map.get(c, "discord", false)) end)
+      m
+      |> Enum.any?(fn %{presence: p, context: c} ->
+        p == :room and !(c != nil and Map.get(c, "discord", false))
+      end)
     end)
     |> Enum.count()
   end
@@ -585,7 +625,10 @@ defmodule Ret.Hub do
   def lobby_count_for(hub_sid) do
     RetWeb.Presence.list("hub:#{hub_sid}")
     |> Enum.filter(fn {_, %{metas: m}} ->
-      m |> Enum.any?(fn %{presence: p, context: c} -> p == :lobby and !(c != nil and Map.get(c, "discord", false)) end)
+      m
+      |> Enum.any?(fn %{presence: p, context: c} ->
+        p == :lobby and !(c != nil and Map.get(c, "discord", false))
+      end)
     end)
     |> Enum.count()
   end
@@ -625,14 +668,20 @@ defmodule Ret.Hub do
       one_day_ago = Timex.now() |> Timex.shift(days: -1)
 
       candidate_hub_sids =
-        from(h in Hub, where: not is_nil(h.host) and h.inserted_at < ^one_day_ago)
-        |> Repo.all()
-        |> Enum.map(& &1.hub_sid)
+        Repo.all(
+          from h in Hub,
+            where: not is_nil(h.host),
+            where: h.inserted_at < ^one_day_ago,
+            select: h.hub_sid
+        )
 
       present_hub_sids = RetWeb.Presence.present_hub_sids()
-      clearable_hub_sids = candidate_hub_sids |> Enum.filter(&(!Enum.member?(present_hub_sids, &1)))
 
-      from(h in Hub, where: h.hub_sid in ^clearable_hub_sids) |> Repo.update_all(set: [host: nil])
+      clearable_hub_sids =
+        candidate_hub_sids |> Enum.filter(&(!Enum.member?(present_hub_sids, &1)))
+
+      query = from h in Hub, where: h.hub_sid in ^clearable_hub_sids
+      Repo.update_all(query, set: [host: nil])
     end)
   end
 
@@ -678,13 +727,20 @@ defmodule Ret.Hub do
 
   defp add_default_member_permissions_to_changeset(changeset) do
     if Ret.AppConfig.get_config_bool("features|permissive_rooms") do
-      changeset |> put_change(:member_permissions, @default_member_permissions |> member_permissions_to_int)
+      changeset
+      |> put_change(:member_permissions, @default_member_permissions |> member_permissions_to_int)
     else
-      changeset |> put_change(:member_permissions, @default_restrictive_member_permissions |> member_permissions_to_int)
+      changeset
+      |> put_change(
+        :member_permissions,
+        @default_restrictive_member_permissions |> member_permissions_to_int
+      )
     end
   end
 
-  def add_owner!(%Hub{created_by_account_id: created_by_account_id} = hub, %Account{account_id: account_id})
+  def add_owner!(%Hub{created_by_account_id: created_by_account_id} = hub, %Account{
+        account_id: account_id
+      })
       when created_by_account_id != nil and created_by_account_id === account_id,
       do: hub
 
@@ -714,7 +770,8 @@ defmodule Ret.Hub do
   def is_creator?(_hub, _account), do: false
 
   def is_owner?(%Hub{hub_role_memberships: hub_role_memberships} = hub, account_id) do
-    is_creator?(hub, account_id) || hub_role_memberships |> Enum.any?(&(&1.account_id === account_id))
+    is_creator?(hub, account_id) ||
+      hub_role_memberships |> Enum.any?(&(&1.account_id === account_id))
   end
 
   @doc """
@@ -722,7 +779,8 @@ defmodule Ret.Hub do
   Does not throw on invalid permissions
   """
   def lenient_member_permissions_to_int(%{} = member_permissions) do
-    invalid_member_permissions = member_permissions |> Map.drop(@member_permissions_keys) |> Map.keys()
+    invalid_member_permissions =
+      member_permissions |> Map.drop(@member_permissions_keys) |> Map.keys()
 
     if invalid_member_permissions |> Enum.count() > 0 do
       {ArgumentError, "Invalid permissions #{invalid_member_permissions |> Enum.join(", ")}"}
@@ -750,7 +808,9 @@ defmodule Ret.Hub do
 
   def has_member_permission?(%Hub{} = hub, member_permission) do
     case @member_permissions
-         |> Enum.find(fn {_, member_permission_name} -> member_permission_name == member_permission end) do
+         |> Enum.find(fn {_, member_permission_name} ->
+           member_permission_name == member_permission
+         end) do
       nil -> raise ArgumentError, "Invalid permission #{member_permission}"
       {val, _} -> (hub.member_permissions &&& val) > 0
     end
@@ -826,7 +886,11 @@ defmodule Ret.Hub do
     do: %{owner: false, creator: false, signed_in: false}
 
   def roles_for_account(%Ret.Hub{} = hub, account),
-    do: %{owner: hub |> is_owner?(account.account_id), creator: hub |> is_creator?(account.account_id), signed_in: true}
+    do: %{
+      owner: hub |> is_owner?(account.account_id),
+      creator: hub |> is_creator?(account.account_id),
+      signed_in: true
+    }
 end
 
 defimpl Canada.Can, for: Ret.Account do
@@ -850,7 +914,9 @@ defimpl Canada.Can, for: Ret.Account do
     false
   end
 
-  def can?(%Ret.Account{account_id: account_id}, :revoke_credentials, %Credentials{account_id: account_id}) do
+  def can?(%Ret.Account{account_id: account_id}, :revoke_credentials, %Credentials{
+        account_id: account_id
+      }) do
     true
   end
 
@@ -938,7 +1004,8 @@ defimpl Canada.Can, for: Ret.Account do
         created_by_account_id: created_by_account_id,
         hub_bindings: []
       })
-      when action in @creator_actions and created_by_account_id != nil and created_by_account_id == account_id,
+      when action in @creator_actions and created_by_account_id != nil and
+             created_by_account_id == account_id,
       do: true
 
   # Unbound hubs - Owners can perform special actions
@@ -947,7 +1014,8 @@ defimpl Canada.Can, for: Ret.Account do
       do: hub |> Ret.Hub.is_owner?(account_id)
 
   # Unbound hubs - Object actions can be performed if granted in member permissions or if account is an owner
-  def can?(%Ret.Account{account_id: account_id}, action, %Hub{hub_bindings: []} = hub) when action in @object_actions do
+  def can?(%Ret.Account{account_id: account_id}, action, %Hub{hub_bindings: []} = hub)
+      when action in @object_actions do
     hub |> Hub.has_member_permission?(action) or hub |> Ret.Hub.is_owner?(account_id)
   end
 
@@ -966,7 +1034,9 @@ defimpl Canada.Can, for: Ret.Account do
 
   # Create accounts
   def can?(%Ret.Account{is_admin: true}, :create_account, _), do: true
-  def can?(_account, :create_account, _), do: !AppConfig.get_cached_config_value("features|disable_sign_up")
+
+  def can?(_account, :create_account, _),
+    do: !AppConfig.get_cached_config_value("features|disable_sign_up")
 
   # Deny permissions for any other case that falls through
   def can?(_, _, _), do: false
@@ -986,7 +1056,15 @@ defimpl Canada.Can, for: Ret.OAuthProvider do
     :voice_chat,
     :text_chat
   ]
-  @special_actions [:update_hub, :update_roles, :close_hub, :embed_hub, :kick_users, :mute_users, :amplify_audio]
+  @special_actions [
+    :update_hub,
+    :update_roles,
+    :close_hub,
+    :embed_hub,
+    :kick_users,
+    :mute_users,
+    :amplify_audio
+  ]
 
   # Always deny access to non-enterable hubs
   def can?(%Ret.OAuthProvider{}, :join_hub, %Ret.Hub{entry_mode: :deny}), do: false
@@ -1001,9 +1079,15 @@ defimpl Canada.Can, for: Ret.OAuthProvider do
   end
 
   # Object permissions for OAuthProvider users are based on member permission settings
-  def can?(%Ret.OAuthProvider{} = oauth_provider, action, %Ret.Hub{hub_bindings: hub_bindings} = hub)
+  def can?(
+        %Ret.OAuthProvider{} = oauth_provider,
+        action,
+        %Ret.Hub{hub_bindings: hub_bindings} = hub
+      )
       when action in @object_actions do
-    is_member = hub_bindings |> Enum.any?(&(oauth_provider |> Ret.HubBinding.member_of_channel?(&1)))
+    is_member =
+      hub_bindings |> Enum.any?(&(oauth_provider |> Ret.HubBinding.member_of_channel?(&1)))
+
     is_member and hub |> Hub.has_member_permission?(action)
   end
 
@@ -1067,7 +1151,8 @@ defimpl Canada.Can, for: Atom do
     do: !AppConfig.get_cached_config_value("features|disable_room_creation")
 
   # Create accounts
-  def can?(_, :create_account, _), do: !AppConfig.get_cached_config_value("features|disable_sign_up")
+  def can?(_, :create_account, _),
+    do: !AppConfig.get_cached_config_value("features|disable_sign_up")
 
   def can?(_, _, _), do: false
 end

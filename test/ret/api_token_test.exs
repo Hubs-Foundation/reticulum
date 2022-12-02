@@ -26,7 +26,9 @@ defmodule Ret.ApiTokenTest do
 
     Ret.Api.Token.revoke(token)
 
-    {:ok, %Credentials{is_revoked: is_revoked_2}} = Guardian.decode_and_verify(Ret.Api.Token, token)
+    {:ok, %Credentials{is_revoked: is_revoked_2}} =
+      Guardian.decode_and_verify(Ret.Api.Token, token)
+
     assert is_revoked_2 == true
   end
 

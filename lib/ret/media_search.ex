@@ -21,7 +21,18 @@ defmodule Ret.MediaSearch do
   import Ret.HttpUtils
   import Ecto.Query
 
-  alias Ret.{Repo, OwnedFile, Scene, SceneListing, Asset, Avatar, AvatarListing, AccountFavorite, Hub, Project}
+  alias Ret.{
+    AccountFavorite,
+    Asset,
+    Avatar,
+    AvatarListing,
+    Hub,
+    OwnedFile,
+    Project,
+    Repo,
+    Scene,
+    SceneListing
+  }
 
   @page_size 24
   # HACK for now to reduce page size for scene listings -- real fix will be to expose page_size to API
@@ -33,19 +44,40 @@ defmodule Ret.MediaSearch do
   # @max_file_size_bytes 20 * 1024 * 1024 
   # @max_collection_file_size_bytes 100 * 1024 * 1024
 
-  def search(%Ret.MediaSearchQuery{source: "scene_listings", cursor: cursor, filter: "featured", q: query}) do
+  def search(%Ret.MediaSearchQuery{
+        source: "scene_listings",
+        cursor: cursor,
+        filter: "featured",
+        q: query
+      }) do
     scene_listing_search(cursor, query, "featured", asc: :order)
   end
 
-  def search(%Ret.MediaSearchQuery{source: "scene_listings", cursor: cursor, filter: "remixable", q: query}) do
+  def search(%Ret.MediaSearchQuery{
+        source: "scene_listings",
+        cursor: cursor,
+        filter: "remixable",
+        q: query
+      }) do
     scene_listing_remixable_search(cursor, query)
   end
 
-  def search(%Ret.MediaSearchQuery{source: "scene_listings", cursor: cursor, filter: filter, q: query}) do
+  def search(%Ret.MediaSearchQuery{
+        source: "scene_listings",
+        cursor: cursor,
+        filter: filter,
+        q: query
+      }) do
     scene_listing_search(cursor, query, filter)
   end
 
-  def search(%Ret.MediaSearchQuery{source: "scenes", cursor: cursor, filter: filter, user: account_id, q: query}) do
+  def search(%Ret.MediaSearchQuery{
+        source: "scenes",
+        cursor: cursor,
+        filter: filter,
+        user: account_id,
+        q: query
+      }) do
     scene_search(cursor, query, filter, account_id)
   end
 
@@ -59,15 +91,33 @@ defmodule Ret.MediaSearch do
     avatar_listing_search(cursor, query, filter, similar_to)
   end
 
-  def search(%Ret.MediaSearchQuery{source: "avatars", cursor: cursor, filter: filter, user: account_id, q: query}) do
+  def search(%Ret.MediaSearchQuery{
+        source: "avatars",
+        cursor: cursor,
+        filter: filter,
+        user: account_id,
+        q: query
+      }) do
     avatar_search(cursor, query, filter, account_id)
   end
 
-  def search(%Ret.MediaSearchQuery{source: "assets", type: type, cursor: cursor, user: account_id, q: query}) do
+  def search(%Ret.MediaSearchQuery{
+        source: "assets",
+        type: type,
+        cursor: cursor,
+        user: account_id,
+        q: query
+      }) do
     assets_search(cursor, type, account_id, query)
   end
 
-  def search(%Ret.MediaSearchQuery{source: "favorites", type: type, cursor: cursor, user: account_id, q: q}) do
+  def search(%Ret.MediaSearchQuery{
+        source: "favorites",
+        type: type,
+        cursor: cursor,
+        user: account_id,
+        q: q
+      }) do
     favorites_search(cursor, type, account_id, q)
   end
 
@@ -75,12 +125,24 @@ defmodule Ret.MediaSearch do
     public_rooms_search(cursor, q)
   end
 
-  def search(%Ret.MediaSearchQuery{source: "sketchfab", cursor: cursor, filter: nil, collection: nil, q: q})
+  def search(%Ret.MediaSearchQuery{
+        source: "sketchfab",
+        cursor: cursor,
+        filter: nil,
+        collection: nil,
+        q: q
+      })
       when q == nil or q == "" do
     search(%Ret.MediaSearchQuery{source: "sketchfab", cursor: cursor, filter: "featured", q: q})
   end
 
-  def search(%Ret.MediaSearchQuery{source: "sketchfab", cursor: cursor, filter: nil, collection: nil, q: q}) do
+  def search(%Ret.MediaSearchQuery{
+        source: "sketchfab",
+        cursor: cursor,
+        filter: nil,
+        collection: nil,
+        q: q
+      }) do
     query =
       URI.encode_query(
         type: :models,
@@ -119,7 +181,13 @@ defmodule Ret.MediaSearch do
     sketchfab_search(query)
   end
 
-  def search(%Ret.MediaSearchQuery{source: "sketchfab", cursor: cursor, filter: nil, collection: collection_id, q: q}) do
+  def search(%Ret.MediaSearchQuery{
+        source: "sketchfab",
+        cursor: cursor,
+        filter: nil,
+        collection: collection_id,
+        q: q
+      }) do
     query =
       URI.encode_query(
         type: :models,
@@ -274,7 +342,8 @@ defmodule Ret.MediaSearch do
         )
 
       res =
-        "https://api.twitch.tv/helix/streams?#{query}" |> retry_get_until_success(headers: [{"Client-ID", client_id}])
+        "https://api.twitch.tv/helix/streams?#{query}"
+        |> retry_get_until_success(headers: [{"Client-ID", client_id}])
 
       case res do
         :error ->
@@ -321,7 +390,10 @@ defmodule Ret.MediaSearch do
 
         res ->
           decoded_res = res |> Map.get(:body) |> Poison.decode!()
-          entries = decoded_res |> Map.get("results") |> Enum.map(&sketchfab_api_result_to_entry/1)
+
+          entries =
+            decoded_res |> Map.get("results") |> Enum.map(&sketchfab_api_result_to_entry/1)
+
           cursors = decoded_res |> Map.get("cursors")
 
           {:commit,
@@ -335,7 +407,8 @@ defmodule Ret.MediaSearch do
     end
   end
 
-  def bing_search(%Ret.MediaSearchQuery{source: "bing_videos", q: q, locale: locale}) when q == nil or q == "" do
+  def bing_search(%Ret.MediaSearchQuery{source: "bing_videos", q: q, locale: locale})
+      when q == nil or q == "" do
     with api_key when is_binary(api_key) <- resolver_config(:bing_search_api_key) do
       query =
         URI.encode_query(
@@ -362,7 +435,11 @@ defmodule Ret.MediaSearch do
             |> Enum.map(&Kernel.get_in(&1, ["tiles"]))
             |> List.flatten()
 
-          entries = tiles |> Enum.shuffle() |> Enum.with_index() |> Enum.map(&bing_trending_api_result_to_entry/1)
+          entries =
+            tiles
+            |> Enum.shuffle()
+            |> Enum.with_index()
+            |> Enum.map(&bing_trending_api_result_to_entry/1)
 
           {:commit,
            %Ret.MediaSearchResult{
@@ -376,7 +453,13 @@ defmodule Ret.MediaSearch do
     end
   end
 
-  def bing_search(%Ret.MediaSearchQuery{source: source, cursor: cursor, filter: _filter, q: q, locale: locale}) do
+  def bing_search(%Ret.MediaSearchQuery{
+        source: source,
+        cursor: cursor,
+        filter: _filter,
+        q: q,
+        locale: locale
+      }) do
     with api_key when is_binary(api_key) <- resolver_config(:bing_search_api_key) do
       query =
         URI.encode_query(
@@ -401,7 +484,9 @@ defmodule Ret.MediaSearch do
         res ->
           decoded_res = res |> Map.get(:body) |> Poison.decode!()
           next_cursor = decoded_res |> Map.get("nextOffset")
-          entries = decoded_res |> Map.get("value") |> Enum.map(&bing_api_result_to_entry(type, &1))
+
+          entries =
+            decoded_res |> Map.get("value") |> Enum.map(&bing_api_result_to_entry(type, &1))
 
           suggestions =
             if decoded_res["relatedSearches"] do
@@ -425,13 +510,16 @@ defmodule Ret.MediaSearch do
   defp assets_search(cursor, type, account_id, query, order \\ [desc: :updated_at]) do
     page_number = (cursor || "1") |> Integer.parse() |> elem(0)
 
+    ecto_query =
+      from a in Asset,
+        where: a.account_id == ^account_id,
+        preload: [:asset_owned_file, :thumbnail_owned_file],
+        order_by: ^order
+
     results =
-      Asset
-      |> where([a], a.account_id == ^account_id)
+      ecto_query
       |> add_type_to_asset_search_query(type)
       |> add_query_to_asset_search_query(query)
-      |> preload([:asset_owned_file, :thumbnail_owned_file])
-      |> order_by(^order)
       |> Repo.paginate(%{page: page_number, page_size: @page_size})
       |> result_for_assets_page(page_number)
 
@@ -441,11 +529,18 @@ defmodule Ret.MediaSearch do
   defp public_rooms_search(cursor, _query) do
     page_number = (cursor || "1") |> Integer.parse() |> elem(0)
 
+    ecto_query =
+      from h in Hub,
+        where: h.allow_promotion,
+        where: h.entry_mode == ^:allow,
+        preload: [
+          scene: [:screenshot_owned_file],
+          scene_listing: [:scene, :screenshot_owned_file]
+        ],
+        order_by: [desc: :inserted_at]
+
     results =
-      Hub
-      |> where([h], h.allow_promotion and h.entry_mode == ^"allow")
-      |> preload(scene: [:screenshot_owned_file], scene_listing: [:scene, :screenshot_owned_file])
-      |> order_by(desc: :inserted_at)
+      ecto_query
       |> Repo.paginate(%{page: page_number, page_size: @page_size})
       |> result_for_page(page_number, :public_rooms, &hub_to_entry/1)
 
@@ -453,19 +548,27 @@ defmodule Ret.MediaSearch do
   end
 
   defp filter_by_hub_entry_mode(query, entry_mode) do
-    query
-    |> join(:inner, [favorite], hub in assoc(favorite, :hub))
-    |> where([favorite, hub], hub.entry_mode == ^entry_mode)
+    from fav in query,
+      join: hub in assoc(fav, :hub),
+      where: hub.entry_mode == ^entry_mode
   end
 
   defp favorites_search(cursor, _type, account_id, _query, order \\ [desc: :last_activated_at]) do
     page_number = (cursor || "1") |> Integer.parse() |> elem(0)
 
+    ecto_query =
+      from fav in AccountFavorite,
+        where: fav.account_id == ^account_id,
+        preload: [
+          hub: [
+            scene: [:screenshot_owned_file],
+            scene_listing: [:scene, :screenshot_owned_file]
+          ]
+        ],
+        order_by: ^order
+
     results =
-      AccountFavorite
-      |> where([a], a.account_id == ^account_id)
-      |> preload(hub: [scene: [:screenshot_owned_file], scene_listing: [:scene, :screenshot_owned_file]])
-      |> order_by(^order)
+      ecto_query
       |> filter_by_hub_entry_mode("allow")
       |> Repo.paginate(%{page: page_number, page_size: @page_size})
       |> result_for_page(page_number, :favorites, &favorite_to_entry/1)
@@ -474,9 +577,16 @@ defmodule Ret.MediaSearch do
   end
 
   defp add_type_to_asset_search_query(query, nil), do: query
-  defp add_type_to_asset_search_query(query, type), do: query |> where([a], a.type == ^type)
+
+  defp add_type_to_asset_search_query(query, type) do
+    from asset in query, where: asset.type == ^type
+  end
+
   defp add_query_to_asset_search_query(query, nil), do: query
-  defp add_query_to_asset_search_query(query, q), do: query |> where([a], ilike(a.name, ^"%#{q}%"))
+
+  defp add_query_to_asset_search_query(query, q) do
+    from asset in query, where: ilike(asset.name, ^"%#{q}%")
+  end
 
   defp result_for_assets_page(page, page_number) do
     %Ret.MediaSearchResult{
@@ -511,29 +621,43 @@ defmodule Ret.MediaSearch do
   defp avatar_search(cursor, _query, _filter, account_id, order \\ [desc: :updated_at]) do
     page_number = (cursor || "1") |> Integer.parse() |> elem(0)
 
+    ecto_query =
+      from a in Avatar,
+        where: a.account_id == ^account_id,
+        preload: [:thumbnail_owned_file],
+        order_by: ^order
+
     results =
-      Avatar
-      |> where([a], a.account_id == ^account_id)
-      |> preload([:thumbnail_owned_file])
-      |> order_by(^order)
+      ecto_query
       |> Repo.paginate(%{page: page_number, page_size: @page_size})
       |> result_for_page(page_number, :avatar, &avatar_to_entry/1)
 
     {:commit, results}
   end
 
-  defp avatar_listing_search(cursor, query, filter, similar_to, order \\ [asc: :order, desc: :updated_at]) do
+  defp avatar_listing_search(
+         cursor,
+         query,
+         filter,
+         similar_to,
+         order \\ [asc: :order, desc: :updated_at]
+       ) do
     page_number = (cursor || "1") |> Integer.parse() |> elem(0)
 
+    ecto_query =
+      from l in AvatarListing,
+        join: a in assoc(l, :avatar),
+        where: l.state == ^:active,
+        where: a.state == ^:active,
+        where: a.allow_promotion,
+        preload: [:thumbnail_owned_file, :avatar],
+        order_by: ^order
+
     results =
-      AvatarListing
-      |> join(:inner, [l], a in assoc(l, :avatar))
-      |> where([l, a], l.state == ^"active" and a.state == ^"active" and a.allow_promotion == ^true)
+      ecto_query
       |> add_query_to_listing_search_query(query)
       |> add_tag_to_listing_search_query(filter)
       |> add_similar_to_to_listing_search_query(similar_to)
-      |> preload([:thumbnail_owned_file, :avatar])
-      |> order_by(^order)
       |> Repo.paginate(%{page: page_number, page_size: @page_size})
       |> result_for_page(page_number, :avatar_listings, &avatar_listing_to_entry/1)
 
@@ -543,16 +667,25 @@ defmodule Ret.MediaSearch do
   defp scene_listing_remixable_search(cursor, query, order \\ [desc: :updated_at]) do
     page_number = (cursor || "1") |> Integer.parse() |> elem(0)
 
+    ecto_query =
+      from l in SceneListing,
+        join: s in assoc(l, :scene),
+        where: l.state == ^:active,
+        where: s.state == ^:active,
+        where: s.allow_promotion,
+        where: s.allow_remixing,
+        preload: [
+          :screenshot_owned_file,
+          :model_owned_file,
+          :scene_owned_file,
+          :project,
+          scene: [:project]
+        ],
+        order_by: ^order
+
     results =
-      SceneListing
-      |> join(:inner, [l], s in assoc(l, :scene))
-      |> where(
-        [l, s],
-        l.state == ^"active" and s.state == ^"active" and s.allow_promotion == ^true and s.allow_remixing == ^true
-      )
+      ecto_query
       |> add_query_to_listing_search_query(query)
-      |> preload([:screenshot_owned_file, :model_owned_file, :scene_owned_file, :project, scene: [:project]])
-      |> order_by(^order)
       |> Repo.paginate(%{page: page_number, page_size: @scene_page_size})
       |> result_for_page(page_number, :scene_listings, &scene_or_scene_listing_to_entry/1)
 
@@ -562,14 +695,25 @@ defmodule Ret.MediaSearch do
   defp scene_listing_search(cursor, query, filter, order \\ [desc: :updated_at]) do
     page_number = (cursor || "1") |> Integer.parse() |> elem(0)
 
+    ecto_query =
+      from l in SceneListing,
+        join: s in assoc(l, :scene),
+        where: l.state == ^:active,
+        where: s.state == ^:active,
+        where: s.allow_promotion,
+        preload: [
+          :screenshot_owned_file,
+          :model_owned_file,
+          :scene_owned_file,
+          :project,
+          scene: [:project]
+        ],
+        order_by: ^order
+
     results =
-      SceneListing
-      |> join(:inner, [l], s in assoc(l, :scene))
-      |> where([l, s], l.state == ^"active" and s.state == ^"active" and s.allow_promotion == ^true)
+      ecto_query
       |> add_query_to_listing_search_query(query)
       |> add_tag_to_listing_search_query(filter)
-      |> preload([:screenshot_owned_file, :model_owned_file, :scene_owned_file, :project, scene: [:project]])
-      |> order_by(^order)
       |> Repo.paginate(%{page: page_number, page_size: @scene_page_size})
       |> result_for_page(page_number, :scene_listings, &scene_or_scene_listing_to_entry/1)
 
@@ -579,11 +723,14 @@ defmodule Ret.MediaSearch do
   defp scene_search(cursor, _query, _filter, account_id, order \\ [desc: :updated_at]) do
     page_number = (cursor || "1") |> Integer.parse() |> elem(0)
 
+    ecto_query =
+      from s in Scene,
+        where: s.account_id == ^account_id,
+        preload: [:screenshot_owned_file, :model_owned_file, :scene_owned_file, :project],
+        order_by: ^order
+
     results =
-      Scene
-      |> where([a], a.account_id == ^account_id)
-      |> preload([:screenshot_owned_file, :model_owned_file, :scene_owned_file, :project])
-      |> order_by(^order)
+      ecto_query
       |> Repo.paginate(%{page: page_number, page_size: @scene_page_size})
       |> result_for_page(page_number, :scenes, &scene_or_scene_listing_to_entry/1)
 
@@ -591,10 +738,14 @@ defmodule Ret.MediaSearch do
   end
 
   defp add_query_to_listing_search_query(query, nil), do: query
-  defp add_query_to_listing_search_query(query, q), do: query |> where([l, s], ilike(l.name, ^"%#{q}%"))
+
+  defp add_query_to_listing_search_query(query, q),
+    do: query |> where([l, s], ilike(l.name, ^"%#{q}%"))
 
   defp add_tag_to_listing_search_query(query, nil), do: query
-  defp add_tag_to_listing_search_query(query, tag), do: query |> where(fragment("tags->'tags' \\? ?", ^tag))
+
+  defp add_tag_to_listing_search_query(query, tag),
+    do: query |> where(fragment("tags->'tags' \\? ?", ^tag))
 
   defp add_similar_to_to_listing_search_query(query, nil), do: query
 
@@ -604,12 +755,12 @@ defmodule Ret.MediaSearch do
         query |> where(false)
 
       %{parent_avatar_listing_id: similar_parent_id, avatar_listing_id: similar_id} ->
-        query
-        |> where(
-          [l],
-          l.avatar_listing_id == ^similar_id or l.avatar_listing_id == ^similar_parent_id or
-            l.parent_avatar_listing_id == ^similar_parent_id or l.parent_avatar_listing_id == ^similar_id
-        )
+        from avatar_listing in query,
+          where:
+            avatar_listing.avatar_listing_id == ^similar_id or
+              avatar_listing.avatar_listing_id == ^similar_parent_id or
+              avatar_listing.parent_avatar_listing_id == ^similar_parent_id or
+              avatar_listing.parent_avatar_listing_id == ^similar_id
     end
   end
 
@@ -639,7 +790,14 @@ defmodule Ret.MediaSearch do
 
     images =
       if scene_or_scene_listing do
-        %{preview: %{url: scene_or_scene_listing.screenshot_owned_file |> OwnedFile.uri_for() |> URI.to_string()}}
+        %{
+          preview: %{
+            url:
+              scene_or_scene_listing.screenshot_owned_file
+              |> OwnedFile.uri_for()
+              |> URI.to_string()
+          }
+        }
       else
         %{preview: %{url: "#{RetWeb.Endpoint.url()}/app-thumbnail.png"}}
       end
@@ -762,7 +920,9 @@ defmodule Ret.MediaSearch do
       id: result["uid"],
       type: "sketchfab_model",
       name: result["name"],
-      attributions: %{creator: %{name: result["user"]["username"], url: result["user"]["profileUrl"]}},
+      attributions: %{
+        creator: %{name: result["user"]["username"], url: result["user"]["profileUrl"]}
+      },
       url: "https://sketchfab.com/models/#{result["uid"]}",
       images: images
     }

@@ -14,7 +14,10 @@ defmodule Ret.JanusLoadStatus do
           {:ok, [{:host_to_ccu, pods}]}
         else
           _ ->
-            Logger.warn("falling back to default_janus_host because get_dialog_pods() returned []")
+            Logger.warn(
+              "falling back to default_janus_host because get_dialog_pods() returned []"
+            )
+
             {:ok, [{:host_to_ccu, [{module_config(:default_janus_host), 0}]}]}
         end
       end
@@ -78,7 +81,8 @@ defmodule Ret.JanusLoadStatus do
         admin_secret: janus_secret
       }
 
-      janus_resp = retry_api_post_until_success("http://#{janus_ip}:#{janus_port}/admin", janus_payload)
+      janus_resp =
+        retry_api_post_until_success("http://#{janus_ip}:#{janus_port}/admin", janus_payload)
 
       case janus_resp do
         %HTTPoison.Response{status_code: 200, body: body} ->
@@ -103,7 +107,10 @@ defmodule Ret.JanusLoadStatus do
         end
 
       # For local dev, allow insecure SSL because of webpack server
-      case HTTPoison.post(url, payload |> Poison.encode!(), [{"Content-Type", "application/json"}],
+      case HTTPoison.post(
+             url,
+             payload |> Poison.encode!(),
+             [{"Content-Type", "application/json"}],
              hackney: hackney_options
            ) do
         {:ok, %HTTPoison.Response{status_code: 200} = resp} -> resp

@@ -8,8 +8,9 @@ defmodule Ret.Login do
   @primary_key {:login_id, :id, autogenerate: true}
 
   schema "logins" do
-    field(:identifier_hash, :string)
-    belongs_to(:account, Account, references: :account_id)
+    field :identifier_hash, :string
+
+    belongs_to :account, Account, references: :account_id
 
     timestamps()
   end

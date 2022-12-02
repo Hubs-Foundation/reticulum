@@ -5,7 +5,7 @@ defmodule RetWeb.ApiTokenAuthPipeline do
     module: Ret.Api.Token,
     error_handler: RetWeb.ApiTokenAuthErrorHandler
 
-  plug(Guardian.Plug.VerifyHeader, halt: false)
+  plug Guardian.Plug.VerifyHeader, halt: false
 end
 
 defmodule RetWeb.ApiTokenAuthErrorHandler do

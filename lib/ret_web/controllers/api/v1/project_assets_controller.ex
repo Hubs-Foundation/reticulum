@@ -4,7 +4,7 @@ defmodule RetWeb.Api.V1.ProjectAssetsController do
   alias Ret.{Asset, Project, ProjectAsset, Repo, Storage}
 
   # Limit to 1 TPS
-  plug(RetWeb.Plugs.RateLimit when action in [:create])
+  plug RetWeb.Plugs.RateLimit when action in [:create]
 
   def index(conn, %{"project_id" => project_sid}) do
     account = Guardian.Plug.current_resource(conn)
@@ -39,11 +39,23 @@ defmodule RetWeb.Api.V1.ProjectAssetsController do
   end
 
   defp create(conn, params, account, project) do
-    with {:ok, asset_owned_file} <- Storage.promote(params["file_id"], params["access_token"], nil, account),
+    with {:ok, asset_owned_file} <-
+           Storage.promote(params["file_id"], params["access_token"], nil, account),
          {:ok, thumbnail_owned_file} <-
-           Storage.promote(params["thumbnail_file_id"], params["thumbnail_access_token"], nil, account),
+           Storage.promote(
+             params["thumbnail_file_id"],
+             params["thumbnail_access_token"],
+             nil,
+             account
+           ),
          {:ok, result} <-
-           Asset.create_asset_and_project_asset(account, project, asset_owned_file, thumbnail_owned_file, params) do
+           Asset.create_asset_and_project_asset(
+             account,
+             project,
+             asset_owned_file,
+             thumbnail_owned_file,
+             params
+           ) do
       asset = Repo.preload(result.asset, [:asset_owned_file, :thumbnail_owned_file])
       conn |> render("show.json", asset: asset)
     else

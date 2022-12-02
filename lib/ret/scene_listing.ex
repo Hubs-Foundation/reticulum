@@ -18,20 +18,22 @@ defmodule Ret.SceneListing do
   @schema_prefix "ret0"
   @primary_key {:scene_listing_id, :id, autogenerate: true}
   schema "scene_listings" do
-    field(:scene_listing_sid, :string)
-    field(:slug, SceneListingSlug.Type)
-    field(:name, :string)
-    field(:description, :string)
-    field(:tags, :map)
-    field(:attributions, :map)
-    belongs_to(:scene, Ret.Scene, references: :scene_id)
-    belongs_to(:model_owned_file, Ret.OwnedFile, references: :owned_file_id)
-    belongs_to(:screenshot_owned_file, Ret.OwnedFile, references: :owned_file_id)
-    belongs_to(:scene_owned_file, Ret.OwnedFile, references: :owned_file_id)
-    has_one(:account, through: [:scene, :account])
-    has_one(:project, through: [:scene, :project])
-    field(:order, :integer)
-    field(:state, SceneListing.State)
+    field :scene_listing_sid, :string
+    field :slug, SceneListingSlug.Type
+    field :name, :string
+    field :description, :string
+    field :tags, :map
+    field :attributions, :map
+    field :order, :integer
+    field :state, SceneListing.State
+
+    belongs_to :scene, Ret.Scene, references: :scene_id
+    belongs_to :model_owned_file, Ret.OwnedFile, references: :owned_file_id
+    belongs_to :screenshot_owned_file, Ret.OwnedFile, references: :owned_file_id
+    belongs_to :scene_owned_file, Ret.OwnedFile, references: :owned_file_id
+
+    has_one :account, through: [:scene, :account]
+    has_one :project, through: [:scene, :project]
 
     timestamps()
   end

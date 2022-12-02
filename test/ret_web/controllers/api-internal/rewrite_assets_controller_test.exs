@@ -6,10 +6,14 @@ defmodule RetWeb.ApiInternal.V1.RewriteAssetsControllerTest do
   @dashboard_access_key "test-key"
 
   setup_all do
-    merge_module_config(:ret, RetWeb.Plugs.DashboardHeaderAuthorization, %{dashboard_access_key: @dashboard_access_key})
+    merge_module_config(:ret, RetWeb.Plugs.DashboardHeaderAuthorization, %{
+      dashboard_access_key: @dashboard_access_key
+    })
 
     on_exit(fn ->
-      Ret.TestHelpers.merge_module_config(:ret, RetWeb.Plugs.DashboardHeaderAuthorization, %{dashboard_access_key: nil})
+      Ret.TestHelpers.merge_module_config(:ret, RetWeb.Plugs.DashboardHeaderAuthorization, %{
+        dashboard_access_key: nil
+      })
     end)
   end
 
@@ -29,6 +33,9 @@ defmodule RetWeb.ApiInternal.V1.RewriteAssetsControllerTest do
   defp post_rewrite_assets(conn, new_domain, old_domain) do
     conn
     |> put_req_header(@dashboard_access_header, @dashboard_access_key)
-    |> post("/api-internal/v1/rewrite_assets", %{"old_domain" => old_domain, "new_domain" => new_domain})
+    |> post("/api-internal/v1/rewrite_assets", %{
+      "old_domain" => old_domain,
+      "new_domain" => new_domain
+    })
   end
 end

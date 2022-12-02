@@ -3,7 +3,7 @@ defmodule Ret.Repo.Migrations.AddCreatorAssignmentToken do
 
   def change do
     alter table("hubs") do
-      add(:creator_assignment_token, :string)
+      add :creator_assignment_token, :string
     end
   end
 end

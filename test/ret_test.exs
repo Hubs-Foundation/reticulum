@@ -2,7 +2,9 @@ defmodule RetTest do
   use Ret.DataCase
 
   import Ret.Schema, only: [is_schema: 1]
-  import Ret.TestHelpers, only: [create_admin_account: 1, create_account: 1, generate_temp_owned_file: 1]
+
+  import Ret.TestHelpers,
+    only: [create_admin_account: 1, create_account: 1, generate_temp_owned_file: 1]
 
   alias Ret.{
     Account,
@@ -43,7 +45,10 @@ defmodule RetTest do
       refute repo_reload(account_to_delete)
     end
 
-    test "deletes account owned files", %{account_to_delete: account_to_delete, current_user: current_user} do
+    test "deletes account owned files", %{
+      account_to_delete: account_to_delete,
+      current_user: current_user
+    } do
       owned_file = generate_temp_owned_file(account_to_delete)
 
       %OwnedFile{} = repo_reload(owned_file)
@@ -54,7 +59,10 @@ defmodule RetTest do
       refute file_on_disk?(owned_file)
     end
 
-    test "deletes account favorites", %{account_to_delete: account_to_delete, current_user: current_user} do
+    test "deletes account favorites", %{
+      account_to_delete: account_to_delete,
+      current_user: current_user
+    } do
       own_hub = create_hub(account_to_delete)
       member_hub = create_hub()
       favorite1 = Repo.insert!(%AccountFavorite{account: account_to_delete, hub: own_hub})
@@ -65,7 +73,10 @@ defmodule RetTest do
       refute repo_reload(favorite2)
     end
 
-    test "deletes API credentials", %{account_to_delete: account_to_delete, current_user: current_user} do
+    test "deletes API credentials", %{
+      account_to_delete: account_to_delete,
+      current_user: current_user
+    } do
       Api.TokenUtils.gen_token_for_account(account_to_delete)
       credentials = Repo.get_by(Api.Credentials, account_id: account_to_delete.account_id)
 
@@ -82,7 +93,10 @@ defmodule RetTest do
       refute repo_reload(asset)
     end
 
-    test "deletes asset owned files", %{account_to_delete: account_to_delete, current_user: current_user} do
+    test "deletes asset owned files", %{
+      account_to_delete: account_to_delete,
+      current_user: current_user
+    } do
       asset = create_asset(account_to_delete)
       owned_files = owned_files(asset, [:asset_owned_file, :thumbnail_owned_file])
 
@@ -108,7 +122,10 @@ defmodule RetTest do
       refute repo_reload(avatar)
     end
 
-    test "deletes avatar owned files", %{account_to_delete: account_to_delete, current_user: current_user} do
+    test "deletes avatar owned files", %{
+      account_to_delete: account_to_delete,
+      current_user: current_user
+    } do
       avatar = create_avatar(account_to_delete)
       owned_files = avatar_owned_files(avatar)
 
@@ -125,7 +142,10 @@ defmodule RetTest do
       end
     end
 
-    test "reassigns parent avatars to current user", %{account_to_delete: account_to_delete, current_user: current_user} do
+    test "reassigns parent avatars to current user", %{
+      account_to_delete: account_to_delete,
+      current_user: current_user
+    } do
       account_to_delete_id = account_to_delete.account_id
       avatar = create_avatar(account_to_delete)
       create_child_avatar(avatar)
@@ -159,7 +179,10 @@ defmodule RetTest do
       end
     end
 
-    test "reassigns listed avatars to current user", %{account_to_delete: account_to_delete, current_user: current_user} do
+    test "reassigns listed avatars to current user", %{
+      account_to_delete: account_to_delete,
+      current_user: current_user
+    } do
       account_to_delete_id = account_to_delete.account_id
       avatar = create_avatar(account_to_delete)
       create_avatar_listing(avatar)
@@ -202,7 +225,10 @@ defmodule RetTest do
       refute repo_reload(hub)
     end
 
-    test "deletes hub account favorites", %{account_to_delete: account_to_delete, current_user: current_user} do
+    test "deletes hub account favorites", %{
+      account_to_delete: account_to_delete,
+      current_user: current_user
+    } do
       hub = create_hub(account_to_delete)
       other_account = create_account("other account")
       favorite = Repo.insert!(%AccountFavorite{account: other_account, hub: hub})
@@ -211,7 +237,10 @@ defmodule RetTest do
       refute repo_reload(favorite)
     end
 
-    test "deletes hub bindings", %{account_to_delete: account_to_delete, current_user: current_user} do
+    test "deletes hub bindings", %{
+      account_to_delete: account_to_delete,
+      current_user: current_user
+    } do
       hub = create_hub(account_to_delete)
 
       binding =
@@ -226,7 +255,10 @@ defmodule RetTest do
       refute repo_reload(binding)
     end
 
-    test "deletes hub invites", %{account_to_delete: account_to_delete, current_user: current_user} do
+    test "deletes hub invites", %{
+      account_to_delete: account_to_delete,
+      current_user: current_user
+    } do
       hub = create_hub(account_to_delete)
       invite = Repo.insert!(%HubInvite{hub: hub, hub_invite_sid: "dummy sid"})
 
@@ -234,7 +266,10 @@ defmodule RetTest do
       refute repo_reload(invite)
     end
 
-    test "deletes hub hub-role memberships", %{account_to_delete: account_to_delete, current_user: current_user} do
+    test "deletes hub hub-role memberships", %{
+      account_to_delete: account_to_delete,
+      current_user: current_user
+    } do
       hub = create_hub(account_to_delete)
       other_account = create_account("other account")
       membership = Repo.insert!(%HubRoleMembership{account: other_account, hub: hub})
@@ -243,7 +278,10 @@ defmodule RetTest do
       refute repo_reload(membership)
     end
 
-    test "deletes hub room objects", %{account_to_delete: account_to_delete, current_user: current_user} do
+    test "deletes hub room objects", %{
+      account_to_delete: account_to_delete,
+      current_user: current_user
+    } do
       hub = create_hub(account_to_delete)
       other_account = create_account("other account")
       object = create_room_object(hub, other_account)
@@ -254,17 +292,28 @@ defmodule RetTest do
       refute repo_reload(object)
     end
 
-    test "deletes hub web push subscriptions", %{account_to_delete: account_to_delete, current_user: current_user} do
+    test "deletes hub web push subscriptions", %{
+      account_to_delete: account_to_delete,
+      current_user: current_user
+    } do
       hub = create_hub(account_to_delete)
 
       subscription =
-        Repo.insert!(%WebPushSubscription{auth: "fake auth", endpoint: "fake endpoint", hub: hub, p256dh: "fake key"})
+        Repo.insert!(%WebPushSubscription{
+          auth: "fake auth",
+          endpoint: "fake endpoint",
+          hub: hub,
+          p256dh: "fake key"
+        })
 
       assert :ok === Ret.delete_account(account_to_delete.account_id, current_user)
       refute repo_reload(subscription)
     end
 
-    test "deletes hub-role memberships", %{account_to_delete: account_to_delete, current_user: current_user} do
+    test "deletes hub-role memberships", %{
+      account_to_delete: account_to_delete,
+      current_user: current_user
+    } do
       own_hub = create_hub(account_to_delete)
       member_hub = create_hub()
       membership1 = Repo.insert!(%HubRoleMembership{account: account_to_delete, hub: own_hub})
@@ -291,7 +340,10 @@ defmodule RetTest do
       refute repo_reload(login)
     end
 
-    test "deletes OAuth providers", %{account_to_delete: account_to_delete, current_user: current_user} do
+    test "deletes OAuth providers", %{
+      account_to_delete: account_to_delete,
+      current_user: current_user
+    } do
       provider =
         Repo.insert!(%OAuthProvider{
           account: account_to_delete,
@@ -312,7 +364,10 @@ defmodule RetTest do
       refute repo_reload(project)
     end
 
-    test "deletes project owned files", %{account_to_delete: account_to_delete, current_user: current_user} do
+    test "deletes project owned files", %{
+      account_to_delete: account_to_delete,
+      current_user: current_user
+    } do
       project = create_project(account_to_delete)
       owned_files = owned_files(project, [:project_owned_file, :thumbnail_owned_file])
 
@@ -329,7 +384,10 @@ defmodule RetTest do
       end
     end
 
-    test "deletes project assets", %{account_to_delete: account_to_delete, current_user: current_user} do
+    test "deletes project assets", %{
+      account_to_delete: account_to_delete,
+      current_user: current_user
+    } do
       %{project_id: project_id} = create_project(account_to_delete)
       %{asset_id: asset_id} = create_asset(account_to_delete)
       project_asset = Repo.insert!(%ProjectAsset{asset_id: asset_id, project_id: project_id})
@@ -338,7 +396,10 @@ defmodule RetTest do
       refute repo_reload(project_asset)
     end
 
-    test "deletes room objects", %{account_to_delete: account_to_delete, current_user: current_user} do
+    test "deletes room objects", %{
+      account_to_delete: account_to_delete,
+      current_user: current_user
+    } do
       own_hub = create_hub(account_to_delete)
       member_hub = create_hub()
       object1 = create_room_object(own_hub, account_to_delete)
@@ -361,7 +422,10 @@ defmodule RetTest do
       refute repo_reload(scene)
     end
 
-    test "deletes scene owned files", %{account_to_delete: account_to_delete, current_user: current_user} do
+    test "deletes scene owned files", %{
+      account_to_delete: account_to_delete,
+      current_user: current_user
+    } do
       scene = create_scene(account_to_delete)
       owned_files = scene_owned_files(scene)
 
@@ -378,7 +442,10 @@ defmodule RetTest do
       end
     end
 
-    test "rassigns parent scenes to current user", %{account_to_delete: account_to_delete, current_user: current_user} do
+    test "rassigns parent scenes to current user", %{
+      account_to_delete: account_to_delete,
+      current_user: current_user
+    } do
       account_to_delete_id = account_to_delete.account_id
       scene = create_scene(account_to_delete)
       create_child_scene(scene)
@@ -412,7 +479,10 @@ defmodule RetTest do
       end
     end
 
-    test "reassigns listed scenes to current user", %{account_to_delete: account_to_delete, current_user: current_user} do
+    test "reassigns listed scenes to current user", %{
+      account_to_delete: account_to_delete,
+      current_user: current_user
+    } do
       account_to_delete_id = account_to_delete.account_id
       scene = create_scene(account_to_delete)
       create_scene_listing(scene)
@@ -449,14 +519,18 @@ defmodule RetTest do
     test "with a non-admin user", %{account_to_delete: account_to_delete} do
       current_user = create_account("non-admin")
 
-      assert {:error, :forbidden} === Ret.delete_account(account_to_delete.account_id, current_user)
+      assert {:error, :forbidden} ===
+               Ret.delete_account(account_to_delete.account_id, current_user)
+
       assert repo_reload(account_to_delete)
     end
 
     test "with an admin account to delete", %{current_user: current_user} do
       {:ok, admin_account: account_to_delete} = create_admin_account("admin account")
 
-      assert {:error, :forbidden} === Ret.delete_account(account_to_delete.account_id, current_user)
+      assert {:error, :forbidden} ===
+               Ret.delete_account(account_to_delete.account_id, current_user)
+
       assert repo_reload(account_to_delete)
     end
 
@@ -587,7 +661,12 @@ defmodule RetTest do
   @spec create_hub(Account.t()) :: Hub.t()
   defp create_hub(%Account{} = account),
     do:
-      Repo.insert!(%Hub{created_by_account: account, name: "test hub", scene: create_scene(account), slug: "dummy-slug"})
+      Repo.insert!(%Hub{
+        created_by_account: account,
+        name: "test hub",
+        scene: create_scene(account),
+        slug: "dummy-slug"
+      })
 
   @spec create_project(Account.t()) :: Project.t()
   defp create_project(%Account{} = account) do
@@ -606,7 +685,13 @@ defmodule RetTest do
 
   @spec create_room_object(Hub.t(), Account.t()) :: RoomObject.t()
   defp create_room_object(%Hub{} = hub, %Account{} = account),
-    do: Repo.insert!(%RoomObject{account: account, gltf_node: "fake node", hub: hub, object_id: "fake id"})
+    do:
+      Repo.insert!(%RoomObject{
+        account: account,
+        gltf_node: "fake node",
+        hub: hub,
+        object_id: "fake id"
+      })
 
   @spec create_scene(Account.t()) :: Scene.t()
   defp create_scene(%Account{} = account) do

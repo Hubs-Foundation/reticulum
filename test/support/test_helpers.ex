@@ -1,5 +1,17 @@
 defmodule Ret.TestHelpers do
-  alias Ret.{Storage, Project, Account, Asset, ProjectAsset, Scene, SceneListing, Repo, Hub, Avatar, AvatarListing}
+  alias Ret.{
+    Account,
+    Asset,
+    Avatar,
+    AvatarListing,
+    Hub,
+    Project,
+    ProjectAsset,
+    Repo,
+    Scene,
+    SceneListing,
+    Storage
+  }
 
   def generate_temp_owned_file(account) do
     temp_file = generate_temp_file("test")
@@ -71,7 +83,9 @@ defmodule Ret.TestHelpers do
   end
 
   def create_scene(%Account{} = account) do
-    {:ok, scene: scene} = create_scene(%{account: account, owned_file: generate_temp_owned_file(account)})
+    {:ok, scene: scene} =
+      create_scene(%{account: account, owned_file: generate_temp_owned_file(account)})
+
     scene
   end
 
@@ -85,7 +99,10 @@ defmodule Ret.TestHelpers do
       })
       |> Repo.insert_or_update()
 
-    scene = scene |> Repo.preload([:model_owned_file, :screenshot_owned_file, :scene_owned_file, :account])
+    scene =
+      scene
+      |> Repo.preload([:model_owned_file, :screenshot_owned_file, :scene_owned_file, :account])
+
     {:ok, scene: scene}
   end
 
@@ -156,7 +173,9 @@ defmodule Ret.TestHelpers do
 
   def create_project_owned_file(%{account: account}) do
     project_file = Path.expand("../fixtures/spoke-project.json", __DIR__)
-    {:ok, project_owned_file: generate_fixture_owned_file(account, project_file, "application/json")}
+
+    {:ok,
+     project_owned_file: generate_fixture_owned_file(account, project_file, "application/json")}
   end
 
   def create_thumbnail_owned_file(%{account: account}) do
@@ -180,7 +199,9 @@ defmodule Ret.TestHelpers do
       })
       |> Repo.insert_or_update()
 
-    project = project |> Repo.preload([:project_owned_file, :thumbnail_owned_file, :created_by_account])
+    project =
+      project |> Repo.preload([:project_owned_file, :thumbnail_owned_file, :created_by_account])
+
     {:ok, project: project}
   end
 

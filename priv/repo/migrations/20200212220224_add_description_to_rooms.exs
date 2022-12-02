@@ -3,7 +3,7 @@ defmodule Ret.Repo.Migrations.AddDescriptionToRooms do
 
   def change do
     alter table("hubs") do
-      add(:description, :string, size: 64_000)
+      add :description, :string, size: 64_000
     end
   end
 end

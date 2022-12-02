@@ -56,9 +56,6 @@ defmodule RetWeb.AuthChannelTest do
 
   defp login_token_for_email_exists?(email) do
     email_hash = Account.identifier_hash_for_email(email)
-
-    Ret.LoginToken
-    |> where([t], t.identifier_hash == ^email_hash)
-    |> Repo.exists?()
+    Repo.exists?(from t in Ret.LoginToken, where: t.identifier_hash == ^email_hash)
   end
 end

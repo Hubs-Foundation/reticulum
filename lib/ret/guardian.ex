@@ -18,10 +18,14 @@ defmodule Ret.Guardian do
   def resource_from_claims(%{"sub" => account_id, "iat" => issued_at}) do
     issued_at_utc_datetime = DateTime.from_unix!(issued_at, :second) |> DateTime.to_iso8601()
 
-    Account
-    |> where([a], a.account_id == ^account_id and a.min_token_issued_at <= ^issued_at_utc_datetime)
+    query =
+      from a in Account,
+        where: a.account_id == ^account_id,
+        where: a.min_token_issued_at <= ^issued_at_utc_datetime,
+        preload: [:oauth_providers, :identity]
+
+    query
     |> Repo.one()
-    |> Repo.preload([:oauth_providers, :identity])
     |> result_for_account
   end
 

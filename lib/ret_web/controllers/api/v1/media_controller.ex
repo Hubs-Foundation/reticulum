@@ -6,28 +6,42 @@ defmodule RetWeb.Api.V1.MediaController do
   def create(conn, %{"media" => %{"url" => url, "quality" => quality}, "version" => version}),
     do: resolve_and_render(conn, url, version, String.to_atom(quality))
 
-  def create(conn, %{"media" => %{"url" => url}, "version" => version}), do: resolve_and_render(conn, url, version)
+  def create(conn, %{"media" => %{"url" => url}, "version" => version}),
+    do: resolve_and_render(conn, url, version)
+
   def create(conn, %{"media" => %{"url" => url}}), do: resolve_and_render(conn, url, 1)
 
   def create(
         conn,
-        %{"media" => %Plug.Upload{filename: filename, content_type: "application/octet-stream"} = upload} = params
+        %{
+          "media" =>
+            %Plug.Upload{filename: filename, content_type: "application/octet-stream"} = upload
+        } = params
       ) do
     desired_content_type = params |> Map.get("desired_content_type")
     content_type_from_path = MIME.from_path(filename)
 
-    if [desired_content_type, content_type_from_path] |> Enum.any?(&RetWeb.ContentType.is_forbidden_content_type/1) do
+    if [desired_content_type, content_type_from_path]
+       |> Enum.any?(&RetWeb.ContentType.is_forbidden_content_type/1) do
       conn |> send_resp(403, "")
     else
       promotion_token = params |> promotion_token_for_params
-      store_and_render_upload(conn, upload, content_type_from_path, desired_content_type, promotion_token)
+
+      store_and_render_upload(
+        conn,
+        upload,
+        content_type_from_path,
+        desired_content_type,
+        promotion_token
+      )
     end
   end
 
   def create(conn, %{"media" => %Plug.Upload{content_type: content_type} = upload} = params) do
     desired_content_type = params |> Map.get("desired_content_type")
 
-    if [desired_content_type, content_type] |> Enum.any?(&RetWeb.ContentType.is_forbidden_content_type/1) do
+    if [desired_content_type, content_type]
+       |> Enum.any?(&RetWeb.ContentType.is_forbidden_content_type/1) do
       conn |> send_resp(403, "")
     else
       promotion_token = params |> promotion_token_for_params
@@ -38,7 +52,13 @@ defmodule RetWeb.Api.V1.MediaController do
   defp promotion_token_for_params(%{"promotion_mode" => "with_token"}), do: SecureRandom.hex()
   defp promotion_token_for_params(_params), do: nil
 
-  defp store_and_render_upload(conn, upload, content_type, nil = _desired_content_type, promotion_token) do
+  defp store_and_render_upload(
+         conn,
+         upload,
+         content_type,
+         nil = _desired_content_type,
+         promotion_token
+       ) do
     store_and_render_upload(conn, upload, content_type, promotion_token)
   end
 
@@ -54,7 +74,12 @@ defmodule RetWeb.Api.V1.MediaController do
         store_and_render_upload(conn, converted_upload, desired_content_type, promotion_token)
 
       _ ->
-        store_and_render_upload(conn, upload, desired_content_type || content_type, promotion_token)
+        store_and_render_upload(
+          conn,
+          upload,
+          desired_content_type || content_type,
+          promotion_token
+        )
     end
   end
 
@@ -71,7 +96,11 @@ defmodule RetWeb.Api.V1.MediaController do
           file_id: uuid,
           origin: uri |> URI.to_string(),
           raw: uri |> URI.to_string(),
-          meta: %{access_token: access_token, promotion_token: promotion_token, expected_content_type: content_type}
+          meta: %{
+            access_token: access_token,
+            promotion_token: promotion_token,
+            expected_content_type: content_type
+          }
         )
 
       {:error, :quota} ->
@@ -124,11 +153,21 @@ defmodule RetWeb.Api.V1.MediaController do
   end
 
   defp maybe_do_telemetry({:commit, nil}), do: Statix.increment("ret.media_resolver.404")
-  defp maybe_do_telemetry({:commit, %Ret.ResolvedMedia{}}), do: Statix.increment("ret.media_resolver.ok")
-  defp maybe_do_telemetry({:commit, :forbidden}), do: Statix.increment("ret.media_resolver.forbidden")
-  defp maybe_do_telemetry({:error, _reason}), do: Statix.increment("ret.media_resolver.unknown_error")
+
+  defp maybe_do_telemetry({:commit, %Ret.ResolvedMedia{}}),
+    do: Statix.increment("ret.media_resolver.ok")
+
+  defp maybe_do_telemetry({:commit, :forbidden}),
+    do: Statix.increment("ret.media_resolver.forbidden")
+
+  defp maybe_do_telemetry({:error, _reason}),
+    do: Statix.increment("ret.media_resolver.unknown_error")
+
   defp maybe_do_telemetry({:commit, :error}), do: Statix.increment("ret.media_resolver.500")
-  defp maybe_do_telemetry({:commit, {:error, _reason}}), do: Statix.increment("ret.media_resolver.500")
+
+  defp maybe_do_telemetry({:commit, {:error, _reason}}),
+    do: Statix.increment("ret.media_resolver.500")
+
   defp maybe_do_telemetry(_), do: nil
 
   defp maybe_bump_ttl({_status, %Ret.ResolvedMedia{ttl: ttl}}, query) do
@@ -177,7 +216,12 @@ defmodule RetWeb.Api.V1.MediaController do
 
   defp render_resolved_media(conn, %Ret.ResolvedMedia{uri: uri, audio_uri: audio_uri, meta: meta})
        when audio_uri != nil do
-    conn |> render("show.json", origin: uri |> URI.to_string(), origin_audio: audio_uri |> URI.to_string(), meta: meta)
+    conn
+    |> render("show.json",
+      origin: uri |> URI.to_string(),
+      origin_audio: audio_uri |> URI.to_string(),
+      meta: meta
+    )
   end
 
   defp render_resolved_media(conn, %Ret.ResolvedMedia{uri: uri, meta: meta}) do

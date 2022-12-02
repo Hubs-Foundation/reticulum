@@ -48,7 +48,8 @@ defmodule Ret.Api.Rooms do
   end
 
   def authed_update_room(hub_sid, %Credentials{} = credentials, params) do
-    hub = Hub |> Repo.get_by(hub_sid: hub_sid) |> Repo.preload([:hub_role_memberships, :hub_bindings])
+    hub =
+      Hub |> Repo.get_by(hub_sid: hub_sid) |> Repo.preload([:hub_role_memberships, :hub_bindings])
 
     if is_nil(hub) do
       {:error, "Cannot find room with id: " <> hub_sid}
@@ -87,7 +88,11 @@ defmodule Ret.Api.Rooms do
       {:ok, hub} ->
         hub = Repo.preload(hub, Hub.hub_preloads())
 
-        case broadcast_hub_refresh(hub, subject, Map.keys(changeset.changes) |> Enum.map(&Atom.to_string(&1))) do
+        case broadcast_hub_refresh(
+               hub,
+               subject,
+               Map.keys(changeset.changes) |> Enum.map(&Atom.to_string(&1))
+             ) do
           {:error, reason} -> {:error, reason}
           :ok -> {:ok, hub}
         end

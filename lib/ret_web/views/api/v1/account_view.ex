@@ -3,7 +3,10 @@ defmodule RetWeb.Api.V1.AccountView do
 
   alias Ret.{Account, Identity}
 
-  def render("create.json", %{account: %Account{identity: %Identity{name: name}} = account, email: email}) do
+  def render("create.json", %{
+        account: %Account{identity: %Identity{name: name}} = account,
+        email: email
+      }) do
     %{
       id: "#{account.account_id}",
       login: %{email: email},

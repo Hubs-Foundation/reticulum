@@ -15,20 +15,23 @@ defmodule Ret.Api.Credentials do
   @primary_key {:api_credentials_id, :id, autogenerate: true}
 
   schema "api_credentials" do
-    field(:api_credentials_sid, :string)
-    field(:token_hash, :string)
-    field(:subject_type, TokenSubjectType)
-    field(:is_revoked, :boolean)
-    field(:scopes, {:array, ScopeType})
+    field :api_credentials_sid, :string
+    field :token_hash, :string
+    field :subject_type, TokenSubjectType
+    field :is_revoked, :boolean
+    field :scopes, {:array, ScopeType}
 
-    belongs_to(:account, Account, references: :account_id)
+    belongs_to :account, Account, references: :account_id
+
     timestamps()
   end
 
   @required_keys [:api_credentials_sid, :token_hash, :subject_type, :is_revoked, :scopes]
   @permitted_keys @required_keys
 
-  def generate_credentials(%{subject_type: _st, scopes: _sc, account_or_nil: account_or_nil} = params) do
+  def generate_credentials(
+        %{subject_type: _st, scopes: _sc, account_or_nil: account_or_nil} = params
+      ) do
     sid = Ret.Sids.generate_sid()
 
     # Use 18 bytes (not 16, the default) to avoid having all tokens end in "09"
@@ -89,7 +92,10 @@ defmodule Ret.Api.Credentials do
     if TokenSubjectType.valid_value?(subject_type) do
       []
     else
-      [invalid_subject_type: "Unrecognized subject type. Must be app or account. Got #{subject_type}."]
+      [
+        invalid_subject_type:
+          "Unrecognized subject type. Must be app or account. Got #{subject_type}."
+      ]
     end
   end
 
@@ -101,34 +107,29 @@ defmodule Ret.Api.Credentials do
   end
 
   def query do
-    from(c in Credentials, left_join: a in Account, on: c.account_id == a.account_id, preload: [account: a])
+    from c in Credentials,
+      left_join: a in Account,
+      on: c.account_id == a.account_id,
+      preload: [account: a]
   end
 
   def where_sid_is(query, sid) do
-    from([credential, _account] in query,
-      where: credential.api_credentials_sid == ^sid
-    )
+    from [credential, _account] in query, where: credential.api_credentials_sid == ^sid
   end
 
   def where_token_hash_is(query, hash) do
-    from([credential, _account] in query,
-      where: credential.token_hash == ^hash
-    )
+    from [credential, _account] in query, where: credential.token_hash == ^hash
   end
 
   def where_account_is(query, %Account{account_id: id}) do
-    from([credential, _account] in query,
-      where: credential.account_id == ^id
-    )
+    from [credential, _account] in query, where: credential.account_id == ^id
   end
 
   def where_token_is_not_revoked(query) do
-    from([credential, _account] in query,
-      where: not credential.is_revoked
-    )
+    from [credential, _account] in query, where: not credential.is_revoked
   end
 
   def app_token_query() do
-    from(c in Credentials, where: c.subject_type == ^:app)
+    from c in Credentials, where: c.subject_type == ^:app
   end
 end

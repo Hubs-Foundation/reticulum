@@ -11,18 +11,18 @@ defmodule Ret.Asset do
   @schema_prefix "ret0"
   @primary_key {:asset_id, :id, autogenerate: true}
   schema "assets" do
-    field(:asset_sid, :string)
-    field(:name, :string)
-    field(:type, Ret.Asset.Type)
-    belongs_to(:account, Ret.Account, references: :account_id)
-    belongs_to(:asset_owned_file, Ret.OwnedFile, references: :owned_file_id)
-    belongs_to(:thumbnail_owned_file, Ret.OwnedFile, references: :owned_file_id)
+    field :asset_sid, :string
+    field :name, :string
+    field :type, Ret.Asset.Type
 
-    many_to_many(:projects, Ret.Project,
+    belongs_to :account, Ret.Account, references: :account_id
+    belongs_to :asset_owned_file, Ret.OwnedFile, references: :owned_file_id
+    belongs_to :thumbnail_owned_file, Ret.OwnedFile, references: :owned_file_id
+
+    many_to_many :projects, Ret.Project,
       join_through: Ret.ProjectAsset,
       join_keys: [asset_id: :asset_id, project_id: :project_id],
       on_replace: :delete
-    )
 
     timestamps()
   end
@@ -33,8 +33,15 @@ defmodule Ret.Asset do
     |> Repo.insert()
   end
 
-  def create_asset_and_project_asset(account, project, asset_owned_file, thumbnail_owned_file, params) do
-    asset_changeset = Asset.changeset(%Asset{}, account, asset_owned_file, thumbnail_owned_file, params)
+  def create_asset_and_project_asset(
+        account,
+        project,
+        asset_owned_file,
+        thumbnail_owned_file,
+        params
+      ) do
+    asset_changeset =
+      Asset.changeset(%Asset{}, account, asset_owned_file, thumbnail_owned_file, params)
 
     multi =
       Multi.new()
@@ -48,11 +55,12 @@ defmodule Ret.Asset do
   end
 
   def asset_by_sid_for_account(asset_sid, account) do
-    from(a in Asset,
-      where: a.asset_sid == ^asset_sid and a.account_id == ^account.account_id,
-      preload: [:account, :asset_owned_file, :thumbnail_owned_file]
+    Repo.one(
+      from a in Asset,
+        where: a.asset_sid == ^asset_sid,
+        where: a.account_id == ^account.account_id,
+        preload: [:account, :asset_owned_file, :thumbnail_owned_file]
     )
-    |> Repo.one()
   end
 
   # Create an Asset

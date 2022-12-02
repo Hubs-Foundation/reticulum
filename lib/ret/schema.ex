@@ -5,7 +5,9 @@ defmodule Ret.Schema do
 
   @spec is_struct(term) :: boolean
   defguardp is_struct(term)
-            when is_map(term) and :erlang.is_map_key(:__struct__, term) and is_atom(:erlang.map_get(:__struct__, term))
+            when is_map(term) and
+                   :erlang.is_map_key(:__struct__, term) and
+                   is_atom(:erlang.map_get(:__struct__, term))
 
   @spec is_struct(term, module) :: boolean
   defguardp is_struct(term, module)

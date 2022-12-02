@@ -24,7 +24,7 @@ defmodule Ret.Repo.Migrations.AddForeignReferencesAndDeleteBehaviorToTables do
   def up do
     for {table, column, foreign_table} <- @missing_reference do
       alter table(table) do
-        modify(column, references(foreign_table, column: column, on_delete: :delete_all))
+        modify column, references(foreign_table, column: column, on_delete: :delete_all)
       end
     end
 
@@ -32,7 +32,7 @@ defmodule Ret.Repo.Migrations.AddForeignReferencesAndDeleteBehaviorToTables do
       drop_foreign_constraint(table, column)
 
       alter table(table) do
-        modify(column, references(foreign_table, column: foreign_column, on_delete: :delete_all))
+        modify column, references(foreign_table, column: foreign_column, on_delete: :delete_all)
       end
     end
   end
@@ -46,12 +46,13 @@ defmodule Ret.Repo.Migrations.AddForeignReferencesAndDeleteBehaviorToTables do
       drop_foreign_constraint(table, column)
 
       alter table(table) do
-        modify(column, references(foreign_table, column: foreign_column, on_delete: :nothing))
+        modify column, references(foreign_table, column: foreign_column, on_delete: :nothing)
       end
     end
   end
 
   @spec drop_foreign_constraint(String.t(), String.t()) :: :ok
-  defp drop_foreign_constraint(table, column) when is_atom(table) and is_atom(column),
-    do: execute("ALTER TABLE #{table} DROP CONSTRAINT #{table}_#{column}_fkey")
+  defp drop_foreign_constraint(table, column) when is_atom(table) and is_atom(column) do
+    execute "ALTER TABLE #{table} DROP CONSTRAINT #{table}_#{column}_fkey"
+  end
 end

@@ -3,9 +3,9 @@ defmodule Ret.Repo.Migrations.AddCreatedByToHubs do
 
   def change do
     alter table("hubs") do
-      add(:created_by_account_id, references(:accounts, column: :account_id))
+      add :created_by_account_id, references(:accounts, column: :account_id)
     end
 
-    create(index(:hubs, [:created_by_account_id]))
+    create index(:hubs, [:created_by_account_id])
   end
 end

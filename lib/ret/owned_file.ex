@@ -9,12 +9,13 @@ defmodule Ret.OwnedFile do
   @schema_prefix "ret0"
   @primary_key {:owned_file_id, :id, autogenerate: true}
   schema "owned_files" do
-    field(:owned_file_uuid, :string)
-    field(:key, :string)
-    field(:content_type, :string)
-    field(:content_length, :integer)
-    field(:state, OwnedFile.State)
-    belongs_to(:account, Account, references: :account_id)
+    field :owned_file_uuid, :string
+    field :key, :string
+    field :content_type, :string
+    field :content_length, :integer
+    field :state, OwnedFile.State
+
+    belongs_to :account, Account, references: :account_id
 
     timestamps()
   end
@@ -35,9 +36,7 @@ defmodule Ret.OwnedFile do
   end
 
   def inactive() do
-    OwnedFile
-    |> where(state: "inactive")
-    |> Repo.all()
+    Repo.all(from OwnedFile, where: [state: ^:inactive])
   end
 
   def set_active(owned_file_uuid, account_id) do
@@ -53,9 +52,7 @@ defmodule Ret.OwnedFile do
   end
 
   def get_by_uuid_and_account(owned_file_uuid, account_id) do
-    OwnedFile
-    |> where(owned_file_uuid: ^owned_file_uuid, account_id: ^account_id)
-    |> Repo.one()
+    Repo.one(from OwnedFile, where: [owned_file_uuid: ^owned_file_uuid, account_id: ^account_id])
   end
 
   defp set_state(nil, _state), do: nil

@@ -54,7 +54,9 @@ defmodule RetWeb.Api.V1.SceneView do
   defp add_scene_or_listing_fields(map, %Scene{} = scene, account) do
     map
     |> Map.merge(%{
-      account_id: account && scene.account_id == account.account_id && scene.account_id |> Integer.to_string(),
+      account_id:
+        account && scene.account_id == account.account_id &&
+          scene.account_id |> Integer.to_string(),
       parent_scene_id: (scene.parent_scene_listing || scene.parent_scene) |> Scene.to_sid(),
       attribution: scene.attribution,
       allow_remixing: scene.allow_remixing,

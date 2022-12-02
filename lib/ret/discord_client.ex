@@ -31,7 +31,9 @@ defmodule Ret.DiscordClient do
     }
 
     "#{@discord_api_base}/oauth2/token"
-    |> Ret.HttpUtils.retry_post_until_success(body, headers: [{"content-type", "application/x-www-form-urlencoded"}])
+    |> Ret.HttpUtils.retry_post_until_success(body,
+      headers: [{"content-type", "application/x-www-form-urlencoded"}]
+    )
     |> Map.get(:body)
     |> Poison.decode!()
     |> Map.get("access_token")
@@ -39,21 +41,28 @@ defmodule Ret.DiscordClient do
 
   def fetch_user_info(access_token) do
     "#{@discord_api_base}/users/@me"
-    |> Ret.HttpUtils.retry_get_until_success(headers: [{"authorization", "Bearer #{access_token}"}])
+    |> Ret.HttpUtils.retry_get_until_success(
+      headers: [{"authorization", "Bearer #{access_token}"}]
+    )
     |> Map.get(:body)
     |> Poison.decode!()
   end
 
   def has_permission?(nil, _, _), do: false
 
-  def has_permission?(%Ret.OAuthProvider{} = oauth_provider, %Ret.HubBinding{} = hub_binding, permission) do
+  def has_permission?(
+        %Ret.OAuthProvider{} = oauth_provider,
+        %Ret.HubBinding{} = hub_binding,
+        permission
+      ) do
     oauth_provider.provider_account_id |> has_permission?(hub_binding, permission)
   end
 
   def has_permission?(provider_account_id, %Ret.HubBinding{} = hub_binding, permission)
       when is_binary(provider_account_id) do
     permissions =
-      compute_permissions(provider_account_id, hub_binding.community_id, hub_binding.channel_id) |> permissions_to_map
+      compute_permissions(provider_account_id, hub_binding.community_id, hub_binding.channel_id)
+      |> permissions_to_map
 
     permissions[permission]
   end
@@ -76,15 +85,21 @@ defmodule Ret.DiscordClient do
     end
   end
 
-  def fetch_community_identifier(%Ret.OAuthProvider{source: :discord, provider_account_id: provider_account_id}) do
+  def fetch_community_identifier(%Ret.OAuthProvider{
+        source: :discord,
+        provider_account_id: provider_account_id
+      }) do
     case Cachex.fetch(:discord_api, "/users/#{provider_account_id}") do
-      {status, result} when status in [:commit, :ok] -> "#{result["username"]}##{result["discriminator"]}"
+      {status, result} when status in [:commit, :ok] ->
+        "#{result["username"]}##{result["discriminator"]}"
     end
   end
 
   def api_request(path) do
     "#{@discord_api_base}#{path}"
-    |> Ret.HttpUtils.retry_get_until_success(headers: [{"authorization", "Bot #{module_config(:bot_token)}"}])
+    |> Ret.HttpUtils.retry_get_until_success(
+      headers: [{"authorization", "Bot #{module_config(:bot_token)}"}]
+    )
     |> Map.get(:body)
     |> Poison.decode!()
   end
@@ -186,7 +201,8 @@ defmodule Ret.DiscordClient do
         end
 
       # Apply role specific overwrites.
-      user_permissions = user_roles |> Enum.map(&channel_overwrites[&1]) |> Enum.filter(&(&1 != nil))
+      user_permissions =
+        user_roles |> Enum.map(&channel_overwrites[&1]) |> Enum.filter(&(&1 != nil))
 
       allow = user_permissions |> Enum.reduce(@none, &(&1["allow"] ||| &2))
       deny = user_permissions |> Enum.reduce(@none, &(&1["deny"] ||| &2))

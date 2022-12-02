@@ -8,7 +8,9 @@ defmodule Ret.Meta do
   defp base_meta do
     %{
       version: @version,
-      phx_host: module_config(:phx_host) || :net_adm.localhost() |> :net_adm.dns_hostname() |> elem(1) |> to_string,
+      phx_host:
+        module_config(:phx_host) ||
+          :net_adm.localhost() |> :net_adm.dns_hostname() |> elem(1) |> to_string,
       phx_port: Application.get_env(:ret, RetWeb.Endpoint)[:https][:port] |> to_string,
       pool: Application.get_env(:ret, Ret)[:pool]
     }

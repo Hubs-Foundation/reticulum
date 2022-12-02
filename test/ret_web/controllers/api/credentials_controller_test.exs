@@ -39,7 +39,10 @@ defmodule RetWeb.CredentialsControllerTest do
   defp create_credentials_for_another_account(conn, creator_account, account) do
     conn
     |> put_auth_header_for_account(creator_account)
-    |> post(credentials_path(conn, :create), params(valid_scopes(), :account) ++ [account_id: account.account_id])
+    |> post(
+      credentials_path(conn, :create),
+      params(valid_scopes(), :account) ++ [account_id: account.account_id]
+    )
   end
 
   test "Accounts must authenticate to access credentials API.", %{
@@ -157,7 +160,10 @@ defmodule RetWeb.CredentialsControllerTest do
     errors =
       conn
       |> put_auth_header_for_account(admin_account)
-      |> post(create, params([:not_a_valid_scope, :another_invalid_scope], :not_a_valid_subject_type))
+      |> post(
+        create,
+        params([:not_a_valid_scope, :another_invalid_scope], :not_a_valid_subject_type)
+      )
       |> json_response(400)
       |> Map.get("errors")
 

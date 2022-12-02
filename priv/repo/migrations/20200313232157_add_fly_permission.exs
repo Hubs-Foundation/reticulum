@@ -3,21 +3,19 @@ defmodule Ret.Repo.Migrations.AddFlyPermission do
 
   def up do
     alter table("hubs") do
-      modify(:member_permissions, :integer,
+      modify :member_permissions, :integer,
         default:
-          %{
+          Ret.Hub.member_permissions_to_int(%{
             spawn_and_move_media: true,
             spawn_camera: true,
             spawn_drawing: true,
             pin_objects: true,
             spawn_emoji: true,
             fly: true
-          }
-          |> Ret.Hub.member_permissions_to_int()
-      )
+          })
     end
 
-    execute("UPDATE ret0.hubs SET member_permissions = member_permissions | 32;")
+    execute "UPDATE ret0.hubs SET member_permissions = member_permissions | 32"
   end
 
   def down do

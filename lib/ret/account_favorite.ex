@@ -8,9 +8,10 @@ defmodule Ret.AccountFavorite do
   @primary_key {:account_favorite_id, :id, autogenerate: true}
 
   schema "account_favorites" do
-    belongs_to(:account, Ret.Account, references: :account_id)
-    belongs_to(:hub, Ret.Hub, references: :hub_id)
-    field(:last_activated_at, :utc_datetime)
+    field :last_activated_at, :utc_datetime
+
+    belongs_to :account, Ret.Account, references: :account_id
+    belongs_to :hub, Ret.Hub, references: :hub_id
 
     timestamps()
   end

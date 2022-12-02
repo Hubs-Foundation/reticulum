@@ -3,7 +3,7 @@ defmodule Ret.Repo.Migrations.AddHasMediaObjectsBit do
 
   def change do
     alter table("hubs") do
-      add(:spawned_object_types, :int, null: false, default: 0)
+      add :spawned_object_types, :int, null: false, default: 0
     end
   end
 end

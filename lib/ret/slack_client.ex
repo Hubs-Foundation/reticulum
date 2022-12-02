@@ -27,7 +27,9 @@ defmodule Ret.SlackClient do
 
     %{"authed_user" => authed_user} =
       "#{@slack_api_base}/api/oauth.v2.access"
-      |> Ret.HttpUtils.retry_post_until_success(body, headers: [{"content-type", "application/x-www-form-urlencoded"}])
+      |> Ret.HttpUtils.retry_post_until_success(body,
+        headers: [{"content-type", "application/x-www-form-urlencoded"}]
+      )
       |> Map.get(:body)
       |> Poison.decode!()
 
@@ -48,7 +50,11 @@ defmodule Ret.SlackClient do
 
   def has_permission?(nil, _, _), do: false
 
-  def has_permission?(%Ret.OAuthProvider{} = oauth_provider, %Ret.HubBinding{} = hub_binding, permission) do
+  def has_permission?(
+        %Ret.OAuthProvider{} = oauth_provider,
+        %Ret.HubBinding{} = hub_binding,
+        permission
+      ) do
     oauth_provider.provider_account_id |> has_permission?(hub_binding, permission)
   end
 
@@ -100,7 +106,10 @@ defmodule Ret.SlackClient do
     name
   end
 
-  def fetch_community_identifier(%Ret.OAuthProvider{source: _type, provider_account_id: provider_account_id}) do
+  def fetch_community_identifier(%Ret.OAuthProvider{
+        source: _type,
+        provider_account_id: provider_account_id
+      }) do
     %{"user" => %{"real_name" => real_name}} =
       case Cachex.fetch(
              :slack_api,
@@ -114,7 +123,9 @@ defmodule Ret.SlackClient do
 
   def api_request(path) do
     "#{@slack_api_base}#{path}"
-    |> Ret.HttpUtils.retry_get_until_success(headers: [{"authorization", "Bearer #{module_config(:bot_token)}"}])
+    |> Ret.HttpUtils.retry_get_until_success(
+      headers: [{"authorization", "Bearer #{module_config(:bot_token)}"}]
+    )
     |> Map.get(:body)
     |> Poison.decode!()
   end

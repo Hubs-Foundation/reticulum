@@ -6,17 +6,28 @@ defmodule RetWeb.Api.V2.CredentialsController do
   alias Ecto.Changeset
 
   import Ret.Api.TokenUtils,
-    only: [to_claims: 2, authed_create_credentials: 2, authed_list_credentials: 2, authed_revoke_credentials: 2]
+    only: [
+      authed_create_credentials: 2,
+      authed_list_credentials: 2,
+      authed_revoke_credentials: 2,
+      to_claims: 2
+    ]
 
   # Limit to 1 TPS
-  plug(RetWeb.Plugs.RateLimit when action in [:create, :update])
+  plug RetWeb.Plugs.RateLimit when action in [:create, :update]
 
   def index(conn, %{"app" => _anything} = _params) do
-    handle_list_credentials_result(conn, authed_list_credentials(Guardian.Plug.current_resource(conn), :app))
+    handle_list_credentials_result(
+      conn,
+      authed_list_credentials(Guardian.Plug.current_resource(conn), :app)
+    )
   end
 
   def index(conn, _params) do
-    handle_list_credentials_result(conn, authed_list_credentials(Guardian.Plug.current_resource(conn), :account))
+    handle_list_credentials_result(
+      conn,
+      authed_list_credentials(Guardian.Plug.current_resource(conn), :account)
+    )
   end
 
   def show(conn, %{"id" => credentials_sid}) do
@@ -59,7 +70,11 @@ defmodule RetWeb.Api.V2.CredentialsController do
   end
 
   defp handle_list_credentials_result(conn, {:error, :unauthorized}) do
-    render_errors(conn, 401, {:unauthorized, "You do not have permission to view these credentials."})
+    render_errors(
+      conn,
+      401,
+      {:unauthorized, "You do not have permission to view these credentials."}
+    )
   end
 
   defp handle_list_credentials_result(conn, {:error, reason}) do
@@ -74,7 +89,11 @@ defmodule RetWeb.Api.V2.CredentialsController do
   end
 
   defp handle_create_credentials_result(conn, {:error, :unauthorized}) do
-    render_errors(conn, 401, {:unauthorized, "You do not have permission to create these credentials."})
+    render_errors(
+      conn,
+      401,
+      {:unauthorized, "You do not have permission to create these credentials."}
+    )
   end
 
   defp handle_create_credentials_result(conn, {:error, reason}) do
@@ -96,7 +115,11 @@ defmodule RetWeb.Api.V2.CredentialsController do
   end
 
   defp handle_revoke_credentials_result(conn, {:error, :unauthorized}) do
-    render_errors(conn, 401, {:unauthorized, "You do not have permission to revoke these credentials."})
+    render_errors(
+      conn,
+      401,
+      {:unauthorized, "You do not have permission to revoke these credentials."}
+    )
   end
 
   defp handle_revoke_credentials_result(conn, {:error, reason}) do
@@ -119,7 +142,8 @@ defmodule RetWeb.Api.V2.CredentialsController do
 
   defp render_errors(conn, status, %Changeset{} = changeset) do
     render_errors(conn, status,
-      errors: changeset |> Ecto.Changeset.traverse_errors(fn {err, _opts} -> err end) |> Enum.to_list()
+      errors:
+        changeset |> Ecto.Changeset.traverse_errors(fn {err, _opts} -> err end) |> Enum.to_list()
     )
   end
 

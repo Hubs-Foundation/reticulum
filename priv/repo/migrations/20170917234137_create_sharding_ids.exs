@@ -2,10 +2,10 @@ defmodule Ret.Repo.Migrations.CreateShardingIds do
   use Ecto.Migration
 
   def up do
-    execute("create schema if not exists ret0")
-    execute("create sequence ret0.table_id_seq")
+    execute "create schema if not exists ret0"
+    execute "create sequence ret0.table_id_seq"
 
-    execute("""
+    execute """
     CREATE OR REPLACE FUNCTION ret0.next_id(OUT result bigint) AS $$
     DECLARE
     our_epoch bigint := 1505706041000;
@@ -21,10 +21,10 @@ defmodule Ret.Repo.Migrations.CreateShardingIds do
     result := result | (seq_id);
     END;
     $$ LANGUAGE PLPGSQL;
-    """)
+    """
   end
 
   def down do
-    execute("DROP SCHEMA ret0 CASCADE")
+    execute "DROP SCHEMA ret0 CASCADE"
   end
 end
