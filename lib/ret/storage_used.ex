@@ -24,7 +24,7 @@ defmodule Ret.StorageUsed do
       end
     else
       # Not TURKEY_MODE
-      case System.cmd("df", ["-k", storage_path]) do
+      case System.cmd("df", ["-kP", storage_path]) do
         {lines, 0} ->
           line = lines |> String.split("\n") |> Enum.at(1)
 
