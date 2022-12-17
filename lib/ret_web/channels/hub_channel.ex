@@ -455,6 +455,64 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
+  def handle_in("list_entity_states", _, socket) do
+    hub = socket |> hub_for_socket
+    entity_states = Ret.Store.list_entity_states(hub.hub_id)
+
+    {:reply, {:ok, RetWeb.EntityStateView.render("index.json", %{entity_states: entity_states})},
+     socket}
+  end
+
+  def handle_in(
+        "save_entity_state",
+        %{"root_nid" => root_nid, "nid" => nid, "message" => message},
+        socket
+      ) do
+    with {:ok, hub} <- authorize(socket, :write_entity_state) do
+      Ret.Store.save_entity_state!(hub, %{
+        root_nid: root_nid,
+        nid: nid,
+        message: Poison.encode!(message)
+      })
+
+      broadcast!(socket, "entity_state_saved", message)
+      {:reply, :ok, socket}
+    else
+      error -> {:reply, error, socket}
+    end
+  end
+
+  def handle_in(
+        "delete_entity_state",
+        %{"nid" => nid, "message" => message},
+        socket
+      ) do
+    with {:ok, hub} <- authorize(socket, :write_entity_state) do
+      Ret.Store.delete_entity_state!(hub.hub_id, nid)
+      broadcast!(socket, "entity_state_deleted", message)
+      {:reply, :ok, socket}
+    else
+      error -> {:reply, error, socket}
+    end
+  end
+
+  # TODO Should reticulum reject save_entity_state calls with this root_nid
+  #      for some period of time after this is called, in order to prevent
+  #      accidental re-pinning?
+  def handle_in(
+        "delete_entity_states_for_root_nid",
+        %{"nid" => nid, "message" => message},
+        socket
+      ) do
+    with {:ok, hub} <- authorize(socket, :write_entity_state) do
+      Ret.Store.delete_entity_states_for_root_nid!(hub.hub_id, nid)
+      broadcast!(socket, "entity_state_hierarchy_deleted", message)
+      {:reply, :ok, socket}
+    else
+      error -> {:reply, error, socket}
+    end
+  end
+
   def handle_in("get_host", _args, socket) do
     hub = socket |> hub_for_socket |> Hub.ensure_host()
 
@@ -868,6 +926,21 @@ defmodule RetWeb.HubChannel do
         # client should have signed-in at this point,
         # so if we still don't have an account, it must have been an invalid token
         {:reply, {:error, %{reason: :invalid_token}}, socket}
+    end
+  end
+
+  defp authorize(socket, :write_entity_state) do
+    with account <- Guardian.Phoenix.Socket.current_resource(socket),
+         :ok <- if(account === nil, do: :not_logged_in, else: :ok),
+         hub <- hub_for_socket(socket),
+         true <- can?(account, pin_objects(hub)) do
+      {:ok, hub}
+    else
+      :not_logged_in ->
+        {:error, %{reason: :not_logged_in}}
+
+      false ->
+        {:error, %{reason: :unauthorized}}
     end
   end
 
