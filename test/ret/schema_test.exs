@@ -16,7 +16,7 @@ defmodule Ret.SchemaTest do
 
     property "with a non-struct map" do
       check all map <-
-                  string(:printable, max_length: 3)
+                  string(:printable, max_length: 4)
                   |> map(&String.to_atom/1)
                   |> map_of(nil) do
         assert false === Schema.is_schema(map)
