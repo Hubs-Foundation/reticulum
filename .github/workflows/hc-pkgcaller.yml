@@ -7,5 +7,5 @@ jobs:
     uses: mozilla/hubs-ops/.github/workflows/HcPkgPreReleaseGitops.yaml@master
     with:
       main: master
-      releasing: polycosm
+      releaseTrackingBranch: polycosm
       qaTestBranch: qa-test
