@@ -12,6 +12,7 @@ jobs:
       registry: mozillareality
       dockerfile: TurkeyDockerfile
       bio_script_path: scripts/hab-wrap-and-push.sh
+      hc_channel_name: polycosm-stable-a
       personal_k8s_deployment: reticulum
       personal_k8s_deployment_container: reticulum
     secrets:
