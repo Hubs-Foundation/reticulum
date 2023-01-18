@@ -1,4 +1,4 @@
-use Mix.Config
+import Config
 
 # For production, we often load configuration from external
 # sources, such as your system environment. For this reason,
@@ -89,10 +89,6 @@ config :ret, Ret.SessionLockRepo,
 #
 #     config :ret, RetWeb.Endpoint, server: true
 #
-
-# Finally import the config/prod.secret.exs
-# which should be versioned separately.
-import_config "prod.secret.exs"
 
 # Filter out media search API params
 config :phoenix, :filter_parameters, ["q", "filter", "cursor"]

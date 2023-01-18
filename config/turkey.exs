@@ -1,4 +1,4 @@
-use Mix.Config
+import Config
 
 import_config "prod.exs"
 
