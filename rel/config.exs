@@ -53,7 +53,7 @@ end
 # will be used by default
 
 release :ret do
-  set version: System.get_env("RELEASE_VERSION") || current_version(:ret)
+  set version: System.get_env("RELEASE_VERSION", current_version(:ret))
 
   set applications: [
         :runtime_tools

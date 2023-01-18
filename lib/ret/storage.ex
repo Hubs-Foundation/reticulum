@@ -319,8 +319,8 @@ defmodule Ret.Storage do
         |> Repo.insert!()
 
       File.mkdir_p!(dest_path)
-      File.rename(meta_file_path, dest_meta_file_path)
-      File.rename(blob_file_path, dest_blob_file_path)
+      File.rename!(meta_file_path, dest_meta_file_path)
+      File.rename!(blob_file_path, dest_blob_file_path)
 
       {:ok, owned_file}
     else
@@ -483,8 +483,8 @@ defmodule Ret.Storage do
         paths_for_uuid(uuid, expiring_file_path())
     ) do
       File.mkdir_p!(dest_path)
-      File.rename(meta_file_path, dest_meta_file_path)
-      File.rename(blob_file_path, dest_blob_file_path)
+      File.rename!(meta_file_path, dest_meta_file_path)
+      File.rename!(blob_file_path, dest_blob_file_path)
     end
   end
 

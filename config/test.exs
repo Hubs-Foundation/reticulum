@@ -1,4 +1,4 @@
-use Mix.Config
+import Config
 
 # We don't run a server during test. If one is required,
 # you can enable the server option below.
@@ -13,8 +13,8 @@ config :ret, RetWeb.Endpoint,
 # Print only warnings and errors during test
 config :logger, level: :warn
 
-db_credentials = System.get_env("DB_CREDENTIALS") || "admin"
-db_host = System.get_env("DB_HOST") || "localhost"
+db_credentials = System.get_env("DB_CREDENTIALS", "admin")
+db_host = System.get_env("DB_HOST", "localhost")
 
 config :ret, Ret.Repo,
   adapter: Ecto.Adapters.Postgres,

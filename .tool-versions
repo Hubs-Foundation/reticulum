@@ -1,2 +1,2 @@
-elixir 1.8.2
-erlang 22.3.4.26
+elixir 1.10.4-otp-23
+erlang 23.3.4.18

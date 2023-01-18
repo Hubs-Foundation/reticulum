@@ -1,4 +1,5 @@
-use Mix.Config
+# TODO: Deprecate this environment in favor of prod + an environment variable
+import Config
 
 import_config "prod.exs"
 

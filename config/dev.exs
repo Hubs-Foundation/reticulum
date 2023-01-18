@@ -1,4 +1,4 @@
-use Mix.Config
+import Config
 
 # NOTE: this file contains some security keys/certs that are *not* secrets, and are only used for local development purposes.
 
@@ -122,9 +122,9 @@ config :ret,
   upload_encryption_key: "a8dedeb57adafa7821027d546f016efef5a501bd",
   bot_access_key: ""
 
-hubs_admin_internal_hostname = System.get_env("HUBS_ADMIN_INTERNAL_HOSTNAME") || host
-hubs_client_internal_hostname = System.get_env("HUBS_CLIENT_INTERNAL_HOSTNAME") || host
-spoke_internal_hostname = System.get_env("SPOKE_INTERNAL_HOSTNAME") || host
+hubs_admin_internal_hostname = System.get_env("HUBS_ADMIN_INTERNAL_HOSTNAME", host)
+hubs_client_internal_hostname = System.get_env("HUBS_CLIENT_INTERNAL_HOSTNAME", host)
+spoke_internal_hostname = System.get_env("SPOKE_INTERNAL_HOSTNAME", host)
 
 config :ret, Ret.PageOriginWarmer,
   admin_page_origin: "https://#{hubs_admin_internal_hostname}:8989",
@@ -182,7 +182,10 @@ config :ret, Ret.Mailer, adapter: Bamboo.LocalAdapter
 config :ret, RetWeb.Email, from: "info@hubs-mail.com"
 
 config :ret, Ret.PermsToken,
-  perms_key: (System.get_env("PERMS_KEY") || "") |> String.replace("\\n", "\n")
+  perms_key:
+    "PERMS_KEY"
+    |> System.get_env("")
+    |> String.replace("\\n", "\n")
 
 config :ret, Ret.OAuthToken, oauth_token_key: ""
 
@@ -209,8 +212,12 @@ config :sentry,
 
 config :ret, Ret.Habitat, ip: "127.0.0.1", http_port: 9631
 
-dialog_hostname = System.get_env("DIALOG_HOSTNAME") || "dev-janus.reticulum.io"
-dialog_port = String.to_integer(System.get_env("DIALOG_PORT") || "443")
+dialog_hostname = System.get_env("DIALOG_HOSTNAME", "dev-janus.reticulum.io")
+
+dialog_port =
+  "DIALOG_PORT"
+  |> System.get_env("443")
+  |> String.to_integer()
 
 config :ret, Ret.JanusLoadStatus, default_janus_host: dialog_hostname, janus_port: dialog_port
 

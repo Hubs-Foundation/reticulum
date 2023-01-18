@@ -1,9 +1,4 @@
-# This file is responsible for configuring your application
-# and its dependencies with the aid of the Mix.Config module.
-#
-# This configuration file is loaded before any dependency and
-# is restricted to this project.
-use Mix.Config
+import Config
 
 # General application configuration
 
@@ -11,7 +6,7 @@ config :ret,
   ecto_repos: [Ret.Repo, Ret.SessionLockRepo]
 
 config :ret, RetWeb.Plugs.PostgrestProxy,
-  hostname: System.get_env("POSTGREST_INTERNAL_HOSTNAME") || "localhost"
+  hostname: System.get_env("POSTGREST_INTERNAL_HOSTNAME", "localhost")
 
 config :phoenix, :format_encoders, "json-api": Jason
 config :phoenix, :json_library, Jason
