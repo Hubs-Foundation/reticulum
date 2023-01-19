@@ -38,9 +38,8 @@ defmodule Ret.Mixfile do
       {:phoenix_pubsub, "~> 1.1"},
       {:phoenix_ecto, "~> 4.0"},
       {:plug, "~> 1.7"},
-      # Avoid 3.4.0 for now bc https://github.com/elixir-ecto/ecto/issues/3246
-      {:ecto, "~> 3.3.0"},
-      {:ecto_sql, "~> 3.3.0"},
+      {:ecto, "~> 3.5.4"},
+      {:ecto_sql, "~> 3.5.4"},
       {:absinthe, "~> 1.4"},
       {:dataloader, "~> 1.0.0"},
       {:absinthe_plug, "~> 1.4"},
