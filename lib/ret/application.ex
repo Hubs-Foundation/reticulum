@@ -64,6 +64,7 @@ defmodule Ret.Application do
 
     # Define workers and child supervisors to be supervised
     children = [
+      {Phoenix.PubSub, [name: Ret.PubSub, adapter: Phoenix.PubSub.PG2, pool_size: 4]},
       # Start the Ecto repository
       supervisor(Ret.Repo, []),
       supervisor(RetWeb.Endpoint, []),
@@ -248,8 +249,7 @@ defmodule Ret.Application do
           ]
         ],
         id: :whats_new_cache
-      ),
-      supervisor(TheEnd.Of.Phoenix, [[timeout: 10_000, endpoint: RetWeb.Endpoint]])
+      )
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
