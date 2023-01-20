@@ -34,8 +34,8 @@ defmodule Ret.Mixfile do
   defp deps do
     [
       {:ecto_boot_migration, "~> 0.2.0"},
-      {:phoenix, "~> 1.4.0"},
-      {:phoenix_pubsub, "~> 1.1"},
+      {:phoenix, "~> 1.5.13"},
+      {:phoenix_pubsub, "~> 2.1"},
       {:phoenix_ecto, "~> 4.0"},
       {:plug, "~> 1.7"},
       {:ecto, "~> 3.5.4"},
@@ -43,7 +43,7 @@ defmodule Ret.Mixfile do
       {:absinthe, "~> 1.4"},
       {:dataloader, "~> 1.0.0"},
       {:absinthe_plug, "~> 1.4"},
-      {:absinthe_phoenix, "~> 1.4.0"},
+      {:absinthe_phoenix, "~> 2.0.0"},
       {:postgrex, ">= 0.0.0"},
       {:phoenix_html, "~> 2.13"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
@@ -62,7 +62,6 @@ defmodule Ret.Mixfile do
       {:mox, "~> 1.0.1", only: [:dev, :test]},
       {:plug_attack, "~> 0.4"},
       {:ecto_enum, "~> 1.3"},
-      {:the_end, git: "https://github.com/mozillareality/the_end.git", branch: "bug/phoenix-14"},
       {:cachex, "~> 3.2"},
       {:retry, "~> 0.13"},
       {:open_graph, "~> 0.0.3"},
