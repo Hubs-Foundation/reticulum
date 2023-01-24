@@ -63,7 +63,7 @@ defmodule Ret.Mixfile do
       {:plug_attack, "~> 0.4"},
       {:ecto_enum, "~> 1.3"},
       {:cachex, "~> 3.2"},
-      {:retry, "~> 0.13"},
+      {:retry, "~> 0.15.0"},
       {:open_graph, "~> 0.0.3"},
       {:secure_random, "~> 0.5"},
       {:bamboo, "~> 1.3"},
