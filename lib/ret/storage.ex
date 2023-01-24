@@ -502,13 +502,11 @@ defmodule Ret.Storage do
     ext = MIME.extensions(content_type) |> List.first()
     filename = [id, ext] |> Enum.reject(&is_nil/1) |> Enum.join(".")
 
-    "#{file_host}/files/#{filename}#{
-      if token do
-        "?" <> URI.encode_query(token: token)
-      else
-        ""
-      end
-    }"
+    "#{file_host}/files/#{filename}#{if token do
+      "?" <> URI.encode_query(token: token)
+    else
+      ""
+    end}"
     |> URI.parse()
   end
 
@@ -540,9 +538,7 @@ defmodule Ret.Storage do
 
   defp paths_for_uuid(uuid, subpath) do
     path =
-      "#{module_config(:storage_path)}/#{subpath}/#{String.slice(uuid, 0, 2)}/#{
-        String.slice(uuid, 2, 2)
-      }"
+      "#{module_config(:storage_path)}/#{subpath}/#{String.slice(uuid, 0, 2)}/#{String.slice(uuid, 2, 2)}"
 
     blob_file_path = "#{path}/#{uuid}.blob"
     meta_file_path = "#{path}/#{uuid}.meta.json"

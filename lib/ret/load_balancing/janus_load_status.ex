@@ -14,7 +14,7 @@ defmodule Ret.JanusLoadStatus do
           {:ok, [{:host_to_ccu, pods}]}
         else
           _ ->
-            Logger.warn(
+            Logger.warning(
               "falling back to default_janus_host because get_dialog_pods() returned []"
             )
 
@@ -65,7 +65,10 @@ defmodule Ret.JanusLoadStatus do
       exception ->
         # This should only really occur in disaster scenarios,
         # if the request to the dialog endpoint fails, or it returns an invalid response.
-        Logger.warn(inspect(exception))
+        exception
+        |> inspect()
+        |> Logger.warning()
+
         []
     end
   end

@@ -1,4 +1,4 @@
-FROM elixir:1.10-alpine as builder
+FROM elixir:1.12-alpine as builder
 RUN apk add --no-cache nodejs yarn git build-base
 copy . .
 RUN mix local.hex --force && mix local.rebar --force && mix deps.get

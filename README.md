@@ -25,7 +25,7 @@ Windows: https://www.postgresql.org/download/windows/
 
 Windows WSL: https://github.com/michaeltreat/Windows-Subsystem-For-Linux-Setup-Guide/blob/master/readmes/installs/PostgreSQL.md
 
-#### Erlang (v23.3) + Elixir (v1.10) + Phoenix
+#### Erlang (v23.3) + Elixir (v1.12) + Phoenix
 
 https://elixir-lang.org/install.html
 
