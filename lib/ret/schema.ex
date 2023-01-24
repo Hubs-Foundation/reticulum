@@ -3,13 +3,6 @@ defmodule Ret.Schema do
   Conveniences for working with Ecto schemas.
   """
 
-  @spec is_struct(term, module) :: boolean
-  defguardp is_struct(term, module)
-            when is_map(term) and
-                   is_atom(module) and
-                   :erlang.is_map_key(:__struct__, term) and
-                   :erlang.map_get(:__struct__, term) === module
-
   @doc """
   Determines if a `term` is an Ecto schema.
 

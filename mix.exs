@@ -5,7 +5,7 @@ defmodule Ret.Mixfile do
     [
       app: :ret,
       version: System.get_env("RELEASE_VERSION", "1.0.0"),
-      elixir: "~> 1.10",
+      elixir: "~> 1.11",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:phoenix, :gettext] ++ Mix.compilers(),
       start_permanent: Mix.env() == :prod,
