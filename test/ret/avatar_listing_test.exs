@@ -31,7 +31,10 @@ defmodule Ret.AvatarListingTest do
     }
   end
 
-  test "can create an avatar listing", %{account_1_avatar_1: avatar, account_1_avatar_1_listing_1: listing} do
+  test "can create an avatar listing", %{
+    account_1_avatar_1: avatar,
+    account_1_avatar_1_listing_1: listing
+  } do
     assert listing.name == avatar.name
     assert listing.description == avatar.description
     assert listing.avatar_id == avatar.avatar_id

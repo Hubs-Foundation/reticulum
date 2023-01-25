@@ -3,7 +3,7 @@ defmodule RetWeb.Api.V1.SlackController do
   alias Ret.{Hub, HubBinding}
 
   # Limit to 1 TPS
-  plug(RetWeb.Plugs.RateLimit)
+  plug RetWeb.Plugs.RateLimit
 
   @slack_api_base "https://slack.com"
   @help_prefix "Hi! I'm the Hubs bot. I connect Slack channels with rooms on Hubs (https://hubs.mozilla.com/). Type `/hubs help` for more information."
@@ -85,7 +85,10 @@ defmodule RetWeb.Api.V1.SlackController do
     %{"channel" => %{"topic" => %{"value" => topic}}} = get_channel_info(channel_id)
 
     if !has_hubs_url(topic) do
-      send_message_to_channel(channel_id, "No Hubs room is bridged in the topic, so doing nothing :eyes:")
+      send_message_to_channel(
+        channel_id,
+        "No Hubs room is bridged in the topic, so doing nothing :eyes:"
+      )
     else
       update_topic(channel_id, remove_hub_topic(topic))
     end
@@ -97,7 +100,10 @@ defmodule RetWeb.Api.V1.SlackController do
 
   # catches requests that do not match the specified commands above
   defp handle_command(_command, channel_id, _args, _team_id) do
-    send_message_to_channel(channel_id, "Type \"/hubs help\" if you need the list of available commands")
+    send_message_to_channel(
+      channel_id,
+      "Type \"/hubs help\" if you need the list of available commands"
+    )
   end
 
   defp has_hubs_url(topic) do
@@ -134,7 +140,8 @@ defmodule RetWeb.Api.V1.SlackController do
   end
 
   defp get_channel_info(channel_id) do
-    ("#{@slack_api_base}/api/conversations.info?" <> URI.encode_query(%{token: get_bot_token(), channel: channel_id}))
+    ("#{@slack_api_base}/api/conversations.info?" <>
+       URI.encode_query(%{token: get_bot_token(), channel: channel_id}))
     |> Ret.HttpUtils.retry_get_until_success()
     |> Map.get(:body)
     |> Poison.decode!()

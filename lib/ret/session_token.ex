@@ -4,7 +4,10 @@ defmodule Ret.SessionToken do
   Session uuids are generated on the server and the tokens containing them are stored in clients' localStorage.
   They allow us to re-establish an verify a session if a client needs to re-connect, without losing session state.
   """
-  use Guardian, otp_app: :ret, secret_fetcher: Ret.SessionTokenSecretFetcher, allowed_algos: ["HS512"]
+  use Guardian,
+    otp_app: :ret,
+    secret_fetcher: Ret.SessionTokenSecretFetcher,
+    allowed_algos: ["HS512"]
 
   def subject_for_token(_resource, %{"session_id" => session_id}) do
     {:ok, "#{session_id}"}

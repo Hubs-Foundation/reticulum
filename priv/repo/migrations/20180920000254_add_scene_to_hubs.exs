@@ -3,7 +3,7 @@ defmodule Ret.Repo.Migrations.AddSceneToHubs do
 
   def change do
     alter table("hubs") do
-      add(:scene_id, references(:scenes, column: :scene_id))
+      add :scene_id, references(:scenes, column: :scene_id)
     end
   end
 end

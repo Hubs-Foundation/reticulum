@@ -7,14 +7,14 @@ defmodule RetWeb.Schema.Types.Custom.JSON do
   use Absinthe.Schema.Notation
 
   scalar :json, name: "Json" do
-    description("""
+    description """
     The `Json` scalar type represents arbitrary json string data, represented as UTF-8
     character sequences. The Json type is most often used to represent a free-form
     human-readable json string.
-    """)
+    """
 
-    serialize(&encode/1)
-    parse(&decode/1)
+    serialize &encode/1
+    parse &decode/1
   end
 
   @spec decode(Absinthe.Blueprint.Input.String.t()) :: {:ok, term()} | :error

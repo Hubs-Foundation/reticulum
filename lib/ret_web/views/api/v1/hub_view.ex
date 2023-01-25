@@ -16,7 +16,10 @@ defmodule RetWeb.Api.V1.HubView do
     hub |> render_with_scene(embeddable)
   end
 
-  def render("show.json", %{hub: %Hub{scene_listing: %SceneListing{}} = hub, embeddable: embeddable}) do
+  def render("show.json", %{
+        hub: %Hub{scene_listing: %SceneListing{}} = hub,
+        embeddable: embeddable
+      }) do
     hub |> render_with_scene(embeddable)
   end
 

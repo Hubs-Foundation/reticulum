@@ -9,16 +9,16 @@ defmodule RetWeb.Schema do
     build_middleware(middleware, field, object)
   end
 
-  import_types(Absinthe.Type.Custom)
-  import_types(RetWeb.Schema.RoomTypes)
-  import_types(RetWeb.Schema.SceneTypes)
+  import_types Absinthe.Type.Custom
+  import_types RetWeb.Schema.RoomTypes
+  import_types RetWeb.Schema.SceneTypes
 
   query do
-    import_fields(:room_queries)
+    import_fields :room_queries
   end
 
   mutation do
-    import_fields(:room_mutations)
+    import_fields :room_mutations
   end
 
   def context(ctx) do

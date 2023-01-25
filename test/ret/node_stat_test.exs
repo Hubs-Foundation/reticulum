@@ -63,7 +63,10 @@ defmodule Ret.NodeStatTest do
     {:ok, time} = Time.new(0, 0, 0, 0)
 
     %{
-      today: %{start_time: today_date |> date_to_date_time(time), end_time: tomorrow_date |> date_to_date_time(time)},
+      today: %{
+        start_time: today_date |> date_to_date_time(time),
+        end_time: tomorrow_date |> date_to_date_time(time)
+      },
       yesterday: %{
         start_time: yesterday_date |> date_to_date_time(time),
         end_time: today_date |> date_to_date_time(time)

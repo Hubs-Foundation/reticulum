@@ -10,16 +10,26 @@ defmodule Ret.HubTest do
     {:ok, hub} = %Hub{} |> Hub.changeset(scene, %{name: "Test Hub"}) |> Repo.insert()
     hub = hub |> Repo.preload([:hub_bindings, :hub_role_memberships])
 
-    %{join_hub: true, update_hub: false, close_hub: false, mute_users: false, amplify_audio: false} =
-      hub |> Hub.perms_for_account(Ret.Account.account_for_email("non-creator@mozilla.com"))
+    %{
+      join_hub: true,
+      update_hub: false,
+      close_hub: false,
+      mute_users: false,
+      amplify_audio: false
+    } = hub |> Hub.perms_for_account(Ret.Account.account_for_email("non-creator@mozilla.com"))
   end
 
   test "should deny permissions for anon", %{scene: scene} do
     {:ok, hub} = %Hub{} |> Hub.changeset(scene, %{name: "Test Hub"}) |> Repo.insert()
     hub = hub |> Repo.preload([:hub_bindings])
 
-    %{join_hub: true, update_hub: false, close_hub: false, mute_users: false, amplify_audio: false} =
-      hub |> Hub.perms_for_account(nil)
+    %{
+      join_hub: true,
+      update_hub: false,
+      close_hub: false,
+      mute_users: false,
+      amplify_audio: false
+    } = hub |> Hub.perms_for_account(nil)
   end
 
   test "should deny entry for closed hub, allow entry for re-opened hub", %{scene: scene} do
@@ -114,7 +124,10 @@ defmodule Ret.HubTest do
     assert hub.created_by_account_id == account.account_id
   end
 
-  test "should not have creator assignment token if account assigned", %{account: account, scene: scene} do
+  test "should not have creator assignment token if account assigned", %{
+    account: account,
+    scene: scene
+  } do
     {:ok, hub} =
       %Hub{}
       |> Hub.changeset(scene, %{name: "Test Hub"})
@@ -186,7 +199,8 @@ defmodule Ret.HubTest do
       |> Repo.insert()
 
     hub = hub |> Hub.add_owner!(account)
-    assert HubRoleMembership |> where(hub_id: ^hub.hub_id) |> Repo.aggregate(:count, :hub_role_membership_id) === 0
+
+    refute Repo.exists?(from HubRoleMembership, where: [hub_id: ^hub.hub_id])
   end
 
   test "double adding the same account doesn't fail", %{
@@ -204,6 +218,6 @@ defmodule Ret.HubTest do
     hub = hub |> Hub.add_owner!(account2)
     hub = hub |> Hub.add_owner!(account2)
 
-    assert HubRoleMembership |> where(hub_id: ^hub.hub_id) |> Repo.aggregate(:count, :hub_role_membership_id) === 1
+    assert Repo.one(from HubRoleMembership, where: [hub_id: ^hub.hub_id])
   end
 end

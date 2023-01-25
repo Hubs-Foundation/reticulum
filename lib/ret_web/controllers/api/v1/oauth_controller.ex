@@ -1,10 +1,21 @@
 defmodule RetWeb.Api.V1.OAuthController do
   use RetWeb, :controller
 
-  alias Ret.{Repo, OAuthToken, OAuthProvider, DiscordClient, SlackClient, TwitterClient, Hub, Account, PermsToken}
+  alias Ret.{
+    Account,
+    DiscordClient,
+    Hub,
+    OAuthProvider,
+    OAuthToken,
+    PermsToken,
+    Repo,
+    SlackClient,
+    TwitterClient
+  }
+
   import Canada, only: [can?: 2]
 
-  plug(RetWeb.Plugs.RateLimit when action in [:show])
+  plug RetWeb.Plugs.RateLimit when action in [:show]
 
   def show(conn, %{
         "type" => "twitter",
@@ -19,8 +30,11 @@ defmodule RetWeb.Api.V1.OAuthController do
 
     case OAuthToken.decode_and_verify(state) do
       {:ok, _} ->
-        %{"user_id" => twitter_user_id, "oauth_token" => access_token, "oauth_token_secret" => access_token_secret} =
-          TwitterClient.get_access_token_and_user_info(oauth_verifier, oauth_token)
+        %{
+          "user_id" => twitter_user_id,
+          "oauth_token" => access_token,
+          "oauth_token_secret" => access_token_secret
+        } = TwitterClient.get_access_token_and_user_info(oauth_verifier, oauth_token)
 
         conn
         |> process_twitter_oauth(account, access_token, access_token_secret, twitter_user_id)
@@ -94,7 +108,11 @@ defmodule RetWeb.Api.V1.OAuthController do
       token: account |> Account.credentials_for_account()
     }
 
-    conn |> put_short_lived_cookie("ret-oauth-flow-account-credentials", credentials |> Poison.encode!())
+    conn
+    |> put_short_lived_cookie(
+      "ret-oauth-flow-account-credentials",
+      credentials |> Poison.encode!()
+    )
   end
 
   # Discord user does not have a verified email, so we can't create an account for them. Instead, we generate a perms
@@ -137,7 +155,12 @@ defmodule RetWeb.Api.V1.OAuthController do
 
   # If an oauthprovider exists for the given chat_user_id, return the associated account, updating the email
   # if necessary.
-  defp account_for_oauth_provider(%OAuthProvider{} = oauth_provider, email, _chat_user_id, _source) do
+  defp account_for_oauth_provider(
+         %OAuthProvider{} = oauth_provider,
+         email,
+         _chat_user_id,
+         _source
+       ) do
     account = oauth_provider.account |> Repo.preload(:login)
     login = account.login
     current_identifier_hash = login.identifier_hash

@@ -61,7 +61,7 @@ defmodule Ret.SketchfabTest do
       )
 
     %CachedFile{file_uuid: file_uuid, file_content_type: file_content_type, file_key: file_key} =
-      CachedFile |> where(cache_key: ^cache_key) |> Repo.one()
+      Repo.one(from CachedFile, where: [cache_key: ^cache_key])
 
     assert uri === Storage.uri_for(file_uuid, file_content_type, file_key)
   end

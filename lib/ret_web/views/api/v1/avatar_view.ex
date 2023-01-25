@@ -22,10 +22,14 @@ defmodule RetWeb.Api.V1.AvatarView do
       avatar_id: avatar.avatar_sid,
       parent_avatar_id: unless(is_nil(avatar.parent_avatar), do: avatar.parent_avatar.avatar_sid),
       # Only include account id on your own avatars
-      account_id: account && avatar.account_id == account.account_id && avatar.account_id |> Integer.to_string(),
+      account_id:
+        account &&
+          avatar.account_id == account.account_id &&
+          avatar.account_id |> Integer.to_string(),
       allow_remixing: avatar.allow_remixing,
       allow_promotion: avatar.allow_promotion,
-      has_listings: length(avatar.avatar_listings |> Enum.filter(fn l -> l.state == :active end)) > 0
+      has_listings:
+        length(avatar.avatar_listings |> Enum.filter(fn l -> l.state == :active end)) > 0
     })
   end
 
@@ -42,7 +46,8 @@ defmodule RetWeb.Api.V1.AvatarView do
 
   defp common_fields(%t{} = a) when t in [Avatar, AvatarListing] do
     %{
-      parent_avatar_listing_id: unless(is_nil(a.parent_avatar_listing), do: a.parent_avatar_listing.avatar_listing_sid),
+      parent_avatar_listing_id:
+        unless(is_nil(a.parent_avatar_listing), do: a.parent_avatar_listing.avatar_listing_sid),
       name: a.name,
       description: a.description,
       attributions: if(is_nil(a.attributions), do: %{}, else: a.attributions),

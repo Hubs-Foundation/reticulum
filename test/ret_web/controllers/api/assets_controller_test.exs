@@ -12,13 +12,19 @@ defmodule RetWeb.AssetsControllerTest do
     end)
   end
 
-  test "assets create 401's when not logged in", %{conn: conn, thumbnail_owned_file: thumbnail_owned_file} do
+  test "assets create 401's when not logged in", %{
+    conn: conn,
+    thumbnail_owned_file: thumbnail_owned_file
+  } do
     params = asset_create_params(thumbnail_owned_file, thumbnail_owned_file)
     conn |> post(api_v1_assets_path(conn, :create), params) |> response(401)
   end
 
   @tag :authenticated
-  test "assets create works when logged in", %{conn: conn, thumbnail_owned_file: thumbnail_owned_file} do
+  test "assets create works when logged in", %{
+    conn: conn,
+    thumbnail_owned_file: thumbnail_owned_file
+  } do
     # Asset file needs to be an image, video, or model so use the thumbnail_owned_file for both the asset and thumbnail
     params = asset_create_params(thumbnail_owned_file, thumbnail_owned_file)
 

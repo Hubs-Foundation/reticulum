@@ -63,7 +63,10 @@ defmodule Ret.MediaResolver do
   end
 
   # auto convert dropbox urls to "raw" urls
-  def resolve(%MediaResolverQuery{url: %URI{host: "www.dropbox.com", path: "/s/" <> _rest} = url}, _root_host) do
+  def resolve(
+        %MediaResolverQuery{url: %URI{host: "www.dropbox.com", path: "/s/" <> _rest} = url},
+        _root_host
+      ) do
     {:commit,
      url
      |> Map.put(
@@ -275,19 +278,31 @@ defmodule Ret.MediaResolver do
     {:commit, uri |> resolved(meta)}
   end
 
-  defp resolve_non_video(%MediaResolverQuery{url: %URI{path: "/gifs/" <> _rest} = uri}, "giphy.com") do
+  defp resolve_non_video(
+         %MediaResolverQuery{url: %URI{path: "/gifs/" <> _rest} = uri},
+         "giphy.com"
+       ) do
     resolve_giphy_media_uri(uri, "mp4")
   end
 
-  defp resolve_non_video(%MediaResolverQuery{url: %URI{path: "/stickers/" <> _rest} = uri}, "giphy.com") do
+  defp resolve_non_video(
+         %MediaResolverQuery{url: %URI{path: "/stickers/" <> _rest} = uri},
+         "giphy.com"
+       ) do
     resolve_giphy_media_uri(uri, "url")
   end
 
-  defp resolve_non_video(%MediaResolverQuery{url: %URI{path: "/videos/" <> _rest} = uri}, "tenor.com") do
+  defp resolve_non_video(
+         %MediaResolverQuery{url: %URI{path: "/videos/" <> _rest} = uri},
+         "tenor.com"
+       ) do
     {:commit, uri |> resolved(%{expected_content_type: "video/mp4"})}
   end
 
-  defp resolve_non_video(%MediaResolverQuery{url: %URI{path: "/gallery/" <> gallery_id} = uri}, "imgur.com") do
+  defp resolve_non_video(
+         %MediaResolverQuery{url: %URI{path: "/gallery/" <> gallery_id} = uri},
+         "imgur.com"
+       ) do
     [resolved_url, meta] =
       "https://imgur-apiv3.p.mashape.com/3/gallery/#{gallery_id}"
       |> image_data_for_imgur_collection_api_url
@@ -295,7 +310,10 @@ defmodule Ret.MediaResolver do
     {:commit, (resolved_url || uri) |> resolved(meta)}
   end
 
-  defp resolve_non_video(%MediaResolverQuery{url: %URI{path: "/a/" <> album_id} = uri}, "imgur.com") do
+  defp resolve_non_video(
+         %MediaResolverQuery{url: %URI{path: "/a/" <> album_id} = uri},
+         "imgur.com"
+       ) do
     [resolved_url, meta] =
       "https://imgur-apiv3.p.mashape.com/3/album/#{album_id}"
       |> image_data_for_imgur_collection_api_url
@@ -347,7 +365,10 @@ defmodule Ret.MediaResolver do
     end
   end
 
-  defp fallback_to_screenshot_opengraph_or_nothing(%MediaResolverQuery{url: %URI{host: host} = uri, version: version}) do
+  defp fallback_to_screenshot_opengraph_or_nothing(%MediaResolverQuery{
+         url: %URI{host: host} = uri,
+         version: version
+       }) do
     photomnemonic_endpoint = module_config(:photomnemonic_endpoint)
 
     # Crawl og tags for hubs rooms + scenes
@@ -355,7 +376,10 @@ defmodule Ret.MediaResolver do
 
     case uri
          |> URI.to_string()
-         |> retry_head_then_get_until_success(headers: [{"Range", "bytes=0-32768"}], append_browser_user_agent: true) do
+         |> retry_head_then_get_until_success(
+           headers: [{"Range", "bytes=0-32768"}],
+           append_browser_user_agent: true
+         ) do
       :error ->
         :error
 
@@ -412,7 +436,10 @@ defmodule Ret.MediaResolver do
   defp opengraph_result_for_uri(uri) do
     case uri
          |> URI.to_string()
-         |> retry_get_until_success(headers: [{"Range", "bytes=0-32768"}], append_browser_user_agent: true) do
+         |> retry_get_until_success(
+           headers: [{"Range", "bytes=0-32768"}],
+           append_browser_user_agent: true
+         ) do
       :error ->
         :error
 
@@ -454,7 +481,11 @@ defmodule Ret.MediaResolver do
 
   defp get_sketchfab_model_zip_url(%{model_id: model_id, api_key: api_key}) do
     case "https://api.sketchfab.com/v3/models/#{model_id}/download"
-         |> retry_get_until_success(headers: [{"Authorization", "Token #{api_key}"}], cap_ms: 15_000, expiry_ms: 15_000) do
+         |> retry_get_until_success(
+           headers: [{"Authorization", "Token #{api_key}"}],
+           cap_ms: 15_000,
+           expiry_ms: 15_000
+         ) do
       :error ->
         {:error, "Failed to get sketchfab metadata"}
 
@@ -625,11 +656,15 @@ defmodule Ret.MediaResolver do
   defp ytdl_resolution(%MediaResolverQuery{quality: :high_360}), do: "[height<=2160]"
   defp ytdl_resolution(_query), do: "[height<=720]"
 
-  defp ytdl_qualifier(%MediaResolverQuery{quality: quality}) when quality in [:low, :high], do: "best"
+  defp ytdl_qualifier(%MediaResolverQuery{quality: quality}) when quality in [:low, :high],
+    do: "best"
+
   # for 360, we always grab dedicated audio track
   defp ytdl_qualifier(_query), do: "bestvideo"
 
-  defp query_ytdl_audio?(%MediaResolverQuery{quality: quality}) when quality in [:low, :high], do: false
+  defp query_ytdl_audio?(%MediaResolverQuery{quality: quality}) when quality in [:low, :high],
+    do: false
+
   defp query_ytdl_audio?(_query), do: true
 
   defp ytdl_format(query, "crunchyroll.com") do

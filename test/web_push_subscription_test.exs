@@ -4,7 +4,10 @@ defmodule Ret.WebPushSubscriptionTest do
 
   alias Ret.{Hub, WebPushSubscription}
 
-  @stub_subscription %{"endpoint" => "endpoint", "keys" => %{"p256dh" => "p256dh", "auth" => "auth"}}
+  @stub_subscription %{
+    "endpoint" => "endpoint",
+    "keys" => %{"p256dh" => "p256dh", "auth" => "auth"}
+  }
 
   setup [:create_account, :create_owned_file, :create_scene, :create_hub]
 
@@ -15,7 +18,8 @@ defmodule Ret.WebPushSubscriptionTest do
 
     assert subscription.web_push_subscription_id != nil
 
-    %WebPushSubscription{endpoint: "endpoint", p256dh: "p256dh", auth: "auth", hub_id: ^hub_id} = subscription
+    %WebPushSubscription{endpoint: "endpoint", p256dh: "p256dh", auth: "auth", hub_id: ^hub_id} =
+      subscription
   end
 
   test "re-use existing subscription", %{hub: hub} do
@@ -29,7 +33,10 @@ defmodule Ret.WebPushSubscriptionTest do
     subscription = WebPushSubscription.subscribe_to_hub(hub, @stub_subscription)
 
     subscription_other =
-      WebPushSubscription.subscribe_to_hub(hub, @stub_subscription |> Map.put("endpoint", "endpoint2"))
+      WebPushSubscription.subscribe_to_hub(
+        hub,
+        @stub_subscription |> Map.put("endpoint", "endpoint2")
+      )
 
     assert subscription.web_push_subscription_id != subscription_other.web_push_subscription_id
 
@@ -37,7 +44,10 @@ defmodule Ret.WebPushSubscriptionTest do
     %WebPushSubscription{endpoint: "endpoint2"} = subscription_other
   end
 
-  test "create a new subscription if hub is varied", %{scene: scene, hub: %Hub{hub_id: hub_id} = hub} do
+  test "create a new subscription if hub is varied", %{
+    scene: scene,
+    hub: %Hub{hub_id: hub_id} = hub
+  } do
     {:ok, hub: hub_other} = create_hub(%{scene: scene})
     %Hub{hub_id: other_hub_id} = hub_other
 
@@ -67,9 +77,11 @@ defmodule Ret.WebPushSubscriptionTest do
     WebPushSubscription.unsubscribe_from_hub(hub, @stub_subscription)
 
     existing =
-      WebPushSubscription
-      |> where([t], t.endpoint == "endpoint" and t.hub_id == ^hub_id)
-      |> Repo.one()
+      Repo.one(
+        from sub in WebPushSubscription,
+          where: sub.endpoint == "endpoint",
+          where: sub.hub_id == ^hub_id
+      )
 
     assert existing == nil
   end

@@ -7,7 +7,10 @@ defmodule RetWeb.AccountControllerTest do
   setup %{conn: conn} do
     {:ok, admin_account: admin_account} = create_admin_account("test")
     {:ok, token, _params} = admin_account |> Ret.Guardian.encode_and_sign()
-    {:ok, account: admin_account, conn: conn |> Plug.Conn.put_req_header("authorization", "bearer: " <> token)}
+
+    {:ok,
+     account: admin_account,
+     conn: conn |> Plug.Conn.put_req_header("authorization", "bearer: " <> token)}
   end
 
   test "non-admins cannot create accounts", %{conn: conn} do
@@ -34,7 +37,10 @@ defmodule RetWeb.AccountControllerTest do
   end
 
   test "admins can create accounts with identities", %{conn: conn} do
-    req = conn |> api_v1_account_path(:create, %{data: %{email: "testapi@mozilla.com", name: "Test User"}})
+    req =
+      conn
+      |> api_v1_account_path(:create, %{data: %{email: "testapi@mozilla.com", name: "Test User"}})
+
     res = conn |> post(req) |> response(200) |> Poison.decode!()
 
     account = Account.account_for_email("testapi@mozilla.com")
@@ -73,7 +79,11 @@ defmodule RetWeb.AccountControllerTest do
     req =
       conn
       |> api_v1_account_path(:create, %{
-        data: [%{email: "testapi1@mozilla.com"}, %{email: "testapi2@mozilla.com"}, %{email: "invalidemail"}]
+        data: [
+          %{email: "testapi1@mozilla.com"},
+          %{email: "testapi2@mozilla.com"},
+          %{email: "invalidemail"}
+        ]
       })
 
     res = conn |> post(req) |> response(207) |> Poison.decode!()

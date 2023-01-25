@@ -10,9 +10,9 @@ defmodule Ret.LoginToken do
   @token_max_age 1_800
 
   schema "login_tokens" do
-    field(:token, :string)
-    field(:payload_key, :string)
-    field(:identifier_hash, :string)
+    field :token, :string
+    field :payload_key, :string
+    field :identifier_hash, :string
 
     timestamps()
   end
@@ -37,13 +37,13 @@ defmodule Ret.LoginToken do
 
   def lookup_by_token(token) do
     login_token =
-      Ret.LoginToken
-      |> where([t], t.token == ^token)
-      |> where(
-        [t],
-        t.inserted_at > datetime_add(^NaiveDateTime.utc_now(), ^(@token_max_age * -1), "second")
+      Repo.one(
+        from t in Ret.LoginToken,
+          where: t.token == ^token,
+          where:
+            t.inserted_at >
+              datetime_add(^NaiveDateTime.utc_now(), ^(@token_max_age * -1), "second")
       )
-      |> Repo.one()
 
     if login_token do
       login_token
@@ -53,19 +53,17 @@ defmodule Ret.LoginToken do
   end
 
   def expire(token) do
-    Ret.LoginToken
-    |> where([t], t.token == ^token)
-    |> Repo.delete_all()
+    Repo.delete_all(from t in Ret.LoginToken, where: t.token == ^token)
   end
 
   def expire_stale do
     Ret.Locking.exec_if_lockable(:login_token_expire, fn ->
-      Ret.LoginToken
-      |> where(
-        [t],
-        t.inserted_at < datetime_add(^NaiveDateTime.utc_now(), ^(@token_max_age * -1), "second")
+      Repo.delete_all(
+        from t in Ret.LoginToken,
+          where:
+            t.inserted_at <
+              datetime_add(^NaiveDateTime.utc_now(), ^(@token_max_age * -1), "second")
       )
-      |> Repo.delete_all()
     end)
   end
 

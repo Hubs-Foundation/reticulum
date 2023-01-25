@@ -18,7 +18,12 @@ defmodule RetWeb.Middleware.StartTiming do
 
   @behaviour Absinthe.Middleware
   def call(resolution, _) do
-    add_timing_info(resolution, resolution.definition.schema_node.identifier, :started_at, NaiveDateTime.utc_now())
+    add_timing_info(
+      resolution,
+      resolution.definition.schema_node.identifier,
+      :started_at,
+      NaiveDateTime.utc_now()
+    )
   end
 end
 
@@ -29,7 +34,12 @@ defmodule RetWeb.Middleware.EndTiming do
 
   @behaviour Absinthe.Middleware
   def call(resolution, _) do
-    add_timing_info(resolution, resolution.definition.schema_node.identifier, :ended_at, NaiveDateTime.utc_now())
+    add_timing_info(
+      resolution,
+      resolution.definition.schema_node.identifier,
+      :ended_at,
+      NaiveDateTime.utc_now()
+    )
   end
 end
 

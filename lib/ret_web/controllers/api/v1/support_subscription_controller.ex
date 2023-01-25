@@ -6,10 +6,10 @@ defmodule RetWeb.Api.V1.SupportSubscriptionController do
   alias Ret.Repo
 
   # Limit to 1 TPS
-  plug(RetWeb.Plugs.RateLimit when action in [:create, :delete])
+  plug RetWeb.Plugs.RateLimit when action in [:create, :delete]
 
   # Only allow access with secret header
-  plug(RetWeb.Plugs.HeaderAuthorization when action in [:create, :delete])
+  plug RetWeb.Plugs.HeaderAuthorization when action in [:create, :delete]
 
   def index(conn, _params) do
     case Support.available?() do
@@ -36,10 +36,7 @@ defmodule RetWeb.Api.V1.SupportSubscriptionController do
   end
 
   def delete(conn, %{"id" => identifier}) do
-    SupportSubscription
-    |> where(identifier: ^identifier)
-    |> Repo.delete_all()
-
+    Repo.delete_all(from SupportSubscription, where: [identifier: ^identifier])
     conn |> send_resp(200, "OK")
   end
 end

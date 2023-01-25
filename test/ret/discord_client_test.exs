@@ -33,9 +33,17 @@ defmodule Ret.DiscordClientTest do
       %{"id" => @moderator_role, "permissions" => @view_channel}
     ])
 
-    Cachex.put(:discord_api, "/guilds/#{@community_id}/members/#{@moderator_user_id}", %{"roles" => [@moderator_role]})
-    Cachex.put(:discord_api, "/guilds/#{@community_id}/members/#{@owner_user_id}", %{"roles" => []})
-    Cachex.put(:discord_api, "/guilds/#{@community_id}/members/#{@regular_user_id}", %{"roles" => []})
+    Cachex.put(:discord_api, "/guilds/#{@community_id}/members/#{@moderator_user_id}", %{
+      "roles" => [@moderator_role]
+    })
+
+    Cachex.put(:discord_api, "/guilds/#{@community_id}/members/#{@owner_user_id}", %{
+      "roles" => []
+    })
+
+    Cachex.put(:discord_api, "/guilds/#{@community_id}/members/#{@regular_user_id}", %{
+      "roles" => []
+    })
 
     Cachex.put(:discord_api, "/channels/#{@general_channel_id}", %{"permission_overwrites" => []})
 
@@ -51,18 +59,22 @@ defmodule Ret.DiscordClientTest do
   end
 
   test "regular member should be able to view general channel" do
-    assert @regular_user_id |> DiscordClient.has_permission?(@general_channel_binding, :view_channel)
+    assert @regular_user_id
+           |> DiscordClient.has_permission?(@general_channel_binding, :view_channel)
   end
 
   test "regular member should not be able to view restricted channel" do
-    refute @regular_user_id |> DiscordClient.has_permission?(@restricted_channel_binding, :view_channel)
+    refute @regular_user_id
+           |> DiscordClient.has_permission?(@restricted_channel_binding, :view_channel)
   end
 
   test "owner should be able to view restricted channel" do
-    assert @owner_user_id |> DiscordClient.has_permission?(@restricted_channel_binding, :view_channel)
+    assert @owner_user_id
+           |> DiscordClient.has_permission?(@restricted_channel_binding, :view_channel)
   end
 
   test "moderator should be able to view restricted channel" do
-    assert @moderator_user_id |> DiscordClient.has_permission?(@restricted_channel_binding, :view_channel)
+    assert @moderator_user_id
+           |> DiscordClient.has_permission?(@restricted_channel_binding, :view_channel)
   end
 end

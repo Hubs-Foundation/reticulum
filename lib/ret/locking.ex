@@ -27,7 +27,8 @@ defmodule Ret.Locking do
       )
 
     try do
-      <<lock_key::little-signed-integer-size(64), _::binary>> = :crypto.hash(:sha256, lock_name |> to_string)
+      <<lock_key::little-signed-integer-size(64), _::binary>> =
+        :crypto.hash(:sha256, lock_name |> to_string)
 
       case Postgrex.query!(pid, "select pg_try_advisory_lock($1)", [lock_key], timeout: 60_000) do
         %Postgrex.Result{rows: [[true]]} ->
@@ -50,13 +51,21 @@ defmodule Ret.Locking do
 
     Repo.checkout(
       fn ->
-        Ecto.Adapters.SQL.query!(Repo, "set idle_in_transaction_session_timeout = #{timeout};", [], timeout: 60_000)
+        Ecto.Adapters.SQL.query!(
+          Repo,
+          "set idle_in_transaction_session_timeout = #{timeout};",
+          [],
+          timeout: 60_000
+        )
 
         res =
           Repo.transaction(fn ->
-            <<lock_key::little-signed-integer-size(64), _::binary>> = :crypto.hash(:sha256, lock_name |> to_string)
+            <<lock_key::little-signed-integer-size(64), _::binary>> =
+              :crypto.hash(:sha256, lock_name |> to_string)
 
-            case Ecto.Adapters.SQL.query!(Repo, "select pg_try_advisory_xact_lock($1);", [lock_key]) do
+            case Ecto.Adapters.SQL.query!(Repo, "select pg_try_advisory_xact_lock($1);", [
+                   lock_key
+                 ]) do
               %Postgrex.Result{rows: [[true]]} ->
                 exec.()
 
@@ -77,11 +86,17 @@ defmodule Ret.Locking do
 
     Repo.checkout(
       fn ->
-        Ecto.Adapters.SQL.query!(Repo, "set idle_in_transaction_session_timeout = #{timeout};", [], timeout: 60_000)
+        Ecto.Adapters.SQL.query!(
+          Repo,
+          "set idle_in_transaction_session_timeout = #{timeout};",
+          [],
+          timeout: 60_000
+        )
 
         res =
           Repo.transaction(fn ->
-            <<lock_key::little-signed-integer-size(64), _::binary>> = :crypto.hash(:sha256, lock_name |> to_string)
+            <<lock_key::little-signed-integer-size(64), _::binary>> =
+              :crypto.hash(:sha256, lock_name |> to_string)
 
             Ecto.Adapters.SQL.query!(Repo, "select pg_advisory_xact_lock($1);", [lock_key])
 

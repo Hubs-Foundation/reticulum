@@ -73,7 +73,11 @@ defmodule RoomQueryTest do
     assert hd(res["errors"])["type"] === "api_access_token_not_found"
   end
 
-  test "Can query public rooms with app token", %{conn: conn, public_hub: public_hub, app_token: app_token} do
+  test "Can query public rooms with app token", %{
+    conn: conn,
+    public_hub: public_hub,
+    app_token: app_token
+  } do
     res =
       conn
       |> put_auth_header_for_token(app_token)
@@ -116,7 +120,12 @@ defmodule RoomQueryTest do
     assert List.first(rooms)["id"] == hub.hub_sid
   end
 
-  test "my rooms only returns my own rooms", %{conn: conn, account2: account2, hub: hub, token: token} do
+  test "my rooms only returns my own rooms", %{
+    conn: conn,
+    account2: account2,
+    hub: hub,
+    token: token
+  } do
     assign_creator(hub, account2)
 
     auth_res =
@@ -144,7 +153,8 @@ defmodule RoomQueryTest do
       |> put_auth_header_for_token(token)
       |> do_graphql_action(@query_my_rooms)
 
-    assert length(response["data"]["myRooms"]["entries"]) === response["data"]["myRooms"]["page_size"]
+    assert length(response["data"]["myRooms"]["entries"]) ===
+             response["data"]["myRooms"]["page_size"]
   end
 
   test "The room query api paginates results 2", %{
@@ -166,7 +176,11 @@ defmodule RoomQueryTest do
     assert length(response["data"]["myRooms"]["entries"]) === 2
   end
 
-  test "Public API Access has to be enabled on the server", %{conn: conn, public_hub: public_hub, app_token: app_token} do
+  test "Public API Access has to be enabled on the server", %{
+    conn: conn,
+    public_hub: public_hub,
+    app_token: app_token
+  } do
     AppConfig.set_config_value("features|public_api_access", false)
 
     conn

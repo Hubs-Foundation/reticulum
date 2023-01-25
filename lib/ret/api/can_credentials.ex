@@ -79,7 +79,11 @@ defimpl Canada.Can, for: Ret.Api.Credentials do
     Scopes.read_rooms() in scopes && can?(:reticulum_app_token, embed_hub(hub))
   end
 
-  def can?(%Credentials{subject_type: :account, account: subject, scopes: scopes}, :embed_hub, %Hub{} = hub) do
+  def can?(
+        %Credentials{subject_type: :account, account: subject, scopes: scopes},
+        :embed_hub,
+        %Hub{} = hub
+      ) do
     Scopes.read_rooms() in scopes && can?(subject, embed_hub(hub))
   end
 

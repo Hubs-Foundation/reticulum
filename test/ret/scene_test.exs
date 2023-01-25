@@ -43,7 +43,9 @@ defmodule Ret.SceneTest do
       Repo.get!(OwnedFile, scene.screenshot_owned_file_id)
       Repo.get!(OwnedFile, scene.model_owned_file_id)
 
-      [_path, old_meta_file_path, old_blob_file_path] = Storage.paths_for_owned_file(scene.scene_owned_file)
+      [_path, old_meta_file_path, old_blob_file_path] =
+        Storage.paths_for_owned_file(scene.scene_owned_file)
+
       true = File.exists?(old_meta_file_path)
       true = File.exists?(old_blob_file_path)
 

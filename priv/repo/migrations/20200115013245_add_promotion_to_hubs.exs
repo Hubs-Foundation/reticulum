@@ -3,7 +3,7 @@ defmodule Ret.Repo.Migrations.AddPromotionToHubs do
 
   def change do
     alter table(:hubs) do
-      add(:allow_promotion, :boolean, null: false, default: false)
+      add :allow_promotion, :boolean, null: false, default: false
     end
   end
 end

@@ -21,12 +21,17 @@ defmodule RetWeb.ProjectAssetsControllerTest do
   end
 
   test "project assets index 401's when not logged in", %{conn: conn, project: project} do
-    conn |> get(api_v1_project_project_assets_path(conn, :index, project.project_sid)) |> response(401)
+    conn
+    |> get(api_v1_project_project_assets_path(conn, :index, project.project_sid))
+    |> response(401)
   end
 
   @tag :authenticated
   test "project assets index shows assets", %{conn: conn, project: project} do
-    response = conn |> get(api_v1_project_project_assets_path(conn, :index, project.project_sid)) |> json_response(200)
+    response =
+      conn
+      |> get(api_v1_project_project_assets_path(conn, :index, project.project_sid))
+      |> json_response(200)
 
     %{
       "assets" => [
@@ -55,7 +60,10 @@ defmodule RetWeb.ProjectAssetsControllerTest do
     thumbnail_owned_file: thumbnail_owned_file
   } do
     params = project_asset_create_or_update_params(thumbnail_owned_file, thumbnail_owned_file)
-    conn |> post(api_v1_project_project_assets_path(conn, :create, project.project_sid), params) |> response(401)
+
+    conn
+    |> post(api_v1_project_project_assets_path(conn, :create, project.project_sid), params)
+    |> response(401)
   end
 
   @tag :authenticated
@@ -67,7 +75,9 @@ defmodule RetWeb.ProjectAssetsControllerTest do
     params = %{"asset_id" => asset.asset_sid}
 
     response =
-      conn |> post(api_v1_project_project_assets_path(conn, :create, project.project_sid), params) |> json_response(200)
+      conn
+      |> post(api_v1_project_project_assets_path(conn, :create, project.project_sid), params)
+      |> json_response(200)
 
     %{"assets" => [%{"asset_id" => asset_id}]} = response
 
@@ -86,7 +96,9 @@ defmodule RetWeb.ProjectAssetsControllerTest do
     params = project_asset_create_or_update_params(thumbnail_owned_file, thumbnail_owned_file)
 
     response =
-      conn |> post(api_v1_project_project_assets_path(conn, :create, project.project_sid), params) |> json_response(200)
+      conn
+      |> post(api_v1_project_project_assets_path(conn, :create, project.project_sid), params)
+      |> json_response(200)
 
     %{"assets" => [%{"asset_id" => asset_id}]} = response
 
@@ -95,12 +107,17 @@ defmodule RetWeb.ProjectAssetsControllerTest do
     assert created_asset.name == "Name"
   end
 
-  test "project assets delete 401's when not logged in", %{conn: conn, project_asset: project_asset} do
+  test "project assets delete 401's when not logged in", %{
+    conn: conn,
+    project_asset: project_asset
+  } do
     project = project_asset.project
     asset = project_asset.asset
 
     conn
-    |> delete(api_v1_project_project_assets_path(conn, :delete, project.project_sid, asset.asset_sid))
+    |> delete(
+      api_v1_project_project_assets_path(conn, :delete, project.project_sid, asset.asset_sid)
+    )
     |> response(401)
   end
 
@@ -110,12 +127,16 @@ defmodule RetWeb.ProjectAssetsControllerTest do
     asset = project_asset.asset
 
     conn
-    |> delete(api_v1_project_project_assets_path(conn, :delete, project.project_sid, asset.asset_sid))
+    |> delete(
+      api_v1_project_project_assets_path(conn, :delete, project.project_sid, asset.asset_sid)
+    )
     |> response(200)
 
     deleted_asset = Asset |> Repo.get_by(asset_sid: asset.asset_sid)
     deleted_project = Project |> Repo.get_by(project_sid: project.project_sid)
-    deleted_project_asset = ProjectAsset |> Repo.get_by(project_id: project.project_id, asset_id: asset.asset_id)
+
+    deleted_project_asset =
+      ProjectAsset |> Repo.get_by(project_id: project.project_id, asset_id: asset.asset_id)
 
     assert deleted_asset != nil
     assert deleted_project != nil

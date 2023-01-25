@@ -24,11 +24,12 @@ defmodule Ret.StorageUsed do
       end
     else
       # Not TURKEY_MODE
-      case System.cmd("df", ["-k", storage_path]) do
+      case System.cmd("df", ["-kP", storage_path]) do
         {lines, 0} ->
           line = lines |> String.split("\n") |> Enum.at(1)
 
-          {:ok, [_FS, _kb, used, _Avail], _RestStr} = :io_lib.fread('~s~d~d~d', line |> to_charlist)
+          {:ok, [_FS, _kb, used, _Avail], _RestStr} =
+            :io_lib.fread('~s~d~d~d', line |> to_charlist)
 
           {:ok, [{:storage_used, used}]}
 

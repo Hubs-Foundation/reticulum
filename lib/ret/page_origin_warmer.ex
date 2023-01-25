@@ -39,7 +39,9 @@ defmodule Ret.PageOriginWarmer do
           if last_aggregated_etag !== latest_aggregated_etag do
             cache_values =
               @pages
-              |> Enum.map(fn {source, page} -> Task.async(fn -> page_to_cache_entry(source, page) end) end)
+              |> Enum.map(fn {source, page} ->
+                Task.async(fn -> page_to_cache_entry(source, page) end)
+              end)
               |> Enum.map(&Task.await(&1, 15_000))
               |> Enum.reject(&is_nil/1)
 

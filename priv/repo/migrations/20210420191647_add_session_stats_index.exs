@@ -6,17 +6,17 @@ defmodule Ret.Repo.Migrations.AddSessionStatsIndex do
   def up do
     for year <- 2018..@max_year,
         month <- 0..11 do
-      execute("
+      execute """
         create index session_stats_y#{year}_m#{month + 1}_session_id 
           on ret0.session_stats_y#{year}_m#{month + 1} (session_id)
-      ")
+      """
     end
   end
 
   def down do
     for year <- 2018..@max_year,
         month <- 0..11 do
-      execute("drop index session_stats_y#{year}_m#{month + 1}_session_id")
+      execute "drop index session_stats_y#{year}_m#{month + 1}_session_id"
     end
   end
 end

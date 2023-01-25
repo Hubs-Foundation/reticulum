@@ -11,12 +11,12 @@ defmodule Ret.WebPushSubscription do
   @push_rate_limit_seconds 60
 
   schema "web_push_subscriptions" do
-    field(:p256dh, :string)
-    field(:endpoint, :string)
-    field(:auth, EncryptedField)
-    field(:last_notified_at, :utc_datetime)
+    field :p256dh, :string
+    field :endpoint, :string
+    field :auth, EncryptedField
+    field :last_notified_at, :utc_datetime
 
-    belongs_to(:hub, Hub, references: :hub_id)
+    belongs_to :hub, Hub, references: :hub_id
 
     timestamps()
   end
@@ -35,12 +35,17 @@ defmodule Ret.WebPushSubscription do
         %Hub{hub_id: hub_id},
         subscription
       ) do
-    with %WebPushSubscription{} = web_push_subscription <- find_by_hub_id_and_subscription(hub_id, subscription) do
+    with %WebPushSubscription{} = web_push_subscription <-
+           find_by_hub_id_and_subscription(hub_id, subscription) do
       web_push_subscription |> Repo.delete!()
     end
   end
 
-  def maybe_send(%WebPushSubscription{endpoint: endpoint, p256dh: p256dh, auth: auth} = web_push_subscription, body) do
+  def maybe_send(
+        %WebPushSubscription{endpoint: endpoint, p256dh: p256dh, auth: auth} =
+          web_push_subscription,
+        body
+      ) do
     if may_send?(web_push_subscription) do
       subscription = %{
         endpoint: endpoint,
@@ -71,15 +76,15 @@ defmodule Ret.WebPushSubscription do
   end
 
   defp find_by_hub_id_and_subscription(hub_id, %{"endpoint" => endpoint}) do
-    WebPushSubscription
-    |> where([t], t.hub_id == ^hub_id and t.endpoint == ^endpoint)
-    |> Repo.one()
+    Repo.one(
+      from sub in WebPushSubscription,
+        where: sub.hub_id == ^hub_id,
+        where: sub.endpoint == ^endpoint
+    )
   end
 
   def endpoint_has_subscriptions?(endpoint) do
-    WebPushSubscription
-    |> where([t], t.endpoint == ^endpoint)
-    |> Repo.aggregate(:count, :web_push_subscription_id) > 0
+    Repo.exists?(from sub in WebPushSubscription, where: sub.endpoint == ^endpoint)
   end
 
   def changeset_for_new(%WebPushSubscription{} = subscription, hub, params) do

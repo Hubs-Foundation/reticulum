@@ -3,7 +3,7 @@ defmodule Ret.Repo.Migrations.AddAttributionsToScene do
 
   def change do
     alter table("scenes") do
-      add(:attributions, :jsonb)
+      add :attributions, :jsonb
     end
   end
 end

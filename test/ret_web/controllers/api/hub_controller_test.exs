@@ -134,7 +134,9 @@ defmodule RetWeb.HubControllerTest do
 
     %{"hubs" => hubs} =
       conn
-      |> update_hub(hub_id, %{member_permissions: %{spawn_and_move_media: true, pin_objects: false}})
+      |> update_hub(hub_id, %{
+        member_permissions: %{spawn_and_move_media: true, pin_objects: false}
+      })
       |> json_response(200)
 
     hub_response = Enum.at(hubs, 0)

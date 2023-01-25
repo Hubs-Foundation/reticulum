@@ -3,7 +3,7 @@ defmodule Ret.Repo.Migrations.AddAttributionToScene do
 
   def change do
     alter table("scenes") do
-      add(:attribution, :string)
+      add :attribution, :string
     end
   end
 end
