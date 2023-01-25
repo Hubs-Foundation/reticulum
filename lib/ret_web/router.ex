@@ -83,8 +83,8 @@ defmodule RetWeb.Router do
   end
 
   pipeline :graphql do
-    plug RetWeb.ApiTokenAuthPipeline
-    plug RetWeb.AddAbsintheContext
+    plug(RetWeb.ApiTokenAuthPipeline)
+    plug(RetWeb.AddAbsintheContext)
   end
 
   scope "/health", RetWeb do
@@ -103,7 +103,8 @@ defmodule RetWeb.Router do
 
   scope "/api", RetWeb do
     pipe_through(
-      [:secure_headers, :parsed_body, :api] ++ if(Mix.env() == :prod, do: [:ssl_only, :canonicalize_domain], else: [])
+      [:secure_headers, :parsed_body, :api] ++
+        if(Mix.env() == :prod, do: [:ssl_only, :canonicalize_domain], else: [])
     )
 
     scope "/v1", as: :api_v1 do
@@ -114,6 +115,7 @@ defmodule RetWeb.Router do
 
       scope "/support" do
         resources("/subscriptions", Api.V1.SupportSubscriptionController, only: [:create, :delete])
+
         resources("/availability", Api.V1.SupportSubscriptionController, only: [:index])
       end
 
@@ -185,23 +187,25 @@ defmodule RetWeb.Router do
 
   scope "/api/v2_alpha", as: :api_v2_alpha do
     pipe_through(
-      [:parsed_body, :api, :public_api_access, :graphql] ++ if(Mix.env() == :prod, do: [:ssl_only], else: [])
+      [:parsed_body, :api, :public_api_access, :graphql] ++
+        if(Mix.env() == :prod, do: [:ssl_only], else: [])
     )
 
-    forward "/graphiql", Absinthe.Plug.GraphiQL, json_codec: Jason, schema: RetWeb.Schema
-    forward "/", Absinthe.Plug, json_codec: Jason, schema: RetWeb.Schema
+    forward("/graphiql", Absinthe.Plug.GraphiQL, json_codec: Jason, schema: RetWeb.Schema)
+    forward("/", Absinthe.Plug, json_codec: Jason, schema: RetWeb.Schema)
   end
 
   scope "/api-internal", RetWeb do
     pipe_through(
-      [:dashboard_header_auth, :secure_headers, :parsed_body, :api] ++ if(Mix.env() == :prod, do: [:ssl_only], else: [])
+      [:dashboard_header_auth, :secure_headers, :parsed_body, :api] ++
+        if(Mix.env() == :prod, do: [:ssl_only], else: [])
     )
 
     scope "/v1", as: :api_internal_v1 do
       get("/presence", ApiInternal.V1.PresenceController, :show)
       get("/presence/range_max", ApiInternal.V1.PresenceController, :range_max)
-      get("/storage", ApiInternal.V1.StorageController, :show)
       post("/rewrite_assets", ApiInternal.V1.RewriteAssetsController, :post)
+      get("/hub_stats", ApiInternal.V1.HubStatsController, :show)
     end
   end
 
@@ -216,7 +220,10 @@ defmodule RetWeb.Router do
   end
 
   scope "/", RetWeb do
-    pipe_through([:strict_secure_headers, :parsed_body, :browser] ++ if(Mix.env() == :prod, do: [:ssl_only], else: []))
+    pipe_through(
+      [:strict_secure_headers, :parsed_body, :browser] ++
+        if(Mix.env() == :prod, do: [:ssl_only], else: [])
+    )
 
     head("/files/:id", FileController, :head)
     get("/files/:id", FileController, :show)

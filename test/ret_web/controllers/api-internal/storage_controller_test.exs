@@ -1,4 +1,4 @@
-defmodule RetWeb.ApiInternal.V1.StorageControllerTest do
+defmodule RetWeb.ApiInternal.V1.HubStatsControllerTest do
   use RetWeb.ConnCase
   import Ret.TestHelpers
 
@@ -46,6 +46,10 @@ defmodule RetWeb.ApiInternal.V1.StorageControllerTest do
   # and ensure that the endpoint returns it as expected.
   defp mock_storage_used(nil), do: Cachex.put(:storage_used, :storage_used, nil)
   defp mock_storage_used(storage_used_mb), do: Cachex.put(:storage_used, :storage_used, storage_used_mb * 1024)
+
+  defp seed_ccu() do
+    # todo
+  end
 
   defp request_storage(conn, opts \\ [expected_status: 200]) do
     conn
