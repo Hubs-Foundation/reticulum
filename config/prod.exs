@@ -160,3 +160,5 @@ config :ret, Ret.StatsJob, node_stats_enabled: false, node_gauges_enabled: false
 
 # Default repo check and page check to off so for polycosm hosts database + s3 hits can go idle
 config :ret, RetWeb.HealthController, check_repo: false
+
+config :ret, RetWeb.Router, secure?: true

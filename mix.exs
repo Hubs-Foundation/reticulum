@@ -3,14 +3,15 @@ defmodule Ret.Mixfile do
 
   def project do
     [
+      aliases: aliases(),
       app: :ret,
-      version: System.get_env("RELEASE_VERSION", "1.0.0"),
+      compilers: [:phoenix, :gettext] ++ Mix.compilers(),
+      deps: deps(),
       elixir: "~> 1.11",
       elixirc_paths: elixirc_paths(Mix.env()),
-      compilers: [:phoenix, :gettext] ++ Mix.compilers(),
+      releases: releases(),
       start_permanent: Mix.env() == :prod,
-      aliases: aliases(),
-      deps: deps()
+      version: System.get_env("RELEASE_VERSION", "1.0.0")
     ]
   end
 
@@ -50,7 +51,6 @@ defmodule Ret.Mixfile do
       {:gettext, "~> 0.17"},
       {:cowboy, "~> 2.9"},
       {:plug_cowboy, "~> 2.1"},
-      {:distillery, "~> 2.0"},
       {:peerage, "~> 1.0"},
       {:httpoison, "~> 1.5"},
       {:poison, "~> 3.1"},
@@ -108,4 +108,13 @@ defmodule Ret.Mixfile do
       test: ["ecto.create --quiet", "ecto.migrate", "test"]
     ]
   end
+
+  defp releases,
+    do: [
+      ret: [
+        config_providers: [
+          {Toml.Provider, [path: {:system, "RELEASE_CONFIG_DIR", "/config.toml"}]}
+        ]
+      ]
+    ]
 end
