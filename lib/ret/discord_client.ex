@@ -1,6 +1,6 @@
 defmodule Ret.DiscordClient do
-  use Bitwise
   alias Ret.{BitFieldUtils}
+  import Bitwise
 
   @oauth_scope "identify email"
   @discord_api_base "https://discordapp.com/api/v6"

@@ -1,5 +1,4 @@
 defmodule Ret.Repo.Migrations.AddPermissionsToHubs do
-  use Bitwise
   use Ecto.Migration
 
   def change do

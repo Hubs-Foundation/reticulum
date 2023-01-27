@@ -14,7 +14,7 @@ pkg_build_deps=(
     core/coreutils/8.30/20190115012313
     core/git/2.23.0
     mozillareality/erlang/23.3.4.18
-    core/elixir/1.13.4
+    core/elixir/1.14.3
 )
 pkg_exports=(
    [port]=phx.port
