@@ -76,7 +76,7 @@ do_build() {
 }
 do_install() {
     rm -rf _build/prod/rel/ret/releases
-    MIX_ENV=prod mix distillery.release
+    MIX_ENV=prod mix release
     # TODO 1.9 releases chmod 0655 _build/prod/rel/ret/bin/*
     cp -a _build/prod/rel/ret/* ${pkg_prefix}
 

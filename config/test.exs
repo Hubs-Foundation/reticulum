@@ -13,6 +13,8 @@ config :ret, RetWeb.Endpoint,
 # Print only warnings and errors during test
 config :logger, level: :warn
 
+config :ret, Ret.AppConfig, caching?: false
+
 config :ret, Ret.Repo,
   adapter: Ecto.Adapters.Postgres,
   database: "ret_test",
@@ -70,3 +72,5 @@ config :ret, Ret.MediaResolver,
   photomnemonic_endpoint: "https://uvnsm9nzhe.execute-api.us-west-1.amazonaws.com/public"
 
 config :ret, :ex_unit_configuration, exclude: [dev_only: true]
+
+config :ret, RetWeb.Plugs.RateLimit, throttle?: false

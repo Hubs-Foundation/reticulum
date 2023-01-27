@@ -22,6 +22,8 @@ config :mime, :types, %{
   "application/wasm" => ["wasm"]
 }
 
+config :ret, Ret.AppConfig, caching?: true
+
 # Configures the endpoint
 config :ret, RetWeb.Endpoint,
   url: [host: "localhost"],
@@ -51,10 +53,14 @@ config :ret, Ret.SessionLockRepo,
   ownership_timeout: 60_000,
   timeout: 60_000
 
+config :ret, RetWeb.Plugs.RateLimit, throttle?: true
+
+config :ret, RetWeb.Router, secure?: false
+
 config :peerage, log_results: false
 
 config :statix, prefix: "ret"
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
-import_config "#{Mix.env()}.exs"
+import_config "#{config_env()}.exs"
