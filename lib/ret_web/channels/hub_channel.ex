@@ -19,10 +19,11 @@ defmodule RetWeb.HubChannel do
     Storage,
     SessionStat,
     Statix,
-    WebPushSubscription
+    WebPushSubscription,
+    EntityState
   }
 
-  alias RetWeb.{Presence}
+  alias RetWeb.{Presence, EntityStateView}
   alias RetWeb.Api.V1.{HubView}
 
   intercept [
@@ -457,56 +458,76 @@ defmodule RetWeb.HubChannel do
 
   def handle_in("list_entity_states", _, socket) do
     hub = socket |> hub_for_socket
-    entity_states = Ret.Store.list_entity_states(hub.hub_id)
-
-    {:reply, {:ok, RetWeb.EntityStateView.render("index.json", %{entity_states: entity_states})},
-     socket}
+    entity_states = EntityState.list_entity_states(hub.hub_id)
+    {:reply, {:ok, EntityStateView.render("index.json", %{entity_states: entity_states})}, socket}
   end
 
   def handle_in(
-        "save_entity_state",
-        %{"root_nid" => root_nid, "nid" => nid, "message" => message},
+        "create_entity_state",
+        %{"nid" => nid, "create_message" => create_message, "updates" => updates},
         socket
       ) do
-    with {:ok, hub} <- authorize(socket, :write_entity_state) do
-      Ret.Store.save_entity_state!(hub, %{
-        root_nid: root_nid,
-        nid: nid,
-        message: Poison.encode!(message)
-      })
+    with {:ok, hub} <- authorize(socket, :write_entity_state),
+         {:ok, entity_state} <-
+           EntityState.create_entity_state!(hub, %{
+             nid: nid,
+             create_message: create_message,
+             updates: updates
+           }) do
+      broadcast!(
+        socket,
+        "entity_state_created",
+        EntityStateView.render("show.json", %{entity_state: entity_state})
+      )
 
-      broadcast!(socket, "entity_state_saved", message)
       {:reply, :ok, socket}
     else
-      error -> {:reply, error, socket}
+      {:error, %{reason: reason}} ->
+        {:reply, {:error, %{reason: reason}}, socket}
+
+      {:error, other} ->
+        IO.inspect({:error, other})
+        {:reply, {:error, %{reason: "TODO"}}, socket}
+    end
+  end
+
+  def handle_in(
+        "update_entity_state",
+        %{"root_nid" => root_nid, "nid" => nid, "update_message" => update_message},
+        socket
+      ) do
+    with {:ok, hub} <- authorize(socket, :write_entity_state),
+         {:ok, _} <-
+           EntityState.update_entity_state!(hub, %{
+             root_nid: root_nid,
+             nid: nid,
+             update_message: update_message
+           }) do
+      broadcast!(socket, "entity_state_updated", update_message)
+      {:reply, :ok, socket}
+    else
+      {:error, %{reason: reason}} ->
+        {:reply, {:error, %{reason: reason}}, socket}
+
+      {:error, _other} ->
+        # TODO Why might this fail? What error messages would we receive?
+        {:reply, {:error, %{reason: "entity update failed."}}, socket}
     end
   end
 
   def handle_in(
         "delete_entity_state",
-        %{"nid" => nid, "message" => message},
+        %{"nid" => nid},
         socket
       ) do
     with {:ok, hub} <- authorize(socket, :write_entity_state) do
-      Ret.Store.delete_entity_state!(hub.hub_id, nid)
-      broadcast!(socket, "entity_state_deleted", message)
-      {:reply, :ok, socket}
-    else
-      error -> {:reply, error, socket}
-    end
-  end
+      EntityState.delete_entity_state!(hub.hub_id, nid)
 
-  # TODO Should reticulum reject save_entity_state calls with this root_nid
-  #      for some period of time after this is called, in order to prevent
-  #      accidental re-pinning?
-  def handle_in(
-        "delete_entity_states_for_root_nid",
-        %{"nid" => nid, "message" => message},
-        socket
-      ) do
-    with {:ok, hub} <- authorize(socket, :write_entity_state) do
-      Ret.Store.delete_entity_states_for_root_nid!(hub.hub_id, nid)
-      broadcast!(socket, "entity_state_hierarchy_deleted", message)
+      broadcast!(socket, "entity_state_deleted", %{
+        "nid" => nid,
+        "creator" => socket.assigns.session_id
+      })
+
       {:reply, :ok, socket}
     else
       error -> {:reply, error, socket}

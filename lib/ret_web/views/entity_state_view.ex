@@ -1,5 +1,6 @@
 defmodule RetWeb.EntityStateView do
   use RetWeb, :view
+  alias Ret.EntityState.CreateMessage
   alias RetWeb.EntityStateView
 
   def render("index.json", %{entity_states: entity_states}) do
@@ -7,15 +8,19 @@ defmodule RetWeb.EntityStateView do
   end
 
   def render("show.json", %{entity_state: entity_state}) do
-    %{data: render_one(entity_state, EntityStateView, "entity_state.json")}
+    %{data: [render_one(entity_state, EntityStateView, "entity_state.json")]}
   end
 
-  def render("entity_state.json", %{entity_state: entity_state}) do
+  def render("entity_state.json", %{entity_state: %CreateMessage{} = message}) do
     %{
-      root_nid: entity_state.root_nid,
-      nid: entity_state.nid,
-      message: Poison.Parser.parse!(entity_state.message, %{})
-      # TODO Should hub_id be included here?
+      create_message: Poison.Parser.parse!(message.create_message, %{}),
+      update_messages:
+        Enum.map(
+          message.entity_update_messages,
+          fn u ->
+            Poison.Parser.parse!(u.update_message, %{})
+          end
+        )
     }
   end
 end
