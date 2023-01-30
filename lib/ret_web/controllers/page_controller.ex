@@ -719,7 +719,7 @@ defmodule RetWeb.PageController do
         |> Map.put(:path_info, [])
         # Since we replaced the host with the IP address in ip_url above, we need to force the host
         # header back to the original authority so that the proxy destination does not reject our request
-        |> Map.update!(:req_headers, &[{"host", authority}|&1])
+        |> Map.update!(:req_headers, &[{"host", authority} | &1])
         # Some domains disallow access from improper Origins
         |> Conn.delete_req_header("origin")
         |> ReverseProxyPlug.request(body, opts)
