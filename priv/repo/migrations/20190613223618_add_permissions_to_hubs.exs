@@ -1,8 +1,6 @@
 defmodule Ret.Repo.Migrations.AddPermissionsToHubs do
   use Ecto.Migration
 
-  import Bitwise
-
   def change do
     alter table("hubs") do
       add :member_permissions, :integer,
