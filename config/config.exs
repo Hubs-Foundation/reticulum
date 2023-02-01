@@ -55,7 +55,7 @@ config :ret, Ret.SessionLockRepo,
 
 config :ret, RetWeb.Plugs.RateLimit, throttle?: true
 
-config :ret, RetWeb.Router, secure?: false
+config :ret, RetWeb.Router, canonicalize?: false
 
 config :peerage, log_results: false
 
