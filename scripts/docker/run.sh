@@ -10,4 +10,4 @@ export MIX_ENV="turkey" RELEASE_CONFIG_DIR="/ret" RELEASE_MUTABLE_DIR="/ret/var"
 export NODE_NAME="${POD_IP}" NODE_COOKIE="foobar" 
 echo "NODE_NAME=$NODE_NAME" 
 healthcheck &
-TURKEY_MODE=1 exec /ret/bin/ret start
+TURKEY_MODE=1 exec /ret/bin/ret foreground

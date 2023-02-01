@@ -1,4 +1,4 @@
-import Config
+use Mix.Config
 
 # For production, we often load configuration from external
 # sources, such as your system environment. For this reason,
@@ -29,7 +29,7 @@ config :ret, RetWeb.Endpoint,
   assets_url: [scheme: "https", host: "", port: 443],
   link_url: [scheme: "https", host: "", port: 443],
   imgproxy_url: [scheme: "http", host: "", port: 5000],
-  pubsub_server: Ret.PubSub,
+  pubsub: [name: Ret.PubSub, adapter: Phoenix.PubSub.PG2, pool_size: 4],
   server: true,
   root: "."
 
@@ -89,6 +89,10 @@ config :ret, Ret.SessionLockRepo,
 #
 #     config :ret, RetWeb.Endpoint, server: true
 #
+
+# Finally import the config/prod.secret.exs
+# which should be versioned separately.
+import_config "prod.secret.exs"
 
 # Filter out media search API params
 config :phoenix, :filter_parameters, ["q", "filter", "cursor"]
@@ -160,5 +164,3 @@ config :ret, Ret.StatsJob, node_stats_enabled: false, node_gauges_enabled: false
 
 # Default repo check and page check to off so for polycosm hosts database + s3 hits can go idle
 config :ret, RetWeb.HealthController, check_repo: false
-
-config :ret, RetWeb.Router, secure?: true

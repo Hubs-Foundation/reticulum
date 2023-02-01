@@ -36,11 +36,11 @@
             <div class="col-sm-6">
               <p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>
               <p class="alert alert-danger" role="alert"><%= get_flash(@conn, :error) %></p>
-            </div>
+            </div>          
           </div>
         </div>
         <div class="container">
-          <%= @inner_content %>
+          <%= render @view_module, @view_template, assigns %>
         </div>
       </div>
       <div class="container">

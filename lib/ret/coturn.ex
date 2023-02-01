@@ -22,11 +22,7 @@ defmodule Ret.Coturn do
 
     # Credentials are good for two minutes, since we connect immediately.
     username = "#{Timex.now() |> Timex.shift(minutes: 2) |> Timex.to_unix()}:coturn"
-
-    credential =
-      :hmac
-      |> :crypto.mac(:sha, coturn_secret, username)
-      |> :base64.encode()
+    credential = :crypto.hmac(:sha, coturn_secret, username) |> :base64.encode()
 
     {username, credential}
   end

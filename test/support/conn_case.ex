@@ -18,8 +18,7 @@ defmodule RetWeb.ConnCase do
   using do
     quote do
       # Import conveniences for testing with connections
-      import Phoenix.ConnTest
-      import Plug.Conn
+      use Phoenix.ConnTest
       import RetWeb.Router.Helpers
 
       # The default endpoint for testing

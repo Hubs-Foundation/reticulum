@@ -1,5 +1,5 @@
 defmodule Ret.BitFieldUtils do
-  import Bitwise
+  use Bitwise
 
   def permissions_to_map(nil = _bit_field, permissions) do
     0 |> permissions_to_map(permissions)

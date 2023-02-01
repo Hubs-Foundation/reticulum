@@ -1,4 +1,4 @@
-import Config
+use Mix.Config
 
 # We don't run a server during test. If one is required,
 # you can enable the server option below.
@@ -13,23 +13,37 @@ config :ret, RetWeb.Endpoint,
 # Print only warnings and errors during test
 config :logger, level: :warn
 
-config :ret, Ret.AppConfig, caching?: false
+db_credentials = System.get_env("DB_CREDENTIALS") || "admin"
+db_host = System.get_env("DB_HOST") || "localhost"
 
 config :ret, Ret.Repo,
   adapter: Ecto.Adapters.Postgres,
+  username: db_credentials,
+  password: db_credentials,
   database: "ret_test",
+  hostname: db_host,
   template: "template0",
   pool_size: 10,
   pool: Ecto.Adapters.SQL.Sandbox
 
 config :ret, Ret.SessionLockRepo,
   adapter: Ecto.Adapters.Postgres,
+  username: db_credentials,
+  password: db_credentials,
   database: "ret_test",
+  hostname: db_host,
   template: "template0",
   pool_size: 10,
   pool: Ecto.Adapters.SQL.Sandbox
 
-config :ret, Ret.Locking, lock_timeout_ms: 1000 * 60 * 15
+config :ret, Ret.Locking,
+  lock_timeout_ms: 1000 * 60 * 15,
+  session_lock_db: [
+    username: db_credentials,
+    password: db_credentials,
+    database: "ret_test",
+    hostname: db_host
+  ]
 
 config :ret, Ret.Guardian,
   issuer: "ret",
@@ -72,5 +86,3 @@ config :ret, Ret.MediaResolver,
   photomnemonic_endpoint: "https://uvnsm9nzhe.execute-api.us-west-1.amazonaws.com/public"
 
 config :ret, :ex_unit_configuration, exclude: [dev_only: true]
-
-config :ret, RetWeb.Plugs.RateLimit, throttle?: false

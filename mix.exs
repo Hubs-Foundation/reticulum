@@ -3,15 +3,14 @@ defmodule Ret.Mixfile do
 
   def project do
     [
-      aliases: aliases(),
       app: :ret,
-      compilers: [:phoenix, :gettext] ++ Mix.compilers(),
-      deps: deps(),
-      elixir: "~> 1.11",
+      version: System.get_env("RELEASE_VERSION") || "1.0.0",
+      elixir: "~> 1.4",
       elixirc_paths: elixirc_paths(Mix.env()),
-      releases: releases(),
+      compilers: [:phoenix, :gettext] ++ Mix.compilers(),
       start_permanent: Mix.env() == :prod,
-      version: System.get_env("RELEASE_VERSION", "1.0.0")
+      aliases: aliases(),
+      deps: deps()
     ]
   end
 
@@ -35,22 +34,24 @@ defmodule Ret.Mixfile do
   defp deps do
     [
       {:ecto_boot_migration, "~> 0.2.0"},
-      {:phoenix, "~> 1.5.13"},
-      {:phoenix_pubsub, "~> 2.1"},
+      {:phoenix, "~> 1.4.0"},
+      {:phoenix_pubsub, "~> 1.1"},
       {:phoenix_ecto, "~> 4.0"},
       {:plug, "~> 1.7"},
-      {:ecto, "~> 3.5.4"},
-      {:ecto_sql, "~> 3.5.4"},
+      # Avoid 3.4.0 for now bc https://github.com/elixir-ecto/ecto/issues/3246
+      {:ecto, "~> 3.3.0"},
+      {:ecto_sql, "~> 3.3.0"},
       {:absinthe, "~> 1.4"},
       {:dataloader, "~> 1.0.0"},
       {:absinthe_plug, "~> 1.4"},
-      {:absinthe_phoenix, "~> 2.0.0"},
+      {:absinthe_phoenix, "~> 1.4.0"},
       {:postgrex, ">= 0.0.0"},
       {:phoenix_html, "~> 2.13"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:gettext, "~> 0.17"},
       {:cowboy, "~> 2.9"},
       {:plug_cowboy, "~> 2.1"},
+      {:distillery, "~> 2.0"},
       {:peerage, "~> 1.0"},
       {:httpoison, "~> 1.5"},
       {:poison, "~> 3.1"},
@@ -62,20 +63,21 @@ defmodule Ret.Mixfile do
       {:mox, "~> 1.0.1", only: [:dev, :test]},
       {:plug_attack, "~> 0.4"},
       {:ecto_enum, "~> 1.3"},
+      {:the_end, git: "https://github.com/mozillareality/the_end.git", branch: "bug/phoenix-14"},
       {:cachex, "~> 3.2"},
-      {:retry, "~> 0.15.0"},
+      {:retry, "~> 0.13"},
       {:open_graph, "~> 0.0.3"},
       {:secure_random, "~> 0.5"},
       {:bamboo, "~> 1.3"},
       {:bamboo_smtp, "~> 1.7"},
-      {:guardian, "~> 2.3.1"},
+      {:guardian, "~> 2.1.1"},
       {:guardian_phoenix, "~> 2.0"},
       {:canary, "~> 1.1.1"},
       {:temp, "~> 0.4"},
       {:timex, "~> 3.6"},
       # 0.2.2 breaks FCM without an auth token, not sure what's up with that.
       {:web_push_encryption, "0.2.1"},
-      {:sentry, "~> 7.0"},
+      {:sentry, "~> 6.0"},
       {:toml, "~> 0.5"},
       {:scrivener_ecto, "~> 2.0"},
       {:ua_parser, "~> 1.5"},
@@ -86,7 +88,7 @@ defmodule Ret.Mixfile do
       {:dns, "~> 2.2.0"},
       {:oauther, "~> 1.1"},
       {:jason, "~> 1.1"},
-      {:ex_rated, "~> 2.1.0"},
+      {:ex_rated, "~> 1.3.3"},
       {:mix_test_watch, "~> 1.0", only: :dev, runtime: false},
       {:ex_json_schema, "~> 0.7.3"},
       {:observer_cli, "~> 1.5"},
@@ -108,13 +110,4 @@ defmodule Ret.Mixfile do
       test: ["ecto.create --quiet", "ecto.migrate", "test"]
     ]
   end
-
-  defp releases,
-    do: [
-      ret: [
-        config_providers: [
-          {Toml.Provider, [path: {:system, "RELEASE_CONFIG_DIR", "/config.toml"}]}
-        ]
-      ]
-    ]
 end

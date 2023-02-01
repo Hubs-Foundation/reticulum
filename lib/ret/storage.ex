@@ -319,8 +319,8 @@ defmodule Ret.Storage do
         |> Repo.insert!()
 
       File.mkdir_p!(dest_path)
-      File.rename!(meta_file_path, dest_meta_file_path)
-      File.rename!(blob_file_path, dest_blob_file_path)
+      File.rename(meta_file_path, dest_meta_file_path)
+      File.rename(blob_file_path, dest_blob_file_path)
 
       {:ok, owned_file}
     else
@@ -483,8 +483,8 @@ defmodule Ret.Storage do
         paths_for_uuid(uuid, expiring_file_path())
     ) do
       File.mkdir_p!(dest_path)
-      File.rename!(meta_file_path, dest_meta_file_path)
-      File.rename!(blob_file_path, dest_blob_file_path)
+      File.rename(meta_file_path, dest_meta_file_path)
+      File.rename(blob_file_path, dest_blob_file_path)
     end
   end
 
@@ -502,11 +502,13 @@ defmodule Ret.Storage do
     ext = MIME.extensions(content_type) |> List.first()
     filename = [id, ext] |> Enum.reject(&is_nil/1) |> Enum.join(".")
 
-    "#{file_host}/files/#{filename}#{if token do
-      "?" <> URI.encode_query(token: token)
-    else
-      ""
-    end}"
+    "#{file_host}/files/#{filename}#{
+      if token do
+        "?" <> URI.encode_query(token: token)
+      else
+        ""
+      end
+    }"
     |> URI.parse()
   end
 
@@ -538,7 +540,9 @@ defmodule Ret.Storage do
 
   defp paths_for_uuid(uuid, subpath) do
     path =
-      "#{module_config(:storage_path)}/#{subpath}/#{String.slice(uuid, 0, 2)}/#{String.slice(uuid, 2, 2)}"
+      "#{module_config(:storage_path)}/#{subpath}/#{String.slice(uuid, 0, 2)}/#{
+        String.slice(uuid, 2, 2)
+      }"
 
     blob_file_path = "#{path}/#{uuid}.blob"
     meta_file_path = "#{path}/#{uuid}.meta.json"
