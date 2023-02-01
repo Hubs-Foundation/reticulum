@@ -25,8 +25,8 @@ jobs:
 
       - uses: erlef/setup-beam@v1
         with:
-          otp-version: '23.3'
-          elixir-version: '1.14'
+          otp-version: 22
+          elixir-version: 1.8
 
       - uses: actions/cache@v3.0.2
         with:

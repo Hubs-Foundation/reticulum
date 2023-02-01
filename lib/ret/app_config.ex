@@ -109,23 +109,24 @@ defmodule Ret.AppConfig do
     end
   end
 
-  def get_cached_config_value(key) do
-    if caching?() do
-      case Cachex.fetch(:app_config_value, key) do
-        {status, result} when status in [:commit, :ok] -> result
-      end
-    else
-      get_config_value(key)
+  def get_cached_config_value(key), do: get_cached_config_value(key, Mix.env())
+  def get_cached_config_owned_file_uri(key), do: get_cached_config_owned_file_uri(key, Mix.env())
+
+  # No caching in test
+  def get_cached_config_value(key, :test), do: get_config_value(key)
+
+  def get_cached_config_value(key, _env) do
+    case Cachex.fetch(:app_config_value, key) do
+      {status, result} when status in [:commit, :ok] -> result
     end
   end
 
-  def get_cached_config_owned_file_uri(key) do
-    if caching?() do
-      case Cachex.fetch(:app_config_owned_file_uri, key) do
-        {status, result} when status in [:commit, :ok] -> result
-      end
-    else
-      get_config_owned_file_uri(key)
+  # No caching in test
+  def get_cached_config_owned_file_uri(key, :test), do: get_config_owned_file_uri(key)
+
+  def get_cached_config_owned_file_uri(key, _env) do
+    case Cachex.fetch(:app_config_owned_file_uri, key) do
+      {status, result} when status in [:commit, :ok] -> result
     end
   end
 
@@ -161,13 +162,6 @@ defmodule Ret.AppConfig do
   defp write_config_value(app_config, key, value, _account) do
     app_config |> AppConfig.changeset(%{key: key, value: value}) |> Repo.insert_or_update!()
   end
-
-  @spec caching? :: boolean
-  defp caching?,
-    do:
-      :ret
-      |> Application.fetch_env!(__MODULE__)
-      |> Keyword.fetch!(:caching?)
 
   defp expand_key(key, app_config) do
     if key |> String.contains?("|") do

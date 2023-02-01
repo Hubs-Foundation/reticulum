@@ -1,10 +1,7 @@
 defmodule Ret.Crypto do
-  @aad "AES256GCM"
-  @aead_cipher :aes_256_gcm
-  @chunk_size 1024 * 1024
   @header_bytes <<184, 165, 211, 58, 11, 5, 200, 155>>
-  @iv <<0::size(128)>>
-  @iv_cipher :aes_256_ctr
+
+  @chunk_size 1024 * 1024
   @min_aes_size 12
 
   # Takes a stream and encrypts it using AES-CTR to a file at dest path.
@@ -13,7 +10,7 @@ defmodule Ret.Crypto do
   # original file length.
   def encrypt_stream_to_file(source_stream, source_size, destination_path, key) do
     outfile = File.stream!(destination_path, [], @chunk_size)
-    state = crypto_stream(:encrypt, crypto_hash(key))
+    state = :crypto.stream_init(:aes_ctr, :crypto.hash(:sha256, key), <<0::size(128)>>)
 
     [@header_bytes <> <<source_size::size(32)>>]
     |> Stream.concat(source_stream)
@@ -24,36 +21,19 @@ defmodule Ret.Crypto do
   end
 
   def encrypt(plaintext, key \\ default_secret_key()) do
-    one_time_iv = :crypto.strong_rand_bytes(16)
-    hashed_key = crypto_hash(key)
+    iv = :crypto.strong_rand_bytes(16)
+    hashed_key = :crypto.hash(:sha256, key)
 
     {ciphertext, tag} =
-      :crypto.crypto_one_time_aead(
-        @aead_cipher,
-        hashed_key,
-        one_time_iv,
-        to_string(plaintext),
-        @aad,
-        16,
-        true
-      )
+      :crypto.block_encrypt(:aes_gcm, hashed_key, iv, {"AES256GCM", plaintext |> to_string(), 16})
 
-    one_time_iv <> tag <> ciphertext
+    iv <> tag <> ciphertext
   end
 
   def decrypt(ciphertext, key \\ default_secret_key()) do
-    <<one_time_iv::binary-16, tag::binary-16, ciphertext::binary>> = ciphertext
-    hashed_key = crypto_hash(key)
-
-    :crypto.crypto_one_time_aead(
-      @aead_cipher,
-      hashed_key,
-      one_time_iv,
-      ciphertext,
-      @aad,
-      tag,
-      false
-    )
+    <<iv::binary-16, tag::binary-16, ciphertext::binary>> = ciphertext
+    hashed_key = :crypto.hash(:sha256, key)
+    :crypto.block_decrypt(:aes_gcm, hashed_key, iv, {"AES256GCM", ciphertext, tag})
   end
 
   # Given the source path and the user-specified decryption key, return
@@ -71,7 +51,7 @@ defmodule Ret.Crypto do
   def decrypt_file_to_stream(source_path, key) do
     case stream_decode_encrypted_header(source_path, key) do
       {:ok, file_size, aes_key, stream} ->
-        state = crypto_stream(:decrypt, aes_key)
+        state = :crypto.stream_init(:aes_ctr, aes_key, <<0::size(128)>>)
 
         {:ok,
          stream
@@ -85,14 +65,14 @@ defmodule Ret.Crypto do
 
   defp stream_decode_encrypted_header(source_path, key) do
     infile = source_path |> File.stream!([], @chunk_size)
-    aes_key = crypto_hash(key)
-    state = crypto_stream(:decrypt, aes_key)
+    aes_key = :crypto.hash(:sha256, key)
+    state = :crypto.stream_init(:aes_ctr, aes_key, <<0::size(128)>>)
 
     [<<header_ciphertext::binary-size(12), _header_chunk::binary>>] =
       infile |> Stream.take(1) |> Enum.map(& &1)
 
-    case :crypto.crypto_update(state, header_ciphertext) do
-      <<@header_bytes, file_size::size(32)>> ->
+    case :crypto.stream_decrypt(state, header_ciphertext) do
+      {_state, <<@header_bytes, file_size::size(32)>>} ->
         {:ok, file_size, aes_key, infile}
 
       _ ->
@@ -101,18 +81,9 @@ defmodule Ret.Crypto do
   end
 
   def hash(plaintext, key \\ default_secret_key()) do
-    (plaintext <> crypto_hash(plaintext <> key))
-    |> crypto_hash()
+    :crypto.hash(:sha256, plaintext <> :crypto.hash(:sha256, plaintext <> key))
     |> :base64.encode()
   end
-
-  @spec crypto_hash(String.t()) :: <<_::256>>
-  defp crypto_hash(key) when is_binary(key),
-    do: :crypto.hash(:sha256, key)
-
-  @spec crypto_stream(:encrypt | :decrypt, <<_::256>>) :: :crypto.crypto_state()
-  defp crypto_stream(action, <<_::256>> = aes_key) when action in [:encrypt, :decrypt],
-    do: :crypto.crypto_init(@iv_cipher, aes_key, @iv, action === :encrypt)
 
   defp pad_chunk(chunk) when byte_size(chunk) >= @min_aes_size, do: chunk
 
@@ -124,8 +95,7 @@ defmodule Ret.Crypto do
   end
 
   defp encrypt_chunk(chunk, {state, _ciphertext}) do
-    result = :crypto.crypto_update(state, chunk)
-    {state, result}
+    :crypto.stream_encrypt(state, chunk)
   end
 
   # At beginning, skip header
@@ -133,23 +103,25 @@ defmodule Ret.Crypto do
        when total_bytes < @min_aes_size do
     max_bytes = min(total_bytes, @min_aes_size)
 
-    <<_header::binary-size(12), body::binary-size(max_bytes), _padding::binary>> =
-      :crypto.crypto_update(state, ciphertext)
+    {state, <<_header::binary-size(12), body::binary-size(max_bytes), _padding::binary>>} =
+      :crypto.stream_decrypt(state, ciphertext)
 
     {byte_size(body), total_bytes, state, body}
   end
 
   # At beginning, skip header
   defp decrypt_chunk(ciphertext, {nil, total_bytes, state, _plaintext}) do
-    <<_header::binary-size(12), body::binary>> = :crypto.crypto_update(state, ciphertext)
+    {state, <<_header::binary-size(12), body::binary>>} =
+      :crypto.stream_decrypt(state, ciphertext)
+
     {byte_size(body), total_bytes, state, body}
   end
 
   defp decrypt_chunk(ciphertext, {decrypted_bytes, total_bytes, state, _plaintext}) do
     max_bytes = min(total_bytes - decrypted_bytes, byte_size(ciphertext))
 
-    <<plaintext::binary-size(max_bytes), _padding::binary>> =
-      :crypto.crypto_update(state, ciphertext)
+    {state, <<plaintext::binary-size(max_bytes), _padding::binary>>} =
+      :crypto.stream_decrypt(state, ciphertext)
 
     {decrypted_bytes + byte_size(plaintext), total_bytes, state, plaintext}
   end

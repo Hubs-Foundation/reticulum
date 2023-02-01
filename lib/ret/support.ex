@@ -33,7 +33,9 @@ defmodule Ret.Support do
     at_handles = handles |> Enum.map(fn h -> "@#{h}" end)
 
     message =
-      "*Incoming support request*\nOn call: #{at_handles |> Enum.join(" ")}\n<#{RetWeb.Endpoint.url()}/#{hub.hub_sid}|Enter Now>"
+      "*Incoming support request*\nOn call: #{at_handles |> Enum.join(" ")}\n<#{
+        RetWeb.Endpoint.url()
+      }/#{hub.hub_sid}|Enter Now>"
 
     notify_slack(":quest", message)
   end

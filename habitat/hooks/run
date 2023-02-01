@@ -21,4 +21,4 @@ if [ -f "${START_ERL_DATA}" ]; then
     rm "${START_ERL_DATA}"
 fi
 
-exec {{ pkg.path }}/bin/ret start
+exec {{ pkg.path }}/bin/ret foreground

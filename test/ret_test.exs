@@ -39,10 +39,10 @@ defmodule RetTest do
     end
 
     test "deletes account", %{account_to_delete: account_to_delete, current_user: current_user} do
-      %Account{} = Repo.reload(account_to_delete)
+      %Account{} = repo_reload(account_to_delete)
 
       assert :ok === Ret.delete_account(account_to_delete.account_id, current_user)
-      refute Repo.reload(account_to_delete)
+      refute repo_reload(account_to_delete)
     end
 
     test "deletes account owned files", %{
@@ -51,11 +51,11 @@ defmodule RetTest do
     } do
       owned_file = generate_temp_owned_file(account_to_delete)
 
-      %OwnedFile{} = Repo.reload(owned_file)
+      %OwnedFile{} = repo_reload(owned_file)
       true = file_on_disk?(owned_file)
 
       assert :ok === Ret.delete_account(account_to_delete.account_id, current_user)
-      refute Repo.reload(owned_file)
+      refute repo_reload(owned_file)
       refute file_on_disk?(owned_file)
     end
 
@@ -69,8 +69,8 @@ defmodule RetTest do
       favorite2 = Repo.insert!(%AccountFavorite{account: account_to_delete, hub: member_hub})
 
       assert :ok === Ret.delete_account(account_to_delete.account_id, current_user)
-      refute Repo.reload(favorite1)
-      refute Repo.reload(favorite2)
+      refute repo_reload(favorite1)
+      refute repo_reload(favorite2)
     end
 
     test "deletes API credentials", %{
@@ -81,16 +81,16 @@ defmodule RetTest do
       credentials = Repo.get_by(Api.Credentials, account_id: account_to_delete.account_id)
 
       assert :ok === Ret.delete_account(account_to_delete.account_id, current_user)
-      refute Repo.reload(credentials)
+      refute repo_reload(credentials)
     end
 
     test "deletes assets", %{account_to_delete: account_to_delete, current_user: current_user} do
       asset = create_asset(account_to_delete)
 
-      %Asset{} = Repo.reload(asset)
+      %Asset{} = repo_reload(asset)
 
       assert :ok === Ret.delete_account(account_to_delete.account_id, current_user)
-      refute Repo.reload(asset)
+      refute repo_reload(asset)
     end
 
     test "deletes asset owned files", %{
@@ -101,14 +101,14 @@ defmodule RetTest do
       owned_files = owned_files(asset, [:asset_owned_file, :thumbnail_owned_file])
 
       for owned_file <- owned_files do
-        %OwnedFile{} = Repo.reload(owned_file)
+        %OwnedFile{} = repo_reload(owned_file)
         true = file_on_disk?(owned_file)
       end
 
       assert :ok === Ret.delete_account(account_to_delete.account_id, current_user)
 
       for owned_file <- owned_files do
-        refute Repo.reload(owned_file)
+        refute repo_reload(owned_file)
         refute file_on_disk?(owned_file)
       end
     end
@@ -116,10 +116,10 @@ defmodule RetTest do
     test "deletes avatars", %{account_to_delete: account_to_delete, current_user: current_user} do
       avatar = create_avatar(account_to_delete)
 
-      %Avatar{} = Repo.reload(avatar)
+      %Avatar{} = repo_reload(avatar)
 
       assert :ok === Ret.delete_account(account_to_delete.account_id, current_user)
-      refute Repo.reload(avatar)
+      refute repo_reload(avatar)
     end
 
     test "deletes avatar owned files", %{
@@ -130,14 +130,14 @@ defmodule RetTest do
       owned_files = avatar_owned_files(avatar)
 
       for owned_file <- owned_files do
-        %OwnedFile{} = Repo.reload(owned_file)
+        %OwnedFile{} = repo_reload(owned_file)
         true = file_on_disk?(owned_file)
       end
 
       assert :ok === Ret.delete_account(account_to_delete.account_id, current_user)
 
       for owned_file <- owned_files do
-        refute Repo.reload(owned_file)
+        refute repo_reload(owned_file)
         refute file_on_disk?(owned_file)
       end
     end
@@ -150,10 +150,10 @@ defmodule RetTest do
       avatar = create_avatar(account_to_delete)
       create_child_avatar(avatar)
 
-      %Avatar{account_id: ^account_to_delete_id} = Repo.reload(avatar)
+      %Avatar{account_id: ^account_to_delete_id} = repo_reload(avatar)
 
       assert :ok === Ret.delete_account(account_to_delete.account_id, current_user)
-      assert avatar = Repo.reload(avatar)
+      assert avatar = repo_reload(avatar)
       assert current_user.account_id === avatar.account_id
     end
 
@@ -187,10 +187,10 @@ defmodule RetTest do
       avatar = create_avatar(account_to_delete)
       create_avatar_listing(avatar)
 
-      %Avatar{account_id: ^account_to_delete_id} = Repo.reload(avatar)
+      %Avatar{account_id: ^account_to_delete_id} = repo_reload(avatar)
 
       assert :ok === Ret.delete_account(account_to_delete.account_id, current_user)
-      assert avatar = Repo.reload(avatar)
+      assert avatar = repo_reload(avatar)
       assert current_user.account_id === avatar.account_id
     end
 
@@ -219,10 +219,10 @@ defmodule RetTest do
     test "deletes hubs", %{account_to_delete: account_to_delete, current_user: current_user} do
       hub = create_hub(account_to_delete)
 
-      %Hub{} = Repo.reload(hub)
+      %Hub{} = repo_reload(hub)
 
       assert :ok === Ret.delete_account(account_to_delete.account_id, current_user)
-      refute Repo.reload(hub)
+      refute repo_reload(hub)
     end
 
     test "deletes hub account favorites", %{
@@ -234,7 +234,7 @@ defmodule RetTest do
       favorite = Repo.insert!(%AccountFavorite{account: other_account, hub: hub})
 
       assert :ok === Ret.delete_account(account_to_delete.account_id, current_user)
-      refute Repo.reload(favorite)
+      refute repo_reload(favorite)
     end
 
     test "deletes hub bindings", %{
@@ -252,7 +252,7 @@ defmodule RetTest do
         })
 
       assert :ok === Ret.delete_account(account_to_delete.account_id, current_user)
-      refute Repo.reload(binding)
+      refute repo_reload(binding)
     end
 
     test "deletes hub invites", %{
@@ -263,7 +263,7 @@ defmodule RetTest do
       invite = Repo.insert!(%HubInvite{hub: hub, hub_invite_sid: "dummy sid"})
 
       assert :ok === Ret.delete_account(account_to_delete.account_id, current_user)
-      refute Repo.reload(invite)
+      refute repo_reload(invite)
     end
 
     test "deletes hub hub-role memberships", %{
@@ -275,7 +275,7 @@ defmodule RetTest do
       membership = Repo.insert!(%HubRoleMembership{account: other_account, hub: hub})
 
       assert :ok === Ret.delete_account(account_to_delete.account_id, current_user)
-      refute Repo.reload(membership)
+      refute repo_reload(membership)
     end
 
     test "deletes hub room objects", %{
@@ -286,10 +286,10 @@ defmodule RetTest do
       other_account = create_account("other account")
       object = create_room_object(hub, other_account)
 
-      %RoomObject{} = Repo.reload(object)
+      %RoomObject{} = repo_reload(object)
 
       assert :ok === Ret.delete_account(account_to_delete.account_id, current_user)
-      refute Repo.reload(object)
+      refute repo_reload(object)
     end
 
     test "deletes hub web push subscriptions", %{
@@ -307,7 +307,7 @@ defmodule RetTest do
         })
 
       assert :ok === Ret.delete_account(account_to_delete.account_id, current_user)
-      refute Repo.reload(subscription)
+      refute repo_reload(subscription)
     end
 
     test "deletes hub-role memberships", %{
@@ -320,24 +320,24 @@ defmodule RetTest do
       membership2 = Repo.insert!(%HubRoleMembership{account: account_to_delete, hub: member_hub})
 
       assert :ok === Ret.delete_account(account_to_delete.account_id, current_user)
-      refute Repo.reload(membership1)
-      refute Repo.reload(membership2)
+      refute repo_reload(membership1)
+      refute repo_reload(membership2)
     end
 
     test "deletes identity", %{account_to_delete: account_to_delete, current_user: current_user} do
       %{identity: identity} = Account.set_identity!(account_to_delete, "test identity")
 
-      %Identity{} = Repo.reload(identity)
+      %Identity{} = repo_reload(identity)
 
       assert :ok === Ret.delete_account(account_to_delete.account_id, current_user)
-      refute Repo.reload(identity)
+      refute repo_reload(identity)
     end
 
     test "deletes login", %{account_to_delete: account_to_delete, current_user: current_user} do
       login = Repo.get_by(Login, account_id: account_to_delete.account_id)
 
       assert :ok === Ret.delete_account(account_to_delete.account_id, current_user)
-      refute Repo.reload(login)
+      refute repo_reload(login)
     end
 
     test "deletes OAuth providers", %{
@@ -352,16 +352,16 @@ defmodule RetTest do
         })
 
       assert :ok === Ret.delete_account(account_to_delete.account_id, current_user)
-      refute Repo.reload(provider)
+      refute repo_reload(provider)
     end
 
     test "deletes projects", %{account_to_delete: account_to_delete, current_user: current_user} do
       project = create_project(account_to_delete)
 
-      %Project{} = Repo.reload(project)
+      %Project{} = repo_reload(project)
 
       assert :ok === Ret.delete_account(account_to_delete.account_id, current_user)
-      refute Repo.reload(project)
+      refute repo_reload(project)
     end
 
     test "deletes project owned files", %{
@@ -372,14 +372,14 @@ defmodule RetTest do
       owned_files = owned_files(project, [:project_owned_file, :thumbnail_owned_file])
 
       for owned_file <- owned_files do
-        %OwnedFile{} = Repo.reload(owned_file)
+        %OwnedFile{} = repo_reload(owned_file)
         true = file_on_disk?(owned_file)
       end
 
       assert :ok === Ret.delete_account(account_to_delete.account_id, current_user)
 
       for owned_file <- owned_files do
-        refute Repo.reload(owned_file)
+        refute repo_reload(owned_file)
         refute file_on_disk?(owned_file)
       end
     end
@@ -393,7 +393,7 @@ defmodule RetTest do
       project_asset = Repo.insert!(%ProjectAsset{asset_id: asset_id, project_id: project_id})
 
       assert :ok === Ret.delete_account(account_to_delete.account_id, current_user)
-      refute Repo.reload(project_asset)
+      refute repo_reload(project_asset)
     end
 
     test "deletes room objects", %{
@@ -405,21 +405,21 @@ defmodule RetTest do
       object1 = create_room_object(own_hub, account_to_delete)
       object2 = create_room_object(member_hub, account_to_delete)
 
-      %RoomObject{} = Repo.reload(object1)
-      %RoomObject{} = Repo.reload(object2)
+      %RoomObject{} = repo_reload(object1)
+      %RoomObject{} = repo_reload(object2)
 
       assert :ok === Ret.delete_account(account_to_delete.account_id, current_user)
-      refute Repo.reload(object1)
-      refute Repo.reload(object2)
+      refute repo_reload(object1)
+      refute repo_reload(object2)
     end
 
     test "deletes scenes", %{account_to_delete: account_to_delete, current_user: current_user} do
       scene = create_scene(account_to_delete)
 
-      %Scene{} = Repo.reload(scene)
+      %Scene{} = repo_reload(scene)
 
       assert :ok === Ret.delete_account(account_to_delete.account_id, current_user)
-      refute Repo.reload(scene)
+      refute repo_reload(scene)
     end
 
     test "deletes scene owned files", %{
@@ -430,14 +430,14 @@ defmodule RetTest do
       owned_files = scene_owned_files(scene)
 
       for owned_file <- owned_files do
-        %OwnedFile{} = Repo.reload(owned_file)
+        %OwnedFile{} = repo_reload(owned_file)
         true = file_on_disk?(owned_file)
       end
 
       assert :ok === Ret.delete_account(account_to_delete.account_id, current_user)
 
       for owned_file <- owned_files do
-        refute Repo.reload(owned_file)
+        refute repo_reload(owned_file)
         refute file_on_disk?(owned_file)
       end
     end
@@ -450,10 +450,10 @@ defmodule RetTest do
       scene = create_scene(account_to_delete)
       create_child_scene(scene)
 
-      %Scene{account_id: ^account_to_delete_id} = Repo.reload(scene)
+      %Scene{account_id: ^account_to_delete_id} = repo_reload(scene)
 
       assert :ok === Ret.delete_account(account_to_delete.account_id, current_user)
-      assert scene = Repo.reload(scene)
+      assert scene = repo_reload(scene)
       assert current_user.account_id === scene.account_id
     end
 
@@ -487,10 +487,10 @@ defmodule RetTest do
       scene = create_scene(account_to_delete)
       create_scene_listing(scene)
 
-      %Scene{account_id: ^account_to_delete_id} = Repo.reload(scene)
+      %Scene{account_id: ^account_to_delete_id} = repo_reload(scene)
 
       assert :ok === Ret.delete_account(account_to_delete.account_id, current_user)
-      assert scene = Repo.reload(scene)
+      assert scene = repo_reload(scene)
       assert current_user.account_id === scene.account_id
     end
 
@@ -522,7 +522,7 @@ defmodule RetTest do
       assert {:error, :forbidden} ===
                Ret.delete_account(account_to_delete.account_id, current_user)
 
-      assert Repo.reload(account_to_delete)
+      assert repo_reload(account_to_delete)
     end
 
     test "with an admin account to delete", %{current_user: current_user} do
@@ -531,14 +531,14 @@ defmodule RetTest do
       assert {:error, :forbidden} ===
                Ret.delete_account(account_to_delete.account_id, current_user)
 
-      assert Repo.reload(account_to_delete)
+      assert repo_reload(account_to_delete)
     end
 
     test "with the user’s own account to delete" do
       {:ok, admin_account: account} = create_admin_account("own account")
 
       assert {:error, :forbidden} === Ret.delete_account(account.account_id, account)
-      assert Repo.reload(account)
+      assert repo_reload(account)
     end
   end
 
@@ -743,11 +743,18 @@ defmodule RetTest do
     end
   end
 
+  # TODO: Replace calls with Repo.reload/1 after Ecto updgrade
+  @spec repo_reload(schema) :: schema when schema: Ecto.Schema.schema()
+  defp repo_reload(schema) when is_schema(schema) do
+    [primary_key] = schema.__struct__.__schema__(:primary_key)
+    Repo.get(schema.__struct__, Map.fetch!(schema, primary_key))
+  end
+
   @spec reload_account_id(Ecto.Schema.schema()) :: Account.id()
   defp reload_account_id(schema) when is_schema(schema),
     do:
       schema
-      |> Repo.reload()
+      |> repo_reload()
       |> Map.fetch!(:account_id)
 
   @spec scene_owned_files(Scene.t()) :: [OwnedFile.t()]

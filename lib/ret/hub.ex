@@ -8,11 +8,11 @@ end
 
 defmodule Ret.Hub do
   use Ecto.Schema
+  use Bitwise
 
-  import Bitwise
-  import Canada, only: [can?: 2]
   import Ecto.Changeset
   import Ecto.Query
+  import Canada, only: [can?: 2]
 
   alias Ret.{
     Account,
