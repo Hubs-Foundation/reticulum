@@ -1,7 +1,12 @@
 defmodule RetWeb.Plugs.RateLimit do
   use PlugAttack
 
-  if Mix.env() != :test do
+  throttle? =
+    :ret
+    |> Application.compile_env!(__MODULE__)
+    |> Keyword.fetch!(:throttle?)
+
+  if throttle? do
     rule "throttle by ip to 1 tps", conn do
       throttle(
         conn.remote_ip,

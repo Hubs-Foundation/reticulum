@@ -10,7 +10,7 @@ apk add curl
 org="biome-sh";repo="biome"
 ver=$(curl -s https://api.github.com/repos/$org/$repo/releases/latest | grep "tag_name" | awk '{print substr($2, 2, length($2)-3)}')
 dl="https://github.com/$org/$repo/releases/download/$ver/bio-${ver#"v"}-x86_64-linux.tar.gz"
-echo "[info] getting bio from: $dl" && curl -L -o bio.gz $dl && tar -xf bio.gz 
+echo "[info] getting bio from: $dl" && curl -L -o bio.gz $dl && tar -xf bio.gz
 cp ./bio /usr/bin/bio && bio --version
 
 export HAB_ORIGIN=mozillareality
@@ -40,13 +40,13 @@ pkg_deps=(
     core/coreutils/8.30/20190115012313
     core/bash/4.4.19/20190115012619
     core/which/2.21/20190430084037
-    mozillareality/erlang/22.0
+    mozillareality/erlang/23.3.4.18
 )
 pkg_build_deps=(
     core/coreutils/8.30/20190115012313
     core/git/2.23.0
-    mozillareality/erlang/22.0
-    core/elixir/1.8.0
+    mozillareality/erlang/23.3.4.18
+    core/elixir/1.14.3
 )
 pkg_exports=(
    [port]=phx.port
@@ -58,7 +58,7 @@ do_verify() {
 do_prepare() {
     export LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
     export MIX_ENV=prod
-    export RELEASE_VERSION="1.0.$(echo $pkg_prefix | cut -d '/' -f 7)" 
+    export RELEASE_VERSION="1.0.$(echo $pkg_prefix | cut -d '/' -f 7)"
 
     # Rebar3 will hate us otherwise because it looks for
     # /usr/bin/env when it does some of its compiling
@@ -76,7 +76,7 @@ do_build() {
 }
 do_install() {
     rm -rf _build/prod/rel/ret/releases
-    MIX_ENV=prod mix distillery.release
+    MIX_ENV=prod mix release
     # TODO 1.9 releases chmod 0655 _build/prod/rel/ret/bin/*
     cp -a _build/prod/rel/ret/* ${pkg_prefix}
 

@@ -3,6 +3,11 @@ defmodule RetWeb.Router do
   use Plug.ErrorHandler
   use Sentry.Plug
 
+  secure? =
+    :ret
+    |> Application.compile_env!(__MODULE__)
+    |> Keyword.fetch!(:secure?)
+
   pipeline :secure_headers do
     plug :put_secure_browser_headers
     plug RetWeb.Plugs.AddCSP
@@ -103,7 +108,7 @@ defmodule RetWeb.Router do
 
   scope "/api", RetWeb do
     pipe_through [:secure_headers, :parsed_body, :api] ++
-                   if(Mix.env() == :prod, do: [:ssl_only, :canonicalize_domain], else: [])
+                   if(secure?, do: [:ssl_only, :canonicalize_domain], else: [])
 
     scope "/v1", as: :api_v1 do
       get "/meta", Api.V1.MetaController, :show
@@ -183,7 +188,7 @@ defmodule RetWeb.Router do
 
   scope "/api/v2_alpha", RetWeb do
     pipe_through [:secure_headers, :parsed_body, :api, :public_api_access, :auth_required] ++
-                   if(Mix.env() == :prod, do: [:ssl_only, :canonicalize_domain], else: [])
+                   if(secure?, do: [:ssl_only, :canonicalize_domain], else: [])
 
     resources "/credentials", Api.V2.CredentialsController,
       only: [:create, :index, :update, :show]
@@ -191,7 +196,7 @@ defmodule RetWeb.Router do
 
   scope "/api/v2_alpha", as: :api_v2_alpha do
     pipe_through [:parsed_body, :api, :public_api_access, :graphql] ++
-                   if(Mix.env() == :prod, do: [:ssl_only], else: [])
+                   if(secure?, do: [:ssl_only], else: [])
 
     forward "/graphiql", Absinthe.Plug.GraphiQL, json_codec: Jason, schema: RetWeb.Schema
     forward "/", Absinthe.Plug, json_codec: Jason, schema: RetWeb.Schema
@@ -199,7 +204,7 @@ defmodule RetWeb.Router do
 
   scope "/api-internal", RetWeb do
     pipe_through [:dashboard_header_auth, :secure_headers, :parsed_body, :api] ++
-                   if(Mix.env() == :prod, do: [:ssl_only], else: [])
+                   if(secure?, do: [:ssl_only], else: [])
 
     scope "/v1", as: :api_internal_v1 do
       get "/presence", ApiInternal.V1.PresenceController, :show
@@ -214,8 +219,7 @@ defmodule RetWeb.Router do
   # Directly accessible APIs.
   # Permit direct file uploads without intermediate ALB/Cloudfront/CDN proxying.
   scope "/api", RetWeb do
-    pipe_through [:secure_headers, :parsed_body, :api] ++
-                   if(Mix.env() == :prod, do: [:ssl_only], else: [])
+    pipe_through [:secure_headers, :parsed_body, :api] ++ if(secure?, do: [:ssl_only], else: [])
 
     scope "/v1", as: :api_v1 do
       resources "/media", Api.V1.MediaController, only: [:create]
@@ -224,7 +228,7 @@ defmodule RetWeb.Router do
 
   scope "/", RetWeb do
     pipe_through [:strict_secure_headers, :parsed_body, :browser] ++
-                   if(Mix.env() == :prod, do: [:ssl_only], else: [])
+                   if(secure?, do: [:ssl_only], else: [])
 
     head "/files/:id", FileController, :head
     get "/files/:id", FileController, :show
@@ -232,21 +236,21 @@ defmodule RetWeb.Router do
 
   scope "/", RetWeb do
     pipe_through [:secure_headers, :parsed_body, :browser] ++
-                   if(Mix.env() == :prod, do: [:ssl_only, :canonicalize_domain], else: [])
+                   if(secure?, do: [:ssl_only, :canonicalize_domain], else: [])
 
     get "/link", PageController, only: [:index]
   end
 
   scope "/", RetWeb do
     pipe_through [:secure_headers, :parsed_body, :browser, :rate_limit] ++
-                   if(Mix.env() == :prod, do: [:ssl_only, :canonicalize_domain], else: [])
+                   if(secure?, do: [:ssl_only, :canonicalize_domain], else: [])
 
     get "/link/*path", PageController, only: [:index]
   end
 
   scope "/", RetWeb do
     pipe_through [:secure_headers, :parsed_body, :browser] ++
-                   if(Mix.env() == :prod, do: [:ssl_only, :canonicalize_domain], else: [])
+                   if(secure?, do: [:ssl_only, :canonicalize_domain], else: [])
 
     get "/*path", PageController, only: [:index]
   end
