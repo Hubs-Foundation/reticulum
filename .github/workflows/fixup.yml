@@ -8,4 +8,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
-          echo "${{ toJSON(github.event.commits) }}"
+          echo "${{ toJSON(github.event) }}"
