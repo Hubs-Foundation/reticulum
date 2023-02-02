@@ -1,4 +1,3 @@
-
 set -e
 
 #BLDR_HAB_TOKEN='_Qk9YLTEKYmxkci0yMDE3M...'
