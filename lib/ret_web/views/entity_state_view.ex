@@ -13,14 +13,9 @@ defmodule RetWeb.EntityStateView do
 
   def render("entity_state.json", %{entity_state: %CreateMessage{} = message}) do
     %{
-      create_message: Poison.Parser.parse!(message.create_message, %{}),
+      create_message: Jason.decode!(message.create_message, %{}),
       update_messages:
-        Enum.map(
-          message.entity_update_messages,
-          fn u ->
-            Poison.Parser.parse!(u.update_message, %{})
-          end
-        )
+        Enum.map(message.entity_update_messages, &Jason.decode!(&1.update_message, %{}))
     }
   end
 end
