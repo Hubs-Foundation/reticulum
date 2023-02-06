@@ -15,9 +15,9 @@ defmodule Ret.EntityState.CreateMessage do
     timestamps()
   end
 
-  def changeset(%CreateMessage{} = create_message, %Hub{} = hub, attrs) do
+  def changeset(%CreateMessage{} = create_message, %Hub{} = hub, params) do
     create_message
-    |> cast(attrs, [:nid, :create_message])
+    |> cast(params, [:nid, :create_message])
     |> validate_required([:nid, :create_message])
     |> put_assoc(:hub, hub)
     |> unique_constraint(:nid, name: :entity_create_messages_nid_hub_id_index)

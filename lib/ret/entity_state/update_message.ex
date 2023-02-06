@@ -19,10 +19,10 @@ defmodule Ret.EntityState.UpdateMessage do
         %UpdateMessage{} = update_message,
         %Hub{} = hub,
         %CreateMessage{} = create_message,
-        attrs
+        params
       ) do
     update_message
-    |> cast(attrs, [:nid, :update_message])
+    |> cast(params, [:nid, :update_message])
     |> validate_required([:nid, :update_message])
     |> put_assoc(:hub, hub)
     |> put_assoc(:entity_create_message, create_message)
