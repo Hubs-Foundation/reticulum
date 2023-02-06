@@ -8,7 +8,7 @@ defmodule Ret.Repo.Migrations.AddEntityUpdateMessagesTable do
         primary_key: true
 
       add :nid, :string, null: false
-      add :update_message, :binary
+      add :update_message, :binary, null: false
       add :hub_id, references(:hubs, column: :hub_id), null: false
 
       add :entity_create_message_id,
@@ -21,10 +21,5 @@ defmodule Ret.Repo.Migrations.AddEntityUpdateMessagesTable do
     create unique_index(:entity_update_messages, [:nid, :hub_id])
     create index(:entity_update_messages, [:hub_id])
     create index(:entity_update_messages, [:nid])
-
-    # create index(:entity_update_messages_entity_create_message_id_hub_id_index, [
-    #          :entity_create_message_id,
-    #          :hub_id
-    #        ])
   end
 end

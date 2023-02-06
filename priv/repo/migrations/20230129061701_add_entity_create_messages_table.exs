@@ -8,7 +8,7 @@ defmodule Ret.Repo.Migrations.AddEntityCreateMessagesTable do
         primary_key: true
 
       add :nid, :string, null: false
-      add :create_message, :binary
+      add :create_message, :binary, null: false
       add :hub_id, references(:hubs, column: :hub_id), null: false
       timestamps()
     end
