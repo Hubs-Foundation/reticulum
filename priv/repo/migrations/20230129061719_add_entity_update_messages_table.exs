@@ -12,7 +12,10 @@ defmodule Ret.Repo.Migrations.AddEntityUpdateMessagesTable do
       add :hub_id, references(:hubs, column: :hub_id), null: false
 
       add :entity_create_message_id,
-          references(:entity_create_messages, column: :entity_create_message_id),
+          references(:entity_create_messages,
+            column: :entity_create_message_id,
+            on_delete: :delete_all
+          ),
           null: false
 
       timestamps()

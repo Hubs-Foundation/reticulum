@@ -80,12 +80,6 @@ defmodule Ret.EntityState do
             where: create_message.nid == ^nid
         )
 
-      Repo.delete_all(
-        from update_message in UpdateMessage,
-          where:
-            update_message.entity_create_message_id == ^create_message.entity_create_message_id
-      )
-
       Repo.delete!(create_message)
     end)
   end
