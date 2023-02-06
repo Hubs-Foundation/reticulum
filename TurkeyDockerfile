@@ -1,8 +1,8 @@
-FROM elixir:1.8-alpine as builder
+FROM elixir:1.14-alpine as builder
 RUN apk add --no-cache nodejs yarn git build-base
 copy . .
 RUN mix local.hex --force && mix local.rebar --force && mix deps.get
-run MIX_ENV=turkey mix distillery.release
+run MIX_ENV=turkey mix release
 
 from alpine/openssl as certr
 workdir certs
