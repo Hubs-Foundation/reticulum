@@ -20,11 +20,11 @@ defmodule RetWeb.ApiInternal.V1.StorageControllerTest do
   test "hub stats endpoint responds with cached storage value", %{conn: conn} do
     mock_storage_used(0)
     resp = request_hub_stats(conn)
-    assert resp["storage_mb"] === 0.0
+    assert resp["storage_mb"] === 0.0 and resp["max_ccu"] === 0.0
 
     mock_storage_used(10)
     resp = request_hub_stats(conn)
-    assert resp["storage_mb"] === 10.0
+    assert resp["storage_mb"] === 10.0 and resp["max_ccu"] === 0.0
   end
 
 
@@ -48,15 +48,6 @@ defmodule RetWeb.ApiInternal.V1.StorageControllerTest do
     assert resp["error"] === "storage_usage_unavailable"
   end
 
-  test "hub stats endpoint returns correct ccu numbers for time range", %{conn: conn} do
-  end
-
-  test "hub stats endpoint returns 0 ccu numbers for time range if no data available", %{conn: conn} do
-  end
-
-  test "hub stats endpoint returns correct ccu numbers for time range when there is multiple ccu numbers in db", %{conn: conn} do
-  end
-
   # The Ret.Storage module relies on a cached value to retrieve storage usage via Ret.StorageUsed.
   # Since we mainly care about testing the endpoint here, we use the cache to mock the usage value
   # and ensure that the endpoint returns it as expected.
@@ -65,14 +56,13 @@ defmodule RetWeb.ApiInternal.V1.StorageControllerTest do
   defp mock_storage_used(storage_used_mb),
     do: Cachex.put(:storage_used, :storage_used, storage_used_mb * 1024)
 
-  defp seed_ccu() do
-    # todo
-  end
-
   defp request_hub_stats(conn, opts \\ [expected_status: 200]) do
+    {:ok, start_time} = NaiveDateTime.utc_now() |> NaiveDateTime.to_date() |> NaiveDateTime.new(Time.new(0,0,0,0))
+    {:ok, end_time} = NaiveDateTime.utc_now() |> NaiveDateTime.to_date() |> Date.add(1) |> NaiveDateTime.new(Time.new(0,0,0,0))
+
     conn
     |> put_req_header(@dashboard_access_header, @dashboard_access_key)
-    |> get("/api-internal/v1/hub_stats?")
+    |> get("/api-internal/v1/hub_stats", %{start_time: start_time, end_time: end_time})
     |> json_response(opts[:expected_status])
   end
 end
