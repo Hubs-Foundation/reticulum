@@ -19,11 +19,10 @@ defmodule RetWeb.HubChannel do
     Storage,
     SessionStat,
     Statix,
-    WebPushSubscription,
-    EntityState
+    WebPushSubscription
   }
 
-  alias RetWeb.{Presence, EntityStateView}
+  alias RetWeb.{Presence, EntityView}
   alias RetWeb.Api.V1.{HubView}
 
   intercept [
@@ -456,28 +455,28 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
-  def handle_in("list_entity_states", _, socket) do
+  def handle_in("list_entities", _, socket) do
     hub = socket |> hub_for_socket
-    entity_states = EntityState.list_entity_states(hub.hub_id)
-    {:reply, {:ok, EntityStateView.render("index.json", %{entity_states: entity_states})}, socket}
+    entities = Ret.list_entities(hub.hub_id)
+    {:reply, {:ok, EntityView.render("index.json", %{entities: entities})}, socket}
   end
 
   def handle_in(
-        "create_entity_state",
+        "save_entity_state",
         %{"nid" => nid, "create_message" => create_message, "updates" => updates},
         socket
       ) do
     with {:ok, hub} <- authorize(socket, :write_entity_state),
-         {:ok, entity_state} <-
-           EntityState.create_entity_state!(hub, %{
+         {:ok, entity} <-
+           Ret.create_entity!(hub, %{
              nid: nid,
              create_message: create_message,
              updates: updates
            }) do
       broadcast!(
         socket,
-        "entity_state_created",
-        EntityStateView.render("show.json", %{entity_state: entity_state})
+        "entity_state_saved",
+        EntityView.render("show.json", %{entity: entity})
       )
 
       {:reply, :ok, socket}
@@ -498,7 +497,7 @@ defmodule RetWeb.HubChannel do
       ) do
     with {:ok, hub} <- authorize(socket, :write_entity_state),
          {:ok, _} <-
-           EntityState.update_entity_state!(hub, %{
+           Ret.insert_or_update_sub_entity!(hub, %{
              root_nid: root_nid,
              nid: nid,
              update_message: update_message
@@ -521,7 +520,7 @@ defmodule RetWeb.HubChannel do
         socket
       ) do
     with {:ok, hub} <- authorize(socket, :write_entity_state) do
-      EntityState.delete_entity_state!(hub.hub_id, nid)
+      Ret.delete_entity!(hub.hub_id, nid)
 
       broadcast!(socket, "entity_state_deleted", %{
         "nid" => nid,

@@ -7,13 +7,16 @@ defmodule Ret do
     Asset,
     Avatar,
     AvatarListing,
+    Entity,
+    Hub,
     Login,
     OwnedFile,
     Project,
     Repo,
     Scene,
     SceneListing,
-    Storage
+    Storage,
+    SubEntity
   }
 
   import Canada, only: [can?: 2]
@@ -265,5 +268,85 @@ defmodule Ret do
   @spec scene_query(Account.id()) :: Ecto.Query.t()
   defp scene_query(account_id) when is_serial_id(account_id) do
     from Scene, where: [account_id: ^account_id]
+  end
+
+  def list_entities(hub_id) do
+    Repo.all(
+      from entity in Entity,
+        where: entity.hub_id == ^hub_id,
+        preload: [:sub_entities]
+    )
+  end
+
+  def create_entity!(
+        %Hub{hub_id: hub_id} = hub,
+        %{nid: nid, create_message: create_message, updates: updates}
+      ) do
+    Repo.transaction(fn ->
+      %Entity{}
+      |> Entity.changeset(hub, %{
+        nid: nid,
+        create_message: Jason.encode!(create_message)
+      })
+      |> Repo.insert!()
+
+      for update <- updates do
+        # TODO How / where are we supposed to handle string <-> atom conversion?
+        insert_or_update_sub_entity!(hub, %{
+          root_nid: nid,
+          nid: update["nid"],
+          update_message: update["update_message"]
+        })
+      end
+
+      Repo.one!(
+        from entity in Entity,
+          where: entity.hub_id == ^hub_id,
+          where: entity.nid == ^nid,
+          preload: [:sub_entities]
+      )
+    end)
+  end
+
+  def insert_or_update_sub_entity!(
+        %Hub{hub_id: hub_id} = hub,
+        %{root_nid: root_nid, nid: nid, update_message: update_message}
+      ) do
+    Repo.transaction(fn ->
+      entity =
+        Repo.one!(
+          from entity in Entity,
+            where: entity.hub_id == ^hub_id,
+            where: entity.nid == ^root_nid
+        )
+
+      sub_entity =
+        Repo.one(
+          from sub_entity in SubEntity,
+            where: sub_entity.entity_id == ^entity.entity_id,
+            where: sub_entity.nid == ^nid,
+            preload: [:hub, :entity]
+        )
+
+      (sub_entity || %SubEntity{})
+      |> SubEntity.changeset(hub, entity, %{
+        nid: nid,
+        update_message: Jason.encode!(update_message)
+      })
+      |> Repo.insert_or_update!()
+    end)
+  end
+
+  def delete_entity!(hub_id, nid) do
+    Repo.transaction(fn ->
+      entity =
+        Repo.one!(
+          from entity in Entity,
+            where: entity.hub_id == ^hub_id,
+            where: entity.nid == ^nid
+        )
+
+      Repo.delete!(entity)
+    end)
   end
 end
