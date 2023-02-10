@@ -3,7 +3,7 @@ defmodule Ret.Entity do
   import Ecto.Changeset
 
   alias Ret.Hub
-  alias Ret.{Entity, SubEntity}
+  alias Ret.SubEntity
 
   @schema_prefix "ret0"
   @primary_key {:entity_id, :id, autogenerate: true}
@@ -16,7 +16,7 @@ defmodule Ret.Entity do
     timestamps()
   end
 
-  def changeset(%Entity{} = entity, %Hub{} = hub, params) do
+  def changeset(entity, hub, params) do
     entity
     |> cast(params, [:nid, :create_message])
     |> validate_required([:nid, :create_message])

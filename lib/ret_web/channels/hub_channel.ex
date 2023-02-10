@@ -461,67 +461,36 @@ defmodule RetWeb.HubChannel do
     {:reply, {:ok, EntityView.render("index.json", %{entities: entities})}, socket}
   end
 
-  def handle_in(
-        "save_entity_state",
-        %{"nid" => nid, "create_message" => create_message, "updates" => updates},
-        socket
-      ) do
-    with {:ok, hub} <- authorize(socket, :write_entity_state),
-         {:ok, entity} <-
-           Ret.create_entity!(hub, %{
-             nid: nid,
-             create_message: create_message,
-             updates: updates
-           }) do
-      broadcast!(
-        socket,
-        "entity_state_saved",
-        EntityView.render("show.json", %{entity: entity})
-      )
+  def handle_in("save_entity_state", params, socket) do
+    params = parse(params)
 
+    with {:ok, hub} <- authorize(socket, :write_entity_state),
+         {:ok, %{entity: entity}} <- Ret.create_entity(hub, params) do
+      entity = Repo.preload(entity, [:sub_entities])
+      broadcast!(socket, "entity_state_saved", EntityView.render("show.json", %{entity: entity}))
       {:reply, :ok, socket}
     else
-      {:error, %{reason: reason}} ->
-        {:reply, {:error, %{reason: reason}}, socket}
-
-      {:error, other} ->
-        IO.inspect({:error, other})
-        {:reply, {:error, %{reason: "TODO"}}, socket}
+      {:error, reason} ->
+        reply_error(socket, reason)
     end
   end
 
-  def handle_in(
-        "update_entity_state",
-        %{"root_nid" => root_nid, "nid" => nid, "update_message" => update_message},
-        socket
-      ) do
+  def handle_in("update_entity_state", %{"update_message" => update_message} = params, socket) do
+    params = parse(params)
+
     with {:ok, hub} <- authorize(socket, :write_entity_state),
-         {:ok, _} <-
-           Ret.insert_or_update_sub_entity!(hub, %{
-             root_nid: root_nid,
-             nid: nid,
-             update_message: update_message
-           }) do
+         {:ok, _} <- Ret.insert_or_update_sub_entity(hub, params) do
       broadcast!(socket, "entity_state_updated", update_message)
       {:reply, :ok, socket}
     else
-      {:error, %{reason: reason}} ->
-        {:reply, {:error, %{reason: reason}}, socket}
-
-      {:error, _other} ->
-        # TODO Why might this fail? What error messages would we receive?
-        {:reply, {:error, %{reason: "entity update failed."}}, socket}
+      {:error, reason} ->
+        reply_error(socket, reason)
     end
   end
 
-  def handle_in(
-        "delete_entity_state",
-        %{"nid" => nid},
-        socket
-      ) do
-    with {:ok, hub} <- authorize(socket, :write_entity_state) do
-      Ret.delete_entity!(hub.hub_id, nid)
-
+  def handle_in("delete_entity_state", %{"nid" => nid}, socket) do
+    with {:ok, hub} <- authorize(socket, :write_entity_state),
+         {:ok, _} <- Ret.delete_entity(hub.hub_id, nid) do
       broadcast!(socket, "entity_state_deleted", %{
         "nid" => nid,
         "creator" => socket.assigns.session_id
@@ -529,7 +498,8 @@ defmodule RetWeb.HubChannel do
 
       {:reply, :ok, socket}
     else
-      error -> {:reply, error, socket}
+      {:error, reason} ->
+        reply_error(socket, reason)
     end
   end
 
@@ -949,18 +919,30 @@ defmodule RetWeb.HubChannel do
     end
   end
 
-  defp authorize(socket, :write_entity_state) do
-    with account <- Guardian.Phoenix.Socket.current_resource(socket),
-         :ok <- if(account === nil, do: :not_logged_in, else: :ok),
-         hub <- hub_for_socket(socket),
-         true <- can?(account, pin_objects(hub)) do
-      {:ok, hub}
-    else
-      :not_logged_in ->
-        {:error, %{reason: :not_logged_in}}
+  defp account_for_socket(socket) do
+    case Guardian.Phoenix.Socket.current_resource(socket) do
+      nil ->
+        {:error, :not_logged_in}
 
-      false ->
-        {:error, %{reason: :unauthorized}}
+      account ->
+        {:ok, account}
+    end
+  end
+
+  defp auth(hub, account, :write_entity_state) do
+    if can?(account, pin_objects(hub)) do
+      :ok
+    else
+      {:error, :unauthorized}
+    end
+  end
+
+  defp authorize(socket, :write_entity_state) do
+    hub = hub_for_socket(socket)
+
+    with {:ok, account} <- account_for_socket(socket),
+         :ok <- auth(hub, account, :write_entity_state) do
+      {:ok, hub}
     end
   end
 
@@ -1450,4 +1432,20 @@ defmodule RetWeb.HubChannel do
 
   defp internal_naf_event_for("nafr", _socket), do: "maybe-nafr"
   defp internal_naf_event_for("naf", _socket), do: "maybe-naf"
+
+  defp parse(%{"nid" => nid, "root_nid" => root_nid, "update_message" => update_message}) do
+    %{nid: nid, root_nid: root_nid, update_message: Jason.encode!(update_message)}
+  end
+
+  defp parse(%{"nid" => nid, "create_message" => create_message, "updates" => updates}) do
+    %{
+      nid: nid,
+      create_message: Jason.encode!(create_message),
+      updates: Enum.map(updates, &parse(&1))
+    }
+  end
+
+  defp reply_error(socket, reason) do
+    {:reply, {:error, %{reason: reason}}, socket}
+  end
 end

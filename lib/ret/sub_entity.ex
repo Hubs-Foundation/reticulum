@@ -15,17 +15,27 @@ defmodule Ret.SubEntity do
     timestamps()
   end
 
-  def changeset(
-        %SubEntity{} = sub_entity,
-        %Hub{} = hub,
-        %Entity{} = entity,
-        params
-      ) do
+  def changeset(sub_entity, hub, entity, params) do
     sub_entity
     |> cast(params, [:nid, :update_message])
     |> validate_required([:nid, :update_message])
     |> put_assoc(:hub, hub)
     |> put_assoc(:entity, entity)
     |> unique_constraint(:nid, name: :sub_entities_nid_hub_id_index)
+  end
+
+  def for_bulk_insert(hub, entity, params) do
+    %{valid?: true} = changeset(%SubEntity{}, hub, entity, params)
+
+    now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
+    # insert_all only allows raw maps or keyword lists
+    [
+      nid: params.nid,
+      update_message: params.update_message,
+      entity_id: entity.entity_id,
+      hub_id: hub.hub_id,
+      inserted_at: now,
+      updated_at: now
+    ]
   end
 end

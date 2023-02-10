@@ -8,15 +8,14 @@ defmodule Ret do
     Avatar,
     AvatarListing,
     Entity,
-    Hub,
+    EntityManager,
     Login,
     OwnedFile,
     Project,
     Repo,
     Scene,
     SceneListing,
-    Storage,
-    SubEntity
+    Storage
   }
 
   import Canada, only: [can?: 2]
@@ -278,75 +277,40 @@ defmodule Ret do
     )
   end
 
-  def create_entity!(
-        %Hub{hub_id: hub_id} = hub,
-        %{nid: nid, create_message: create_message, updates: updates}
-      ) do
-    Repo.transaction(fn ->
-      %Entity{}
-      |> Entity.changeset(hub, %{
-        nid: nid,
-        create_message: Jason.encode!(create_message)
-      })
-      |> Repo.insert!()
+  def create_entity(hub, params) do
+    result = Repo.transaction(EntityManager.create_entity(hub, params))
 
-      for update <- updates do
-        # TODO How / where are we supposed to handle string <-> atom conversion?
-        insert_or_update_sub_entity!(hub, %{
-          root_nid: nid,
-          nid: update["nid"],
-          update_message: update["update_message"]
-        })
-      end
+    case result do
+      {:ok, _} ->
+        result
 
-      Repo.one!(
-        from entity in Entity,
-          where: entity.hub_id == ^hub_id,
-          where: entity.nid == ^nid,
-          preload: [:sub_entities]
-      )
-    end)
+      {:error, :entity,
+       %{errors: [nid: {_, [constraint: :unique, constraint_name: "entities_nid_hub_id_index"]}]},
+       _changes_so_far} ->
+        {:error, :entity_state_already_exists}
+    end
   end
 
-  def insert_or_update_sub_entity!(
-        %Hub{hub_id: hub_id} = hub,
-        %{root_nid: root_nid, nid: nid, update_message: update_message}
-      ) do
-    Repo.transaction(fn ->
-      entity =
-        Repo.one!(
-          from entity in Entity,
-            where: entity.hub_id == ^hub_id,
-            where: entity.nid == ^root_nid
-        )
+  def insert_or_update_sub_entity(hub, params) do
+    result = Repo.transaction(EntityManager.insert_or_update_sub_entity(hub, params))
 
-      sub_entity =
-        Repo.one(
-          from sub_entity in SubEntity,
-            where: sub_entity.entity_id == ^entity.entity_id,
-            where: sub_entity.nid == ^nid,
-            preload: [:hub, :entity]
-        )
+    case result do
+      {:ok, _} ->
+        result
 
-      (sub_entity || %SubEntity{})
-      |> SubEntity.changeset(hub, entity, %{
-        nid: nid,
-        update_message: Jason.encode!(update_message)
-      })
-      |> Repo.insert_or_update!()
-    end)
+      {:error, :entity, :entity_state_does_not_exist, _} ->
+        {:error, :entity_state_does_not_exist}
+    end
   end
 
-  def delete_entity!(hub_id, nid) do
-    Repo.transaction(fn ->
-      entity =
-        Repo.one!(
-          from entity in Entity,
-            where: entity.hub_id == ^hub_id,
-            where: entity.nid == ^nid
-        )
-
-      Repo.delete!(entity)
-    end)
+  def delete_entity(hub_id, nid) do
+    case Repo.one(
+           from entity in Entity,
+             where: entity.hub_id == ^hub_id,
+             where: entity.nid == ^nid
+         ) do
+      nil -> {:error, :entity_state_does_not_exist}
+      entity -> Repo.delete(entity)
+    end
   end
 end
