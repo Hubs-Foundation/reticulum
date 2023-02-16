@@ -1,7 +1,7 @@
 # Hubs Server API
 Reticulum includes a [GraphQL](https://graphql.org/) API that grants programmatic access to server resources. 
 
-Note: This API is currently in alpha testing and is not yet available for use. (Users cannot generate API Access Tokens.)
+Note: This API is currently in alpha testing and will likely experience frequent updates.
 
 ## Accessing the API
 Hubs Cloud administrators can enable or disable the API by toggling `App Settings > Features > Public API Access` in the admin panel. 
@@ -13,7 +13,9 @@ You must attach an API Access Token with each request.
 
 To attach an API Access Token to a request, add an `HTTP` header named `Authorization` with value `Bearer: <your API token>`. 
 
-### API Access Token Types
+### API Access Token Generation and Types
+API Token can be generated and revoked though an interface located at `<your_hubs_cloud_host>/tokens`.
+
 There are two types of API Access Tokens: 
 - `:account` tokens act on behalf of a specific user
 - `:app` tokens act on behalf of the Hubs Cloud itself
@@ -27,6 +29,26 @@ Each API Access Token specifies its `scopes`. Scopes allow a token to be used to
 | `write_rooms` | `createRoom`, `updateRoom` |
 
 Scopes, actions, and token types are expected to expand over time.
+
+## Write_Rooms
+The following parameters can be written to individual rooms on `createRoom` or `updateRoom`.
+`name` _str_ - The room name.
+`description` _str_ - A description of the room.
+`roomSize` _str_ - The number of non-admin participants allowed into the room from the lobby at any given time.
+`sceneId` _str_ - The seven character id of the scene hosted on the server.
+`sceneUrl` _str_ - A hosted asset to be used as the scene. Frequently used for specifying .glb files as scenes.
+`memberPermissions` _map_ - A map of the permissions non-admin participants should have in the room.
+  `spawnAndMoveMedia` _bool_ - Allow non-admin participants to spawn and move media.
+  `spawnCamera` _bool_ - Allow non-admin participants to spawn in-game cameras.
+  `spawnDrawing` _bool_ - Allow non-admin participants to draw with a pen.
+  `pinObjects` _bool_ - Allow non-admin participants to pin media to the room.
+  `spawnEmoji` _bool_ - Allow non-admin participants to spawn emoji.
+  `fly` _bool_ - Allow non-admin participants to toggle fly mode.
+  `voiceChat` _bool_ - Allow non-admin participants to use the voice chat.
+  `textChat` _bool_ - Allow non-admin participants to use the text chat.
+`user_data` _map_ - Arbitrary json data associated with this room
+
+See [room_types.ex](../lib/ret_web/schema/room_types.ex) for full GraphQL Schema.
 
 ## Examples
 Reticulum ships with [GraphiQL](https://github.com/graphql/graphiql/tree/main/packages/graphiql#graphiql), a graphical, interactive, in-browser GraphQL IDE that makes it easier to test and learn the API. It can be accessed by navigating to `<your_hubs_cloud_host>/api/v2_alpha/graphiql`. 
