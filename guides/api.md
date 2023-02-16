@@ -32,21 +32,21 @@ Scopes, actions, and token types are expected to expand over time.
 
 ## Write_Rooms
 The following parameters can be written to individual rooms on `createRoom` or `updateRoom`.
-- `name` _str_ The room name.
-- `description` _str_ A description of the room.
-- `roomSize` _str_ The number of non-admin participants allowed into the room from the lobby at any given time.
-- `sceneId` _str_ The seven character id of the scene hosted on the server.
-- `sceneUrl` _str_ A hosted asset to be used as the scene. Frequently used for specifying .glb files as scenes.
-- `memberPermissions` _map_ A map of the permissions non-admin participants should have in the room.
-  - `spawnAndMoveMedia` _bool_ Allow non-admin participants to spawn and move media.
-  - `spawnCamera` _bool_ Allow non-admin participants to spawn in-game cameras.
-  - `spawnDrawing` _bool_ Allow non-admin participants to draw with a pen.
-  - `pinObjects` _bool_ Allow non-admin participants to pin media to the room.
-  - `spawnEmoji` _bool_ Allow non-admin participants to spawn emoji.
-  - `fly` _bool_ Allow non-admin participants to toggle fly mode.
-  - `voiceChat` _bool_ Allow non-admin participants to use the voice chat.
-  - `textChat` _bool_ Allow non-admin participants to use the text chat.
-- `user_data` _map_ Arbitrary json data associated with this room.
+- `name` _**str**_ \| The room name.
+- `description` _**str**_ \| A description of the room.
+- `roomSize` _**str**_ \| The number of non-admin participants allowed into the room from the lobby at any given time.
+- `sceneId` _**str**_ \| The seven character id of the scene hosted on the server.
+- `sceneUrl` _**str**_ \| A hosted asset to be used as the scene. Frequently used for specifying .glb files as scenes.
+- `memberPermissions` _**map**_ \| A map of the permissions non-admin participants should have in the room.
+  - `spawnAndMoveMedia` _**bool**_ \| Allow non-admin participants to spawn and move media.
+  - `spawnCamera` _**bool**_ \| Allow non-admin participants to spawn in-game cameras.
+  - `spawnDrawing` _**bool**_ \| Allow non-admin participants to draw with a pen.
+  - `pinObjects` _**bool**_ \| Allow non-admin participants to pin media to the room.
+  - `spawnEmoji` _**bool**_ \| Allow non-admin participants to spawn emoji.
+  - `fly` _**bool**_ \| Allow non-admin participants to toggle fly mode.
+  - `voiceChat` _**bool**_ \| Allow non-admin participants to use the voice chat.
+  - `textChat` _**bool**_ \| Allow non-admin participants to use the text chat.
+- `user_data` _**map**_ \| Arbitrary json data associated with this room.
 
 See [room_types.ex](../lib/ret_web/schema/room_types.ex) for full GraphQL Schema.
 
