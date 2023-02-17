@@ -428,7 +428,13 @@ defmodule RetWeb.PageController do
   end
 
   def render_hub_content(conn, nil, _) do
-    conn |> send_resp(200, "Hub is not configured properly. (Homepage Room ID not valid.) Please contact your Hub administrator.")
+    user_agent = get_req_header(conn, "user-agent")
+    IO.puts("user_agent#{user_agent}")
+    if contains?(user_agent, "kube-probe") do
+      send_resp(conn, 200, "")
+    else
+      send_resp(conn, 404, "bad Room ID")
+    end
   end
 
   def render_hub_content(conn, hub, "objects.gltf") do
