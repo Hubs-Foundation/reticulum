@@ -428,8 +428,8 @@ defmodule RetWeb.PageController do
   end
 
   def render_hub_content(conn, nil, _) do
-    user_agent = get_req_header(conn, "user-agent")
-    IO.puts("user_agent#{user_agent}")
+    user_agent = Enum.at(get_req_header(conn, "user-agent"),0)
+    IO.puts("user_agent: <#{user_agent}>"
     if String.contains?(user_agent, "kube-probe") do
       send_resp(conn, 200, "")
     else
