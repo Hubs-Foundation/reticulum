@@ -428,7 +428,7 @@ defmodule RetWeb.PageController do
   end
 
   def render_hub_content(conn, nil, _) do
-    conn |> send_resp(204, "not found: default_room_id")
+    conn |> send_resp(200, "not found: Homepage Room. Please Contact The Administrator")
   end
 
   def render_hub_content(conn, hub, "objects.gltf") do
