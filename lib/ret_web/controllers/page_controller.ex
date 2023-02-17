@@ -431,7 +431,6 @@ defmodule RetWeb.PageController do
     user_agent = 
       get_req_header(conn, "user-agent")
       |> Enum.at(0)
-    IO.puts("user_agent: <#{user_agent}>")
     if String.contains?(user_agent, "kube-probe") do
       send_resp(conn, 200, "")
     else
