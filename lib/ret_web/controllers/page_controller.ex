@@ -430,7 +430,7 @@ defmodule RetWeb.PageController do
   def render_hub_content(conn, nil, _) do
     user_agent = get_req_header(conn, "user-agent")
     IO.puts("user_agent#{user_agent}")
-    if contains?(user_agent, "kube-probe") do
+    if String.contains?(user_agent, "kube-probe") do
       send_resp(conn, 200, "")
     else
       send_resp(conn, 404, "bad Room ID")
