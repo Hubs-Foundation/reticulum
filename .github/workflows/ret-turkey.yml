@@ -14,8 +14,8 @@ jobs:
       bio_script_path: scripts/hab-wrap-and-push.sh
       qa_channel_name: polycosm-unstable-a
       hc_channel_name: polycosm-stable-a
-      personal_k8s_deployment: reticulum
-      personal_k8s_deployment_container: reticulum
+      k8s_deployment: reticulum
+      k8s_deployment_container: reticulum
     secrets:
       DOCKER_HUB_PWD: ${{ secrets.DOCKER_HUB_PWD }}
       GCP_TURKEYGITOPS_SA_JSON: ${{ secrets.GCP_TURKEYGITOPS_SA_JSON  }}
