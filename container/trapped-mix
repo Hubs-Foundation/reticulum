@@ -1,0 +1,3 @@
+#!/bin/sh
+trap 'exit 130' INT QUIT
+mix "$@"
