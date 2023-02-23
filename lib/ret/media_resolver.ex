@@ -126,6 +126,7 @@ defmodule Ret.MediaResolver do
         if HttpUtils.internal_ip?(resolved_ip) do
           :forbidden
         else
+          IO.puts("are we here???")
           resolve_with_ytdl(query, root_host, query |> ytdl_format(root_host))
         end
     end
