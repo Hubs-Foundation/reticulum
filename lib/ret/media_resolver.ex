@@ -352,6 +352,9 @@ defmodule Ret.MediaResolver do
     # We fell back because we did not match any of the known hosts above, or ytdl resolution failed. So, we need to
     # validate the IP for this host before making further requests.
     resolved_ip = HttpUtils.resolve_ip(host)
+    
+    IO.put("maybe_fallback_to_screenshot_opengraph_or_nothing, resolved_ip: ")
+    IO.inspect(resolved_ip)
 
     case resolved_ip do
       nil ->
