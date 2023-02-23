@@ -353,7 +353,7 @@ defmodule Ret.MediaResolver do
     # validate the IP for this host before making further requests.
     resolved_ip = HttpUtils.resolve_ip(host)
     
-    IO.put("maybe_fallback_to_screenshot_opengraph_or_nothing, resolved_ip: ")
+    IO.puts("maybe_fallback_to_screenshot_opengraph_or_nothing, resolved_ip: ")
     IO.inspect(resolved_ip)
 
     case resolved_ip do
