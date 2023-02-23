@@ -1,7 +1,7 @@
 defmodule Ret.JanusLoadStatus do
   use Cachex.Warmer
   use Retry
-  def interval, do: :timer.seconds(15)
+  def interval, do: :timer.seconds(35)
 
   require Logger
 

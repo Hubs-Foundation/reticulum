@@ -24,7 +24,7 @@ defmodule Ret.AppConfig do
     timestamps()
   end
 
-  def interval, do: :timer.seconds(15)
+  def interval, do: :timer.seconds(33)
 
   def changeset(%AppConfig{} = app_config, key, %OwnedFile{} = owned_file) do
     app_config
