@@ -33,8 +33,9 @@ defmodule Ret.MediaResolver do
   def resolve(%MediaResolverQuery{url: url} = query) when is_binary(url) do
     uri = url |> URI.parse()
     root_host = get_root_host(uri.host)
+    IO.puts("resolve -- root_host: #{root_host}")
     query = Map.put(query, :url, uri)
-
+    IO.inspect(query)
     # TODO: We could end up running maybe_fallback_to_screenshot_opengraph_or_nothing
     #       twice in a row. These resolve functions can be simplified so that we can
     #       more easily track individual failures and only fallback when necessary.
