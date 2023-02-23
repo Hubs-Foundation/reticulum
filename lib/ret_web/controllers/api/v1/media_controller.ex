@@ -114,6 +114,7 @@ defmodule RetWeb.Api.V1.MediaController do
   defp resolve_and_render(conn, url, version, quality \\ nil) do
     query = query_for(conn, url, version, quality)
     value = Cachex.fetch(:media_urls, query)
+    IO.inspect(value)
     maybe_do_telemetry(value)
     maybe_bump_ttl(value, query)
     render_resolved_media_or_error(conn, value)
