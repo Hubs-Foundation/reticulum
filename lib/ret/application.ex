@@ -151,7 +151,7 @@ defmodule Ret.Application do
            [
              :app_config_value,
              [
-               expiration: expiration(default: :timer.seconds(15)),
+               expiration: expiration(default: :timer.seconds(55)),
                fallback: fallback(default: &Ret.AppConfig.get_config_value/1)
              ]
            ]}
@@ -163,7 +163,7 @@ defmodule Ret.Application do
            [
              :app_config_owned_file_uri,
              [
-               expiration: expiration(default: :timer.seconds(15)),
+               expiration: expiration(default: :timer.seconds(55)),
                fallback: fallback(default: &Ret.AppConfig.get_config_owned_file_uri/1)
              ]
            ]}
