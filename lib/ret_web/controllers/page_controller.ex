@@ -274,7 +274,7 @@ defmodule RetWeb.PageController do
               )
 
             unless module_config(:skip_cache) do
-              Cachex.put(:assets, :manifest, manifest, ttl: :timer.seconds(15))
+              Cachex.put(:assets, :manifest, manifest, ttl: :timer.seconds(55))
             end
 
             manifest
@@ -350,7 +350,7 @@ defmodule RetWeb.PageController do
             end
 
           unless module_config(:skip_cache) do
-            Cachex.put(:assets, cache_key, asset, ttl: :timer.seconds(15))
+            Cachex.put(:assets, cache_key, asset, ttl: :timer.seconds(55))
           end
 
           asset
