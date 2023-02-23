@@ -23,7 +23,7 @@ defmodule RetWeb.Plugs.AddCSP do
       case Cachex.get(:assets, cache_key) do
         {:ok, nil} ->
           csp = generate_csp(strict: strict)
-          Cachex.put(:assets, cache_key, csp, ttl: :timer.seconds(15))
+          Cachex.put(:assets, cache_key, csp, ttl: :timer.seconds(33))
           csp
 
         {:ok, csp} ->
