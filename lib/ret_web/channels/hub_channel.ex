@@ -1441,7 +1441,7 @@ defmodule RetWeb.HubChannel do
     %{
       nid: nid,
       create_message: Jason.encode!(create_message),
-      updates: Enum.map(updates, &parse(&1))
+      updates: Enum.map(updates, &parse/1)
     }
   end
 
