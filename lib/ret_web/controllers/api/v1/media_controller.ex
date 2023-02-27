@@ -2,6 +2,7 @@ defmodule RetWeb.Api.V1.MediaController do
   use RetWeb, :controller
   use Retry
   alias Ret.Statix
+  require Logger
 
   def create(conn, %{"media" => %{"url" => url, "quality" => quality}, "version" => version}),
     do: resolve_and_render(conn, url, version, String.to_atom(quality))
@@ -204,13 +205,15 @@ defmodule RetWeb.Api.V1.MediaController do
   # This is an unexpected error response from Cachex
   defp render_resolved_media_or_error(conn, {:error, _reason}) do
     Statix.increment("ret.media_resolver.unknown_cachex_error")
-    send_resp(conn, 500, "An unexpected error occurred during media resolution.")
+    Logger.warning(Process.info(self(), :current_stacktrace) |> elem(1))
+    send_resp(conn, 500, "An unexpected (Cachex)error occurred during media resolution.")
   end
 
   # This is an unexpected response from Cachex
   defp render_resolved_media_or_error(conn, _) do
     # We do not expect this code to run, so if it happens, something went wrong
     Statix.increment("ret.media_resolver.unknown_error")
+    Logger.warning(Process.info(self(), :current_stacktrace) |> elem(1))
     send_resp(conn, 500, "An unexpected error occurred during media resolution.")
   end
 
