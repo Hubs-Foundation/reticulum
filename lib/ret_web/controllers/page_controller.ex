@@ -689,13 +689,14 @@ defmodule RetWeb.PageController do
       is_cors_proxy_url =
         if System.get_env("TURKEY_MODE") do
           IO.puts("cors_scheme: #{cors_scheme}, cors_host: #{cors_host}, cors_port: #{cors_port}")
-          IO.puts("conn.scheme: #{get_req_header(conn, "x-forwarded-proto")}, conn.host: #{conn.host}, conn.port: #{conn.port}, is_cors_proxy_url: #{is_cors_proxy_url}")            
+          IO.puts("conn.scheme: #{get_req_header(conn, "x-forwarded-proto")}, conn.host: #{conn.host}, conn.port: #{conn.port}")            
           conn_scheme = get_req_header(conn, "x-forwarded-proto") |> Enum.at(0)
           cors_host == conn.host && cors_scheme == conn_scheme
         else
           cors_scheme == Atom.to_string(conn.scheme) && cors_host == conn.host && cors_port == conn.port
         end
-      
+      IO.puts("is_cors_proxy_url: #{is_cors_proxy_url}")            
+
         
       if is_cors_proxy_url do
         allowed_origins =
