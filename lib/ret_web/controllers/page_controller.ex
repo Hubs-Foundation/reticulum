@@ -693,6 +693,10 @@ defmodule RetWeb.PageController do
           cors_scheme == Atom.to_string(conn.scheme) && cors_host == conn.host && cors_port == conn.port
         end
       
+      IO.puts("cors_scheme: #{cors_scheme}, cors_host: #{cors_host}, cors_port: #{cors_port}")
+      IO.puts("conn.scheme: #{get_req_header(conn, "x-forwarded-proto")}, conn.host: #{conn.host}, conn.port: #{conn.port}, is_cors_proxy_url: #{is_cors_proxy_url}")
+        
+        
       if is_cors_proxy_url do
         allowed_origins =
           Application.get_env(:ret, RetWeb.Endpoint)[:allowed_origins] |> String.split(",")
