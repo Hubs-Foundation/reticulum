@@ -674,6 +674,8 @@ defmodule RetWeb.PageController do
     resolved_ip = HttpUtils.resolve_ip(host)
 
     if HttpUtils.internal_ip?(resolved_ip) do
+      IO.inspect(resolved_ip)
+      IO.inspect(conn)
       conn |> send_resp(401, "Bad request.")
     else
       # We want to ensure that the URL we request hits the same IP that we verified above,
@@ -691,6 +693,7 @@ defmodule RetWeb.PageController do
           cors_port == conn.port
         
       IO.puts("cors_scheme: #{cors_scheme}, cors_host: #{cors_host}, cors_port: #{cors_port}")
+      IO.inspect(conn)
           
       if is_cors_proxy_url do
         allowed_origins =
