@@ -1,0 +1,50 @@
+{
+  "nid": "i97tf61",
+  "create_message": {
+    "version": 1,
+    "networkId": "i97tf61",
+    "prefabName": "media",
+    "initialData": {
+      "src": "https://hubs.local:8080/assets/models/DuckyMesh-b80f0ece1f58a683839a..glb",
+      "resize": true,
+      "recenter": true,
+      "animateLoad": true,
+      "isObjectMenuTarget": true
+    }
+  },
+  "updates": [
+    {
+      "root_nid": "i97tf61",
+      "nid": "i97tf61",
+      "update_message": {
+        "nid": "i97tf61",
+        "lastOwnerTime": 2512518168,
+        "timestamp": 2512520633,
+        "owner": "fcd3c223-d187-49ce-9b32-c5955278c046",
+        "data": {
+          "networked-transform": {
+            "version": 1,
+            "data": {
+              "position": [
+                44.879432678222656,
+                1.574803352355957,
+                -6.764097213745117
+              ],
+              "rotation": [
+                -0.007193616591393948,
+                0.7899448871612549,
+                0.009269090369343758,
+                0.6130656003952026
+              ],
+              "scale": [
+                1,
+                1,
+                1
+              ]
+            }
+          }
+        }
+      }
+    }
+  ]
+}
