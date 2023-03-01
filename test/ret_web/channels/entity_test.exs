@@ -1,10 +1,15 @@
 defmodule RetWeb.EntityTest do
   use RetWeb.ChannelCase
   import Ret.TestHelpers
+  import RetWeb.EntityTestUtils, only: [read_json: 1]
 
   alias RetWeb.SessionSocket
   alias Ret.{Repo, HubRoleMembership}
 
+  @payload_save_entity_state read_json("save_entity_state_payload.json")
+  @payload_save_entity_state_2 read_json("save_entity_state_payload_2.json")
+  @payload_update_entity_state read_json("update_entity_state_payload.json")
+  @payload_delete_entity_state read_json("delete_entity_state_payload.json")
   @default_join_params %{"profile" => %{}, "context" => %{}}
 
   setup [:create_account, :create_owned_file, :create_scene, :create_hub, :create_account]
@@ -31,12 +36,12 @@ defmodule RetWeb.EntityTest do
       {:ok, _, socket} =
         subscribe_and_join(socket, "hub:#{hub.hub_sid}", join_params_for_account(account))
 
-      assert_reply push(socket, "save_entity_state", payload(:save_entity_state)), :ok
+      assert_reply push(socket, "save_entity_state", @payload_save_entity_state), :ok
       assert_reply push(socket, "list_entities", %{}), :ok, %{data: [entity_state]}
-      assert entity_state.create_message["networkId"] === payload(:save_entity_state)["nid"]
-      assert entity_state.create_message === payload(:save_entity_state)["create_message"]
+      assert entity_state.create_message["networkId"] === @payload_save_entity_state["nid"]
+      assert entity_state.create_message === @payload_save_entity_state["create_message"]
 
-      Enum.zip(entity_state.update_messages, payload(:save_entity_state)["updates"])
+      Enum.zip(entity_state.update_messages, @payload_save_entity_state["updates"])
       |> Enum.each(fn {update_message, update_from_payload} ->
         assert update_message === update_from_payload["update_message"]
       end)
@@ -48,7 +53,7 @@ defmodule RetWeb.EntityTest do
     } do
       {:ok, _, socket} = subscribe_and_join(socket, "hub:#{hub.hub_sid}", @default_join_params)
 
-      assert_reply push(socket, "save_entity_state", payload(:save_entity_state)), :error, %{
+      assert_reply push(socket, "save_entity_state", @payload_save_entity_state), :error, %{
         reason: :not_logged_in
       }
     end
@@ -61,7 +66,7 @@ defmodule RetWeb.EntityTest do
       {:ok, _, socket} =
         subscribe_and_join(socket, "hub:#{hub.hub_sid}", join_params_for_account(account))
 
-      assert_reply push(socket, "save_entity_state", payload(:save_entity_state)), :error, %{
+      assert_reply push(socket, "save_entity_state", @payload_save_entity_state), :error, %{
         reason: :unauthorized
       }
     end
@@ -77,12 +82,12 @@ defmodule RetWeb.EntityTest do
     {:ok, _, socket} =
       subscribe_and_join(socket, "hub:#{hub.hub_sid}", join_params_for_account(account))
 
-    push(socket, "save_entity_state", payload(:save_entity_state))
+    push(socket, "save_entity_state", @payload_save_entity_state)
     assert_reply push(socket, "list_entities", %{}), :ok, %{data: [entity_state]}
     # The page starts at 2
     2 = Enum.at(entity_state.update_messages, 1)["data"]["networked-pdf"]["data"]["pageNumber"]
 
-    push(socket, "update_entity_state", payload(:update_entity_state))
+    push(socket, "update_entity_state", @payload_update_entity_state)
     assert_reply push(socket, "list_entities", %{}), :ok, %{data: [entity_state]}
     # The page was updated to 1
     assert Enum.at(entity_state.update_messages, 1)["data"]["networked-pdf"]["data"]["pageNumber"] ===
@@ -99,40 +104,13 @@ defmodule RetWeb.EntityTest do
     {:ok, _, socket} =
       subscribe_and_join(socket, "hub:#{hub.hub_sid}", join_params_for_account(account))
 
-    push(socket, "save_entity_state", payload(:save_entity_state))
-    push(socket, "save_entity_state", payload(:save_entity_state_2))
-    assert_reply push(socket, "delete_entity_state", payload(:delete_entity_state)), :ok
+    push(socket, "save_entity_state", @payload_save_entity_state)
+    push(socket, "save_entity_state", @payload_save_entity_state_2)
+    assert_reply push(socket, "delete_entity_state", @payload_delete_entity_state), :ok
     assert_reply push(socket, "list_entities", %{}), :ok, %{data: [entity]}
     refute "ji5uv3q" === entity.create_message["networkedId"]
-    assert entity.create_message["networkId"] === payload(:save_entity_state_2)["nid"]
-    assert entity.create_message === payload(:save_entity_state_2)["create_message"]
-  end
-
-  defp local_file(filename) do
-    Path.join(Path.dirname(__ENV__.file), filename)
-  end
-
-  defp read_json(filename) do
-    filename
-    |> local_file()
-    |> File.read!()
-    |> Jason.decode!()
-  end
-
-  defp payload(:save_entity_state) do
-    read_json("save_entity_state_payload.json")
-  end
-
-  defp payload(:save_entity_state_2) do
-    read_json("save_entity_state_payload_2.json")
-  end
-
-  defp payload(:update_entity_state) do
-    read_json("update_entity_state_payload.json")
-  end
-
-  defp payload(:delete_entity_state) do
-    read_json("delete_entity_state_payload.json")
+    assert entity.create_message["networkId"] === @payload_save_entity_state_2["nid"]
+    assert entity.create_message === @payload_save_entity_state_2["create_message"]
   end
 
   defp join_params_for_account(account) do
