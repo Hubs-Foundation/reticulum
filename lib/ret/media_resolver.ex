@@ -233,7 +233,6 @@ defmodule Ret.MediaResolver do
         {:error, body}
 
       :error ->
-        IO.inspect("Failed to resolve via youtube-dl")
         {:error, "Failed to resolve via youtube-dl"}
     end
   end
