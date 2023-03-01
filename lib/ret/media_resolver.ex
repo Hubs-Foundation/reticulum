@@ -34,6 +34,8 @@ defmodule Ret.MediaResolver do
     uri = url |> URI.parse()
     root_host = get_root_host(uri.host)
     query = Map.put(query, :url, uri)
+    IO.inspect("Resolving media")
+    IO.inspect(%{query: query, root_host: root_host})
 
     # TODO: We could end up running maybe_fallback_to_screenshot_opengraph_or_nothing
     #       twice in a row. These resolve functions can be simplified so that we can
@@ -54,6 +56,8 @@ defmodule Ret.MediaResolver do
         maybe_fallback_to_screenshot_opengraph_or_nothing(query)
 
       commit ->
+        IO.inspect("Caching result")
+        IO.inspect(%{commit: commit})
         commit
     end
   end
@@ -167,11 +171,15 @@ defmodule Ret.MediaResolver do
              )}
           end
 
-        _ ->
+        ytdl_result ->
+          IO.inspect("could not resolve with ytdl")
+          IO.inspect(%{ytdl_result: ytdl_result})
           resolve_non_video(query, root_host)
       end
     else
-      _err ->
+      err ->
+        IO.inspect("attempt to resolve with ytdl threw an error:")
+        IO.inspect(%{err: err})
         resolve_non_video(query, root_host)
     end
   end
@@ -203,34 +211,47 @@ defmodule Ret.MediaResolver do
 
     ytdl_query = URI.encode_query(ytdl_query_args)
 
-    case "#{ytdl_host}/api/info?#{ytdl_query}" |> retry_get_until_valid_ytdl_response do
-      %HTTPoison.Response{status_code: 200, body: body} ->
-        case body |> Poison.decode() do
-          {:ok, json} ->
-            media_info = Map.get(json, "info")
-            # Prefer "manifest_url" when available so the client can do adaptive bitrate handling
-            {:ok, Map.get(media_info, "manifest_url") || Map.get(media_info, "url")}
+    try do
+      case "#{ytdl_host}/api/info?#{ytdl_query}" |> retry_get_until_valid_ytdl_response do
+        %HTTPoison.Response{status_code: 200, body: body} ->
+          case body |> Poison.decode() do
+            {:ok, json} ->
+              media_info = Map.get(json, "info")
 
-          {:error, _} ->
-            {:error, "Invalid response from youtube-dl"}
-        end
+              # Prefer "manifest_url" when available so the client can do adaptive bitrate handling
+              {:ok, Map.get(media_info, "manifest_url") || Map.get(media_info, "url")}
 
-      %HTTPoison.Response{status_code: 500, body: body} ->
-        # youtube-dl returns a 500 error, but includes the underlying error in its body text, search for some special cases
-        cond do
-          String.contains?(body, "is offline") ->
-            {:offline_stream, body}
+            {:error, _} ->
+              {:error, "Invalid response from youtube-dl"}
+          end
 
-          String.contains?(body, "HTTPError 429") ->
-            Statix.increment("ret.media_resolver.ytdl.rate_limited")
-            {:rate_limited, body}
+        %HTTPoison.Response{status_code: 500, body: body} ->
+          # youtube-dl returns a 500 error, but includes the underlying error in its body text, search for some special cases
+          cond do
+            String.contains?(body, "is offline") ->
+              {:offline_stream, body}
 
-          true ->
-            {:error, body}
-        end
+            String.contains?(body, "HTTPError 429") ->
+              Statix.increment("ret.media_resolver.ytdl.rate_limited")
+              {:rate_limited, body}
 
-      %HTTPoison.Response{body: body} ->
-        {:error, body}
+            true ->
+              {:error, body}
+          end
+
+        %HTTPoison.Response{body: body} ->
+          {:error, body}
+
+        other ->
+          Logger.warning("Received unrecognized response from youtube-dl")
+          IO.inspect(other)
+          {:error, :unknown}
+      end
+    rescue
+      error ->
+        Logger.warning("Uncaught error in trying to get ytdl response")
+        IO.inspect(error)
+        {:error, :unknown}
     end
   end
 
@@ -596,14 +617,19 @@ defmodule Ret.MediaResolver do
           Statix.increment("ret.media_resolver.ytdl.ok")
           resp
 
-        _ ->
+        error ->
+          IO.inspect("HTTPPoison.get(url) failed in retry_get_until_valid_ytdl_response.")
+          IO.inspect(%{error: error, url: url})
           Statix.increment("ret.media_resolver.ytdl.errors")
           :error
       end
     after
       result -> result
     else
-      error -> error
+      error ->
+        IO.inspect("retry with exponential backoff failed")
+        IO.inspect(%{error: error})
+        error
     end
   end
 
