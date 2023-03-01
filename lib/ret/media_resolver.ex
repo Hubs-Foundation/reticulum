@@ -231,6 +231,9 @@ defmodule Ret.MediaResolver do
 
       %HTTPoison.Response{body: body} ->
         {:error, body}
+
+      :error ->
+        {:error, "Failed to resolve via youtube-dl"}
     end
   end
 
