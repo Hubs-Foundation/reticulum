@@ -1,0 +1,68 @@
+{
+  "nid": "ji5uv3q",
+  "create_message": {
+    "version": 1,
+    "networkId": "ji5uv3q",
+    "prefabName": "media",
+    "initialData": {
+      "src": "https://africau.edu/images/default/sample.pdf",
+      "recenter": true,
+      "resize": true,
+      "animateLoad": true,
+      "isObjectMenuTarget": true
+    }
+  },
+  "updates": [
+    {
+      "root_nid": "ji5uv3q",
+      "nid": "ji5uv3q",
+      "update_message": {
+        "nid": "ji5uv3q",
+        "lastOwnerTime": 2504421038,
+        "timestamp": 2504424087,
+        "owner": "08c144eb-8877-4c83-a368-19076957e68b",
+        "data": {
+          "networked-transform": {
+            "version": 1,
+            "data": {
+              "position": [
+                45.89086151123047,
+                1.5132673978805542,
+                -8.082813262939453
+              ],
+              "rotation": [
+                -0.03005448915064335,
+                0.363284170627594,
+                0.011726011522114277,
+                0.9311196804046631
+              ],
+              "scale": [
+                1,
+                1,
+                1
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "root_nid": "ji5uv3q",
+      "nid": "ji5uv3q.0",
+      "update_message": {
+        "nid": "ji5uv3q.0",
+        "lastOwnerTime": 2504422689,
+        "timestamp": 2504424087,
+        "owner": "08c144eb-8877-4c83-a368-19076957e68b",
+        "data": {
+          "networked-pdf": {
+            "version": 1,
+            "data": {
+              "pageNumber": 2
+            }
+          }
+        }
+      }
+    }
+  ]
+}
