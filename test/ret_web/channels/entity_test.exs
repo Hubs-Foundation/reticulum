@@ -113,7 +113,10 @@ defmodule RetWeb.EntityTest do
   end
 
   defp read_json(filename) do
-    Jason.decode!(File.read!(local_file(filename)))
+    filename
+    |> local_file()
+    |> File.read!()
+    |> Jason.decode!()
   end
 
   defp payload(:save_entity_state) do
