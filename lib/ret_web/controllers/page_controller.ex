@@ -688,9 +688,14 @@ defmodule RetWeb.PageController do
         [:scheme, :port, :host] |> Enum.map(&Keyword.get(cors_proxy_url, &1))
 
       is_cors_proxy_url =
-        cors_scheme == Atom.to_string(conn.scheme) && cors_host == conn.host &&
-          cors_port == conn.port
+        if System.get_env("TURKEY_MODE") do          
+          cors_host == conn.host && cors_scheme == get_req_header(conn, "x-forwarded-proto") |> Enum.at(0)
+        else
+          cors_scheme == Atom.to_string(conn.scheme) && cors_host == conn.host && cors_port == conn.port
+        end
+      IO.puts("is_cors_proxy_url: #{is_cors_proxy_url}")            
 
+        
       if is_cors_proxy_url do
         allowed_origins =
           Application.get_env(:ret, RetWeb.Endpoint)[:allowed_origins] |> String.split(",")
