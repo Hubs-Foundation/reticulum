@@ -834,6 +834,11 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
+  def handle_out("host_changed" = event, payload, socket) do
+    push(socket, event, payload)
+    {:noreply, socket}
+  end
+
   defp maybe_push_naf(
          socket,
          event,

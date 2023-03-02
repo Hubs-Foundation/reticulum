@@ -656,6 +656,12 @@ defmodule Ret.Hub do
 
       if host && host != hub.host do
         hub |> changeset_for_new_host(host) |> Repo.update!()
+
+        RetWeb.Endpoint.broadcast("hub:" <> hub.hub_sid, "host_changed", %{
+          host: host,
+          port: Hub.janus_port(),
+          turn: Hub.generate_turn_info()
+        })
       else
         hub
       end
