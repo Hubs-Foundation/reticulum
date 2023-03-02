@@ -712,11 +712,6 @@ defmodule RetWeb.HubChannel do
     end
   end
 
-  def handle_in("test_change_host", _payload, socket) do
-    Hub.test_change_host(hub_for_socket(socket))
-    {:noreply, socket}
-  end
-
   def handle_in(_message, _payload, socket) do
     {:noreply, socket}
   end
