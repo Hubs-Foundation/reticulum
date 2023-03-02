@@ -668,6 +668,18 @@ defmodule Ret.Hub do
     end
   end
 
+  def test_change_host(hub) do
+    host = RoomAssigner.get_available_host(hub.host)
+
+    hub |> changeset_for_new_host(host) |> Repo.update!()
+
+    RetWeb.Endpoint.broadcast("hub:" <> hub.hub_sid, "host_changed", %{
+      host: host,
+      port: Hub.janus_port(),
+      turn: Hub.generate_turn_info()
+    })
+  end
+
   # Remove the host entry from any rooms that are older than a day old and have no presence
   def vacuum_hosts do
     Ret.Locking.exec_if_lockable(:hub_vacuum_hosts, fn ->
