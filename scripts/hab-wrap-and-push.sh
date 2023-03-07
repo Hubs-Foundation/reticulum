@@ -44,8 +44,8 @@ pkg_deps=(
 pkg_build_deps=(
     core/coreutils/8.30/20190115012313
     core/git/2.23.0
-    core/erlang/23.3.4.9
-    core/elixir/1.14.3
+    mozillareality/erlang/23.3.4.18
+    mozillareality/elixir/1.14.3
 )
 pkg_exports=(
    [port]=phx.port
@@ -95,7 +95,7 @@ do_end() {
     return 0
 }
 EOF
-bio pkg build -k mozillareality .
+HAB_BLDR_URL="https://bldr.reticulum.io" bio pkg build -k mozillareality .
 
 ### upload
 echo "### upload hab pkg"
