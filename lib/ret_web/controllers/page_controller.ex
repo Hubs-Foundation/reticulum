@@ -428,9 +428,10 @@ defmodule RetWeb.PageController do
   end
 
   def render_hub_content(conn, nil, _) do
-    user_agent = 
+    user_agent =
       get_req_header(conn, "user-agent")
       |> Enum.at(0)
+
     if String.contains?(user_agent, "kube-probe") do
       send_resp(conn, 200, "")
     else
@@ -687,8 +688,15 @@ defmodule RetWeb.PageController do
         [:scheme, :port, :host] |> Enum.map(&Keyword.get(cors_proxy_url, &1))
 
       is_cors_proxy_url =
-        cors_scheme == Atom.to_string(conn.scheme) && cors_host == conn.host &&
-          cors_port == conn.port
+        if System.get_env("TURKEY_MODE") do
+          cors_host == conn.host &&
+            cors_scheme == get_req_header(conn, "x-forwarded-proto") |> Enum.at(0)
+        else
+          cors_scheme == Atom.to_string(conn.scheme) && cors_host == conn.host &&
+            cors_port == conn.port
+        end
+
+      IO.puts("is_cors_proxy_url: #{is_cors_proxy_url}")
 
       if is_cors_proxy_url do
         allowed_origins =

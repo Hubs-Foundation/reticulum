@@ -231,6 +231,12 @@ defmodule Ret.MediaResolver do
 
       %HTTPoison.Response{body: body} ->
         {:error, body}
+
+      :timeout ->
+        {:error, "Failed to resolve via youtube-dl: timeout"}
+
+      :error ->
+        {:error, "Failed to resolve via youtube-dl"}
     end
   end
 
@@ -587,7 +593,7 @@ defmodule Ret.MediaResolver do
   #
   # https://youtube-dl-api-server.readthedocs.io/en/latest/api.html#api-methods
   defp retry_get_until_valid_ytdl_response(url) do
-    retry with: exponential_backoff() |> randomize |> cap(1_000) |> expiry(10_000) do
+    retry with: constant_backoff(1_000) |> randomize() |> expiry(3_500) do
       Statix.increment("ret.media_resolver.ytdl.requests")
 
       case HTTPoison.get(url) do
@@ -595,6 +601,11 @@ defmodule Ret.MediaResolver do
         when status_code in @ytdl_valid_status_codes ->
           Statix.increment("ret.media_resolver.ytdl.ok")
           resp
+
+        {:error, %HTTPoison.Error{reason: :timeout, id: _}} ->
+          Statix.increment("ret.media_resolver.ytdl.errors")
+          # Return a different atom so that we do not retry
+          :timeout
 
         _ ->
           Statix.increment("ret.media_resolver.ytdl.errors")
