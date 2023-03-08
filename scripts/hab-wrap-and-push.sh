@@ -95,7 +95,7 @@ do_end() {
     return 0
 }
 EOF
-HAB_BLDR_URL="https://bldr.reticulum.io" bio pkg build -k mozillareality .
+bio pkg build -k mozillareality .
 
 ### upload
 echo "### upload hab pkg"
