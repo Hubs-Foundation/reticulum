@@ -301,7 +301,7 @@ defmodule RetWeb.HubChannel do
       broadcast!(
         socket,
         event,
-        payload |> Map.put(:session_id, socket.assigns.session_id) |> payload_with_from(socket)
+        payload |> Map.delete("session_id")|> Map.put(:session_id, socket.assigns.session_id) |> payload_with_from(socket)
       )
     end
 
