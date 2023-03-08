@@ -1020,6 +1020,7 @@ defmodule RetWeb.HubChannel do
 
     response =
       HubView.render("show.json", %{hub: hub, embeddable: account |> can?(embed_hub(hub))})
+      |> Map.delete("session_id")
       |> Map.put(:session_id, socket.assigns.session_id)
       |> Map.put(:stale_fields, stale_fields)
 
@@ -1274,6 +1275,7 @@ defmodule RetWeb.HubChannel do
 
       response =
         response
+        |> Map.delete("session_id")
         |> Map.put(:session_id, socket.assigns.session_id)
         |> Map.put(
           :session_token,
