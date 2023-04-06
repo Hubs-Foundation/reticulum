@@ -41,6 +41,7 @@ pkg_deps=(
     core/bash/5.1/20220801055216
     core/which/2.21/20220311145823
     core/zlib/1.2.11/20220311082914
+    core/openssl/1.0.2zb/20220311111046
 )
 pkg_build_deps=(
     core/coreutils/8.32/20220311101609
