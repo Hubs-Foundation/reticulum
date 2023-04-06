@@ -6,7 +6,7 @@ set -e
 #BLDR_RET_PUB_B64='U0lHLVBVQi0xCm1vemls...'
 
 ### preps
-apk add curl
+apk add curl ncurses
 org="biome-sh";repo="biome"
 ver=$(curl -s https://api.github.com/repos/$org/$repo/releases/latest | grep "tag_name" | awk '{print substr($2, 2, length($2)-3)}')
 dl="https://github.com/$org/$repo/releases/download/$ver/bio-${ver#"v"}-x86_64-linux.tar.gz"
