@@ -6,7 +6,7 @@ set -e
 #BLDR_RET_PUB_B64='U0lHLVBVQi0xCm1vemls...'
 
 ### preps
-apk add curl ncurses
+apk add curl
 org="biome-sh";repo="biome"
 ver=$(curl -s https://api.github.com/repos/$org/$repo/releases/latest | grep "tag_name" | awk '{print substr($2, 2, length($2)-3)}')
 dl="https://github.com/$org/$repo/releases/download/$ver/bio-${ver#"v"}-x86_64-linux.tar.gz"
@@ -40,6 +40,7 @@ pkg_deps=(
     core/coreutils/8.32/20220311101609
     core/bash/5.1/20220801055216
     core/which/2.21/20220311145823
+    core/zlib/1.2.11/20220311082914
 )
 pkg_build_deps=(
     core/coreutils/8.32/20220311101609
