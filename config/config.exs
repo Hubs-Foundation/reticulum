@@ -39,7 +39,7 @@ config :logger, :console,
 
 config :logger, :syslog,
   level: :info,
-  faciliy: local0,
+  faciliy: :"local0",
   formatter: {Logger.DefaultFormatter, :format},
   metadata: [:application, :module, :function]
 
