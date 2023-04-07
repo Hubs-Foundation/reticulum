@@ -41,7 +41,7 @@ config :logger, :syslog,
   level: :info,
   faciliy: local0,
   formatter: {Logger.DefaultFormatter, :format},
-  metadata:[:application, :module, :function]
+  metadata: [:application, :module, :function]
 
 config :ret, Ret.Repo,
   migration_source: "schema_migrations",
