@@ -40,10 +40,9 @@ pkg_deps=(
     core/coreutils/8.30/20190115012313
     core/bash/4.4.19/20190115012619
     core/which/2.21/20190430084037
-    mozillareality/erlang/23.3.4.18
 )
 pkg_build_deps=(
-    core/coreutils/8.30/20190115012313
+    core/coreutils/8.32/20220311101609
     core/git/2.23.0
     mozillareality/erlang/23.3.4.18
     core/elixir/1.14.3
