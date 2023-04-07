@@ -36,6 +36,7 @@ config :ret, RetWeb.Endpoint,
 config :logger, :console,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id]
+
 config :logger, :syslog,
   level: :info,
   faciliy: local0,
