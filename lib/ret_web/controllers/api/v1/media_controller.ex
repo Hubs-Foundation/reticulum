@@ -204,7 +204,7 @@ defmodule RetWeb.Api.V1.MediaController do
   # This is an unexpected error response from Cachex
   defp render_resolved_media_or_error(conn, {:error, _reason}) do
     Statix.increment("ret.media_resolver.unknown_cachex_error")
-    send_resp(conn, 500, "An unexpected (Cachex)error occurred during media resolution.")
+    send_resp(conn, 500, "An unexpected error occurred during media resolution.")
   end
 
   # This is an unexpected response from Cachex

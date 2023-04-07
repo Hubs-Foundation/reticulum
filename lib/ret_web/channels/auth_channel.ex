@@ -47,9 +47,13 @@ defmodule RetWeb.AuthChannel do
         Statix.increment("ret.emails.auth.attempted", 1)
 
         if RetWeb.Email.enabled?() do
-          RetWeb.Email.auth_email(email, signin_args) |> Ret.Mailer.deliver_now()
-        end
-
+         case RetWeb.Email.auth_email(email, signin_args) |> Ret.Mailer.deliver_now(response: true) do
+         {:ok, _} ->
+          Logger.info("Email was successfully sent")
+         {:error, reason} ->
+          Logger.error("Email failed to send: #{inspect(reason)}" )
+         end
+       end
         Statix.increment("ret.emails.auth.sent", 1)
       end
 

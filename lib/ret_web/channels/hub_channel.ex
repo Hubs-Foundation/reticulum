@@ -22,7 +22,7 @@ defmodule RetWeb.HubChannel do
     WebPushSubscription
   }
 
-  alias RetWeb.{Presence, EntityView}
+  alias RetWeb.{Presence}
   alias RetWeb.Api.V1.{HubView}
 
   intercept [
@@ -301,10 +301,7 @@ defmodule RetWeb.HubChannel do
       broadcast!(
         socket,
         event,
-        payload
-        |> Map.delete("session_id")
-        |> Map.put(:session_id, socket.assigns.session_id)
-        |> payload_with_from(socket)
+        payload |> Map.put(:session_id, socket.assigns.session_id) |> payload_with_from(socket)
       )
     end
 
@@ -456,54 +453,6 @@ defmodule RetWeb.HubChannel do
     end
 
     {:noreply, socket}
-  end
-
-  def handle_in("list_entities", _, socket) do
-    hub = socket |> hub_for_socket
-    entities = Ret.list_entities(hub.hub_id)
-    {:reply, {:ok, EntityView.render("index.json", %{entities: entities})}, socket}
-  end
-
-  def handle_in("save_entity_state", params, socket) do
-    params = parse(params)
-
-    with {:ok, hub} <- authorize(socket, :write_entity_state),
-         {:ok, %{entity: entity}} <- Ret.create_entity(hub, params) do
-      entity = Repo.preload(entity, [:sub_entities])
-      broadcast!(socket, "entity_state_saved", EntityView.render("show.json", %{entity: entity}))
-      {:reply, :ok, socket}
-    else
-      {:error, reason} ->
-        reply_error(socket, reason)
-    end
-  end
-
-  def handle_in("update_entity_state", %{"update_message" => update_message} = params, socket) do
-    params = parse(params)
-
-    with {:ok, hub} <- authorize(socket, :write_entity_state),
-         {:ok, _} <- Ret.insert_or_update_sub_entity(hub, params) do
-      broadcast!(socket, "entity_state_updated", update_message)
-      {:reply, :ok, socket}
-    else
-      {:error, reason} ->
-        reply_error(socket, reason)
-    end
-  end
-
-  def handle_in("delete_entity_state", %{"nid" => nid}, socket) do
-    with {:ok, hub} <- authorize(socket, :write_entity_state),
-         {:ok, _} <- Ret.delete_entity(hub.hub_id, nid) do
-      broadcast!(socket, "entity_state_deleted", %{
-        "nid" => nid,
-        "creator" => socket.assigns.session_id
-      })
-
-      {:reply, :ok, socket}
-    else
-      {:error, reason} ->
-        reply_error(socket, reason)
-    end
   end
 
   def handle_in("get_host", _args, socket) do
@@ -837,11 +786,6 @@ defmodule RetWeb.HubChannel do
     {:noreply, socket}
   end
 
-  def handle_out("host_changed" = event, payload, socket) do
-    push(socket, event, payload)
-    {:noreply, socket}
-  end
-
   defp maybe_push_naf(
          socket,
          event,
@@ -924,33 +868,6 @@ defmodule RetWeb.HubChannel do
         # client should have signed-in at this point,
         # so if we still don't have an account, it must have been an invalid token
         {:reply, {:error, %{reason: :invalid_token}}, socket}
-    end
-  end
-
-  defp account_for_socket(socket) do
-    case Guardian.Phoenix.Socket.current_resource(socket) do
-      nil ->
-        {:error, :not_logged_in}
-
-      account ->
-        {:ok, account}
-    end
-  end
-
-  defp auth(hub, account, :write_entity_state) do
-    if can?(account, pin_objects(hub)) do
-      :ok
-    else
-      {:error, :unauthorized}
-    end
-  end
-
-  defp authorize(socket, :write_entity_state) do
-    hub = hub_for_socket(socket)
-
-    with {:ok, account} <- account_for_socket(socket),
-         :ok <- auth(hub, account, :write_entity_state) do
-      {:ok, hub}
     end
   end
 
@@ -1440,20 +1357,4 @@ defmodule RetWeb.HubChannel do
 
   defp internal_naf_event_for("nafr", _socket), do: "maybe-nafr"
   defp internal_naf_event_for("naf", _socket), do: "maybe-naf"
-
-  defp parse(%{"nid" => nid, "root_nid" => root_nid, "update_message" => update_message}) do
-    %{nid: nid, root_nid: root_nid, update_message: Jason.encode!(update_message)}
-  end
-
-  defp parse(%{"nid" => nid, "create_message" => create_message, "updates" => updates}) do
-    %{
-      nid: nid,
-      create_message: Jason.encode!(create_message),
-      updates: Enum.map(updates, &parse/1)
-    }
-  end
-
-  defp reply_error(socket, reason) do
-    {:reply, {:error, %{reason: reason}}, socket}
-  end
 end

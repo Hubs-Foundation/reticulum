@@ -7,8 +7,6 @@ defmodule Ret do
     Asset,
     Avatar,
     AvatarListing,
-    Entity,
-    EntityManager,
     Login,
     OwnedFile,
     Project,
@@ -267,50 +265,5 @@ defmodule Ret do
   @spec scene_query(Account.id()) :: Ecto.Query.t()
   defp scene_query(account_id) when is_serial_id(account_id) do
     from Scene, where: [account_id: ^account_id]
-  end
-
-  def list_entities(hub_id) do
-    Repo.all(
-      from entity in Entity,
-        where: entity.hub_id == ^hub_id,
-        preload: [:sub_entities]
-    )
-  end
-
-  def create_entity(hub, params) do
-    result = Repo.transaction(EntityManager.create_entity(hub, params))
-
-    case result do
-      {:ok, _} ->
-        result
-
-      {:error, :entity,
-       %{errors: [nid: {_, [constraint: :unique, constraint_name: "entities_nid_hub_id_index"]}]},
-       _changes_so_far} ->
-        {:error, :entity_state_already_exists}
-    end
-  end
-
-  def insert_or_update_sub_entity(hub, params) do
-    result = Repo.transaction(EntityManager.insert_or_update_sub_entity(hub, params))
-
-    case result do
-      {:ok, _} ->
-        result
-
-      {:error, :entity, :entity_state_does_not_exist, _} ->
-        {:error, :entity_state_does_not_exist}
-    end
-  end
-
-  def delete_entity(hub_id, nid) do
-    case Repo.one(
-           from entity in Entity,
-             where: entity.hub_id == ^hub_id,
-             where: entity.nid == ^nid
-         ) do
-      nil -> {:error, :entity_state_does_not_exist}
-      entity -> Repo.delete(entity)
-    end
   end
 end
