@@ -37,12 +37,14 @@ pkg_maintainer="Mozilla Mixed Reality <mixreality@mozilla.com>"
 pkg_upstream_url="http://github.com/mozilla/reticulum"
 pkg_license=('MPL-2.0')
 pkg_deps=(
-    core/coreutils/8.30/20190115012313
-    core/bash/4.4.19/20190115012619
-    core/which/2.21/20190430084037
+    core/coreutils/8.32/20220311101609
+    core/bash/5.1/20220801055216
+    core/which/2.21/20220311145823
+    core/zlib/1.2.11/20220311082914
+    core/openssl/1.0.2zb/20220311111046
 )
 pkg_build_deps=(
-    core/coreutils/8.30/20190115012313
+    core/coreutils/8.32/20220311101609
     core/git/2.23.0
     mozillareality/erlang/23.3.4.18
     mozillareality/elixir/1.14.3
