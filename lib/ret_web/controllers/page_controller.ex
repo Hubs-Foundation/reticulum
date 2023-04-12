@@ -707,7 +707,7 @@ defmodule RetWeb.PageController do
 
         opts =
           ReverseProxyPlug.init(
-            # upstream: ip_url,
+            upstream: url,
             allowed_origins: allowed_origins,
             proxy_url: "#{cors_scheme}://#{cors_host}:#{cors_port}",
             # Since we replaced the host with the IP address in ip_url above, we need to force the host
