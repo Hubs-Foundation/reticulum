@@ -707,16 +707,16 @@ defmodule RetWeb.PageController do
 
         opts =
           ReverseProxyPlug.init(
-            upstream: url,
+            upstream: ip_url,
             allowed_origins: allowed_origins,
             proxy_url: "#{cors_scheme}://#{cors_host}:#{cors_port}",
             # Since we replaced the host with the IP address in ip_url above, we need to force the host
             # used for ssl verification here so that the connection isn't rejected.
             # Note that we have to convert the authority to a charlist, since this uses Erlang's `ssl` module
             # internally, which expects a charlist.
-            client_options: [
-              ssl: [{:server_name_indication, to_charlist(authority)}, {:versions, [:"tlsv1.2"]}]
-            ],
+            # client_options: [
+            #   ssl: [{:server_name_indication, to_charlist(authority)}, {:versions, [:"tlsv1.2"]}]
+            # ],
             preserve_host_header: true
           )
 
