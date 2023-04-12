@@ -680,6 +680,7 @@ defmodule RetWeb.PageController do
       # We want to ensure that the URL we request hits the same IP that we verified above,
       # so we replace the host with the IP address here and use this url to make the proxy request.
       ip_url = URI.to_string(HttpUtils.replace_host(uri, resolved_ip))
+      IO.puts("ip_url: #{ip_url}")
 
       # Disallow CORS proxying unless request was made to the cors proxy url
       cors_proxy_url = Application.get_env(:ret, RetWeb.Endpoint)[:cors_proxy_url]
@@ -701,10 +702,12 @@ defmodule RetWeb.PageController do
       if is_cors_proxy_url do
         allowed_origins =
           Application.get_env(:ret, RetWeb.Endpoint)[:allowed_origins] |> String.split(",")
+        
+        IO.puts("proxy_url: #{cors_scheme}://#{cors_host}:#{cors_port}")
 
         opts =
           ReverseProxyPlug.init(
-            upstream: ip_url,
+            # upstream: ip_url,
             allowed_origins: allowed_origins,
             proxy_url: "#{cors_scheme}://#{cors_host}:#{cors_port}",
             # Since we replaced the host with the IP address in ip_url above, we need to force the host
