@@ -81,7 +81,8 @@ defmodule Ret.Mixfile do
       {:ua_parser, "~> 1.5"},
       {:download, git: "https://github.com/gfodor/download.git", branch: "reticulum/master"},
       {:reverse_proxy_plug,
-       git: "https://github.com/mozillareality/reverse_proxy_plug.git", branch: "reticulum/master"},
+      #  git: "https://github.com/mozillareality/reverse_proxy_plug.git", branch: "reticulum/master"
+       },
       {:inet_cidr, "~> 1.0"},
       {:dns, "~> 2.2.0"},
       {:oauther, "~> 1.1"},
