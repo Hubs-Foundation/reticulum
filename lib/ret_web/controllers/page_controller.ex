@@ -704,6 +704,7 @@ defmodule RetWeb.PageController do
           Application.get_env(:ret, RetWeb.Endpoint)[:allowed_origins] |> String.split(",")
         
         IO.puts("proxy_url: #{cors_scheme}://#{cors_host}:#{cors_port}")
+        IO.puts("upstream: #{url}")
 
         opts =
           ReverseProxyPlug.init(
@@ -717,7 +718,7 @@ defmodule RetWeb.PageController do
             client_options: [
               ssl: [{:server_name_indication, to_charlist(authority)}, {:versions, [:"tlsv1.2"]}]
             ],
-            preserve_host_header: true
+            # preserve_host_header: true
           )
 
         body = ReverseProxyPlug.read_body(conn)
