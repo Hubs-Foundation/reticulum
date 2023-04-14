@@ -716,7 +716,7 @@ defmodule RetWeb.PageController do
             # Note that we have to convert the authority to a charlist, since this uses Erlang's `ssl` module
             # internally, which expects a charlist.
             client_options: [
-              ssl: [{:server_name_indication, to_charlist(authority)}, {:versions, [:"tlsv1.2"]}]
+              ssl: [{:server_name_indication, to_charlist(authority)}]
             ],
             preserve_host_header: true
           )
