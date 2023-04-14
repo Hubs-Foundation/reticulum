@@ -725,22 +725,22 @@ defmodule RetWeb.PageController do
         is_head = conn |> Conn.get_req_header("x-original-method") == ["HEAD"]
 
         %Conn{}
-        |> Map.merge(conn)
-        |> Map.put(
-          :method,
-          if is_head do
-            "HEAD"
-          else
-            conn.method
-          end
-        )
-        # Need to strip path_info since proxy plug reads it
-        |> Map.put(:path_info, [])
-        # Since we replaced the host with the IP address in ip_url above, we need to force the host
-        # header back to the original authority so that the proxy destination does not reject our request
-        |> Map.update!(:req_headers, &[{"host", authority} | &1])
-        # Some domains disallow access from improper Origins
-        # |> Conn.delete_req_header("origin")
+        # |> Map.merge(conn)
+        # |> Map.put(
+        #   :method,
+        #   if is_head do
+        #     "HEAD"
+        #   else
+        #     conn.method
+        #   end
+        # )
+        # # Need to strip path_info since proxy plug reads it
+        # |> Map.put(:path_info, [])
+        # # Since we replaced the host with the IP address in ip_url above, we need to force the host
+        # # header back to the original authority so that the proxy destination does not reject our request
+        # |> Map.update!(:req_headers, &[{"host", authority} | &1])
+        # # Some domains disallow access from improper Origins
+        # # |> Conn.delete_req_header("origin")
         |> ReverseProxyPlug.request(body, opts)
         |> ReverseProxyPlug.response(conn, opts)
       else
