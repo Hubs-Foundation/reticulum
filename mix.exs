@@ -52,7 +52,7 @@ defmodule Ret.Mixfile do
       {:cowboy, "~> 2.9"},
       {:plug_cowboy, "~> 2.1"},
       {:peerage, "~> 1.0"},
-      {:httpoison, "~> 2.1"},
+      {:httpoison, "~> 1.5"},
       {:poison, "~> 3.1"},
       {:ecto_autoslug_field, "~> 2.0"},
       {:cors_plug, "~> 2.0"},

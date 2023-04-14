@@ -724,6 +724,7 @@ defmodule RetWeb.PageController do
         body = ReverseProxyPlug.read_body(conn)
         is_head = conn |> Conn.get_req_header("x-original-method") == ["HEAD"]
 
+        IO.inspect(opts)
         %Conn{}
         # |> Map.merge(conn)
         # |> Map.put(
