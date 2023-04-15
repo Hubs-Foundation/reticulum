@@ -708,7 +708,7 @@ defmodule RetWeb.PageController do
 
         opts =
           ReverseProxyPlug.init(
-            upstream: url,
+            upstream: ip_url,
             allowed_origins: allowed_origins,
             proxy_url: "#{cors_scheme}://#{cors_host}:#{cors_port}",
             # Since we replaced the host with the IP address in ip_url above, we need to force the host
@@ -716,7 +716,7 @@ defmodule RetWeb.PageController do
             # Note that we have to convert the authority to a charlist, since this uses Erlang's `ssl` module
             # internally, which expects a charlist.
             client_options: [
-              ssl: [{:server_name_indication, to_charlist(authority)}]
+              ssl: [{:server_name_indication, to_charlist(authority)}, {:versions, [:"tlsv1.2",:"tlsv1.3"]}]
             ],
             preserve_host_header: true
           )
@@ -737,9 +737,9 @@ defmodule RetWeb.PageController do
         )
         # Need to strip path_info since proxy plug reads it
         |> Map.put(:path_info, [])
-        # # Since we replaced the host with the IP address in ip_url above, we need to force the host
-        # # header back to the original authority so that the proxy destination does not reject our request
-        # |> Map.update!(:req_headers, &[{"host", authority} | &1])
+        # Since we replaced the host with the IP address in ip_url above, we need to force the host
+        # header back to the original authority so that the proxy destination does not reject our request
+        |> Map.update!(:req_headers, &[{"host", authority} | &1])
         # Some domains disallow access from improper Origins
         # |> Conn.delete_req_header("origin")
         |> ReverseProxyPlug.request(body, opts)
