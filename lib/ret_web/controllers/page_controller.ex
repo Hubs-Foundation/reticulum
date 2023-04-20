@@ -680,7 +680,6 @@ defmodule RetWeb.PageController do
       # We want to ensure that the URL we request hits the same IP that we verified above,
       # so we replace the host with the IP address here and use this url to make the proxy request.
       ip_url = URI.to_string(HttpUtils.replace_host(uri, resolved_ip))
-      IO.puts("ip_url: #{ip_url}")
 
       # Disallow CORS proxying unless request was made to the cors proxy url
       cors_proxy_url = Application.get_env(:ret, RetWeb.Endpoint)[:cors_proxy_url]
@@ -697,18 +696,12 @@ defmodule RetWeb.PageController do
             cors_port == conn.port
         end
 
-      IO.puts("is_cors_proxy_url: #{is_cors_proxy_url}")
-
       if is_cors_proxy_url do
         allowed_origins =
           Application.get_env(:ret, RetWeb.Endpoint)[:allowed_origins] |> String.split(",")
-        
-        IO.puts("proxy_url: #{cors_scheme}://#{cors_host}:#{cors_port}")
-        IO.puts("upstream: #{url}")
-
         opts =
           ReverseProxyPlug.init(
-            upstream: ip_url,
+            upstream: url,
             allowed_origins: allowed_origins,
             proxy_url: "#{cors_scheme}://#{cors_host}:#{cors_port}",
             # Since we replaced the host with the IP address in ip_url above, we need to force the host
@@ -718,15 +711,13 @@ defmodule RetWeb.PageController do
             client_options: [
               ssl: [{:server_name_indication, to_charlist(authority)}, {:versions, [:"tlsv1.2",:"tlsv1.3"]}]
             ],
-            preserve_host_header: true
+            # preserve_host_header: true
           )
 
         body = ReverseProxyPlug.read_body(conn)
         is_head = conn |> Conn.get_req_header("x-original-method") == ["HEAD"]
 
-        IO.inspect(opts)
-        %Conn{}
-        |> Map.merge(conn)
+        %Conn{}|> Map.merge(conn)
         |> Map.put(
           :method,
           if is_head do
@@ -737,11 +728,6 @@ defmodule RetWeb.PageController do
         )
         # Need to strip path_info since proxy plug reads it
         |> Map.put(:path_info, [])
-        # Since we replaced the host with the IP address in ip_url above, we need to force the host
-        # header back to the original authority so that the proxy destination does not reject our request
-        |> Map.update!(:req_headers, &[{"host", authority} | &1])
-        # Some domains disallow access from improper Origins
-        # |> Conn.delete_req_header("origin")
         |> ReverseProxyPlug.request(body, opts)
         |> ReverseProxyPlug.response(conn, opts)
       else
