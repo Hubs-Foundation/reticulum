@@ -1,6 +1,20 @@
 defmodule RetWeb.PageController do
   use RetWeb, :controller
-  alias Ret.{Repo, Hub, Scene, SceneListing, Avatar, AppConfig, OwnedFile, AvatarListing, PageOriginWarmer, Storage}
+
+  alias Ret.{
+    Repo,
+    Hub,
+    Scene,
+    SceneListing,
+    Avatar,
+    AppConfig,
+    OwnedFile,
+    AvatarListing,
+    PageOriginWarmer,
+    Storage,
+    HttpUtils
+  }
+
   alias Plug.Conn
   import Ret.ConnUtils
 
@@ -143,8 +157,11 @@ defmodule RetWeb.PageController do
   end
 
   # Allow loading homepage if auth_token is being used to log in
-  defp render_homepage_content(%Plug.Conn{query_params: %{"auth_token" => _auth_token}} = conn, _default_room_id),
-    do: render_homepage_content(conn, nil)
+  defp render_homepage_content(
+         %Plug.Conn{query_params: %{"auth_token" => _auth_token}} = conn,
+         _default_room_id
+       ),
+       do: render_homepage_content(conn, nil)
 
   defp render_homepage_content(conn, default_room_id) do
     hub = Hub |> Repo.get_by(hub_sid: default_room_id)
@@ -189,12 +206,12 @@ defmodule RetWeb.PageController do
       |> put_hub_headers("hub")
       |> render_page("link.html", :hubs, "link-meta.html")
 
-  def render_for_path("/link/" <> hub_identifier_and_slug, _params, conn) do
-    hub_identifier = hub_identifier_and_slug |> String.split("/") |> List.first()
+  def render_for_path("/link/" <> hub_sid_and_slug, _params, conn) do
+    hub_sid = hub_sid_and_slug |> String.split("/") |> List.first()
 
     conn
     |> put_hub_headers("link")
-    |> redirect_to_hub_identifier(hub_identifier)
+    |> redirect_to_hub_sid(hub_sid)
   end
 
   def render_for_path("/signin", _params, conn), do: conn |> render_page("signin.html")
@@ -203,13 +220,17 @@ defmodule RetWeb.PageController do
   def render_for_path("/verify", _params, conn), do: conn |> render_page("verify.html")
   def render_for_path("/verify/", _params, conn), do: conn |> render_page("verify.html")
 
+  def render_for_path("/tokens", _params, conn), do: conn |> render_page("tokens.html")
+  def render_for_path("/tokens/", _params, conn), do: conn |> render_page("tokens.html")
+
   def render_for_path("/discord", _params, conn), do: conn |> render_page("discord.html")
   def render_for_path("/discord/", _params, conn), do: conn |> render_page("discord.html")
 
   def render_for_path("/cloud", _params, conn), do: conn |> render_page("cloud.html")
   def render_for_path("/cloud/", _params, conn), do: conn |> render_page("cloud.html")
 
-  def render_for_path("/spoke", _params, conn), do: conn |> render_page("index.html", :spoke, "spoke-index-meta.html")
+  def render_for_path("/spoke", _params, conn),
+    do: conn |> render_page("index.html", :spoke, "spoke-index-meta.html")
 
   def render_for_path("/spoke/" <> _path, _params, conn),
     do: conn |> render_page("index.html", :spoke, "spoke-index-meta.html")
@@ -248,7 +269,8 @@ defmodule RetWeb.PageController do
                 root_url: RetWeb.Endpoint.url(),
                 app_name: get_app_config_value("translations|en|app-name") || "",
                 app_description:
-                  (get_app_config_value("translations|en|app-description") || "") |> String.replace("\\n", " ")
+                  (get_app_config_value("translations|en|app-description") || "")
+                  |> String.replace("\\n", " ")
               )
 
             unless module_config(:skip_cache) do
@@ -277,11 +299,15 @@ defmodule RetWeb.PageController do
     conn |> respond_with_configurable_asset(asset_key, path, mime_type)
   end
 
-  def render_for_path("/admin", _params, conn), do: conn |> render_page("admin.html", :admin)
+  def render_for_path("/admin", _params, conn) do
+    conn |> render_page("admin.html", :admin)
+  end
 
   def render_for_path("/robots.txt", _params, conn) do
     allow_crawlers = Application.get_env(:ret, RetWeb.Endpoint)[:allow_crawlers] || false
-    robots_txt = Phoenix.View.render_to_string(RetWeb.PageView, "robots.txt", allow_crawlers: allow_crawlers)
+
+    robots_txt =
+      Phoenix.View.render_to_string(RetWeb.PageView, "robots.txt", allow_crawlers: allow_crawlers)
 
     conn
     |> send_resp(200, robots_txt)
@@ -362,7 +388,8 @@ defmodule RetWeb.PageController do
     conn
     |> put_resp_header(
       "hub-name",
-      get_app_config_value("translations|en|app-full-name") || get_app_config_value("translations|en|app-name") || ""
+      get_app_config_value("translations|en|app-full-name") ||
+        get_app_config_value("translations|en|app-name") || ""
     )
     |> put_resp_header(
       "hub-entity-type",
@@ -379,7 +406,8 @@ defmodule RetWeb.PageController do
   end
 
   defp append_csp(conn, directive, source) do
-    csp_header = conn.resp_headers |> Enum.find(fn {key, _value} -> key == "content-security-policy" end)
+    csp_header =
+      conn.resp_headers |> Enum.find(fn {key, _value} -> key == "content-security-policy" end)
 
     new_directive = "#{directive} #{source}"
 
@@ -400,7 +428,15 @@ defmodule RetWeb.PageController do
   end
 
   def render_hub_content(conn, nil, _) do
-    conn |> send_resp(404, "Invalid URL.")
+    user_agent =
+      get_req_header(conn, "user-agent")
+      |> Enum.at(0)
+
+    if String.contains?(user_agent, "kube-probe") do
+      send_resp(conn, 200, "")
+    else
+      send_resp(conn, 404, "bad Room ID")
+    end
   end
 
   def render_hub_content(conn, hub, "objects.gltf") do
@@ -412,7 +448,9 @@ defmodule RetWeb.PageController do
   end
 
   def render_hub_content(conn, hub, _slug) do
-    hub = hub |> Repo.preload(scene: [:screenshot_owned_file], scene_listing: [:screenshot_owned_file])
+    hub =
+      hub
+      |> Repo.preload(scene: [:screenshot_owned_file], scene_listing: [:screenshot_owned_file])
 
     {app_config, app_config_script} = generate_app_config()
 
@@ -452,20 +490,59 @@ defmodule RetWeb.PageController do
     Ret.AppConfig.get_config(!!module_config(:skip_cache)) |> generate_config("APP_CONFIG")
   end
 
+  # We receive the themes array as stringified JSON. We must decode it here and
+  # then re-encode it so that it will be successfully parsed by the client.
+  #
+  # The data going into this function looks something like this:
+  # %{
+  #   "theme" => %{
+  #     "themes" => "[
+  #       { \"id\": \"theme-1\", ...},
+  #       { \"id\": \"theme-2\", ...},
+  #       ...
+  #     ]",
+  #     "deprecated_color_property_1" => "#ffffff",
+  #     "deprecated_color_property_n" => "#000000"
+  #   }
+  # }
+  # The data returned from this function looks something like this:
+  # %{
+  #   "theme" => %{
+  #     "themes" => [
+  #       %{ "id" => "theme-1", ...},
+  #       %{ "id" => "theme-2", ...},
+  #       ...
+  #     ],
+  #     "deprecated_color_property_1" => "#ffffff",
+  #     "deprecated_color_property_n" => "#000000"
+  #   }
+  # }
+  defp escape_themes(%{"theme" => %{"themes" => string} = category} = config) do
+    case Poison.decode(string || "") do
+      {:ok, array} ->
+        Map.put(config, "theme", Map.put(category, "themes", array))
+
+      _ ->
+        category = Map.put(category, "themes", [])
+        category = Map.put(category, "error", "Failed to parse custom theme JSON.")
+        Map.put(config, "theme", category)
+    end
+  end
+
+  defp escape_themes(config) do
+    config
+  end
+
   defp generate_config(config, name) do
-    config_json = config |> Poison.encode!()
+    config_json = config |> escape_themes() |> Poison.encode!()
     config_script = "window.#{name} = JSON.parse('#{config_json |> String.replace("'", "\\'")}')"
     {config, config_script}
   end
 
   defp csp_for_script(script), do: "'sha256-#{:crypto.hash(:sha256, script) |> :base64.encode()}'"
 
-  # Redirect to the specified hub identifier, which can be a sid or an entry code
-  defp redirect_to_hub_identifier(conn, hub_identifier) do
-    # Rate limit requests for redirects.
-    :timer.sleep(500)
-
-    hub = Repo.get_by(Hub, hub_sid: hub_identifier) || Hub.get_by_entry_code_string(hub_identifier)
+  defp redirect_to_hub_sid(conn, hub_sid) do
+    hub = Repo.get_by(Hub, hub_sid: hub_sid)
 
     case hub do
       %Hub{} = hub -> conn |> redirect(to: "/#{hub.hub_sid}/#{hub.slug}")
@@ -484,7 +561,9 @@ defmodule RetWeb.PageController do
 
     meta_content =
       if meta_template do
-        Phoenix.View.render_to_string(RetWeb.PageView, meta_template, translations: app_config["translations"]["en"])
+        Phoenix.View.render_to_string(RetWeb.PageView, meta_template,
+          translations: app_config["translations"]["en"]
+        )
       else
         []
       end
@@ -510,7 +589,9 @@ defmodule RetWeb.PageController do
 
     meta_tags =
       if meta_template do
-        Phoenix.View.render_to_string(RetWeb.PageView, meta_template, translations: app_config["translations"]["en"])
+        Phoenix.View.render_to_string(RetWeb.PageView, meta_template,
+          translations: app_config["translations"]["en"]
+        )
       else
         []
       end
@@ -518,7 +599,9 @@ defmodule RetWeb.PageController do
     case try_chunks_for_page(conn, page, source) do
       {:ok, chunks} ->
         chunks_with_meta =
-          chunks |> List.insert_at(1, app_config_script |> with_script_tags) |> List.insert_at(1, meta_tags)
+          chunks
+          |> List.insert_at(1, app_config_script |> with_script_tags)
+          |> List.insert_at(1, meta_tags)
 
         conn
         |> append_script_csp(app_config_script)
@@ -555,7 +638,8 @@ defmodule RetWeb.PageController do
 
   defp imgproxy_proxy(%Conn{request_path: "/thumbnail/" <> encoded_url, query_string: qs} = conn) do
     with imgproxy_url <- Application.get_env(:ret, RetWeb.Endpoint)[:imgproxy_url],
-         [scheme, port, host] = [:scheme, :port, :host] |> Enum.map(&Keyword.get(imgproxy_url, &1)),
+         [scheme, port, host] =
+           [:scheme, :port, :host] |> Enum.map(&Keyword.get(imgproxy_url, &1)),
          %{"w" => width, "h" => height} <- qs |> URI.decode_query() do
       thumbnail_url = "#{scheme}://#{host}:#{port}//auto/#{width}/#{height}/sm/1/#{encoded_url}"
 
@@ -579,46 +663,77 @@ defmodule RetWeb.PageController do
     end
   end
 
-  defp cors_proxy(%Conn{request_path: "/" <> url, query_string: ""} = conn), do: cors_proxy(conn, url)
-  defp cors_proxy(%Conn{request_path: "/" <> url, query_string: qs} = conn), do: cors_proxy(conn, "#{url}?#{qs}")
+  defp cors_proxy(%Conn{request_path: "/" <> url, query_string: ""} = conn),
+    do: cors_proxy(conn, url)
+
+  defp cors_proxy(%Conn{request_path: "/" <> url, query_string: qs} = conn),
+    do: cors_proxy(conn, "#{url}?#{qs}")
 
   defp cors_proxy(conn, url) do
-    cors_proxy_url = Application.get_env(:ret, RetWeb.Endpoint)[:cors_proxy_url]
-    [cors_scheme, cors_port, cors_host] = [:scheme, :port, :host] |> Enum.map(&Keyword.get(cors_proxy_url, &1))
+    %URI{authority: authority, host: host} = uri = URI.parse(url)
 
-    # Disallow CORS proxying unless request was made to the cors proxy url
-    if cors_scheme == Atom.to_string(conn.scheme) && cors_host == conn.host && cors_port == conn.port do
-      allowed_origins = Application.get_env(:ret, RetWeb.Endpoint)[:allowed_origins] |> String.split(",")
+    resolved_ip = HttpUtils.resolve_ip(host)
 
-      opts =
-        ReverseProxyPlug.init(
-          upstream: url,
-          allowed_origins: allowed_origins,
-          proxy_url: "#{cors_scheme}://#{cors_host}:#{cors_port}",
-          client_options: [ssl: [{:versions, [:"tlsv1.2"]}]]
-        )
-
-      body = ReverseProxyPlug.read_body(conn)
-      is_head = conn |> Conn.get_req_header("x-original-method") == ["HEAD"]
-
-      %Conn{}
-      |> Map.merge(conn)
-      |> Map.put(
-        :method,
-        if is_head do
-          "HEAD"
-        else
-          conn.method
-        end
-      )
-      # Need to strip path_info since proxy plug reads it
-      |> Map.put(:path_info, [])
-      # Some domains disallow access from improper Origins
-      |> Conn.delete_req_header("origin")
-      |> ReverseProxyPlug.request(body, opts)
-      |> ReverseProxyPlug.response(conn, opts)
-    else
+    if HttpUtils.internal_ip?(resolved_ip) do
       conn |> send_resp(401, "Bad request.")
+    else
+      # We want to ensure that the URL we request hits the same IP that we verified above,
+      # so we replace the host with the IP address here and use this url to make the proxy request.
+      ip_url = URI.to_string(HttpUtils.replace_host(uri, resolved_ip))
+
+      # Disallow CORS proxying unless request was made to the cors proxy url
+      cors_proxy_url = Application.get_env(:ret, RetWeb.Endpoint)[:cors_proxy_url]
+
+      [cors_scheme, cors_port, cors_host] =
+        [:scheme, :port, :host] |> Enum.map(&Keyword.get(cors_proxy_url, &1))
+
+      is_cors_proxy_url =
+        if System.get_env("TURKEY_MODE") do
+          cors_host == conn.host &&
+            cors_scheme == get_req_header(conn, "x-forwarded-proto") |> Enum.at(0)
+        else
+          cors_scheme == Atom.to_string(conn.scheme) && cors_host == conn.host &&
+            cors_port == conn.port
+        end
+
+      if is_cors_proxy_url do
+        allowed_origins =
+          Application.get_env(:ret, RetWeb.Endpoint)[:allowed_origins] |> String.split(",")
+        opts =
+          ReverseProxyPlug.init(
+            upstream: url,
+            allowed_origins: allowed_origins,
+            proxy_url: "#{cors_scheme}://#{cors_host}:#{cors_port}",
+            # Since we replaced the host with the IP address in ip_url above, we need to force the host
+            # used for ssl verification here so that the connection isn't rejected.
+            # Note that we have to convert the authority to a charlist, since this uses Erlang's `ssl` module
+            # internally, which expects a charlist.
+            client_options: [
+              ssl: [{:server_name_indication, to_charlist(authority)}, {:versions, [:"tlsv1.2",:"tlsv1.3"]}]
+            ],
+            # preserve_host_header: true
+          )
+
+        body = ReverseProxyPlug.read_body(conn)
+        is_head = conn |> Conn.get_req_header("x-original-method") == ["HEAD"]
+
+        resp = %Conn{}|> Map.merge(conn)
+        |> Map.put(
+          :method,
+          if is_head do
+            "HEAD"
+          else
+            conn.method
+          end
+        )
+        # Need to strip path_info since proxy plug reads it
+        |> Map.put(:path_info, [])
+        |> ReverseProxyPlug.request(body, opts)
+        |> ReverseProxyPlug.response(conn, opts)
+
+      else
+        conn |> send_resp(401, "Bad request.")
+      end
     end
   end
 
@@ -628,12 +743,16 @@ defmodule RetWeb.PageController do
   end
 
   defp render_asset(conn) do
-    static_options = Plug.Static.init(at: "/", from: module_config(:assets_path), gzip: true, brotli: true)
+    static_options =
+      Plug.Static.init(at: "/", from: module_config(:assets_path), gzip: true, brotli: true)
+
     Plug.Static.call(conn, static_options)
   end
 
   defp render_docs(conn) do
-    static_options = Plug.Static.init(at: "/docs", from: module_config(:docs_path), gzip: true, brotli: true)
+    static_options =
+      Plug.Static.init(at: "/docs", from: module_config(:docs_path), gzip: true, brotli: true)
+
     Plug.Static.call(conn, static_options)
   end
 
@@ -675,7 +794,9 @@ defmodule RetWeb.PageController do
 
   defp append_script_csp(conn, nil), do: conn
   defp append_script_csp(conn, ""), do: conn
-  defp append_script_csp(conn, script), do: conn |> append_csp("script-src", csp_for_script(script))
+
+  defp append_script_csp(conn, script),
+    do: conn |> append_csp("script-src", csp_for_script(script))
 
   defp with_script_tags(nil), do: ""
   defp with_script_tags(""), do: ""
