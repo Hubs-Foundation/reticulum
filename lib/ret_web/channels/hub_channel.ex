@@ -468,21 +468,11 @@ defmodule RetWeb.HubChannel do
     params = parse(params)
     with {:ok, hub, account} <- authorize(socket, :write_entity_state),
          {:ok, %{entity: entity}} <- Ret.create_entity(hub, params) do
-      entity = Repo.preload(entity, [:sub_entities])
-      broadcast!(socket, "entity_state_saved", EntityView.render("show.json", %{entity: entity}))
-      {:reply, :ok, socket}
-    else
-      {:error, reason} ->
-        reply_error(socket, reason)
-    end
-  end
-
-  def handle_in("save_entity_state", params, socket) do
-    params = parse(params)
-    with {:ok, hub, account} <- authorize(socket, :write_entity_state),
-         {:ok, %{entity: entity}} <- Ret.create_entity(hub, params),
-         {:ok, _owned_file} <- Storage.promote(params.file_id, params.file_access_token,  params.promotion_token, account) do
-      OwnedFile.set_active(params.file_id, account.account_id)
+      if Map.has_key?(params, :file_id) do
+        with {:ok, _owned_file} <- Storage.promote(params.file_id, params.file_access_token,  params.promotion_token, account) do
+          OwnedFile.set_active(params.file_id, account.account_id)
+        end
+      end
       entity = Repo.preload(entity, [:sub_entities])
       broadcast!(socket, "entity_state_saved", EntityView.render("show.json", %{entity: entity}))
       {:reply, :ok, socket}
