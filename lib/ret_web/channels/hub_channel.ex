@@ -466,13 +466,21 @@ defmodule RetWeb.HubChannel do
 
   def handle_in("save_entity_state", params, socket) do
     params = parse(params)
+
     with {:ok, hub, account} <- authorize(socket, :write_entity_state),
          {:ok, %{entity: entity}} <- Ret.create_entity(hub, params) do
       if Map.has_key?(params, :file_id) do
-        with {:ok, _owned_file} <- Storage.promote(params.file_id, params.file_access_token,  params.promotion_token, account) do
+        with {:ok, _owned_file} <-
+               Storage.promote(
+                 params.file_id,
+                 params.file_access_token,
+                 params.promotion_token,
+                 account
+               ) do
           OwnedFile.set_active(params.file_id, account.account_id)
         end
       end
+
       entity = Repo.preload(entity, [:sub_entities])
       broadcast!(socket, "entity_state_saved", EntityView.render("show.json", %{entity: entity}))
       {:reply, :ok, socket}
@@ -1450,32 +1458,30 @@ defmodule RetWeb.HubChannel do
   end
 
   defp parse(%{"nid" => nid, "create_message" => create_message, "updates" => updates}) do
-  %{
-    nid: nid,
-    create_message: Jason.encode!(create_message),
-    updates: Enum.map(updates, &parse/1)
-  }
-end
+    %{
+      nid: nid,
+      create_message: Jason.encode!(create_message),
+      updates: Enum.map(updates, &parse/1)
+    }
+  end
 
-defp parse(
-  %{
-    "nid" => nid,
-    "create_message" => create_message,
-    "updates" => updates,
-    "promotion_token" => promotion_token,
-    "file_id" => file_id,
-    "file_access_token" => file_access_token
-  }
-) do
-  %{
-    nid: nid,
-    create_message: Jason.encode!(create_message),
-    updates: Enum.map(updates, &parse/1),
-    promotion_token: promotion_token,
-    file_id: file_id,
-    file_access_token: file_access_token
-  }
-end
+  defp parse(%{
+         "nid" => nid,
+         "create_message" => create_message,
+         "updates" => updates,
+         "promotion_token" => promotion_token,
+         "file_id" => file_id,
+         "file_access_token" => file_access_token
+       }) do
+    %{
+      nid: nid,
+      create_message: Jason.encode!(create_message),
+      updates: Enum.map(updates, &parse/1),
+      promotion_token: promotion_token,
+      file_id: file_id,
+      file_access_token: file_access_token
+    }
+  end
 
   defp reply_error(socket, reason) do
     {:reply, {:error, %{reason: reason}}, socket}
