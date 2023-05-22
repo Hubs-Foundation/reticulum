@@ -466,9 +466,10 @@ defmodule RetWeb.HubChannel do
 
   def handle_in("save_entity_state", params, socket) do
     params = parse(params)
-
-    with {:ok, hub} <- authorize(socket, :write_entity_state),
-         {:ok, %{entity: entity}} <- Ret.create_entity(hub, params) do
+    with {:ok, hub, account} <- authorize(socket, :write_entity_state),
+         {:ok, %{entity: entity}} <- Ret.create_entity(hub, params),
+         {:ok, _owned_file} <- Storage.promote(params.file_id, params.file_access_token,  params.promotion_token, account) do
+      OwnedFile.set_active(params.file_id, account.account_id)
       entity = Repo.preload(entity, [:sub_entities])
       broadcast!(socket, "entity_state_saved", EntityView.render("show.json", %{entity: entity}))
       {:reply, :ok, socket}
@@ -481,7 +482,7 @@ defmodule RetWeb.HubChannel do
   def handle_in("update_entity_state", %{"update_message" => update_message} = params, socket) do
     params = parse(params)
 
-    with {:ok, hub} <- authorize(socket, :write_entity_state),
+    with {:ok, hub, _account} <- authorize(socket, :write_entity_state),
          {:ok, _} <- Ret.insert_or_update_sub_entity(hub, params) do
       broadcast!(socket, "entity_state_updated", update_message)
       {:reply, :ok, socket}
@@ -492,7 +493,7 @@ defmodule RetWeb.HubChannel do
   end
 
   def handle_in("delete_entity_state", %{"nid" => nid}, socket) do
-    with {:ok, hub} <- authorize(socket, :write_entity_state),
+    with {:ok, hub, _account} <- authorize(socket, :write_entity_state),
          {:ok, _} <- Ret.delete_entity(hub.hub_id, nid) do
       broadcast!(socket, "entity_state_deleted", %{
         "nid" => nid,
@@ -950,7 +951,7 @@ defmodule RetWeb.HubChannel do
 
     with {:ok, account} <- account_for_socket(socket),
          :ok <- auth(hub, account, :write_entity_state) do
-      {:ok, hub}
+      {:ok, hub, account}
     end
   end
 
@@ -1445,11 +1446,23 @@ defmodule RetWeb.HubChannel do
     %{nid: nid, root_nid: root_nid, update_message: Jason.encode!(update_message)}
   end
 
-  defp parse(%{"nid" => nid, "create_message" => create_message, "updates" => updates}) do
+  defp parse(
+    %{
+      "nid" => nid,
+      "create_message" => create_message,
+      "updates" => updates,
+      "promotion_token" => promotion_token,
+      "file_id" => file_id,
+      "file_access_token" => file_access_token
+    }
+  ) do
     %{
       nid: nid,
       create_message: Jason.encode!(create_message),
-      updates: Enum.map(updates, &parse/1)
+      updates: Enum.map(updates, &parse/1),
+      promotion_token: promotion_token,
+      file_id: file_id,
+      file_access_token: file_access_token
     }
   end
 
