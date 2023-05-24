@@ -196,7 +196,8 @@ defmodule RetWeb.Plugs.AddCSP do
         link_url,
         ret_direct_connect,
         storage_url,
-        thumbnail_url
+        thumbnail_url,
+        "https://raw.githubusercontent.com"
       ],
       "img-src" => [
         "'self'",
