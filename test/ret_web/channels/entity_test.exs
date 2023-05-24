@@ -4,10 +4,12 @@ defmodule RetWeb.EntityTest do
   import RetWeb.EntityTestUtils, only: [read_json: 1]
 
   alias RetWeb.SessionSocket
-  alias Ret.{Repo, HubRoleMembership}
+  alias Ret.{Repo, HubRoleMembership, Storage}
 
   @payload_save_entity_state read_json("save_entity_state_payload.json")
   @payload_save_entity_state_2 read_json("save_entity_state_payload_2.json")
+  @payload_save_entity_state_promotable read_json("save_entity_state_payload_promotable.json")
+  @payload_save_entity_state_unpromotable read_json("save_entity_state_payload_unpromotable.json")
   @payload_update_entity_state read_json("update_entity_state_payload.json")
   @payload_delete_entity_state read_json("delete_entity_state_payload.json")
   @default_join_params %{"profile" => %{}, "context" => %{}}
@@ -69,6 +71,52 @@ defmodule RetWeb.EntityTest do
       assert_reply push(socket, "save_entity_state", @payload_save_entity_state), :error, %{
         reason: :unauthorized
       }
+    end
+
+    test "save_entity_state succeeds if provided correct promotion keys", %{
+      socket: socket,
+      hub: hub,
+      account: account
+    } do
+      %HubRoleMembership{hub: hub, account: account} |> Repo.insert!()
+      temp_file = generate_temp_file("test")
+
+      {:ok, _, socket} =
+        subscribe_and_join(socket, "hub:#{hub.hub_sid}", join_params_for_account(account))
+
+      {:ok, uuid} = Storage.store(%Plug.Upload{path: temp_file}, "text/plain", "secret")
+
+      updated_map =
+        @payload_save_entity_state_promotable
+        |> Map.put("file_id", uuid)
+        |> Map.put("file_access_token", "secret")
+
+      assert_reply push(socket, "save_entity_state", updated_map), :ok
+    end
+
+    test "save_entity_state fails if provided incorrect promotion parameters", %{
+      socket: socket,
+      hub: hub,
+      account: account
+    } do
+      %HubRoleMembership{hub: hub, account: account} |> Repo.insert!()
+      temp_file = generate_temp_file("test2")
+
+      {:ok, _, socket} =
+        subscribe_and_join(socket, "hub:#{hub.hub_sid}", join_params_for_account(account))
+
+      {:ok, uuid} = Storage.store(%Plug.Upload{path: temp_file}, "text/plain", "secret")
+
+      updated_map =
+        @payload_save_entity_state_promotable
+        |> Map.put("file_id", uuid)
+        |> Map.put("file_access_token", " not_secret")
+
+      assert_reply push(socket, "save_entity_state", updated_map),
+                   :error,
+                   %{
+                     reason: :not_allowed
+                   }
     end
   end
 
