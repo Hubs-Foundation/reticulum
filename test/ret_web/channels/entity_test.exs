@@ -108,7 +108,7 @@ defmodule RetWeb.EntityTest do
       {:ok, uuid} = Storage.store(%Plug.Upload{path: temp_file}, "text/plain", "secret")
 
       updated_map =
-        @payload_save_entity_state_promotable
+        @payload_save_entity_state_unpromotable
         |> Map.put("file_id", uuid)
         |> Map.put("file_access_token", " not_secret")
 

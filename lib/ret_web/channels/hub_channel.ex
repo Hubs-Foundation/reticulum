@@ -476,32 +476,6 @@ defmodule RetWeb.HubChannel do
     end
   end
 
-  defp handle_file_promotion(entity, %{file_id: nil} = _params, _account, socket) do
-    broadcast_entity_state(entity, socket)
-  end
-
-  defp handle_file_promotion(entity, params, account, socket) do
-    with {:ok, _owned_file} <-
-           Storage.promote(
-             params.file_id,
-             params.file_access_token,
-             params.promotion_token,
-             account
-           ) do
-      OwnedFile.set_active(params.file_id, account.account_id)
-      broadcast_entity_state(entity, socket)
-    else
-      {:error, reason} ->
-        reply_error(socket, reason)
-    end
-  end
-
-  defp broadcast_entity_state(entity, socket) do
-    entity = Repo.preload(entity, [:sub_entities])
-    broadcast!(socket, "entity_state_saved", EntityView.render("show.json", %{entity: entity}))
-    {:reply, :ok, socket}
-  end
-
   def handle_in("update_entity_state", %{"update_message" => update_message} = params, socket) do
     params = parse(params)
 
@@ -1484,6 +1458,32 @@ defmodule RetWeb.HubChannel do
       file_id: Map.get(params, "file_id", nil),
       file_access_token: Map.get(params, "file_access_token", nil)
     }
+  end
+
+  defp handle_file_promotion(entity, %{file_id: nil} = _params, _account, socket) do
+    broadcast_entity_state(entity, socket)
+  end
+
+  defp handle_file_promotion(entity, params, account, socket) do
+    with {:ok, _owned_file} <-
+           Storage.promote(
+             params.file_id,
+             params.file_access_token,
+             params.promotion_token,
+             account
+           ) do
+      OwnedFile.set_active(params.file_id, account.account_id)
+      broadcast_entity_state(entity, socket)
+    else
+      {:error, reason} ->
+        reply_error(socket, reason)
+    end
+  end
+
+  defp broadcast_entity_state(entity, socket) do
+    entity = Repo.preload(entity, [:sub_entities])
+    broadcast!(socket, "entity_state_saved", EntityView.render("show.json", %{entity: entity}))
+    {:reply, :ok, socket}
   end
 
   defp reply_error(socket, reason) do
