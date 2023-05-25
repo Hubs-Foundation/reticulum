@@ -489,6 +489,28 @@ defmodule RetWeb.HubChannel do
     end
   end
 
+  def handle_in("delete_entity_state", %{"nid" => nid, "file_id" => file_id}, socket) do
+    {:ok, hub, account} = authorize(socket, :write_entity_state)
+
+    with {:ok, _} <- Ret.delete_entity(hub.hub_id, nid) do
+      OwnedFile.set_inactive(file_id, account.account_id)
+      :ok
+    else
+      _ ->
+        if account |> can?(pin_objects(hub)) do
+          RoomObject.perform_unpin(hub, nid)
+          OwnedFile.set_inactive(file_id, account.account_id)
+        end
+    end
+
+    broadcast!(socket, "entity_state_deleted", %{
+      "nid" => nid,
+      "creator" => socket.assigns.session_id
+    })
+
+    {:reply, :ok, socket}
+  end
+
   def handle_in("delete_entity_state", %{"nid" => nid}, socket) do
     {:ok, hub, account} = authorize(socket, :write_entity_state)
 
