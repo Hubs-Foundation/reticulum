@@ -469,7 +469,17 @@ defmodule RetWeb.HubChannel do
 
     with {:ok, hub, account} <- authorize(socket, :write_entity_state),
          {:ok, %{entity: entity}} <- Ret.create_entity(hub, params) do
-      handle_file_promotion(entity, params, account, socket)
+      with {:ok, _} <- maybe_promote_file(params, account, socket) do
+        entity = Repo.preload(entity, [:sub_entities])
+
+        broadcast!(
+          socket,
+          "entity_state_saved",
+          EntityView.render("show.json", %{entity: entity})
+        )
+
+        {:reply, {:ok, %{entity: entity}}, socket}
+      end
     else
       {:error, reason} ->
         reply_error(socket, reason)
@@ -1460,11 +1470,11 @@ defmodule RetWeb.HubChannel do
     }
   end
 
-  defp handle_file_promotion(entity, %{file_id: nil} = _params, _account, socket) do
-    broadcast_entity_state(entity, socket)
+  defp maybe_promote_file(%{file_id: nil} = _params, _account, socket) do
+    {:reply, :ok, socket}
   end
 
-  defp handle_file_promotion(entity, params, account, socket) do
+  defp maybe_promote_file(params, account, socket) do
     with {:ok, _owned_file} <-
            Storage.promote(
              params.file_id,
@@ -1473,17 +1483,11 @@ defmodule RetWeb.HubChannel do
              account
            ) do
       OwnedFile.set_active(params.file_id, account.account_id)
-      broadcast_entity_state(entity, socket)
+      {:reply, :ok, socket}
     else
       {:error, reason} ->
         reply_error(socket, reason)
     end
-  end
-
-  defp broadcast_entity_state(entity, socket) do
-    entity = Repo.preload(entity, [:sub_entities])
-    broadcast!(socket, "entity_state_saved", EntityView.render("show.json", %{entity: entity}))
-    {:reply, :ok, socket}
   end
 
   defp reply_error(socket, reason) do
