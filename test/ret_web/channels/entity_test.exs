@@ -142,6 +142,46 @@ defmodule RetWeb.EntityTest do
              1
   end
 
+  test "delete_entity_state replies with error if entity does not exist", %{
+    socket: socket,
+    hub: hub,
+    account: account
+  } do
+    %HubRoleMembership{hub: hub, account: account} |> Repo.insert!()
+
+    {:ok, _, socket} =
+      subscribe_and_join(socket, "hub:#{hub.hub_sid}", join_params_for_account(account))
+
+    non_existent_entity_payload = Map.put(@payload_delete_entity_state, "nid", "non_existent_nid")
+
+    assert_reply push(socket, "delete_entity_state", non_existent_entity_payload), :error, %{
+      reason: :entity_state_does_not_exist
+    }
+  end
+
+  test "delete_entity_state deletes the entity and deactivates the owned file if file_id is present",
+       %{
+         socket: socket,
+         hub: hub,
+         account: account,
+         owned_file: owned_file
+       } do
+    %HubRoleMembership{hub: hub, account: account} |> Repo.insert!()
+
+    {:ok, _, socket} =
+      subscribe_and_join(socket, "hub:#{hub.hub_sid}", join_params_for_account(account))
+
+    push(socket, "save_entity_state", @payload_save_entity_state)
+
+    payload_with_file_id =
+      Map.put(@payload_delete_entity_state, "file_id", owned_file.owned_file_uuid)
+
+    assert_reply push(socket, "delete_entity_state", payload_with_file_id), :ok
+
+    updated_file = owned_file |> Repo.reload()
+    assert updated_file.state == :inactive
+  end
+
   test "delete_entity_state deletes the entity with the matching nid", %{
     socket: socket,
     hub: hub,

@@ -498,46 +498,34 @@ defmodule RetWeb.HubChannel do
     end
   end
 
-  def handle_in("delete_entity_state", %{"nid" => nid, "file_id" => file_id}, socket) do
+  def handle_in("delete_entity_state", %{"nid" => nid} = payload, socket) do
     {:ok, hub, account} = authorize(socket, :write_entity_state)
 
-    with {:ok, _} <- Ret.delete_entity(hub.hub_id, nid) do
-      OwnedFile.set_inactive(file_id, account.account_id)
-      :ok
-    else
-      _ ->
-        if account |> can?(pin_objects(hub)) do
+    case Ret.delete_entity(hub.hub_id, nid) do
+      {:ok, _} ->
+        try do
           RoomObject.perform_unpin(hub, nid)
-          OwnedFile.set_inactive(file_id, account.account_id)
+        rescue
+          _ -> :ok
         end
-    end
 
-    broadcast!(socket, "entity_state_deleted", %{
-      "nid" => nid,
-      "creator" => socket.assigns.session_id
-    })
-
-    {:reply, :ok, socket}
-  end
-
-  def handle_in("delete_entity_state", %{"nid" => nid}, socket) do
-    {:ok, hub, account} = authorize(socket, :write_entity_state)
-
-    with {:ok, _} <- Ret.delete_entity(hub.hub_id, nid) do
-      :ok
-    else
-      _ ->
-        if account |> can?(pin_objects(hub)) do
-          RoomObject.perform_unpin(hub, nid)
+        if payload["file_id"] do
+          case OwnedFile.set_inactive(payload["file_id"], account.account_id) do
+            {:ok, _} -> :ok
+            {:error, reason} -> reply_error(socket, reason)
+          end
         end
+
+        broadcast!(socket, "entity_state_deleted", %{
+          "nid" => nid,
+          "creator" => socket.assigns.session_id
+        })
+
+        {:reply, :ok, socket}
+
+      {:error, reason} ->
+        reply_error(socket, reason)
     end
-
-    broadcast!(socket, "entity_state_deleted", %{
-      "nid" => nid,
-      "creator" => socket.assigns.session_id
-    })
-
-    {:reply, :ok, socket}
   end
 
   def handle_in("get_host", _args, socket) do
