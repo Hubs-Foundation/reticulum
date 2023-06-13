@@ -159,6 +159,37 @@ defmodule RetWeb.EntityTest do
     }
   end
 
+  test "delete_entity_state replies with error if owned file does not exist", %{
+    socket: socket,
+    hub: hub,
+    account: account
+  } do
+    %HubRoleMembership{hub: hub, account: account} |> Repo.insert!()
+
+    {:ok, _, socket} =
+      subscribe_and_join(socket, "hub:#{hub.hub_sid}", join_params_for_account(account))
+
+    push(socket, "save_entity_state", @payload_save_entity_state)
+
+    non_existent_file_payload =
+      Map.put(@payload_delete_entity_state, "file_id", "non_existent_file_id")
+
+    assert_reply push(socket, "delete_entity_state", non_existent_file_payload), :error, %{
+      reason: :non_existent_file_id
+    }
+  end
+
+  test "delete_entity_state replies with error if not authorized", %{
+    socket: socket,
+    hub: hub
+  } do
+    {:ok, _, socket} = subscribe_and_join(socket, "hub:#{hub.hub_sid}", @default_join_params)
+
+    assert_reply push(socket, "delete_entity_state", @payload_delete_entity_state), :error, %{
+      reason: :not_logged_in
+    }
+  end
+
   test "delete_entity_state deletes the entity and deactivates the owned file if file_id is present",
        %{
          socket: socket,

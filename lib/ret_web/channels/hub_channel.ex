@@ -499,30 +499,18 @@ defmodule RetWeb.HubChannel do
   end
 
   def handle_in("delete_entity_state", %{"nid" => nid} = payload, socket) do
-    {:ok, hub, account} = authorize(socket, :write_entity_state)
+    with {:ok, hub, account} <- authorize(socket, :write_entity_state),
+         {:ok, _} <- Ret.delete_entity(hub.hub_id, nid),
+         {:ok, _} <- maybe_set_owned_file_inactive(payload, account) do
+      RoomObject.perform_unpin(hub, nid)
 
-    case Ret.delete_entity(hub.hub_id, nid) do
-      {:ok, _} ->
-        try do
-          RoomObject.perform_unpin(hub, nid)
-        rescue
-          _ -> :ok
-        end
+      broadcast!(socket, "entity_state_deleted", %{
+        "nid" => nid,
+        "creator" => socket.assigns.session_id
+      })
 
-        if payload["file_id"] do
-          case OwnedFile.set_inactive(payload["file_id"], account.account_id) do
-            {:ok, _} -> :ok
-            {:error, reason} -> reply_error(socket, reason)
-          end
-        end
-
-        broadcast!(socket, "entity_state_deleted", %{
-          "nid" => nid,
-          "creator" => socket.assigns.session_id
-        })
-
-        {:reply, :ok, socket}
-
+      {:reply, :ok, socket}
+    else
       {:error, reason} ->
         reply_error(socket, reason)
     end
@@ -1482,6 +1470,14 @@ defmodule RetWeb.HubChannel do
       file_id: Map.get(params, "file_id", nil),
       file_access_token: Map.get(params, "file_access_token", nil)
     }
+  end
+
+  defp maybe_set_owned_file_inactive(%{"file_id" => file_id}, %Account{account_id: account_id}) do
+    OwnedFile.set_inactive(file_id, account_id)
+  end
+
+  defp maybe_set_owned_file_inactive(_payload, _account) do
+    {:ok, :no_file}
   end
 
   defp maybe_promote_file(%{file_id: nil} = _params, _account, _socket) do

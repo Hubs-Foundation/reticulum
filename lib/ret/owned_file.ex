@@ -44,7 +44,13 @@ defmodule Ret.OwnedFile do
   end
 
   def set_inactive(owned_file_uuid, account_id) do
-    get_by_uuid_and_account(owned_file_uuid, account_id) |> set_state(:inactive)
+    case get_by_uuid_and_account(owned_file_uuid, account_id) do
+      nil ->
+        {:error, :non_existent_file_id}
+
+      owned_file ->
+        set_state(owned_file, :inactive)
+    end
   end
 
   def set_inactive(%OwnedFile{} = owned_file) do
