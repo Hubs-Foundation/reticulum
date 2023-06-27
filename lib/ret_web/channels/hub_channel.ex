@@ -297,22 +297,24 @@ defmodule RetWeb.HubChannel do
     account = Guardian.Phoenix.Socket.current_resource(socket)
     hub = socket |> hub_for_socket
 
-    if (type == "photo" and type == "video" and
-          account
-          |> can?(spawn_camera(hub))
-          |> Kernel.not()) or
-         (type == "permission" and hub |> Ret.Hub.is_owner?(account.account_id) |> Kernel.not()) do
-      {:noreply, socket}
-    end
+    authorized =
+      cond do
+        type in ["photo", "video"] -> account |> can?(spawn_camera(hub))
+        type === "chat" -> account |> can?(text_chat(hub))
+        type === "permission" -> account |> can?(update_hub(hub))
+        true -> true
+      end
 
-    broadcast!(
-      socket,
-      event,
-      payload
-      |> Map.delete("session_id")
-      |> Map.put(:session_id, socket.assigns.session_id)
-      |> payload_with_from(socket)
-    )
+    if authorized do
+      broadcast!(
+        socket,
+        event,
+        payload
+        |> Map.delete("session_id")
+        |> Map.put(:session_id, socket.assigns.session_id)
+        |> payload_with_from(socket)
+      )
+    end
 
     {:noreply, socket}
   end
