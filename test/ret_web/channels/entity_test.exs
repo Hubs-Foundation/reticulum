@@ -175,7 +175,7 @@ defmodule RetWeb.EntityTest do
       Map.put(@payload_delete_entity_state, "file_id", "non_existent_file_id")
 
     assert_reply push(socket, "delete_entity_state", non_existent_file_payload), :error, %{
-      reason: :non_existent_file_id
+      reason: :file_not_found
     }
   end
 

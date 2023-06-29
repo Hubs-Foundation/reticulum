@@ -41,12 +41,20 @@ defmodule Ret.OwnedFile do
 
   def set_active(owned_file_uuid, account_id) do
     get_by_uuid_and_account(owned_file_uuid, account_id) |> set_state(:active)
+
+    case get_by_uuid_and_account(owned_file_uuid, account_id) do
+      nil ->
+        {:error, :file_not_found}
+
+      owned_file ->
+        set_state(owned_file, :active)
+    end
   end
 
   def set_inactive(owned_file_uuid, account_id) do
     case get_by_uuid_and_account(owned_file_uuid, account_id) do
       nil ->
-        {:error, :non_existent_file_id}
+        {:error, :file_not_found}
 
       owned_file ->
         set_state(owned_file, :inactive)
