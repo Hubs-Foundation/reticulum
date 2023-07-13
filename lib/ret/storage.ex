@@ -337,6 +337,214 @@ defmodule Ret.Storage do
   defp check_promotion_token(actual_token, token) when actual_token != token,
     do: {:error, :invalid_key}
 
+  # Due to a bug in Reticulum and/or Hubs Client, OwnedFiles that are not referred
+  # from anywhere can be remained as active in the database then the associated
+  # files are not removed. This problem causes a high disk volume usage pressure.
+  # This function finds and deletes such files. The function might be removed
+  # when the root issue will be resolved.
+  # Question: Where (In what file) should this function be defined?
+  # Question: How should this function be invoked? Cron? Manually?
+  def cleanup_nonreferred_files do
+    Logger.info("Stored Files: Attempting to clean up non-referred files.")
+
+    # Lock for the operation because the operation may take relatively longer time
+    # due to many tables access and has a side effect. If other operations
+    # access the database while in this operation this operation or the other
+    # operations may not work correctly. Locking relatively longer time would be
+    # acceptable because this function should not be invoked so often.
+    # Question: Are both Atomic transaction (Ecto.Multi) and Lock needed?
+    #           Or is only Atomic transaction good enough?
+    Ret.Locking.exec_if_lockable(:storage_cleanup_nonreferred_files, fn ->
+      import Ecto.Query, only: [from: 2]
+
+      # TODO: Optimize, if possible
+      # TODO: Error handling if needed
+
+      multi = Ecto.Multi.new()
+
+      # 1. Mark all OwnedFiles as inactive
+
+      multi = multi
+        |> Ecto.Multi.update_all(:inactivate_all, OwnedFile, set: [state: :inactive])
+
+      # 2. Mark the OwnedFiles as active that are referred by RoomObjects
+
+      # file_uuid is encoded in RoomObject.gltf_node.extensions.HUBS_components.media.src as like
+      # https://hubs.local:4000/files/71301c23-8fb3-4388-8eec-83b3627f9ad0.glb?token=xxx
+      multi = multi
+        |> Ecto.Multi.run(:activate_if_referred_by_room_object, fn repo, _changes -> 
+             file_uuids = from(o in Ret.RoomObject, select: o.gltf_node)
+               |> repo.all()
+               |> Enum.map(&Jason.decode!/1)
+               |> Enum.flat_map(fn (gltf_node) ->
+                    # Question: Is it a safe assumption that this property exists?
+                    #           We may remove the case below if it's safe.
+                    src = gltf_node["extensions"]["HUBS_components"]["media"]["src"]
+                    case src do
+                      nil -> []
+                      _ -> [src]
+                    end
+                  end)
+               |> Enum.flat_map(fn (src) ->
+                    # If the RoomObject does not point to an uploaded file, then the src
+                    # will be a url to a public resource like https://www.example.com/some_image.png.
+                    # TODO: Check the domain in case public resource link coincidentally matches the regex?
+                    result = Regex.run(~r/\/files\/([^.]+)\./, src)
+                    case result do
+                      nil -> []
+                      _ -> [Enum.at(result, 1)]
+                    end
+                  end)
+               |> Enum.uniq()
+
+             result = from(f in OwnedFile, where: f.owned_file_uuid in ^file_uuids)
+               |> repo.update_all(set: [state: :active])
+
+             {:ok, result}
+           end)
+
+      # 3. Mark the OwnedFiles as active that are referred by
+      #    AppConfig, Asset, Avatar, AvatarListing, Project, Scene, or SceneListing.
+
+      # TODO: Optimize query if possible, can't "find and update" be rewritten with
+      #       a single query for each table?
+
+      multi = multi
+        |> activate_owned_file_if_referred_with_file_id_multi(
+             :activate_if_referred_by_app_config,
+             from(
+               a in Ret.AppConfig,
+                 select: a.owned_file_id
+             )
+           )
+        |> activate_owned_file_if_referred_with_file_id_multi(
+             :activate_if_referred_by_asset,
+             from(
+               a in Ret.Asset,
+                 select: [
+                   a.asset_owned_file_id,
+                   a.thumbnail_owned_file_id
+                 ]
+             )
+           )
+        |> activate_owned_file_if_referred_with_file_id_multi(
+             :activate_if_referred_by_avatar,
+             from(
+               a in Ret.Avatar,
+                 select: [
+                   a.gltf_owned_file_id,
+                   a.bin_owned_file_id,
+                   a.thumbnail_owned_file_id,
+                   a.base_map_owned_file_id,
+                   a.emissive_map_owned_file_id,
+                   a.normal_map_owned_file_id,
+                   a.orm_map_owned_file_id
+                 ]
+             )
+           )
+        |> activate_owned_file_if_referred_with_file_id_multi(
+             :activate_if_referred_by_avatar_listing,
+             from(
+               a in Ret.AvatarListing,
+                 select: [
+                   a.gltf_owned_file_id,
+                   a.bin_owned_file_id,
+                   a.thumbnail_owned_file_id,
+                   a.base_map_owned_file_id,
+                   a.emissive_map_owned_file_id,
+                   a.normal_map_owned_file_id,
+                   a.orm_map_owned_file_id
+                 ]
+             )
+           )
+        |> activate_owned_file_if_referred_with_file_id_multi(
+             :activate_if_referred_by_project,
+             from(
+               p in Ret.Project,
+                 select: [
+                   p.project_owned_file_id,
+                   p.thumbnail_owned_file_id
+                 ]
+             )
+           )
+        |> activate_owned_file_if_referred_with_file_id_multi(
+             :activate_if_referred_by_scene,
+             from(
+               s in Ret.Scene,
+                 select: [
+                   s.model_owned_file_id,
+                   s.screenshot_owned_file_id,
+                   s.scene_owned_file_id
+                 ]
+             )
+           )
+        |> activate_owned_file_if_referred_with_file_id_multi(
+             :activate_if_referred_by_scene_listing,
+             from(
+               s in Ret.SceneListing,
+                 select: [
+                   s.model_owned_file_id,
+                   s.screenshot_owned_file_id,
+                   s.scene_owned_file_id
+                 ]
+             )
+           )
+
+      # 4. Delete the inactive OwnedFiles.
+      #    Until we are confident for this cleanup operation we move inactive OwnedFile
+      #    rows to NonReferredOwnedFiles table and keep the associated file contents for now.
+      #    Even if this operation has a bug and wrongly detects non-referred owned files
+      #    we can restore. And users will notice the wrong detection problem by their
+      #    contents won't appear because they are moved from OwnedFile table.
+      #    TODO: Test this operation enough and update to actually delete non-referred files.
+
+      multi = multi
+        |> Ecto.Multi.run(:copy_inactive_rows, fn repo, _changes -> 
+             # Question: Any more efficient or simpler way to move rows?
+             result = from(f in OwnedFile, where: f.state == :inactive)
+               |> repo.all()
+               |> Enum.each(fn (file) ->
+                    %Ret.NonReferredOwnedFile{
+                      owned_file_id: file.owned_file_id,
+                      owned_file_uuid: file.owned_file_uuid,
+                      key: file.key,
+                      content_type: file.content_type,
+                      content_length: file.content_length,
+                      state: file.state,
+                      account_id: file.account_id
+                    }
+                      |> repo.insert!()
+                  end)
+
+             {:ok, result}
+           end)
+
+      multi = multi
+        |> Ecto.Multi.delete_all(:delete_inactive_rows, from(f in OwnedFile, where: f.state == :inactive))
+
+      Repo.transaction(multi)
+    end)
+
+    Logger.info("Stored Files: Cleaning up non-referred files Finished.")
+  end
+
+  defp activate_owned_file_if_referred_with_file_id_multi(multi, name, query) do
+    import Ecto.Query, only: [from: 2]
+
+    Ecto.Multi.run(multi, name, fn repo, _changes -> 
+      file_ids = query
+        |> repo.all()
+        |> List.flatten()
+        |> Enum.uniq()
+        |> Enum.filter(fn (file_id) -> !is_nil(file_id) end)
+
+      result = from(f in OwnedFile, where: f.owned_file_id in ^file_ids)
+        |> repo.update_all(set: [state: :active])
+
+      {:ok, result}
+    end)
+  end
+
   # Vacuums up TTLed out files
   def vacuum do
     Logger.info("Stored Files: Attempting Vacuum.")
