@@ -1,0 +1,54 @@
+{
+  "nid": "hvpg97x",
+  "create_message": {
+    "version": 1,
+    "networkId": "hvpg97x",
+    "prefabName": "media",
+    "initialData": {
+      "src": "https://hubs.local:4000/files/101ac987-61f4-4645-b512-def3f0336fdf.jpg?token=2bbfa5ff552a159cff50b8bc212a477c",
+      "recenter": true,
+      "resize": true,
+      "animateLoad": true,
+      "fileId": "101ac987-61f4-4645-b512-def3f0336fdf",
+      "isObjectMenuTarget": true
+    }
+  },
+  "updates": [
+    {
+      "root_nid": "hvpg97x",
+      "nid": "hvpg97x",
+      "update_message": {
+        "nid": "hvpg97x",
+        "lastOwnerTime": 1157850816,
+        "timestamp": 1157852116,
+        "owner": "9eac3551-20d7-4b04-80fc-2009b5e8fe10",
+        "data": {
+          "networked-transform": {
+            "version": 1,
+            "data": {
+              "position": [
+                44.335304260253906,
+                1.4967195987701416,
+                -6.183996677398682
+              ],
+              "rotation": [
+                -0.03446304053068161,
+                0.6161360144615173,
+                0.026999054476618767,
+                0.7864221334457397
+              ],
+              "scale": [
+                1,
+                1,
+                1
+              ]
+            }
+          }
+        }
+      }
+    }
+  ],
+  "file_id": "101ac987-61f4-4645-b512-def3f0336fdf",
+  "file_access_token": "2bbfa5ff552a159cff50b8bc212a477c",
+  "promotion_token": "1701f2fc68081168c7b19ebfabc76dc6"
+}

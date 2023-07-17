@@ -233,6 +233,10 @@ defmodule Ret.Storage do
     end
   end
 
+  def promote(_id, nil, nil, _account) do
+    {:error, :not_allowed}
+  end
+
   def promote(nil, _key, _promotion_token, _account) do
     {:error, :not_found}
   end
@@ -329,7 +333,7 @@ defmodule Ret.Storage do
     end
   end
 
-  # If an owned file does not have a promotion token associated with it, it can be promoted with any given 
+  # If an owned file does not have a promotion token associated with it, it can be promoted with any given
   # promotion token, including nil.
   defp check_promotion_token(nil, _token), do: {:ok}
   defp check_promotion_token(actual_token, token) when actual_token == token, do: {:ok}
