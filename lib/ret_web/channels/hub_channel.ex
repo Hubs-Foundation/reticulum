@@ -467,10 +467,17 @@ defmodule RetWeb.HubChannel do
   def handle_in("save_entity_state", params, socket) do
     params = parse(params)
 
-    with {:ok, hub} <- authorize(socket, :write_entity_state),
-         {:ok, %{entity: entity}} <- Ret.create_entity(hub, params) do
+    with {:ok, hub, account} <- authorize(socket, :write_entity_state),
+         {:ok, %{entity: entity}} <- Ret.create_entity(hub, params),
+         :ok <- maybe_promote_file(params, account, socket) do
       entity = Repo.preload(entity, [:sub_entities])
-      broadcast!(socket, "entity_state_saved", EntityView.render("show.json", %{entity: entity}))
+
+      broadcast!(
+        socket,
+        "entity_state_saved",
+        EntityView.render("show.json", %{entity: entity})
+      )
+
       {:reply, :ok, socket}
     else
       {:error, reason} ->
@@ -481,7 +488,7 @@ defmodule RetWeb.HubChannel do
   def handle_in("update_entity_state", %{"update_message" => update_message} = params, socket) do
     params = parse(params)
 
-    with {:ok, hub} <- authorize(socket, :write_entity_state),
+    with {:ok, hub, _account} <- authorize(socket, :write_entity_state),
          {:ok, _} <- Ret.insert_or_update_sub_entity(hub, params) do
       broadcast!(socket, "entity_state_updated", update_message)
       {:reply, :ok, socket}
@@ -491,9 +498,12 @@ defmodule RetWeb.HubChannel do
     end
   end
 
-  def handle_in("delete_entity_state", %{"nid" => nid}, socket) do
-    with {:ok, hub} <- authorize(socket, :write_entity_state),
-         {:ok, _} <- Ret.delete_entity(hub.hub_id, nid) do
+  def handle_in("delete_entity_state", %{"nid" => nid} = payload, socket) do
+    with {:ok, hub, account} <- authorize(socket, :write_entity_state),
+         {:ok, _} <- Ret.delete_entity(hub.hub_id, nid),
+         {:ok, _} <- maybe_set_owned_file_inactive(payload, account) do
+      RoomObject.perform_unpin(hub, nid)
+
       broadcast!(socket, "entity_state_deleted", %{
         "nid" => nid,
         "creator" => socket.assigns.session_id
@@ -950,7 +960,7 @@ defmodule RetWeb.HubChannel do
 
     with {:ok, account} <- account_for_socket(socket),
          :ok <- auth(hub, account, :write_entity_state) do
-      {:ok, hub}
+      {:ok, hub, account}
     end
   end
 
@@ -1445,12 +1455,49 @@ defmodule RetWeb.HubChannel do
     %{nid: nid, root_nid: root_nid, update_message: Jason.encode!(update_message)}
   end
 
-  defp parse(%{"nid" => nid, "create_message" => create_message, "updates" => updates}) do
+  defp parse(
+         %{
+           "nid" => nid,
+           "create_message" => create_message,
+           "updates" => updates
+         } = params
+       ) do
     %{
       nid: nid,
       create_message: Jason.encode!(create_message),
-      updates: Enum.map(updates, &parse/1)
+      updates: Enum.map(updates, &parse/1),
+      promotion_token: Map.get(params, "promotion_token", nil),
+      file_id: Map.get(params, "file_id", nil),
+      file_access_token: Map.get(params, "file_access_token", nil)
     }
+  end
+
+  defp maybe_set_owned_file_inactive(%{"file_id" => file_id}, %Account{account_id: account_id}) do
+    OwnedFile.set_inactive(file_id, account_id)
+  end
+
+  defp maybe_set_owned_file_inactive(_payload, _account) do
+    {:ok, :no_file}
+  end
+
+  defp maybe_promote_file(%{file_id: nil} = _params, _account, _socket) do
+    :ok
+  end
+
+  defp maybe_promote_file(params, account, _socket) do
+    with {:ok, _owned_file} <-
+           Storage.promote(
+             params.file_id,
+             params.file_access_token,
+             params.promotion_token,
+             account
+           ) do
+      OwnedFile.set_active(params.file_id, account.account_id)
+      :ok
+    else
+      {:error, reason} ->
+        {:error, reason}
+    end
   end
 
   defp reply_error(socket, reason) do

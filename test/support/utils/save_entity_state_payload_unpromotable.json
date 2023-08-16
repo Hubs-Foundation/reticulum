@@ -1,0 +1,54 @@
+{
+  "nid": "hvpg97x",
+  "create_message": {
+    "version": 1,
+    "networkId": "hvpg97x",
+    "prefabName": "media",
+    "initialData": {
+      "src": "https://hubs.local:4000/files/101ac987-61f4-4645-b512-def3f0336fdf.jpg?token=2bbfa5ff552a159cff50b8bc212a477c",
+      "recenter": true,
+      "resize": true,
+      "animateLoad": true,
+      "fileId": "101ac987-61f4-4645-b512-def3f0336fdf",
+      "isObjectMenuTarget": true
+    }
+  },
+  "updates": [
+    {
+      "root_nid": "hvpg97x",
+      "nid": "hvpg97x",
+      "update_message": {
+        "nid": "hvpg97x",
+        "lastOwnerTime": 1157792473,
+        "timestamp": 1157845450,
+        "owner": "9eac3551-20d7-4b04-80fc-2009b5e8fe10",
+        "data": {
+          "networked-transform": {
+            "version": 1,
+            "data": {
+              "position": [
+                44.30113220214844,
+                1.4787851572036743,
+                -5.9799041748046875
+              ],
+              "rotation": [
+                -0.032501693814992905,
+                0.6693336963653564,
+                0.029331713914871216,
+                0.7416709065437317
+              ],
+              "scale": [
+                1,
+                1,
+                1
+              ]
+            }
+          }
+        }
+      }
+    }
+  ],
+  "file_id": "101ac987-61f4-4645-b512-def3f0336fdf",
+  "promotion_token": "1701f2fc68081168c7b19ebfabc76dc6",
+  "file_access_token": "dasfaisodfjoein0ewoINCORRECT"
+}
