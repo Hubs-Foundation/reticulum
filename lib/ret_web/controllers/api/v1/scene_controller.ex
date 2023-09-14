@@ -77,6 +77,42 @@ defmodule RetWeb.Api.V1.SceneController do
     create_or_update(conn, params)
   end
 
+  # def delete(conn, %{"id" => scene_listing_sid}) do
+  # IO.inspect("DELETE")
+  #   case scene_listing_sid |> Repo.get_by(scene_listing_sid) do
+      # %SceneListing{} = scene_listing ->
+      #   Repo.delete(scene_listing)
+      #   send_resp(conn, 200, "OK")
+
+      # nil ->
+      #   render_error_json(conn, :not_found)
+  #   end
+  # end
+
+  def delete(conn, %{"id" => scene_listing_sid}) do
+    account = Guardian.Plug.current_resource(conn)
+
+    case scene_listing_sid |> Scene.scene_or_scene_listing_by_sid() do
+      %SceneListing{} = scene_listing -> delete(conn, scene_listing, account)
+      _ -> conn |> send_resp(404, "not found")
+    end
+  end
+
+  def delete(conn, _scene_listing), do: conn |> send_resp(401, "You do not own this avatar")
+
+  def delete(conn, %SceneListing{account_id: scene_listing_account_id} = scene_listing, %Account{
+        account_id: account_id
+      })
+      # when not is_nil(scene_listing_account_id) and scene_listing_account_id == account_id 
+      do
+    scene_listing
+    |> Repo.delete(scene_listing)
+    |> case do
+      {:ok, _} -> send_resp(conn, 200, "OK")
+      {:error, error} -> render_error_json(conn, error)
+    end
+  end
+
   defp get_scene(scene_sid) do
     case scene_sid |> Scene.scene_or_scene_listing_by_sid() do
       nil -> nil
