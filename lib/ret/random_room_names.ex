@@ -395,7 +395,6 @@ defmodule Ret.RandomRoomNames do
     "courageous",
     "courteous",
     "crafty",
-    "crazy",
     "creamy",
     "creative",
     "crisp",
