@@ -233,24 +233,26 @@ defmodule Ret.Storage do
     end
   end
 
-  def promote(_id, nil, nil, _account) do
+  def promote(id, key, promotion_token, account, require_token \\ true)
+
+  def promote(_id, nil, nil, _account, _require_token) do
     {:error, :not_allowed}
   end
 
-  def promote(nil, _key, _promotion_token, _account) do
+  def promote(nil, _key, _promotion_token, _account, _require_token) do
     {:error, :not_found}
   end
 
-  def promote(_id, nil, _promotion_token, _account) do
+  def promote(_id, nil, _promotion_token, _account, _require_token) do
     {:error, :not_allowed}
   end
 
   # Promotes an expiring stored file to a permanently stored file in the specified Account.
-  def promote(id, key, promotion_token, %Account{} = account) do
+  def promote(id, key, promotion_token, %Account{} = account, require_token) do
     # Check if this file has already been promoted
     OwnedFile
     |> Repo.get_by(owned_file_uuid: id)
-    |> promote_or_return_owned_file(id, key, promotion_token, account)
+    |> promote_or_return_owned_file(id, key, promotion_token, account, require_token)
   end
 
   # Promotes multiple files into the given account.
@@ -283,9 +285,10 @@ defmodule Ret.Storage do
          _id,
          _key,
          _promotion_token,
-         _account
+         _account,
+         _require_token
        ) do
-    {:ok, owned_file}
+        {:ok, owned_file}
   end
 
   # Promoting a stored file to being owned has two side effects: the file is moved
@@ -293,7 +296,7 @@ defmodule Ret.Storage do
   # OwnedFile record is inserted into the database which includes the decryption key.
   # If the stored file has an associated promotion token, the given promotion token is verified against it.
   # If the given promotion token fails verification, the file is not promoted.
-  defp promote_or_return_owned_file(nil, id, key, promotion_token, account) do
+  defp promote_or_return_owned_file(nil, id, key, promotion_token, account, require_token) do
     with(
       storage_path when is_binary(storage_path) <- module_config(:storage_path),
       {:ok, uuid} <- Ecto.UUID.cast(id),
@@ -307,7 +310,7 @@ defmodule Ret.Storage do
         "promotion_token" => actual_promotion_token
       } <-
         File.read!(meta_file_path) |> Poison.decode!(),
-      {:ok} <- check_promotion_token(actual_promotion_token, promotion_token),
+      {:ok} <- (if require_token, do: check_promotion_token(actual_promotion_token, promotion_token), else: {:ok}),
       {:ok} <- check_blob_file_key(blob_file_path, key)
     ) do
       owned_file_params = %{

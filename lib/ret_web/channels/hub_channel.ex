@@ -467,8 +467,9 @@ defmodule RetWeb.HubChannel do
   def handle_in("save_entity_state", params, socket) do
     params = parse(params)
 
-    with {:ok, hub, _account} <- authorize(socket, :write_entity_state),
-         {:ok, %{entity: entity}} <- Ret.create_entity(hub, params) do
+    with {:ok, hub, account} <- authorize(socket, :write_entity_state),
+         {:ok, %{entity: entity}} <- Ret.create_entity(hub, params),
+         :ok <- maybe_promote_file(params, account, socket) do
       entity = Repo.preload(entity, [:sub_entities])
 
       broadcast!(
@@ -497,9 +498,10 @@ defmodule RetWeb.HubChannel do
     end
   end
 
-  def handle_in("delete_entity_state", %{"nid" => nid} = _payload, socket) do
-    with {:ok, hub, _account} <- authorize(socket, :write_entity_state),
-         {:ok, _} <- Ret.delete_entity(hub.hub_id, nid) do
+  def handle_in("delete_entity_state", %{"nid" => nid} = payload, socket) do
+    with {:ok, hub, account} <- authorize(socket, :write_entity_state),
+         {:ok, _} <- Ret.delete_entity(hub.hub_id, nid),
+         {:ok, _} <- maybe_set_owned_file_inactive(payload, account) do
       RoomObject.perform_unpin(hub, nid)
 
       broadcast!(socket, "entity_state_deleted", %{
@@ -1468,6 +1470,35 @@ defmodule RetWeb.HubChannel do
       file_id: Map.get(params, "file_id", nil),
       file_access_token: Map.get(params, "file_access_token", nil)
     }
+  end
+
+  defp maybe_set_owned_file_inactive(%{"file_id" => file_id}, _account) do
+    OwnedFile.set_inactive(file_id)
+  end
+
+  defp maybe_set_owned_file_inactive(_payload, _account) do
+    {:ok, :no_file}
+  end
+
+  defp maybe_promote_file(%{file_id: nil} = _params, _account, _socket) do
+    :ok
+  end
+
+  defp maybe_promote_file(params, account, _socket) do
+    with {:ok, _owned_file} <-
+           Storage.promote(
+             params.file_id,
+             params.file_access_token,
+             nil,
+             account,
+             false
+           ) do
+      OwnedFile.set_active(params.file_id, account.account_id)
+      :ok
+    else
+      {:error, reason} ->
+        {:error, reason}
+    end
   end
 
   defp reply_error(socket, reason) do
