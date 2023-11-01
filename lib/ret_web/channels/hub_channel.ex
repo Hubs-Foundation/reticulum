@@ -1489,7 +1489,7 @@ defmodule RetWeb.HubChannel do
            Storage.promote(
              params.file_id,
              params.file_access_token,
-             nil,
+             params.promotion_token,
              account,
              false
            ) do
