@@ -61,7 +61,7 @@ defmodule Ret.OwnedFile do
     end
   end
 
-  def set_inactive(owned_file_uuid) do
+  def set_inactive(owned_file_uuid) when is_binary(owned_file_uuid) do
     case get_by_uuid(owned_file_uuid) do
       nil ->
         {:error, :file_not_found}
