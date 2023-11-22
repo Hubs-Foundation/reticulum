@@ -687,14 +687,15 @@ defmodule RetWeb.PageController do
       [cors_scheme, cors_port, cors_host] =
         [:scheme, :port, :host] |> Enum.map(&Keyword.get(cors_proxy_url, &1))
 
+        
+      IO.inspect(System.get_env("TURKEY_MODE"))
+      IO.inspect(cors_host)
+      IO.inspect(conn.host)
+      IO.inspect(cors_scheme)
+      IO.inspect(get_req_header(conn, "x-forwarded-proto"))
+        
       is_cors_proxy_url =
-        if System.get_env("TURKEY_MODE") do
-          
-          IO.inspect(cors_host)
-          IO.inspect(conn.host)
-          IO.inspect(cors_scheme)
-          IO.inspect(get_req_header(conn, "x-forwarded-proto"))
-          
+        if System.get_env("TURKEY_MODE") do               
           cors_host == conn.host &&
             cors_scheme == get_req_header(conn, "x-forwarded-proto") |> Enum.at(0)
         else
