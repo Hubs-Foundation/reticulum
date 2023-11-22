@@ -675,11 +675,8 @@ defmodule RetWeb.PageController do
     resolved_ip = HttpUtils.resolve_ip(host)
 
     IO.inspect(resolved_ip)
-    IO.inspect(System.get_env("TURKEY_MODE"))
-    IO.inspect(cors_host)
-    IO.inspect(conn.host)
-    IO.inspect(cors_scheme)
-    IO.inspect(get_req_header(conn, "x-forwarded-proto"))
+    IO.inspect(HttpUtils.internal_ip?(resolved_ip))
+
     
     if HttpUtils.internal_ip?(resolved_ip) do
       conn |> send_resp(401, "Bad request")
