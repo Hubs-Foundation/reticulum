@@ -82,7 +82,7 @@ defmodule Ret.Mixfile do
       {:download, git: "https://github.com/gfodor/download.git", branch: "reticulum/master"},
       {:reverse_proxy_plug, "~> 2.1"},
       {:inet_cidr, "~> 1.0"},
-      {:dns, "~> 2.2.0"},
+      {:dns, "~> 2.4.0"},
       {:oauther, "~> 1.1"},
       {:jason, "~> 1.1"},
       {:ex_rated, "~> 2.1.0"},

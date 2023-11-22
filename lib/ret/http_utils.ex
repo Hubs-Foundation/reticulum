@@ -138,10 +138,12 @@ defmodule Ret.HttpUtils do
   end
 
   def resolve_ip(host) do
+    IO.puts("host #{host}")
     try do
       InetCidr.parse_address!(host)
     rescue
       _ ->
+        IO.puts("not an ip: rescue")
         case DNS.resolve(host) do
           {:ok, results} ->
             # TODO We should probably be able to handle ipv6 here too.
