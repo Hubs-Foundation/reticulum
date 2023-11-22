@@ -743,7 +743,7 @@ defmodule RetWeb.PageController do
   def compare_hosts(host1, host2) do
     IO.puts("host1: #{host1}, host2: #{host2}")
     IO.puts(String.split(host1, ".", parts: -1) |> Enum.slice(0..-2) |> Enum.join("."))
-    IO.puts(String.split(host2, ".", parts: -1) |> Enum.slice(0..-2) |> Enum.join(".")))
+    IO.puts(String.split(host2, ".", parts: -1) |> Enum.slice(0..-2) |> Enum.join("."))
     host1 == host2 || (List.last(String.split(host2, ".")) == "dev" && 
                                String.split(host1, ".", parts: -1) |> Enum.slice(0..-2) |> Enum.join(".") == 
                                String.split(host2, ".", parts: -1) |> Enum.slice(0..-2) |> Enum.join("."))
