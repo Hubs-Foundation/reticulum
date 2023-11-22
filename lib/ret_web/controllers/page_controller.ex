@@ -689,8 +689,10 @@ defmodule RetWeb.PageController do
 
       is_cors_proxy_url =
         if System.get_env("TURKEY_MODE") do
-          cors_host == conn.host &&
-            cors_scheme == get_req_header(conn, "x-forwarded-proto") |> Enum.at(0)
+          sameScheme=cors_scheme == get_req_header(conn, "x-forwarded-proto") |> Enum.at(0)
+          # sameHost=cors_host == conn.host
+          String.split(conn.host, ".", parts: -1) |> Enum.slice(0..-2) |> Enum.join(".") == String.split(cors_host, ".", parts: -1) |> Enum.slice(0..-2) |> Enum.join(".")
+          sameScheme&&sameHost
         else
           cors_scheme == Atom.to_string(conn.scheme) && cors_host == conn.host &&
             cors_port == conn.port
