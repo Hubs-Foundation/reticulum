@@ -148,7 +148,8 @@ defmodule Ret.HttpUtils do
           {:ok, results} ->
             # TODO We should probably be able to handle ipv6 here too.
             results |> Enum.filter(&InetCidr.v4?/1) |> Enum.random()
-
+          {:error, reason} -> 
+            IO.puts("failed to DNS.resolve(#{host}): #{reason}")
           _ ->
             nil
         end
