@@ -674,8 +674,15 @@ defmodule RetWeb.PageController do
 
     resolved_ip = HttpUtils.resolve_ip(host)
 
+    IO.inspect(resolved_ip)
+    IO.inspect(System.get_env("TURKEY_MODE"))
+    IO.inspect(cors_host)
+    IO.inspect(conn.host)
+    IO.inspect(cors_scheme)
+    IO.inspect(get_req_header(conn, "x-forwarded-proto"))
+    
     if HttpUtils.internal_ip?(resolved_ip) do
-      conn |> send_resp(401, "Bad request.")
+      conn |> send_resp(401, "Bad request")
     else
       # We want to ensure that the URL we request hits the same IP that we verified above,
       # so we replace the host with the IP address here and use this url to make the proxy request.
