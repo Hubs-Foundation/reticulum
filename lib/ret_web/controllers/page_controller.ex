@@ -689,10 +689,9 @@ defmodule RetWeb.PageController do
 
       is_cors_proxy_url =
         if System.get_env("TURKEY_MODE") do
-          sameScheme=cors_scheme == get_req_header(conn, "x-forwarded-proto") |> Enum.at(0)
-          # sameHost=cors_host == conn.host
-          String.split(conn.host, ".", parts: -1) |> Enum.slice(0..-2) |> Enum.join(".") == String.split(cors_host, ".", parts: -1) |> Enum.slice(0..-2) |> Enum.join(".")
-          sameScheme&&sameHost
+          compare_hosts(cors_host, conn.host) && 
+            cors_scheme == get_req_header(conn, "x-forwarded-proto") |> Enum.at(0)
+          
         else
           cors_scheme == Atom.to_string(conn.scheme) && cors_host == conn.host &&
             cors_port == conn.port
@@ -737,7 +736,13 @@ defmodule RetWeb.PageController do
       end
     end
   end
-
+  
+  def compare_hosts(host1, host2) do
+    host1 == host2 || (List.last(String.split(host2, ".")) == "dev" && 
+                               String.split(host1, ".", parts: -1) |> Enum.slice(0..-2) |> Enum.join(".") == 
+                               String.split(host2, ".", parts: -1) |> Enum.slice(0..-2) |> Enum.join("."))
+  end
+  
   defp render_static_asset(conn) do
     static_options = Plug.Static.init(at: "/", from: :ret, gzip: true, brotli: true)
     Plug.Static.call(conn, static_options)
