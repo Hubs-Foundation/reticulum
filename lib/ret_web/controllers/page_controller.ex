@@ -689,6 +689,9 @@ defmodule RetWeb.PageController do
 
       is_cors_proxy_url =
         if System.get_env("TURKEY_MODE") do
+          IO.puts(cors_host, conn.host, compare_hosts(cors_host, conn.host) )
+          IO.puts(cors_scheme, get_req_header(conn, "x-forwarded-proto") |> Enum.at(0) )
+          
           compare_hosts(cors_host, conn.host) && 
             cors_scheme == get_req_header(conn, "x-forwarded-proto") |> Enum.at(0)
           
@@ -738,6 +741,9 @@ defmodule RetWeb.PageController do
   end
   
   def compare_hosts(host1, host2) do
+    IO.puts("host1: #{host1}, host2: #{host2}")
+    IO.puts(String.split(host1, ".", parts: -1) |> Enum.slice(0..-2) |> Enum.join("."))
+    IO.puts(String.split(host2, ".", parts: -1) |> Enum.slice(0..-2) |> Enum.join(".")))
     host1 == host2 || (List.last(String.split(host2, ".")) == "dev" && 
                                String.split(host1, ".", parts: -1) |> Enum.slice(0..-2) |> Enum.join(".") == 
                                String.split(host2, ".", parts: -1) |> Enum.slice(0..-2) |> Enum.join("."))
