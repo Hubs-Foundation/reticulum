@@ -1472,8 +1472,8 @@ defmodule RetWeb.HubChannel do
     }
   end
 
-  defp maybe_set_owned_file_inactive(%{"file_id" => file_id}, %Account{account_id: account_id}) do
-    OwnedFile.set_inactive(file_id, account_id)
+  defp maybe_set_owned_file_inactive(%{"file_id" => file_id}, _account) do
+    OwnedFile.set_inactive(file_id)
   end
 
   defp maybe_set_owned_file_inactive(_payload, _account) do
@@ -1490,7 +1490,8 @@ defmodule RetWeb.HubChannel do
              params.file_id,
              params.file_access_token,
              params.promotion_token,
-             account
+             account,
+             false
            ) do
       OwnedFile.set_active(params.file_id, account.account_id)
       :ok

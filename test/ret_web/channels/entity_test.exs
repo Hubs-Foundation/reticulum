@@ -8,6 +8,7 @@ defmodule RetWeb.EntityTest do
 
   @payload_save_entity_state read_json("save_entity_state_payload.json")
   @payload_save_entity_state_2 read_json("save_entity_state_payload_2.json")
+  @payload_save_entity_state_promotable_no_token read_json("save_entity_state_payload_promotable_no_token.json")
   @payload_save_entity_state_promotable read_json("save_entity_state_payload_promotable.json")
   @payload_save_entity_state_unpromotable read_json("save_entity_state_payload_unpromotable.json")
   @payload_update_entity_state read_json("update_entity_state_payload.json")
@@ -71,6 +72,27 @@ defmodule RetWeb.EntityTest do
       assert_reply push(socket, "save_entity_state", @payload_save_entity_state), :error, %{
         reason: :unauthorized
       }
+    end
+
+    test "save_entity_state succeeds if no promotion keys are provided", %{
+      socket: socket,
+      hub: hub,
+      account: account
+    } do
+      %HubRoleMembership{hub: hub, account: account} |> Repo.insert!()
+      temp_file = generate_temp_file("test")
+
+      {:ok, _, socket} =
+        subscribe_and_join(socket, "hub:#{hub.hub_sid}", join_params_for_account(account))
+
+      {:ok, uuid} = Storage.store(%Plug.Upload{path: temp_file}, "text/plain", "secret")
+
+      updated_map =
+        @payload_save_entity_state_promotable_no_token
+        |> Map.put("file_id", uuid)
+        |> Map.put("file_access_token", "secret")
+
+      assert_reply push(socket, "save_entity_state", updated_map), :ok
     end
 
     test "save_entity_state succeeds if provided correct promotion keys", %{
