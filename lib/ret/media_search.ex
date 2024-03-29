@@ -41,7 +41,7 @@ defmodule Ret.MediaSearch do
   @max_collection_face_count 200_000
 
   # see sketchfab bug about max_filesizes params broken
-  # @max_file_size_bytes 20 * 1024 * 1024
+  # @max_file_size_bytes 20 * 1024 * 1024 
   # @max_collection_file_size_bytes 100 * 1024 * 1024
 
   def search(%Ret.MediaSearchQuery{
@@ -123,10 +123,6 @@ defmodule Ret.MediaSearch do
 
   def search(%Ret.MediaSearchQuery{source: "rooms", filter: "public", cursor: cursor, q: q}) do
     public_rooms_search(cursor, q)
-  end
-
-  def search(%Ret.MediaSearchQuery{source: "rooms", filter: "created", cursor: cursor, q: q}) do
-    created_rooms_search(cursor, q)
   end
 
   def search(%Ret.MediaSearchQuery{
@@ -229,7 +225,7 @@ defmodule Ret.MediaSearch do
           downloadable: true,
           count: @page_size,
           max_face_count: @max_face_count,
-          # max_filesizes: "gltf:#{@max_file_size_bytes}",
+          # max_filesizes: "gltf:#{@max_file_size_bytes}", 
           processing_status: :succeeded,
           cursor: cursor,
           categories: filter,
@@ -547,25 +543,6 @@ defmodule Ret.MediaSearch do
       ecto_query
       |> Repo.paginate(%{page: page_number, page_size: @page_size})
       |> result_for_page(page_number, :public_rooms, &hub_to_entry/1)
-
-    {:commit, results}
-  end
-
-  defp created_rooms_search(cursor, _query) do
-    page_number = (cursor || "1") |> Integer.parse() |> elem(0)
-
-    ecto_query =
-      from h in Hub,
-        preload: [
-          scene: [:screenshot_owned_file],
-          scene_listing: [:scene, :screenshot_owned_file]
-        ],
-        order_by: [desc: :inserted_at]
-
-    results =
-      ecto_query
-      |> Repo.paginate(%{page: page_number, page_size: @page_size})
-      |> result_for_page(page_number, :my_rooms, &hub_to_entry/1)
 
     {:commit, results}
   end
