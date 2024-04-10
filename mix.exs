@@ -80,7 +80,7 @@ defmodule Ret.Mixfile do
       {:scrivener_ecto, "~> 2.0"},
       {:ua_parser, "~> 1.5"},
       {:download, git: "https://github.com/gfodor/download.git", branch: "reticulum/master"},
-      {:reverse_proxy_plug, "~> 2.1"},
+      {:reverse_proxy_plug, "2.3.0"},
       {:inet_cidr, "~> 1.0"},
       {:dns, "~> 2.2.0"},
       {:oauther, "~> 1.1"},
