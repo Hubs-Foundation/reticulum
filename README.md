@@ -108,16 +108,26 @@ Navigate to that url in your browser to finish signing in.
 
 ### 6. Creating an Admin User
 
-After you've started Reticulum for the first time you'll likely want to create an admin user. Assuming you want to make the first account the admin, this can be done in the iex console using the following code:
-
+After you've started Reticulum for the first time you'll likely want to create an admin user. Assuming you want to make the first account the admin, this can be done in the iex console:
+1) Open the iex console. From the reticulum folder run:
+```
+iex -S mix
+```
+2) Then run the following code:
 ```
 Ret.Account |> Ret.Repo.all() |> Enum.at(0) |> Ecto.Changeset.change(is_admin: true) |> Ret.Repo.update!()
 ```
 
+Make sure to run the Maybe try iex -S mix where the reticulum mix.exs file is.
+
 ### 7. Enabling Room Features
 
 Rooms are created with restricted permissions by default, which means you can't spawn media objects. You can change this setting in the admin panel, or run the following code in the iex console:
-
+1) Open the iex console. From the reticulum folder run:
+```
+iex -S mix
+```
+2) Then run the following code:
 ```
 Ret.AppConfig.set_config_value("features|permissive_rooms", true)
 ```
