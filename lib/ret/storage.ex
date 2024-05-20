@@ -109,13 +109,19 @@ defmodule Ret.Storage do
         search_string,
         replacement_string
       ) do
-    {:ok, %{"content_type" => content_type}, file_stream} = fetch(owned_file)
-
-    file_stream
-    |> Enum.to_list()
-    |> Enum.join("")
-    |> String.replace(search_string, replacement_string)
-    |> store_string_as_owned_file(content_type, account)
+      case fetch(owned_file) do
+        {:ok, %{"content_type" => content_type}, file_stream} ->
+          file_stream
+          |> Enum.to_list()
+          |> Enum.join("")
+          |> String.replace(search_string, replacement_string)
+          |> store_string_as_owned_file(content_type, account)
+    
+        {:error, reason} ->
+          # Print a warning and ignore the error
+          IO.warn("Failed to fetch the file: #{inspect(reason)}")
+          :ignore
+      end
   end
 
   def fetch(id, key) when is_binary(id) and is_binary(key) do
