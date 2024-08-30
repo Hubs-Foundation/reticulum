@@ -249,7 +249,7 @@ defmodule Ret.MediaSearch do
     sketchfab_search(query)
   end
 
-  def search(%Ret.MediaSearchQuery{source: "poly", cursor: cursor, filter: filter, q: q}) do
+  def search(%Ret.MediaSearchQuery{source: "icosa", cursor: cursor, filter: filter, q: q}) do
     with api_key when is_binary(api_key) <- resolver_config(:google_poly_api_key) do
       query =
         URI.encode_query(
@@ -279,7 +279,7 @@ defmodule Ret.MediaSearch do
            %Ret.MediaSearchResult{
              meta: %Ret.MediaSearchResultMeta{
                next_cursor: next_cursor,
-               source: :poly
+               source: :icosa
              },
              entries: entries
            }}
@@ -417,7 +417,7 @@ defmodule Ret.MediaSearch do
     end
   end
 
-  def available?(:poly), do: has_resolver_config?(:google_poly_api_key)
+  def available?(:icosa), do: has_resolver_config?(:google_poly_api_key)
   def available?(:bing_images), do: has_resolver_config?(:bing_search_api_key)
   def available?(:bing_videos), do: has_resolver_config?(:bing_search_api_key)
   def available?(:youtube_videos), do: has_resolver_config?(:youtube_api_key)
@@ -1004,7 +1004,7 @@ defmodule Ret.MediaSearch do
       type: "poly_model",
       name: result["displayName"],
       attributions: %{creator: %{name: result["authorName"]}},
-      url: "https://poly.google.com/view/#{result["name"] |> String.replace("assets/", "")}",
+      url: "https://icosa.ixxy.co.uk/view/#{result["name"] |> String.replace("assets/", "")}",
       images: %{preview: %{url: result["thumbnail"]["url"]}}
     }
   end
