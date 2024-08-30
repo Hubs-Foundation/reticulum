@@ -263,7 +263,7 @@ defmodule Ret.MediaSearch do
         )
 
       res =
-        "https://poly.googleapis.com/v1/assets?#{query}"
+        "https://icosa-api.ixxy.co.uk/v1/assets?#{query}"
         |> retry_get_until_success()
 
       case res do

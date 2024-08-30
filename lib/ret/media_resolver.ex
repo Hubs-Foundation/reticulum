@@ -344,7 +344,7 @@ defmodule Ret.MediaResolver do
         Statix.increment("ret.media_resolver.poly.requests")
 
         payload =
-          "https://poly.googleapis.com/v1/assets/#{asset_id}?key=#{api_key}"
+          "https://icosa-api.ixxy.co.uk/v1/assets/#{asset_id}?key=#{api_key}"
           |> retry_get_until_success
           |> Map.get(:body)
           |> Poison.decode!()
