@@ -336,37 +336,34 @@ defmodule Ret.MediaResolver do
   end
 
   defp resolve_non_video(
-         %MediaResolverQuery{url: %URI{host: "icosa.ixxy.co.uk", path: "/view/" <> asset_id} = uri},
-         "google.com"
-       ) do
-    [uri, meta] =
-      with api_key when is_binary(api_key) <- module_config(:google_poly_api_key) do
-        Statix.increment("ret.media_resolver.poly.requests")
+       %MediaResolverQuery{url: %URI{host: "icosa.ixxy.co.uk", path: "/view/" <> asset_id} = uri},
+       "google.com"
+     ) do
+  [uri, meta] =
+      Statix.increment("ret.media_resolver.poly.requests")
 
-        payload =
-          "https://icosa-api.ixxy.co.uk/v1/assets/#{asset_id}?key=#{api_key}"
-          |> retry_get_until_success
-          |> Map.get(:body)
-          |> Poison.decode!()
+      payload =
+        "https://icosa-api.ixxy.co.uk/v1/assets/#{asset_id}?"
+        |> retry_get_until_success
+        |> Map.get(:body)
+        |> Poison.decode!()
 
-        meta =
-          %{expected_content_type: "model/gltf"}
-          |> Map.put(:name, payload["displayName"])
-          |> Map.put(:author, payload["authorName"])
-          |> Map.put(:license, payload["license"])
+      meta =
+        %{expected_content_type: "model/gltf"}
+        |> Map.put(:name, payload["displayName"])
+        |> Map.put(:author, payload["authorName"])
+        |> Map.put(:license, payload["license"])
 
-        formats = payload |> Map.get("formats")
+      formats = payload |> Map.get("formats")
 
-        uri =
-          (Enum.find(formats, &(&1["formatType"] == "GLTF2")) || Enum.find(formats, &(&1["formatType"] == "GLTF")))
-          |> Kernel.get_in(["root", "url"])
-          |> URI.parse()
+      uri =
+        (Enum.find(formats, &(&1["formatType"] == "GLTF2")) || Enum.find(formats, &(&1["formatType"] == "GLTF")))
+        |> Kernel.get_in(["root", "url"])
+        |> URI.parse()
 
-        Statix.increment("ret.media_resolver.poly.ok")
+      Statix.increment("ret.media_resolver.poly.ok")
 
-        [uri, meta]
-      else
-        _err -> [uri, nil]
+      [uri, meta]
       end
 
     {:commit, uri |> resolved(meta)}
