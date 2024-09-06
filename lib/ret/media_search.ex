@@ -250,42 +250,37 @@ defmodule Ret.MediaSearch do
   end
 
   def search(%Ret.MediaSearchQuery{source: "icosa", cursor: cursor, filter: filter, q: q}) do
-    with api_key when is_binary(api_key) <- resolver_config(:google_poly_api_key) do
-      query =
-        URI.encode_query(
-          pageSize: @page_size,
-          maxComplexity: :MEDIUM,
-          format: :GLTF2,
-          pageToken: cursor,
-          category: filter,
-          keywords: q,
-          key: api_key
-        )
+    query =
+      URI.encode_query(
+        pageSize: @page_size,
+        maxComplexity: :MEDIUM,
+        format: :GLTF2,
+        pageToken: cursor,
+        category: filter,
+        keywords: q
+      )
 
-      res =
-        "https://icosa-api.ixxy.co.uk/v1/assets?#{query}"
-        |> retry_get_until_success()
+    res =
+      "https://icosa-api.ixxy.co.uk/v1/assets?#{query}"
+      |> retry_get_until_success()
 
-      case res do
-        :error ->
-          :error
+    case res do
+      :error ->
+        :error
 
-        res ->
-          decoded_res = res |> Map.get(:body) |> Poison.decode!()
-          entries = decoded_res |> Map.get("assets") |> Enum.map(&poly_api_result_to_entry/1)
-          next_cursor = decoded_res |> Map.get("nextPageToken")
+      res ->
+        decoded_res = res |> Map.get(:body) |> Poison.decode!()
+        entries = decoded_res |> Map.get("assets") |> Enum.map(&poly_api_result_to_entry/1)
+        next_cursor = decoded_res |> Map.get("nextPageToken")
 
-          {:commit,
-           %Ret.MediaSearchResult{
-             meta: %Ret.MediaSearchResultMeta{
-               next_cursor: next_cursor,
-               source: :icosa
-             },
-             entries: entries
-           }}
-      end
-    else
-      _ -> nil
+        {:commit,
+         %Ret.MediaSearchResult{
+           meta: %Ret.MediaSearchResultMeta{
+             next_cursor: next_cursor,
+             source: :icosa
+           },
+           entries: entries
+         }}
     end
   end
 
