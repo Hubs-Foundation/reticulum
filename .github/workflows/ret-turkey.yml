@@ -7,9 +7,9 @@ on:
 
 jobs:
   turkeyGitops:
-    uses: mozilla/hubs-ops/.github/workflows/turkeyGitops.yml@master
+    uses: Hubs-Foundation/hubs-ops/.github/workflows/turkeyGitops.yml@master
     with:
-      registry: mozillareality
+      registry: hubsfoundation
       dockerfile: TurkeyDockerfile
       bio_script_path: scripts/hab-wrap-and-push.sh
       qa_channel_name: polycosm-unstable-a
