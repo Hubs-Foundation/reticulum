@@ -26,7 +26,8 @@ defmodule Ret.MediaResolver do
   @non_video_root_hosts [
     "sketchfab.com",
     "giphy.com",
-    "tenor.com"
+    "tenor.com",
+    "ixxy.co.uk"
   ]
 
   @deviant_id_regex ~r/\"DeviantArt:\/\/deviation\/([^"]+)/
@@ -336,7 +337,7 @@ defmodule Ret.MediaResolver do
   end
 
   defp resolve_non_video(
-       %MediaResolverQuery{url: %URI{host: "icosa-api.ixxy.co.uk", path: "/assets/" <> asset_id} = uri},
+       %MediaResolverQuery{url: %URI{host: "icosa.ixxy.co.uk", path: "/views/" <> asset_id} = uri},
        "ixxy.co.uk"
      ) do
   [uri, meta] =
