@@ -995,11 +995,11 @@ defmodule Ret.MediaSearch do
 
   defp poly_api_result_to_entry(result) do
     %{
-      id: result["name"],
+      id: result["assetId"],
       type: "poly_model",
       name: result["displayName"],
       attributions: %{creator: %{name: result["authorName"]}},
-      url: "https://icosa.ixxy.co.uk/view/#{result["name"] |> String.replace("assets/", "")}",
+      url: result["url"],
       images: %{preview: %{url: result["thumbnail"]["url"]}}
     }
   end

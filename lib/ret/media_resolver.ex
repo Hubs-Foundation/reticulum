@@ -337,7 +337,7 @@ defmodule Ret.MediaResolver do
   end
 
   defp resolve_non_video(
-       %MediaResolverQuery{url: %URI{host: "icosa-api.ixxy.co.uk", path: "/views/" <> asset_id} = uri},
+       %MediaResolverQuery{url: %URI{host: "icosa-api.ixxy.co.uk", path: "v1/assets/" <> asset_id} = uri},
        "ixxy.co.uk"
      ) do
   [uri, meta] =
