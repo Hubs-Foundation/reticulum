@@ -357,7 +357,7 @@ defmodule Ret.MediaResolver do
       formats = payload |> Map.get("formats")
 
       uri =
-        (Enum.find(formats, &(&1["formatType"] == "GLTF2")) || Enum.find(formats, &(&1["formatType"] == "GLTF")))
+        (Enum.find(formats, &(&1["formatType"] == "GLTF2")))
         |> Kernel.get_in(["root", "url"])
         |> URI.parse()
 
