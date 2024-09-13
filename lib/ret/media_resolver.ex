@@ -336,8 +336,8 @@ defmodule Ret.MediaResolver do
   end
 
   defp resolve_non_video(
-       %MediaResolverQuery{url: %URI{host: "icosa.ixxy.co.uk", path: "/view/" <> asset_id} = uri},
-       "google.com"
+       %MediaResolverQuery{url: %URI{host: "icosa-api.ixxy.co.uk", path: "/assets/" <> asset_id} = uri},
+       "ixxy.co.uk"
      ) do
   [uri, meta] =
       Statix.increment("ret.media_resolver.poly.requests")
