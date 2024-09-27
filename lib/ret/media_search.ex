@@ -999,7 +999,8 @@ defmodule Ret.MediaSearch do
       type: "poly_model",
       name: result["displayName"],
       attributions: %{creator: %{name: result["authorName"]}},
-      url: result["url"],
+      url: "http://icosa-api.ixxy.co.uk/v1/assets/" <> result["assetId"],
+      # url: result["url"],
       images: %{preview: %{url: result["thumbnail"]["url"]}}
     }
   end
