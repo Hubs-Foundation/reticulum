@@ -20,7 +20,7 @@ defmodule Ret.MediaResolver do
 
   @youtube_rate_limit %{scale: 8_000, limit: 1}
   @sketchfab_rate_limit %{scale: 60_000, limit: 15}
-  @poly_rate_limit %{scale: 60_000, limit: 1000}
+  @icosa_rate_limit %{scale: 60_000, limit: 1000}
   @max_await_for_rate_limit_s 120
 
   @non_video_root_hosts [
@@ -83,7 +83,7 @@ defmodule Ret.MediaResolver do
 
   # Necessary short circuit around google.com root_host to skip YT-DL check for Poly
   def resolve(%MediaResolverQuery{url: %URI{host: "icosa-api.ixxy.co.uk"}} = query, root_host) do
-    rate_limited_resolve(query, root_host, @poly_rate_limit, fn ->
+    rate_limited_resolve(query, root_host, @icosa_rate_limit, fn ->
       resolve_non_video(query, root_host)
     end)
   end
