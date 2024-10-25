@@ -341,7 +341,7 @@ defmodule Ret.MediaResolver do
          "ixxy.co.uk"
     ) do
   # Increment stat for the request
-  Statix.increment("ret.media_resolver.poly.requests")
+  Statix.increment("ret.media_resolver.icosa.requests")
 
   # Make the API call to get the asset data
   payload =
@@ -367,7 +367,7 @@ defmodule Ret.MediaResolver do
   |> URI.parse()
 
   # Increment stat for successful resolution
-  Statix.increment("ret.media_resolver.poly.ok")
+  Statix.increment("ret.media_resolver.icosa.ok")
 
   # Return the URI and meta data for further processing
   {:commit, resolved(uri, meta)}

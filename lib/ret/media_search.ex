@@ -270,7 +270,7 @@ defmodule Ret.MediaSearch do
 
       res ->
         decoded_res = res |> Map.get(:body) |> Poison.decode!()
-        entries = decoded_res |> Map.get("assets") |> Enum.map(&poly_api_result_to_entry/1)
+        entries = decoded_res |> Map.get("assets") |> Enum.map(&icosa_api_result_to_entry/1)
         next_cursor = decoded_res |> Map.get("nextPageToken")
 
         {:commit,
@@ -993,10 +993,10 @@ defmodule Ret.MediaSearch do
     }
   end
 
-  defp poly_api_result_to_entry(result) do
+  defp icosa_api_result_to_entry(result) do
     %{
       id: result["assetId"],
-      type: "poly_model",
+      type: "icosa_model",
       name: result["displayName"],
       attributions: %{creator: %{name: result["authorName"]}},
       url: "http://icosa-api.ixxy.co.uk/v1/assets/" <> result["assetId"],
