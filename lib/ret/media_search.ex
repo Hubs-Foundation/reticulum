@@ -412,7 +412,7 @@ defmodule Ret.MediaSearch do
     end
   end
 
-  def available?(:icosa), do: has_resolver_config?(:google_poly_api_key)
+  def available?(:icosa), do: true  # Icosa does not currently require an API key
   def available?(:bing_images), do: has_resolver_config?(:bing_search_api_key)
   def available?(:bing_videos), do: has_resolver_config?(:bing_search_api_key)
   def available?(:youtube_videos), do: has_resolver_config?(:youtube_api_key)
