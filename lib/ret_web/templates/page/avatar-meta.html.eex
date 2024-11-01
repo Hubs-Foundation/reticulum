@@ -1,8 +1,25 @@
+<script type="application/ld+json">
+    {
+        "@context": "https://schema.org/",
+        "@type": "3DModel",
+        "name": "<%= @avatar.name %> | <%= @translations["app-full-name"] || @translations["app-name"] %>",
+        "url": "<%= @avatar |> Ret.Avatar.url %>",
+        "contentUrl": "<%= @avatar.gltf_owned_file |> Ret.OwnedFile.uri_for |> URI.to_string %>",
+        "thumbnailUrl": "<%= @avatar.thumbnail_owned_file |> Ret.OwnedFile.uri_for |> URI.to_string %>",
+        "description": "&quot;<%= @avatar.name %>&quot; is an avatar you can use in <%= @translations["app-name"] %>.",
+        "isResizable": false,
+        "keywords": ["3D avatar", "Hubs", "immersive 3D spaces", "social VR", "<%= @translations["share-hashtag"] %>"],
+        "isPartOf": "<%= @root_url %>/",
+        "isAccessibleForFree": true
+    }
+</script>
+
 <meta property="og:type" content="website" />
 <meta property="og:url" content="<%= @avatar |> Ret.Avatar.url %>" />
 <meta property="og:title" content="<%= @avatar.name %> | <%= @translations["app-full-name"] || @translations["app-name"] %>" />
 <meta property="og:description" content="&quot;<%= @avatar.name %>&quot; is an avatar you can use in <%= @translations["app-name"] %>." />
 <meta property="og:image" content="<%= @avatar.thumbnail_owned_file |> Ret.OwnedFile.uri_for |> URI.to_string %>"/>
+<meta property="og:site_name" content="<%= @translations["app-full-name"] || @translations["app-name"] %>"/>
 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:domain" content="<%= RetWeb.Endpoint.host %>" />
