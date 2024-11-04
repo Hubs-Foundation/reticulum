@@ -15,7 +15,7 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="<%= @hub |> Ret.Hub.url_for %>" />
 <meta property="og:title" content="<%= @hub.name %> | <%= @translations["app-full-name"] || @translations["app-name"] %>" />
-<meta property="og:description" content="<%= @translations["app-description"] %>" />
+<meta property="og:description" content="<%= @translations["app-tagline"] %>" />
 <meta property="og:image" content="<%= @hub |> Ret.Hub.image_url_for %>"/>
 <meta property="og:site_name" content="<%= @translations["app-full-name"] || @translations["app-name"] %>"/>
 
@@ -27,8 +27,8 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:domain" content="<%= RetWeb.Endpoint.host %>" />
 <meta name="twitter:title" content="<%= @hub.name %> | <%= @translations["app-full-name"] || @translations["app-name"] %>" />
-<meta name="twitter:description" content="<%= @translations["app-description"] %>" />
-<meta property="twitter:image" content="<%= @hub |> Ret.Hub.image_url_for %>"/>
+<meta name="twitter:description" content="<%= @translations["app-tagline"] %>" />
+<meta name="twitter:image" content="<%= @hub |> Ret.Hub.image_url_for %>"/>
 <meta name="twitter:url" content="<%= @hub |> Ret.Hub.url_for %>" />
 
 <meta name="ret:version" value="<%= @ret_meta[:version] %>" />

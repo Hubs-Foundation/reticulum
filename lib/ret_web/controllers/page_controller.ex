@@ -99,6 +99,7 @@ defmodule RetWeb.PageController do
     avatar_meta_tags =
       Phoenix.View.render_to_string(RetWeb.PageView, "avatar-meta.html",
         avatar: avatar,
+        description: "“#{avatar.name}” is an avatar you can use in the #{app_config["translations"]["en"]["app-name"]} immersive space.",
         ret_meta: Ret.Meta.get_meta(include_repo: false),
         translations: app_config["translations"]["en"],
         root_url: RetWeb.Endpoint.url(),

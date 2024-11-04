@@ -32,8 +32,10 @@
 <!-- OpenGraph for Facebook -->
 <meta property="og:type" content="website">
 <meta property="og:title" content="<%= @translations["app-full-name"] || @translations["app-name"] %>"/>
-<meta property="og:description" content="<%= (@translations["app-description"] || "") |> String.replace("\\n", " ") %>">
+<meta property="og:description" content="<%= @translations["app-tagline"] %>">
 <meta property="og:url" content="/">
+<meta property="og:image" content="<%= @images["home_background"] %>">
+">
 
 <!-- Twitter -->
 <meta name="twitter:card" content="summary_large_image">
@@ -43,7 +45,7 @@
 <% end %>
 
 <meta name="twitter:title" content="<%= @translations["app-full-name"] || @translations["app-name"] %>">
-<meta name="twitter:image" content="<%= @root_url %>/app-thumbnail.png">
+<meta name="twitter:image" content="<%= @images["home_background"] %>">
 <meta name="twitter:description" content="<%= @translations["app-tagline"] %>">
 
 <!-- Microsoft Edge -->
