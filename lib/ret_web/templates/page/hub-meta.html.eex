@@ -4,10 +4,10 @@
     {
         "@context": "https://schema.org/",
         "@type": "VirtualLocation",
-        "name": "<%= @hub.name %> | <%= @translations["app-full-name"] || @translations["app-name"] %>",
+        "name": "<%= @hub.name %> | <%= @translations["app-full-name"] || @translations["app-name"] || "" %>",
         "url": "<%= @hub |> Ret.Hub.url_for %>",
         "image": "<%= @hub |> Ret.Hub.image_url_for %>",
-        "description": "Join others in an immersive space, right in your browser. — <%= @translations["app-description"] %>",
+        "description": "<%= @description %>",
         "disambiguatingDescription": "<%= @scene.name %>"
     }
 </script>
@@ -15,20 +15,20 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="<%= @hub |> Ret.Hub.url_for %>" />
 <meta property="og:title" content="<%= @hub.name %> | <%= @translations["app-full-name"] || @translations["app-name"] %>" />
-<meta property="og:description" content="<%= @translations["app-description"] %>" />
+<meta property="og:description" content="<%= @description %>" />
 <meta property="og:image" content="<%= @hub |> Ret.Hub.image_url_for %>"/>
 <meta property="og:site_name" content="<%= @translations["app-full-name"] || @translations["app-name"] %>"/>
 
-<meta name="description" content="<%= @translations["app-description"] %>" />
+<meta name="description" content="<%= @description %>" />
 
 <meta itemprop="name" content="<%= @hub.name %> | <%= @translations["app-full-name"] || @translations["app-name"] %>" />
-<meta itemprop="description" content="<%= @translations["app-description"] %>" />
+<meta itemprop="description" content="<%= @description %>" />
 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:domain" content="<%= RetWeb.Endpoint.host %>" />
 <meta name="twitter:title" content="<%= @hub.name %> | <%= @translations["app-full-name"] || @translations["app-name"] %>" />
-<meta name="twitter:description" content="<%= @translations["app-description"] %>" />
-<meta property="twitter:image" content="<%= @hub |> Ret.Hub.image_url_for %>"/>
+<meta name="twitter:description" content="<%= @description %>" />
+<meta name="twitter:image" content="<%= @hub |> Ret.Hub.image_url_for %>"/>
 <meta name="twitter:url" content="<%= @hub |> Ret.Hub.url_for %>" />
 
 <meta name="ret:version" value="<%= @ret_meta[:version] %>" />

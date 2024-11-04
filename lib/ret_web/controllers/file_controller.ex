@@ -27,7 +27,7 @@ defmodule RetWeb.FileController do
         app_name =
           AppConfig.get_cached_config_value("translations|en|app-full-name") ||
             AppConfig.get_cached_config_value("translations|en|app-name")
-        title = "Photo taken in #{app_name} immersive space"
+        title = "Photo taken in #{app_name} immersive space, powered by Hubs"
         config = AppConfig.get_config()
 
         conn

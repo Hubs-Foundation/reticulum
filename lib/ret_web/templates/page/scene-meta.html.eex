@@ -5,30 +5,30 @@
     {
         "@context": "https://schema.org/",
         "@type": "VirtualLocation",
-        "name": "<%= @scene.name %> | <%= @translations["app-full-name"] || @translations["app-name"] %>",
+        "name": "<%= @scene.name %> | <%= @translations["app-full-name"] || @translations["app-name"] || "" %>",
         "url": "<%= @scene |> Ret.Scene.to_url %>",
         "image": "<%= @scene.screenshot_owned_file |> Ret.OwnedFile.uri_for |> URI.to_string %>",
-        "description": "A scene you can use in the <%= @translations["app-name"] %> immersive space and others powered by Hubs. — <%= @translations["app-description"] %>"
+        "description": "<%= @description %>"
     }
 </script>
 
 <meta property="og:type" content="website" />
 <meta property="og:url" content="<%= @scene |> Ret.Scene.to_url %>" />
 <meta property="og:title" content="<%= @scene.name %> | <%= @translations["app-full-name"] || @translations["app-name"] %>" />
-<meta property="og:description" content="<%= @translations["app-description"] %>" />
+<meta property="og:description" content="<%= @description %>" />
 <meta property="og:image" content="<%= @scene.screenshot_owned_file |> Ret.OwnedFile.uri_for |> URI.to_string %>"/>
 <meta property="og:site_name" content="<%= @translations["app-full-name"] || @translations["app-name"] %>"/>
 
-<meta name="description" content="<%= @translations["app-description"] %>" />
+<meta name="description" content="<%= @description %>" />
 
 <meta itemprop="name" content="<%= @scene.name %> | <%= @translations["app-full-name"] || @translations["app-name"] %>" />
-<meta itemprop="description" content="<%= @translations["app-description"] %>" />
+<meta itemprop="description" content="<%= @description %>" />
 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:domain" content="<%= RetWeb.Endpoint.host %>" />
 <meta name="twitter:title" content="<%= @scene.name %> | <%= @translations["app-full-name"] || @translations["app-name"] %>" />
-<meta name="twitter:description" content="<%= @translations["app-description"] %>" />
-<meta property="twitter:image" content="<%= @scene.screenshot_owned_file |> Ret.OwnedFile.uri_for |> URI.to_string %>"/>
+<meta name="twitter:description" content="<%= @description %>" />
+<meta name="twitter:image" content="<%= @scene.screenshot_owned_file |> Ret.OwnedFile.uri_for |> URI.to_string %>"/>
 <meta name="twitter:url" content="<%= @scene |> Ret.Scene.to_url %>" />
 
 <meta name="ret:version" value="<%= @ret_meta[:version] %>" />

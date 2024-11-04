@@ -2,7 +2,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 
 <!-- Description for search engines -->
-<meta name="description" content="<%= (@translations["app-description"] || "") |> String.replace("\\n", " ") %>">
+<meta name="description" content="<%= @description %>">
 
 <!-- Schema.org for Google -->
 <script type="application/ld+json">
@@ -13,7 +13,7 @@
         "applicationCategory": ["MultimediaApplication", "CommunicationApplication", "SocialNetworkingApplication"],
         "name": "<%= @translations["app-full-name"] || @translations["app-name"] %>",
         "url": "<%= @root_url %>",
-        "description": "<%= @translations["app-description"] %>",
+        "description": "<%= @description %>",
         "headline": "<%= @translations["app-tagline"] %>",
         "keywords": ["Hubs", "immersive 3D spaces", "social VR", "<%= @translations["share-hashtag"] %>"],
         "image": "<%= @images["home_background"] %>",
@@ -31,8 +31,9 @@
 <!-- OpenGraph for Facebook -->
 <meta property="og:type" content="website">
 <meta property="og:title" content="<%= @translations["app-full-name"] || @translations["app-name"] %>"/>
-<meta property="og:description" content="<%= (@translations["app-description"] || "") |> String.replace("\\n", " ") %>">
+<meta property="og:description" content="<%= @description %>">
 <meta property="og:url" content="/">
+<meta property="og:image" content="<%= @images["home_background"] %>">
 
 <!-- Twitter -->
 <meta name="twitter:card" content="summary_large_image">
@@ -42,8 +43,8 @@
 <% end %>
 
 <meta name="twitter:title" content="<%= @translations["app-full-name"] || @translations["app-name"] %>">
-<meta name="twitter:image" content="<%= @root_url %>/app-thumbnail.png">
-<meta name="twitter:description" content="<%= @translations["app-tagline"] %>">
+<meta name="twitter:image" content="<%= @images["home_background"] %>">
+<meta name="twitter:description" content="<%= @description %>">
 
 <!-- Microsoft Edge -->
 <meta name="application-name" content="<%= @translations["app-full-name"] || @translations["app-name"] %>">
