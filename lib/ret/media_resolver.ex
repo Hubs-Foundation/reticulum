@@ -27,7 +27,7 @@ defmodule Ret.MediaResolver do
     "sketchfab.com",
     "giphy.com",
     "tenor.com",
-    "ixxy.co.uk"
+    "icosa.gallery"
   ]
 
   @deviant_id_regex ~r/\"DeviantArt:\/\/deviation\/([^"]+)/
@@ -82,7 +82,7 @@ defmodule Ret.MediaResolver do
   end
 
   # Necessary short circuit around google.com root_host to skip YT-DL check for Poly
-  def resolve(%MediaResolverQuery{url: %URI{host: "icosa-api.ixxy.co.uk"}} = query, root_host) do
+  def resolve(%MediaResolverQuery{url: %URI{host: "api.icosa.gallery"}} = query, root_host) do
     rate_limited_resolve(query, root_host, @icosa_rate_limit, fn ->
       resolve_non_video(query, root_host)
     end)
@@ -337,15 +337,15 @@ defmodule Ret.MediaResolver do
   end
 
   defp resolve_non_video(
-         %MediaResolverQuery{url: %URI{host: "icosa-api.ixxy.co.uk", path: "/v1/assets/" <> asset_id} = uri},
-         "ixxy.co.uk"
+         %MediaResolverQuery{url: %URI{host: "api.icosa.gallery", path: "/v1/assets/" <> asset_id} = uri},
+         "icosa.gallery"
     ) do
   # Increment stat for the request
   Statix.increment("ret.media_resolver.icosa.requests")
 
   # Make the API call to get the asset data
   payload =
-  "https://icosa-api.ixxy.co.uk/v1/assets/#{asset_id}"
+  "https://api.icosa.gallery/v1/assets/#{asset_id}"
   |> retry_get_until_success() # Assuming this function sends the request and handles retries
   |> Map.get(:body)
   |> Poison.decode!()

@@ -261,7 +261,7 @@ defmodule Ret.MediaSearch do
       )
 
     res =
-      "https://icosa-api.ixxy.co.uk/v1/assets?#{query}"
+      "https://api.icosa.gallery/v1/assets?#{query}"
       |> retry_get_until_success()
 
     case res do
@@ -999,7 +999,7 @@ defmodule Ret.MediaSearch do
       type: "icosa_model",
       name: result["displayName"],
       attributions: %{creator: %{name: result["authorName"]}},
-      url: "http://icosa-api.ixxy.co.uk/v1/assets/" <> result["assetId"],
+      url: "http://api.icosa.gallery/v1/assets/" <> result["assetId"],
       # url: result["url"],
       images: %{preview: %{url: result["thumbnail"]["url"]}}
     }
