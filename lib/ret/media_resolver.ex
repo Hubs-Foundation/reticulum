@@ -669,19 +669,10 @@ defmodule Ret.MediaResolver do
     nil
   end
 
-defp get_root_host(host) do
-  if String.ends_with?(host, ".co.uk") do
-    host
-    |> String.split(".")
-    |> Enum.slice(-3..-1)
-    |> Enum.join(".")
-  else
-    host
-    |> String.split(".")
-    |> Enum.slice(-2..-1)
-    |> Enum.join(".")
+  defp get_root_host(host) do
+    # Drop subdomains
+    host |> String.split(".") |> Enum.slice(-2..-1) |> Enum.join(".")
   end
-end
 
   defp get_imgur_headers() do
     with client_id when is_binary(client_id) <- module_config(:imgur_client_id),
