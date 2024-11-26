@@ -1,4 +1,4 @@
-name: ret
+name: reticulum
 on:
   push:
     branches:
