@@ -175,4 +175,20 @@ defmodule Ret.HttpUtils do
   defp module_config(key) do
     Application.get_env(:ret, __MODULE__)[key]
   end
+
+  def join_smart(enum) do
+    Enum.reduce(enum, "", fn(x, acc) ->
+      x = cond do
+        !x -> nil
+        is_binary(x) -> String.trim(x)
+        true -> "#{x}"
+      end
+      if x && x != "" do
+        if acc && acc != "", do: acc <> " — " <> x, else: x
+      else
+        acc
+      end
+    end)
+  end
+
 end
