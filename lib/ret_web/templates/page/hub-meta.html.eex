@@ -4,30 +4,24 @@
     {
         "@context": "https://schema.org/",
         "@type": "VirtualLocation",
-        "name": "<%= @hub.name %> | <%= @translations["app-full-name"] || @translations["app-name"] || "" %>",
+        "name": "<%= @name %>",
         "url": "<%= @hub |> Ret.Hub.url_for %>",
         "image": "<%= @hub |> Ret.Hub.image_url_for %>",
-        "description": "<%= @description %>",
-        "disambiguatingDescription": "<%= @scene && @scene.name %>"
+        "description": "<%= @description %>"
     }
 </script>
 
 <meta property="og:type" content="website" />
 <meta property="og:url" content="<%= @hub |> Ret.Hub.url_for %>" />
-<meta property="og:title" content="<%= @hub.name %> | <%= @translations["app-full-name"] || @translations["app-name"] %>" />
-<meta property="og:description" content="<%= @description %>" />
+<meta property="og:title" content="<%= @name %>" />
+<meta name="description" property="og:description" content="<%= @description_social_media %>" />
 <meta property="og:image" content="<%= @hub |> Ret.Hub.image_url_for %>"/>
-<meta property="og:site_name" content="<%= @translations["app-full-name"] || @translations["app-name"] %>"/>
-
-<meta name="description" content="<%= @description %>" />
-
-<meta itemprop="name" content="<%= @hub.name %> | <%= @translations["app-full-name"] || @translations["app-name"] %>" />
-<meta itemprop="description" content="<%= @description %>" />
+<meta name="application-name" property="og:site_name" content="<%= @translations["app-full-name"] || @translations["app-name"] || RetWeb.Endpoint.host() %>"/>
 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:domain" content="<%= RetWeb.Endpoint.host %>" />
-<meta name="twitter:title" content="<%= @hub.name %> | <%= @translations["app-full-name"] || @translations["app-name"] %>" />
-<meta name="twitter:description" content="<%= @description %>" />
+<meta name="twitter:title" content="<%= @name %>" />
+<meta name="twitter:description" content="<%= @description_social_media %>" />
 <meta name="twitter:image" content="<%= @hub |> Ret.Hub.image_url_for %>"/>
 <meta name="twitter:url" content="<%= @hub |> Ret.Hub.url_for %>" />
 
@@ -38,7 +32,7 @@
 
 <link rel="apple-touch-icon" href="/app-icon.png">
 
-<title><%= @hub.name %> | <%= @translations["app-full-name"] || @translations["app-name"] %></title>
+<title><%= @title %></title>
 
 <%= @available_integrations_script %>
 <%= @app_config_script %>
