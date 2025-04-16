@@ -4,17 +4,40 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org/",
+        "@type": "ImageObject",
+        "caption": "<%= @title %>",
+        "representativeOfPage": true,
+        "contentUrl": "<%= @image_url %>",
+        "encodingFormat": "<%= @content_type %>",
+        "contentSize": "<%= @content_length %> b",
+        "keywords": ["screenshot", "Hubs", "immersive 3D spaces", "social VR", "<%= @translations["share-hashtag"] %>"],
+        "maintainer": {
+            "@type": "Organization",
+            "name": "<%= @translations["company-name"] %>",
+            "email": "<%= @translations["contact-email"] %>",
+            "logo": "<%= @images["company_logo"] %>"
+        },
+        "isBasedOn": "<%= @root_url %>/",
+        "creditText": "check with <%= @translations["company-name"] %>"
+    }
+    </script>
+
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:domain" value="<%= RetWeb.Endpoint.host %>" />
-    <meta name="twitter:title" value="Photo taken in <%= @app_name %>" />
-    <meta property="twitter:image" content="<%= @image_url %>"/>
+    <meta name="twitter:title" value="<%= @title %>" />
+    <meta name="twitter:description" content="<%= @title %>">
+    <meta name="twitter:image" content="<%= @image_url %>"/>
     <meta name="twitter:url" value="<%= @image_url %>" />
 
     <meta property="og:type" content="website" />
     <meta property="og:url" content="<%= @image_url %>" />
-    <meta property="og:title" content="Photo taken in <%= @app_name %>" />
+    <meta property="og:title" content="<%= @title %>" />
+    <meta property="og:description" content="<%= @title %>">
     <meta property="og:image" content="<%= @image_url %>"/>
-    <title>Photo taken in <%= @app_name %></title>
+    <title><%= @title %></title>
     <style>
       body {
           display: flex;

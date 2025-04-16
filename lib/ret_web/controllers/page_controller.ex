@@ -68,6 +68,7 @@ defmodule RetWeb.PageController do
         scene: scene,
         ret_meta: Ret.Meta.get_meta(include_repo: false),
         translations: app_config["translations"]["en"],
+        description: "A scene you can use in the #{app_config["translations"]["en"]["app-name"] || ''} immersive spaces and others powered by Hubs. #{app_config["translations"]["en"]["app-description"] || ''}" |> String.replace("\\n", " "),
         app_config_script: {:safe, app_config_script |> with_script_tags},
         extra_script: {:safe, get_extra_script(:scene) |> with_script_tags},
         extra_html: {:safe, get_extra_html(:scene) || ""}
@@ -99,8 +100,10 @@ defmodule RetWeb.PageController do
     avatar_meta_tags =
       Phoenix.View.render_to_string(RetWeb.PageView, "avatar-meta.html",
         avatar: avatar,
+        description: "An avatar you can use in the #{app_config["translations"]["en"]["app-name"] || ""} immersive spaces and others powered by Hubs." |> String.replace("\\n", " "),
         ret_meta: Ret.Meta.get_meta(include_repo: false),
         translations: app_config["translations"]["en"],
+        root_url: RetWeb.Endpoint.url(),
         app_config_script: {:safe, app_config_script |> with_script_tags},
         extra_script: {:safe, get_extra_script(:avatar) |> with_script_tags},
         extra_html: {:safe, get_extra_html(:avatar) || ""}
@@ -135,6 +138,8 @@ defmodule RetWeb.PageController do
         "index-meta.html",
         root_url: RetWeb.Endpoint.url(),
         translations: app_config["translations"]["en"],
+        description: "#{app_config["translations"]["en"]["app-description"] || ''} — Immersive spaces, right in your browser, powered by Hubs" |> String.replace("\\n", " "),
+        images: app_config["images"],
         app_config_script: {:safe, app_config_script |> with_script_tags},
         extra_script: {:safe, get_extra_script(:index) |> with_script_tags},
         extra_html: {:safe, get_extra_html(:index) || ""}
@@ -190,7 +195,7 @@ defmodule RetWeb.PageController do
     |> String.split("/")
     |> Enum.at(0)
     |> Avatar.avatar_or_avatar_listing_by_sid()
-    |> Repo.preload([:thumbnail_owned_file])
+    |> Repo.preload([:thumbnail_owned_file, :gltf_owned_file])
     |> render_avatar_content(conn)
   end
 
@@ -464,6 +469,7 @@ defmodule RetWeb.PageController do
         ret_meta: Ret.Meta.get_meta(include_repo: false),
         available_integrations_script: {:safe, available_integrations_script |> with_script_tags},
         translations: app_config["translations"]["en"],
+        description: "Join others in an immersive space in #{app_config["translations"]["en"]["app-name"] || ''}, right in your browser. #{app_config["translations"]["en"]["app-description"] || ''} — Powered by Hubs." |> String.replace("\\n", " "),
         app_config_script: {:safe, app_config_script |> with_script_tags},
         extra_script: {:safe, get_extra_script(:room) |> with_script_tags},
         extra_html: {:safe, get_extra_html(:room) || ""}
