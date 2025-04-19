@@ -4,7 +4,7 @@ on: [push, workflow_dispatch]
 
 jobs:
   lint-and-test:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     services:
       postgres:
@@ -21,14 +21,14 @@ jobs:
           - 5432:5432
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: erlef/setup-beam@v1
         with:
-          otp-version: '23.3'
+          otp-version: '24.2'
           elixir-version: '1.14'
 
-      - uses: actions/cache@v3.0.2
+      - uses: actions/cache@v4
         with:
           path: |
             deps
