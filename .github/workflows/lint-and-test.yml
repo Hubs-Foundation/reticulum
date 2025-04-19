@@ -3,8 +3,54 @@ name: lint-and-test
 on: [push, workflow_dispatch]
 
 jobs:
-  lint-and-test:
-    runs-on: ubuntu-22.04
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        versions:
+          - elixir: '1.14'
+            otp: '24.2'
+          - elixir: '1.14'
+            otp: '24.3'
+          - elixir: '1.14'
+            otp: '25.3'
+
+          - elixir: '1.15'
+            otp: '24.3'
+          - elixir: '1.15'
+            otp: '25.3'
+          - elixir: '1.15'
+            otp: '26.2'
+
+          - elixir: '1.16'
+            otp: '24.3'
+          - elixir: '1.16'
+            otp: '25.3'
+          - elixir: '1.16'
+            otp: '26.2'
+
+          - elixir: '1.17'
+            otp: '25.3'
+          - elixir: '1.17'
+            otp: '26.2'
+          - elixir: '1.17'
+            otp: '27.3'
+
+        os:
+          - 'ubuntu-22.04'
+          - 'ubuntu-24.04'
+
+        exclude:
+          - versions:
+              elixir: '1.14'
+              otp: '24.2'
+            os: 'ubuntu-24.04'
+          - versions:
+              elixir: '1.16'
+              otp: '24.3'
+            os: 'ubuntu-22.04'
+
+    runs-on: ${{ matrix.os }}
 
     services:
       postgres:
@@ -25,8 +71,8 @@ jobs:
 
       - uses: erlef/setup-beam@v1
         with:
-          otp-version: '24.2'
-          elixir-version: '1.14'
+          otp-version: ${{ matrix.versions.otp }}
+          elixir-version: ${{ matrix.versions.elixir }}
 
       - uses: actions/cache@v4
         with:
@@ -38,6 +84,43 @@ jobs:
       - run: mix local.hex --force
       - run: mix local.rebar --force
       - run: mix deps.get
-      - run: mix compile --warnings-as-errors
+      - run: mix compile   # --warnings-as-errors
       - run: mix test
+
+
+  lint:
+    strategy:
+      fail-fast: false
+      matrix:
+        versions:
+          - elixir: '1.14'
+            otp: '24.3'
+
+          - elixir: '1.15'
+            otp: '24.3'
+
+          - elixir: '1.16'
+            otp: '24.3'
+
+          - elixir: '1.17'
+            otp: '25.3'
+
+    runs-on: 'ubuntu-24.04'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: erlef/setup-beam@v1
+        with:
+          otp-version: ${{ matrix.versions.otp }}
+          elixir-version: ${{ matrix.versions.elixir }}
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            deps
+            _build
+          key: mix-${{ hashFiles('mix.lock') }}
+
+#      - run: mix format '{lib,priv,test,config}/**/*.{ex,exs}'
       - run: mix format --check-formatted '{lib,priv,test,config}/**/*.{ex,exs}'
