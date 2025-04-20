@@ -8,7 +8,7 @@
         "url": "<%= @hub |> Ret.Hub.url_for %>",
         "image": "<%= @hub |> Ret.Hub.image_url_for %>",
         "description": "<%= @description %>",
-        "disambiguatingDescription": "<%= @scene.name %>"
+        "disambiguatingDescription": "<%= @scene && @scene.name %>"
     }
 </script>
 
