@@ -2,11 +2,14 @@ name: reticulum
 on:
   push:
     branches:
-    paths-ignore: ["README.md"]
+      - 'master'
+      - 'hotfix/**'
+    paths-ignore: [".github/**", "guides/**", "README.md", "LICENSE", "CODE_OF_CONDUCT.md"]
   workflow_dispatch:
 
 jobs:
   turkeyGitops:
+    if: github.repository_owner == 'Hubs-Foundation'
     uses: Hubs-Foundation/hubs-ops/.github/workflows/turkeyGitops.yml@master
     with:
       registry: hubsfoundation
