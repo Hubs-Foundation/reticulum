@@ -3,8 +3,15 @@ name: lint-and-test
 on: [push, workflow_dispatch]
 
 jobs:
-  lint-and-test:
-    runs-on: ubuntu-22.04
+  test-current:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - 'ubuntu-22.04'
+          - 'ubuntu-24.04'
+
+    runs-on: ${{ matrix.os }}
 
     services:
       postgres:
@@ -25,8 +32,8 @@ jobs:
 
       - uses: erlef/setup-beam@v1
         with:
-          otp-version: '24.2'
-          elixir-version: '1.14'
+          elixir-version: '1.16'
+          otp-version: '25.3'
 
       - uses: actions/cache@v4
         with:
@@ -38,6 +45,135 @@ jobs:
       - run: mix local.hex --force
       - run: mix local.rebar --force
       - run: mix deps.get
-      - run: mix compile --warnings-as-errors
+      - run: mix compile   # after fixing warnings, add --warnings-as-errors
       - run: mix test
+
+
+  test-matrix:
+    # if a matrix-job with newer versions passes, advance the current versions!
+    continue-on-error: true
+
+    strategy:
+      fail-fast: false
+      matrix:
+        versions:
+#          - elixir: '1.14'
+#            otp: '24.2'
+#          - elixir: '1.14'
+#            otp: '24.3'
+#          - elixir: '1.14'
+#            otp: '25.3'
+#
+#          - elixir: '1.15'
+#            otp: '24.3'
+#          - elixir: '1.15'
+#            otp: '25.3'
+#          - elixir: '1.15'
+#            otp: '26.2'
+
+          - elixir: '1.16'
+            otp: '24.3'
+          - elixir: '1.16'
+            otp: '25.3'
+          - elixir: '1.16'
+            otp: '26.2'
+
+          - elixir: '1.17'
+            otp: '25.3'
+          - elixir: '1.17'
+            otp: '26.2'
+          - elixir: '1.17'
+            otp: '27.3'
+
+        os:
+          - 'ubuntu-22.04'
+          - 'ubuntu-24.04'
+
+        exclude:
+          - versions:   # current
+              elixir: '1.16'
+              otp: '25.3'
+
+#          - versions:   # not supported
+#              elixir: '1.14'
+#              otp: '24.2'
+#            os: 'ubuntu-24.04'
+          - versions:   # not supported
+              elixir: '1.16'
+              otp: '24.3'
+            os: 'ubuntu-22.04'
+
+    runs-on: ${{ matrix.os }}
+
+    services:
+      postgres:
+        image: postgres:10
+        env:
+          POSTGRES_USER: admin
+          POSTGRES_PASSWORD: admin
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: erlef/setup-beam@v1
+        with:
+          elixir-version: ${{ matrix.versions.elixir }}
+          otp-version: ${{ matrix.versions.otp }}
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            deps
+            _build
+          key: mix-${{ hashFiles('mix.lock') }}
+
+      - run: mix local.hex --force
+      - run: mix local.rebar --force
+      - run: mix deps.get
+      - run: mix compile   # after fixing warnings, add --warnings-as-errors
+      - run: mix test
+
+
+  pseudo-lint:
+    continue-on-error: true   # TODO: use `mix format` & check in files, then set this false
+    strategy:
+      fail-fast: false
+      matrix:
+        versions:
+          - elixir: '1.14'
+            otp: '24.3'
+
+          - elixir: '1.15'
+            otp: '24.3'
+
+          - elixir: '1.16'
+            otp: '24.3'
+
+          - elixir: '1.17'
+            otp: '25.3'
+
+    runs-on: 'ubuntu-24.04'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: erlef/setup-beam@v1
+        with:
+          elixir-version: ${{ matrix.versions.elixir }}
+          otp-version: ${{ matrix.versions.otp }}
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            deps
+            _build
+          key: mix-${{ hashFiles('mix.lock') }}
+
       - run: mix format --check-formatted '{lib,priv,test,config}/**/*.{ex,exs}'
