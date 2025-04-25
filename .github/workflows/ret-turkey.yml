@@ -7,7 +7,6 @@ on:
 
 jobs:
   turkeyGitops:
-    if: github.repository_owner == 'Hubs-Foundation'
     uses: Hubs-Foundation/hubs-ops/.github/workflows/turkeyGitops.yml@master
     with:
       registry: hubsfoundation
