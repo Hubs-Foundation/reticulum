@@ -20,12 +20,14 @@ defmodule Ret.MediaResolver do
 
   @youtube_rate_limit %{scale: 8_000, limit: 1}
   @sketchfab_rate_limit %{scale: 60_000, limit: 15}
+  @icosa_rate_limit %{scale: 60_000, limit: 1000}
   @max_await_for_rate_limit_s 120
 
   @non_video_root_hosts [
     "sketchfab.com",
     "giphy.com",
-    "tenor.com"
+    "tenor.com",
+    "icosa.gallery"
   ]
 
   @deviant_id_regex ~r/\"DeviantArt:\/\/deviation\/([^"]+)/
@@ -77,6 +79,13 @@ defmodule Ret.MediaResolver do
        |> URI.encode_query()
      )
      |> resolved()}
+  end
+
+  # Necessary short circuit around google.com root_host to skip YT-DL check for Poly
+  def resolve(%MediaResolverQuery{url: %URI{host: "api.icosa.gallery"}} = query, root_host) do
+    rate_limited_resolve(query, root_host, @icosa_rate_limit, fn ->
+      resolve_non_video(query, root_host)
+    end)
   end
 
   def resolve(%MediaResolverQuery{} = query, root_host) when root_host in @non_video_root_hosts do
@@ -326,6 +335,44 @@ defmodule Ret.MediaResolver do
 
     {:commit, (resolved_url || uri) |> resolved(meta)}
   end
+
+  defp resolve_non_video(
+         %MediaResolverQuery{url: %URI{host: "api.icosa.gallery", path: "/v1/assets/" <> asset_id} = uri},
+         "icosa.gallery"
+    ) do
+  # Increment stat for the request
+  Statix.increment("ret.media_resolver.icosa.requests")
+
+  # Make the API call to get the asset data
+  payload =
+  "https://api.icosa.gallery/v1/assets/#{asset_id}"
+  |> retry_get_until_success() # Assuming this function sends the request and handles retries
+  |> Map.get(:body)
+  |> Poison.decode!()
+
+  # Create the meta information based on the payload
+  meta =
+  %{
+    expected_content_type: "model/gltf",
+    name: payload["displayName"],
+    author: payload["authorName"],
+    license: payload["license"]
+  }
+
+  # Extract the GLTF2 format URL from the payload
+  uri =
+  payload["formats"]
+  |> Enum.find(&(&1["formatType"] == "GLTF2"))
+  |> Kernel.get_in(["root", "url"])
+  |> URI.parse()
+
+  # Increment stat for successful resolution
+  Statix.increment("ret.media_resolver.icosa.ok")
+
+  # Return the URI and meta data for further processing
+  {:commit, resolved(uri, meta)}
+  end
+
 
   defp resolve_non_video(
          %MediaResolverQuery{url: %URI{path: "/models/" <> model_id}} = query,
