@@ -483,6 +483,12 @@ defmodule RetWeb.PageController do
 
     app_name = app_config["translations"]["en"]["app-name"] || RetWeb.Endpoint.host()
     scene = hub.scene || hub.scene_listing
+    name = cond do
+      hub.name && scene && scene.name && scene.name != hub.name -> join_smart([hub.name, scene.name])
+      hub.name -> hub.name
+      scene && scene.name -> scene.name
+      true -> "a room on " <> app_name
+    end
     hub_meta_tags =
       Phoenix.View.render_to_string(RetWeb.PageView, "hub-meta.html",
         hub: hub,
@@ -491,19 +497,16 @@ defmodule RetWeb.PageController do
         available_integrations_script: {:safe, available_integrations_script |> with_script_tags},
         translations: app_config["translations"]["en"],
         title: join_smart([hub.name, app_name]),
-        name: hub.name || scene.name || "a Hubs room",
+        name: name,
         description: join_smart([
           hub.description,
-          scene && scene.name,
           "an immersive space in #{app_name}, right in your browser",
           app_config["translations"]["en"]["app-description"],
           "powered by Hubs."
         ]) |> String.replace("\\n", " "),
         description_social_media: join_smart([
-          "Join others in an immersive space in #{app_name}",
+          "Join others in an immersive space in #{app_name}, right in your browser",
           hub.description,
-          scene && scene.name,
-          "right in your browser",
           app_config["translations"]["en"]["app-description"],
           "powered by Hubs."
         ]) |> String.replace("\\n", " "),
