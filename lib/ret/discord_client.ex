@@ -76,7 +76,7 @@ defmodule Ret.DiscordClient do
         {status, result} when status in [:commit, :ok] -> "#{result["nick"]}"
       end
 
-    nickname = if nickname == "" do
+    nickname = if !nickname or nickname == "" do
        case Cachex.fetch(:discord_api, "/users/#{provider_account_id}") do
         {status, result} when status in [:commit, :ok] -> "#{result["global_name"]}"
       end
@@ -84,7 +84,7 @@ defmodule Ret.DiscordClient do
         nickname
     end
 
-    nickname = if nickname == "" do
+    nickname = if !nickname or nickname == "" do
       case Cachex.fetch(:discord_api, "/users/#{provider_account_id}") do
         {status, result} when status in [:commit, :ok] -> "#{result["username"]}"
       end
