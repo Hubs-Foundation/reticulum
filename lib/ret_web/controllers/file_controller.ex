@@ -17,7 +17,7 @@ defmodule RetWeb.FileController do
 
   def handle(conn, %{"id" => <<uuid::binary-size(36), ".html">>, "token" => token}, :show) do
     case Storage.fetch(uuid, token) do
-      {:ok, %{"content_type" => content_type}, _stream} ->
+      {:ok, %{"content_type" => content_type, "content_length" => content_length}, _stream} ->
         image_url =
           uuid
           |> Ret.Storage.uri_for(content_type)
@@ -26,12 +26,23 @@ defmodule RetWeb.FileController do
 
         app_name =
           AppConfig.get_cached_config_value("translations|en|app-full-name") ||
-            AppConfig.get_cached_config_value("translations|en|app-name")
+            AppConfig.get_cached_config_value("translations|en|app-name") || RetWeb.Endpoint.host()
+        title = "Photo taken in #{app_name} immersive space"
+        config = AppConfig.get_config()
 
         conn
         |> render("show.html",
           image_url: image_url,
-          app_name: app_name
+          content_type: content_type |> RetWeb.ContentType.sanitize_content_type(),
+          content_length: content_length,
+          title: title,
+          description_social_media: Ret.HttpUtils.join_smart([
+            config["translations"]["en"]["app-tagline"],
+            "powered by Hubs"]),
+          translations: config["translations"]["en"],
+          app_name: app_name,
+          images: config["images"],
+          root_url: RetWeb.Endpoint.url()
         )
 
       {:error, :not_found} ->

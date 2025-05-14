@@ -1,1 +1,1 @@
-appFullName = "<%= @translations["app-full-name"] || @translations["app-name"] %>";
+appFullName = "<%= @translations["app-full-name"] || @translations["app-name"] || RetWeb.Endpoint.host() %>";

@@ -4,17 +4,44 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org/",
+        "@type": "ImageObject",
+        "caption": "<%= @title %>",
+        "representativeOfPage": true,
+        "contentUrl": "<%= @image_url %>",
+        "encodingFormat": "<%= @content_type %>",
+        "contentSize": "<%= @content_length %> b",
+        "keywords": ["screenshot", "Hubs", "immersive 3D spaces", "social VR", "<%= @translations["share-hashtag"] %>", "<%= @translations["company-name"] %>"],
+        <%= if @translations["company-name"] || @translations["contact-email"] do %>
+        "maintainer": {
+            "@type": "Organization",
+            "name": "<%= @translations["company-name"] || @app_name %>",
+            "email": "<%= @translations["contact-email"] %>",
+            "logo": "<%= @images["company_logo"] %>"
+        },
+        <% end %>
+        "isBasedOn": "<%= @root_url %>/",
+        "creditText": "check with <%= @translations["company-name"] || @app_name %>"
+    }
+    </script>
+
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:domain" value="<%= RetWeb.Endpoint.host %>" />
-    <meta name="twitter:title" value="Photo taken in <%= @app_name %>" />
-    <meta property="twitter:image" content="<%= @image_url %>"/>
+    <meta name="twitter:title" value="<%= @title %>" />
+    <meta name="twitter:description" content="<%= @description_social_media %>">
+    <meta name="twitter:image" content="<%= @image_url %>"/>
     <meta name="twitter:url" value="<%= @image_url %>" />
 
     <meta property="og:type" content="website" />
     <meta property="og:url" content="<%= @image_url %>" />
-    <meta property="og:title" content="Photo taken in <%= @app_name %>" />
+    <meta property="og:title" content="<%= @title %>" />
+    <meta name="description" property="og:description" content="<%= @description_social_media %>">
     <meta property="og:image" content="<%= @image_url %>"/>
-    <title>Photo taken in <%= @app_name %></title>
+    <meta property="og:image:type" content="<%= @content_type %>" />
+    <meta name="application-name" property="og:site_name" content="<%= @app_name %>" />
+    <title><%= @title %></title>
     <style>
       body {
           display: flex;
@@ -35,7 +62,7 @@
   </head>
   <body>
     <a href="<%= RetWeb.Endpoint.url %>">
-        <img src="<%= @image_url %>"/>
+        <img src="<%= @image_url %>" alt="<%= @title %>"/>
     </a>
   </body>
 </html>

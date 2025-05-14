@@ -1,18 +1,50 @@
 <!-- iOS (for "Add to Homescreen") -->
 <meta name="mobile-web-app-capable" content="yes">
 
-<!-- Description for search engines -->
-<meta name="description" content="<%= (@translations["app-description"] || "") |> String.replace("\\n", " ") %>">
-
 <!-- Schema.org for Google -->
-<meta itemprop="name" content="<%= @translations["app-full-name"] || @translations["app-name"] %>">
-<meta itemprop="description" content="<%= (@translations["app-description"] || "") |> String.replace("\\n", " ") %>">
+<script type="application/ld+json">
+    {
+        "@context": "https://schema.org/",
+        "@type": "WebApplication",
+        "browserRequirements": "WebGL",
+        "applicationCategory": ["MultimediaApplication", "CommunicationApplication", "SocialNetworkingApplication"],
+        "name": "<%= @app_name %>",
+        "url": "<%= @root_url %>",
+        "description": "<%= @description %>",
+        <%= if @translations["app-tagline"] do %>
+        "headline": "<%= @translations["app-tagline"] %>",
+        <% end %>
+        "keywords": ["Hubs", "immersive 3D spaces", "social VR", "<%= @translations["share-hashtag"] %>"],
+        <%= if @images["home_background"] do %>
+        "image": "<%= @images["home_background"] %>",
+        <% end %>
+        <%= if  @images["logo"] do %>
+        "thumbnailUrl": "<%= @images["logo"] %>",
+        <% end %>
+        <%= if @translations["company-name"] || @translations["contact-email"] do %>
+        "maintainer": {
+            "@type": "Organization",
+            "name": "<%= @translations["company-name"] || @app_name %>",
+            <%= if @translations["contact-email"] do %>
+            "email": "<%= @translations["contact-email"] %>",
+            <% end %>
+            <%= if @images["company_logo"] do %>
+            "logo": "<%= @images["company_logo"] %>"
+            <% end %>
+        },
+        <% end %>
+        "operatingSystem": "Web Platform"
+    }
+</script>
 
 <!-- OpenGraph for Facebook -->
 <meta property="og:type" content="website">
-<meta property="og:title" content="<%= @translations["app-full-name"] %>">
-<meta property="og:description" content="<%= (@translations["app-description"] || "") |> String.replace("\\n", " ") %>">
+<meta property="og:title" content="<%= @app_name %>"/>
+<meta name="description" property="og:description" content="<%= @description %>">
 <meta property="og:url" content="/">
+<%= if @images["home_background"] do %>
+<meta property="og:image" content="<%= @images["home_background"] %>">
+<% end %>
 
 <!-- Twitter -->
 <meta name="twitter:card" content="summary_large_image">
@@ -21,17 +53,20 @@
 <meta name="twitter:site" content="<%= @translations["app-twitter-user"] %>">
 <% end %>
 
-<meta name="twitter:title" content="<%= @translations["app-full-name"] || @translations["app-name"] %>">
-<meta name="twitter:image" content="<%= @root_url %>/app-thumbnail.png">
-<meta name="twitter:description" content="<%= @translations["app-tagline"] %>">
+<meta name="twitter:title" content="<%= @app_name %>">
+<%= if @images["home_background"] do %>
+<meta name="twitter:image" content="<%= @images["home_background"] %>">
+<% end %>
+<meta name="twitter:description" content="<%= @description %>">
 
 <!-- Microsoft Edge -->
-<meta name="application-name" content="<%= @translations["app-full-name"] || @translations["app-name"] %>">
+<meta name="application-name" property="og:site_name" content="<%= @app_name %>">
+<meta name="creator" content="<%= @translations["company-name"] || @app_name %>" >
 <meta name="msapplication-tooltip" content="<%= @translations["app-tagline"] %>">
 <meta name="msapplication-starturl" content="/">
 <link rel="apple-touch-icon" href="/app-icon.png">
 
-<title><%= @translations["app-name"] %> - <%= @translations["app-tagline"] %></title>
+<title><%= @title %></title>
 <%= @app_config_script %>
 <%= @extra_html %>
 <%= @extra_script %>

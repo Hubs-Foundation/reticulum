@@ -17,6 +17,7 @@ defmodule RetWeb.PageController do
 
   alias Plug.Conn
   import Ret.ConnUtils
+  import Ret.HttpUtils
 
   ##
   # NOTE: In addition to adding a route, you must add static html pages to the page_origin_warmer.ex
@@ -63,11 +64,19 @@ defmodule RetWeb.PageController do
   defp render_scene_content(%t{} = scene, conn) when t in [Scene, SceneListing] do
     {app_config, app_config_script} = generate_app_config()
 
+    app_name = app_config["translations"]["en"]["app-full-name"] || app_config["translations"]["en"]["app-name"] || RetWeb.Endpoint.host()
     scene_meta_tags =
       Phoenix.View.render_to_string(RetWeb.PageView, "scene-meta.html",
         scene: scene,
         ret_meta: Ret.Meta.get_meta(include_repo: false),
         translations: app_config["translations"]["en"],
+        title: join_smart([ scene.name, app_name ]),
+        name: scene.name,
+        description: join_smart([
+          scene.description,
+          "A scene you can use in the #{app_name} immersive spaces and others powered by Hubs",
+          app_config["translations"]["en"]["app-description"]
+        ]) |> String.replace("\\n", " "),
         app_config_script: {:safe, app_config_script |> with_script_tags},
         extra_script: {:safe, get_extra_script(:scene) |> with_script_tags},
         extra_html: {:safe, get_extra_html(:scene) || ""}
@@ -96,11 +105,16 @@ defmodule RetWeb.PageController do
   defp render_avatar_content(%t{} = avatar, conn) when t in [Avatar, AvatarListing] do
     {app_config, app_config_script} = generate_app_config()
 
+    app_name = app_config["translations"]["en"]["app-full-name"] || app_config["translations"]["en"]["app-name"] || RetWeb.Endpoint.host()
     avatar_meta_tags =
       Phoenix.View.render_to_string(RetWeb.PageView, "avatar-meta.html",
         avatar: avatar,
+        title: join_smart([avatar.name, app_name]),
+        name: avatar.name,
+        description: "An avatar you can use in the #{app_name} immersive spaces and others powered by Hubs.",
         ret_meta: Ret.Meta.get_meta(include_repo: false),
         translations: app_config["translations"]["en"],
+        root_url: RetWeb.Endpoint.url(),
         app_config_script: {:safe, app_config_script |> with_script_tags},
         extra_script: {:safe, get_extra_script(:avatar) |> with_script_tags},
         extra_html: {:safe, get_extra_html(:avatar) || ""}
@@ -129,12 +143,21 @@ defmodule RetWeb.PageController do
   defp render_homepage_content(conn, nil = _public_room_id) do
     {app_config, app_config_script} = generate_app_config()
 
+    app_name = app_config["translations"]["en"]["app-full-name"] || app_config["translations"]["en"]["app-name"] || RetWeb.Endpoint.host()
+
     index_meta_tags =
       Phoenix.View.render_to_string(
         RetWeb.PageView,
         "index-meta.html",
         root_url: RetWeb.Endpoint.url(),
         translations: app_config["translations"]["en"],
+        app_name: app_name,
+        title: join_smart([app_name, app_config["translations"]["en"]["app-tagline"]]),
+        description: join_smart(
+          [app_config["translations"]["en"]["app-description"],
+          "Immersive spaces, right in your browser, powered by Hubs"
+        ]),
+        images: app_config["images"],
         app_config_script: {:safe, app_config_script |> with_script_tags},
         extra_script: {:safe, get_extra_script(:index) |> with_script_tags},
         extra_html: {:safe, get_extra_html(:index) || ""}
@@ -190,7 +213,7 @@ defmodule RetWeb.PageController do
     |> String.split("/")
     |> Enum.at(0)
     |> Avatar.avatar_or_avatar_listing_by_sid()
-    |> Repo.preload([:thumbnail_owned_file])
+    |> Repo.preload([:thumbnail_owned_file, :gltf_owned_file])
     |> render_avatar_content(conn)
   end
 
@@ -267,10 +290,11 @@ defmodule RetWeb.PageController do
             manifest =
               Phoenix.View.render_to_string(RetWeb.PageView, "manifest.webmanifest",
                 root_url: RetWeb.Endpoint.url(),
-                app_name: get_app_config_value("translations|en|app-name") || "",
-                app_description:
-                  (get_app_config_value("translations|en|app-description") || "")
-                  |> String.replace("\\n", " ")
+                app_name: get_app_config_value("translations|en|app-name") || RetWeb.Endpoint.host(),
+                app_description: join_smart([
+                  get_app_config_value("translations|en|app-description"),
+                  "Immersive spaces, right in your browser, powered by Hubs"
+                ]) |> String.replace("\\n", " ")
               )
 
             unless module_config(:skip_cache) do
@@ -389,7 +413,7 @@ defmodule RetWeb.PageController do
     |> put_resp_header(
       "hub-name",
       get_app_config_value("translations|en|app-full-name") ||
-        get_app_config_value("translations|en|app-name") || ""
+        get_app_config_value("translations|en|app-name") || RetWeb.Endpoint.host()
     )
     |> put_resp_header(
       "hub-entity-type",
@@ -457,13 +481,35 @@ defmodule RetWeb.PageController do
     {_, available_integrations_script} =
       Ret.Meta.available_integrations_meta() |> generate_config("AVAILABLE_INTEGRATIONS")
 
+    app_name = app_config["translations"]["en"]["app-name"] || RetWeb.Endpoint.host()
+    scene = hub.scene || hub.scene_listing
+    name = cond do
+      hub.name && scene && scene.name && scene.name != hub.name -> join_smart([hub.name, scene.name])
+      hub.name -> hub.name
+      scene && scene.name -> scene.name
+      true -> "a room on " <> app_name
+    end
     hub_meta_tags =
       Phoenix.View.render_to_string(RetWeb.PageView, "hub-meta.html",
         hub: hub,
-        scene: hub.scene,
+        scene: scene,
         ret_meta: Ret.Meta.get_meta(include_repo: false),
         available_integrations_script: {:safe, available_integrations_script |> with_script_tags},
         translations: app_config["translations"]["en"],
+        title: join_smart([hub.name, app_name]),
+        name: name,
+        description: join_smart([
+          hub.description,
+          "an immersive space in #{app_name}, right in your browser",
+          app_config["translations"]["en"]["app-description"],
+          "powered by Hubs."
+        ]) |> String.replace("\\n", " "),
+        description_social_media: join_smart([
+          "Join others in an immersive space in #{app_name}, right in your browser",
+          hub.description,
+          app_config["translations"]["en"]["app-description"],
+          "powered by Hubs."
+        ]) |> String.replace("\\n", " "),
         app_config_script: {:safe, app_config_script |> with_script_tags},
         extra_script: {:safe, get_extra_script(:room) |> with_script_tags},
         extra_html: {:safe, get_extra_html(:room) || ""}

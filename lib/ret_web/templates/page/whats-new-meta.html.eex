@@ -1,1 +1,1 @@
-<title>What's New | <%= @translations["app-full-name"] || @translations["app-name"] %></title>
+<title>What's New | <%= @translations["app-full-name"] || @translations["app-name"] || RetWeb.Endpoint.host() %></title>
