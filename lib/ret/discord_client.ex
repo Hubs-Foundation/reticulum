@@ -178,8 +178,8 @@ defmodule Ret.DiscordClient do
 
       permissions = user_permissions |>
       Enum.reduce(permissions, &(
-      if is_binary(&1), do: String.to_integer(&1), else: &1 |||
-      if is_binary(&2), do: String.to_integer(&2), else: &2
+      (if is_binary(&1), do: String.to_integer(&1), else: &1) |||
+      (if is_binary(&2), do: String.to_integer(&2), else: &2)
       ))
 
       if (permissions &&& @administrator) == @administrator do
@@ -210,8 +210,8 @@ defmodule Ret.DiscordClient do
       permissions =
         if overwrite_everyone do
           (permissions &&&
-          ~~~if is_binary(overwrite_everyone["deny"]), do: String.to_integer(overwrite_everyone["deny"]), else: overwrite_everyone["deny"]) |||
-          if is_binary(overwrite_everyone["allow"]), do: String.to_integer(overwrite_everyone["allow"]), else: overwrite_everyone["allow"]
+          ~~~(if is_binary(overwrite_everyone["deny"]), do: String.to_integer(overwrite_everyone["deny"]), else: overwrite_everyone["deny"])) |||
+          (if is_binary(overwrite_everyone["allow"]), do: String.to_integer(overwrite_everyone["allow"]), else: overwrite_everyone["allow"])
         else
           permissions
         end
@@ -221,11 +221,11 @@ defmodule Ret.DiscordClient do
         user_roles |> Enum.map(&channel_overwrites[&1]) |> Enum.filter(&(&1 != nil))
 
       allow = user_permissions |> Enum.reduce(@none, &(
-      if is_binary(&1["allow"]), do: String.to_integer(&1["allow"]), else: &1["allow"] |||
+      (if is_binary(&1["allow"]), do: String.to_integer(&1["allow"]), else: &1["allow"]) |||
       &2
       ))
       deny = user_permissions |> Enum.reduce(@none, &(
-      if is_binary(&1["deny"]), do: String.to_integer(&1["deny"]), else: &1["deny"] |||
+      (if is_binary(&1["deny"]), do: String.to_integer(&1["deny"]), else: &1["deny"]) |||
       &2
       ))
 
@@ -237,8 +237,8 @@ defmodule Ret.DiscordClient do
       permissions =
         if overwrite_member do
           (permissions &&&
-          ~~~if is_binary(overwrite_member["deny"]), do: String.to_integer(overwrite_member["deny"]), else: overwrite_member["deny"]) |||
-          if is_binary(overwrite_member["allow"]), do: String.to_integer(overwrite_member["allow"]), else: overwrite_member["allow"]
+          ~~~(if is_binary(overwrite_member["deny"]), do: String.to_integer(overwrite_member["deny"]), else: overwrite_member["deny"])) |||
+          (if is_binary(overwrite_member["allow"]), do: String.to_integer(overwrite_member["allow"]), else: overwrite_member["allow"])
         else
           permissions
         end
