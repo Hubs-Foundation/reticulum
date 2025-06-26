@@ -90,7 +90,7 @@ jobs:
           - 'ubuntu-24.04'
 
         exclude:
-          - versions:   # current
+          - versions:   # current versions; already tested above
               elixir: '1.16'
               otp: '25.3'
 
@@ -142,16 +142,16 @@ jobs:
 
 
   pseudo-lint:
-    continue-on-error: true   # TODO: use `mix format` & check in files, then set this false
+    continue-on-error: false   # `mix format` MUST be run before committing
     strategy:
       fail-fast: false
       matrix:
         versions:
-          - elixir: '1.14'
-            otp: '24.3'
-
-          - elixir: '1.15'
-            otp: '24.3'
+#          - elixir: '1.14'
+#            otp: '24.3'
+#
+#          - elixir: '1.15'
+#            otp: '24.3'
 
           - elixir: '1.16'
             otp: '24.3'
