@@ -37,7 +37,14 @@ https://hexdocs.pm/phoenix/installation.html
 
 https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html
 
-### 2. Setup Reticulum:
+### 2. Enable git hooks
+
+Run
+```shell
+. scripts/setup.sh
+```
+
+### 3. Setup Reticulum:
 
 Run the following commands at the root of the reticulum directory:
 
@@ -48,7 +55,7 @@ Run the following commands at the root of the reticulum directory:
    - If you receive an error that the `ret_dev` database does not exist, (using psql again) enter `create database ret_dev;`
 3. From the project directory `mkdir -p storage/dev`
 
-### 3. Start Reticulum
+### 4. Start Reticulum
 
 Run `scripts/run.sh` if you have the hubs secret repo cloned. Otherwise `iex -S mix phx.server`
 

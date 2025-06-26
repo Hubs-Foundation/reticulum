@@ -226,7 +226,7 @@ defmodule Ret.Scene do
             model_owned_file: old_model_owned_file,
             account: account
           } = scene
-  
+
           new_scene_owned_file =
             Storage.create_new_owned_file_with_replaced_string(
               old_scene_owned_file,
@@ -234,29 +234,30 @@ defmodule Ret.Scene do
               old_domain_url,
               new_domain_url
             )
-  
+
           {:ok, new_model_owned_file} =
             Storage.duplicate_and_transform(old_model_owned_file, account, fn glb_stream,
                                                                               _total_bytes ->
               GLTFUtils.replace_in_glb(glb_stream, old_domain_url, new_domain_url)
             end)
-  
+
           scene
           |> change()
           |> put_change(:scene_owned_file_id, new_scene_owned_file.owned_file_id)
           |> put_change(:model_owned_file_id, new_model_owned_file.owned_file_id)
           |> Repo.update!()
-  
+
           for old_owned_file <- [old_scene_owned_file, old_model_owned_file] do
             OwnedFile.set_inactive(old_owned_file)
             Storage.rm_files_for_owned_file(old_owned_file)
             Repo.delete(old_owned_file)
           end
         rescue
-          e -> 
+          e ->
             IO.warn("Failed to process scene due to an error: #{inspect(e)}")
         end
       end)
+
       :ok
     end)
   end
