@@ -156,7 +156,7 @@ config :ret, RetWeb.Plugs.AddCSP,
   font_src: asset_hosts,
   style_src: asset_hosts,
   connect_src:
-    "https://#{host}:8080 https://sentry.prod.mozaws.net #{asset_hosts} #{websocket_hosts} https://www.mozilla.org",
+    "https://#{host}:8080 #{asset_hosts} #{websocket_hosts} https://hubsfoundation.org",
   img_src: asset_hosts,
   media_src: asset_hosts,
   manifest_src: asset_hosts
@@ -174,7 +174,7 @@ config :ret, Ret.Guardian,
   ttl: {12, :weeks}
 
 config :web_push_encryption, :vapid_details,
-  subject: "mailto:admin@mozilla.com",
+  subject: "mailto:admin@hubsfoundation.org",
   public_key:
     "BAb03820kHYuqIvtP6QuCKZRshvv_zp5eDtqkuwCUAxASBZMQbFZXzv8kjYOuLGF16A3k8qYnIN10_4asB-Aw7w",
   # This config value is for local development only.

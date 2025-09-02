@@ -54,7 +54,7 @@ defmodule RetWeb.AssetsControllerTest do
     conn: conn,
     thumbnail_owned_file: thumbnail_owned_file
   } do
-    other_account = Account.account_for_email("test2@mozilla.com")
+    other_account = Account.account_for_email("test2@hubsfoundation.org")
 
     {:ok, asset} =
       %Asset{}

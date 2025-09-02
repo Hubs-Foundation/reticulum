@@ -6,7 +6,7 @@ defmodule RetWeb.Api.V1.SlackController do
   plug RetWeb.Plugs.RateLimit
 
   @slack_api_base "https://slack.com"
-  @help_prefix "Hi! I'm the Hubs bot. I connect Slack channels with rooms on Hubs (https://hubs.mozilla.com/). Type `/hubs help` for more information."
+  @help_prefix "Hi! I'm the Hubs bot. I connect Slack channels with rooms on Hubs (https://hubsfoundation.org/). Type `/hubs help` for more information."
   @help_text "Command reference:\n\n" <>
                "🦆 `/hubs help` - Shows the help text you're reading right now.\n" <>
                "🦆 `/hubs create` - Creates a default Hubs room and puts its URL into the channel topic. " <>
