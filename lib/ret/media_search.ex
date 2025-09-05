@@ -257,6 +257,8 @@ defmodule Ret.MediaSearch do
         format: :GLTF2,
         pageToken: cursor,
         category: filter,
+        licence: :REMIXABLE,
+        orderBy: :BEST,
         keywords: q
       )
 
