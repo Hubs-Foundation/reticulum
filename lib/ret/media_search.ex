@@ -262,8 +262,12 @@ defmodule Ret.MediaSearch do
         keywords: q
       )
 
+    url = "https://api.icosa.gallery/v1/assets?#{query}"
+    # Remove empty category queries as the Icosa API returns validation errors instead of "any"
+    url = String.replace(url, "category=&", "")
+
     res =
-      "https://api.icosa.gallery/v1/assets?#{query}"
+      url
       |> retry_get_until_success()
 
     case res do
