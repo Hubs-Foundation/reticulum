@@ -249,6 +249,47 @@ defmodule Ret.MediaSearch do
     sketchfab_search(query)
   end
 
+  def search(%Ret.MediaSearchQuery{source: "icosa", cursor: cursor, filter: filter, q: q}) do
+    query =
+      URI.encode_query(
+        pageSize: @page_size,
+        maxComplexity: :MEDIUM,
+        format: :GLTF2,
+        pageToken: cursor,
+        category: filter,
+        licence: :REMIXABLE,
+        orderBy: :BEST,
+        keywords: q
+      )
+
+    url = "https://api.icosa.gallery/v1/assets?#{query}"
+    # Remove empty category queries as the Icosa API returns validation errors instead of "any"
+    url = String.replace(url, "category=&", "")
+
+    res =
+      url
+      |> retry_get_until_success()
+
+    case res do
+      :error ->
+        :error
+
+      res ->
+        decoded_res = res |> Map.get(:body) |> Poison.decode!()
+        entries = decoded_res |> Map.get("assets") |> Enum.map(&icosa_api_result_to_entry/1)
+        next_cursor = decoded_res |> Map.get("nextPageToken")
+
+        {:commit,
+         %Ret.MediaSearchResult{
+           meta: %Ret.MediaSearchResultMeta{
+             next_cursor: next_cursor,
+             source: :icosa
+           },
+           entries: entries
+         }}
+    end
+  end
+
   def search(%Ret.MediaSearchQuery{source: "youtube_videos", cursor: cursor, filter: filter, q: q}) do
     with api_key when is_binary(api_key) <- resolver_config(:youtube_api_key) do
       query =
@@ -377,6 +418,7 @@ defmodule Ret.MediaSearch do
     end
   end
 
+  def available?(:icosa), do: true  # Icosa does not currently require an API key
   def available?(:bing_images), do: has_resolver_config?(:bing_search_api_key)
   def available?(:bing_videos), do: has_resolver_config?(:bing_search_api_key)
   def available?(:youtube_videos), do: has_resolver_config?(:youtube_api_key)
@@ -954,6 +996,18 @@ defmodule Ret.MediaSearch do
       },
       url: "https://sketchfab.com/models/#{result["uid"]}",
       images: images
+    }
+  end
+
+  defp icosa_api_result_to_entry(result) do
+    %{
+      id: result["assetId"],
+      type: "icosa_model",
+      name: result["displayName"],
+      attributions: %{creator: %{name: result["authorName"]}},
+      url: "http://api.icosa.gallery/v1/assets/" <> result["assetId"],
+      # url: result["url"],
+      images: %{preview: %{url: result["thumbnail"]["url"]}}
     }
   end
 

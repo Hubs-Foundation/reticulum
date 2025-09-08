@@ -44,6 +44,7 @@ defmodule Ret.Meta do
   def available_integrations_meta do
     %{
       twitter: Ret.TwitterClient.available?(),
+      icosa: Ret.MediaSearch.available?(:icosa),
       bing_images: Ret.MediaSearch.available?(:bing_images),
       bing_videos: Ret.MediaSearch.available?(:bing_videos),
       youtube_videos: Ret.MediaSearch.available?(:youtube_videos),
