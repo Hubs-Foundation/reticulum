@@ -18,6 +18,7 @@ defmodule RetWeb.PageController do
   alias Plug.Conn
   import Ret.ConnUtils
   import Ret.HttpUtils
+  require Logger
 
   ##
   # NOTE: In addition to adding a route, you must add static html pages to the page_origin_warmer.ex
@@ -716,17 +717,24 @@ defmodule RetWeb.PageController do
     do: cors_proxy(conn, "#{url}?#{qs}")
 
   defp cors_proxy(conn, url) do
+    cors_proxy_with_redirects(conn, url, 0)
+  end
+
+  defp cors_proxy_with_redirects(conn, url, redirect_count) when redirect_count > 5 do
+    Logger.error("CORS Proxy: Too many redirects (#{redirect_count}) for URL: #{url}")
+    conn |> send_resp(400, "Too many redirects")
+  end
+
+  defp cors_proxy_with_redirects(conn, url, redirect_count) do
+    
     %URI{authority: authority, host: host} = uri = URI.parse(url)
 
     resolved_ip = HttpUtils.resolve_ip(host)
 
     if HttpUtils.internal_ip?(resolved_ip) do
+      Logger.warning("CORS Proxy: Blocking internal IP #{inspect(resolved_ip)} for host #{host}")
       conn |> send_resp(401, "Bad request.")
     else
-      # We want to ensure that the URL we request hits the same IP that we verified above,
-      # so we replace the host with the IP address here and use this url to make the proxy request.
-      ip_url = URI.to_string(HttpUtils.replace_host(uri, resolved_ip))
-
       # Disallow CORS proxying unless request was made to the cors proxy url
       cors_proxy_url = Application.get_env(:ret, RetWeb.Endpoint)[:cors_proxy_url]
 
@@ -745,41 +753,88 @@ defmodule RetWeb.PageController do
       if is_cors_proxy_url do
         allowed_origins =
           Application.get_env(:ret, RetWeb.Endpoint)[:allowed_origins] |> String.split(",")
+
         opts =
           ReverseProxyPlug.init(
             upstream: url,
             allowed_origins: allowed_origins,
             proxy_url: "#{cors_scheme}://#{cors_host}:#{cors_port}",
-            # Since we replaced the host with the IP address in ip_url above, we need to force the host
-            # used for ssl verification here so that the connection isn't rejected.
-            # Note that we have to convert the authority to a charlist, since this uses Erlang's `ssl` module
-            # internally, which expects a charlist.
+            # Since we need to use the host for SSL verification, we provide the authority
             client_options: [
               ssl: [{:server_name_indication, to_charlist(authority)}, {:versions, [:"tlsv1.2",:"tlsv1.3"]}]
-            ],
-            # preserve_host_header: true
+            ]
           )
 
         body = ReverseProxyPlug.read_body(conn)
         is_head = conn |> Conn.get_req_header("x-original-method") == ["HEAD"]
 
-        %Conn{}|> Map.merge(conn)
-        |> Map.put(
-          :method,
-          if is_head do
-            "HEAD"
-          else
-            conn.method
+        try do
+          # First, make a HEAD request to check for redirects using HTTPoison
+          case HTTPoison.head(url, [], [
+            follow_redirect: false,
+            ssl: [{:server_name_indication, to_charlist(authority)}, {:versions, [:"tlsv1.2", :"tlsv1.3"]}],
+            timeout: 15_000,
+            recv_timeout: 15_000
+          ]) do
+            {:ok, %HTTPoison.Response{status_code: status_code, headers: headers}} when status_code in [301, 302, 303, 307, 308] ->
+              # Found a redirect
+              location_header = headers |> Enum.find(fn {k, _v} -> String.downcase(k) == "location" end) |> elem(1)
+
+              if location_header do
+                # Resolve relative URLs against the current URL
+                redirect_url = URI.merge(uri, location_header) |> URI.to_string()
+                cors_proxy_with_redirects(conn, redirect_url, redirect_count + 1)
+              else
+                Logger.warning("CORS Proxy: Redirect response missing location header")
+                # Fall back to ReverseProxyPlug for this response
+                make_reverse_proxy_request(conn, url, body, is_head, opts)
+              end
+
+            {:ok, %HTTPoison.Response{status_code: status_code}} ->
+              # Not a redirect, use ReverseProxyPlug for the actual request
+              make_reverse_proxy_request(conn, url, body, is_head, opts)
+
+            {:error, reason} ->
+              Logger.error("CORS Proxy: HEAD request failed: #{inspect(reason)}")
+              # Fall back to ReverseProxyPlug anyway
+              make_reverse_proxy_request(conn, url, body, is_head, opts)
           end
-        )
-        # Need to strip path_info since proxy plug reads it
-        |> Map.put(:path_info, [])
-        |> ReverseProxyPlug.request(body, opts)
-        |> ReverseProxyPlug.response(conn, opts)
+        rescue
+          error ->
+            Logger.error("CORS Proxy: Request failed with exception: #{inspect(error)}")
+            conn |> send_resp(500, "Proxy request failed: #{inspect(error)}")
+        catch
+          :exit, reason ->
+            Logger.error("CORS Proxy: Request exited with reason: #{inspect(reason)}")
+            conn |> send_resp(500, "Proxy request timed out or failed")
+          kind, reason ->
+            Logger.error("CORS Proxy: Request failed with #{kind}: #{inspect(reason)}")
+            conn |> send_resp(500, "Proxy request failed")
+        end
       else
+        Logger.warning("CORS Proxy: Request rejected - invalid host or scheme")
         conn |> send_resp(401, "Bad request.")
       end
     end
+  end
+
+  defp make_reverse_proxy_request(conn, _url, body, is_head, opts) do
+    proxy_conn = %Conn{}
+    |> Map.merge(conn)
+    |> Map.put(
+      :method,
+      if is_head do
+        "HEAD"
+      else
+        conn.method
+      end
+    )
+    # Need to strip path_info since proxy plug reads it
+    |> Map.put(:path_info, [])
+    |> ReverseProxyPlug.request(body, opts)
+    |> ReverseProxyPlug.response(conn, opts)
+
+    proxy_conn
   end
 
   defp render_static_asset(conn) do
