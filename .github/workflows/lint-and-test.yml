@@ -85,12 +85,17 @@ jobs:
           - elixir: '1.17'
             otp: '27.3'
 
+          - elixir: '1.18'
+            otp: '25.1'
+          - elixir: '1.18'
+            otp: '28.0'
+
         os:
           - 'ubuntu-22.04'
           - 'ubuntu-24.04'
 
         exclude:
-          - versions:   # current
+          - versions:   # current versions; already tested above
               elixir: '1.16'
               otp: '25.3'
 
@@ -142,22 +147,34 @@ jobs:
 
 
   pseudo-lint:
-    continue-on-error: true   # TODO: use `mix format` & check in files, then set this false
+    continue-on-error: false   # `mix format` MUST be run before committing
     strategy:
       fail-fast: false
       matrix:
         versions:
-          - elixir: '1.14'
-            otp: '24.3'
-
-          - elixir: '1.15'
-            otp: '24.3'
+#          - elixir: '1.14'
+#            otp: '24.3'
+#
+#          - elixir: '1.15'
+#            otp: '24.3'
 
           - elixir: '1.16'
             otp: '24.3'
 
+#          - elixir: '1.16'
+#            otp: '25.1'
+
           - elixir: '1.17'
             otp: '25.3'
+
+#          - elixir: '1.18'
+#            otp: '25.1'
+
+#          - elixir: '1.17'
+#            otp: '25.0'
+
+          - elixir: '1.18'
+            otp: '28.0'
 
     runs-on: 'ubuntu-24.04'
 

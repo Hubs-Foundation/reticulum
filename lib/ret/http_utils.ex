@@ -177,12 +177,14 @@ defmodule Ret.HttpUtils do
   end
 
   def join_smart(enum) do
-    Enum.reduce(enum, "", fn(x, acc) ->
-      x = cond do
-        !x -> nil
-        is_binary(x) -> String.trim(x)
-        true -> "#{x}"
-      end
+    Enum.reduce(enum, "", fn x, acc ->
+      x =
+        cond do
+          !x -> nil
+          is_binary(x) -> String.trim(x)
+          true -> "#{x}"
+        end
+
       if x && x != "" do
         if acc && acc != "", do: acc <> " — " <> x, else: x
       else
@@ -190,5 +192,4 @@ defmodule Ret.HttpUtils do
       end
     end)
   end
-
 end

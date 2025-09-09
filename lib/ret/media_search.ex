@@ -249,7 +249,12 @@ defmodule Ret.MediaSearch do
     sketchfab_search(query)
   end
 
-  def search(%Ret.MediaSearchQuery{source: "youtube_videos", cursor: cursor, filter: filter, q: q}) do
+  def search(%Ret.MediaSearchQuery{
+        source: "youtube_videos",
+        cursor: cursor,
+        filter: filter,
+        q: q
+      }) do
     with api_key when is_binary(api_key) <- resolver_config(:youtube_api_key) do
       query =
         URI.encode_query(
@@ -559,6 +564,7 @@ defmodule Ret.MediaSearch do
 
   defp created_rooms_search(cursor, account_id, _query) do
     page_number = (cursor || "1") |> Integer.parse() |> elem(0)
+
     ecto_query =
       from h in Hub,
         where: h.created_by_account_id == ^account_id,
