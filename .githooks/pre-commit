@@ -39,11 +39,11 @@ EOF
 	exit 1
 fi
 
-# runs pseudo-lint
-mix format --check-formatted '{lib,priv,test,config}/**/*.{ex,exs}'
+# runs pseudo-lint on staged files
+git diff --name-only --cached | grep -E ".*\.(ex|exs)$" | xargs mix format --check-formatted
 
 PSEUDOLINT_STATUS=$?
 if [ "$PSEUDOLINT_STATUS" != "0" ]; then
-  echo 'run `mix format`'
+  echo 'run `mix format` then use `git add` to restage the formatted file'
   exit $PSEUDOLINT_STATUS
 fi
