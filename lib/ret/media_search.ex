@@ -418,7 +418,8 @@ defmodule Ret.MediaSearch do
     end
   end
 
-  def available?(:icosa), do: true  # Icosa does not currently require an API key
+  # Icosa does not currently require an API key
+  def available?(:icosa), do: true
   def available?(:bing_images), do: has_resolver_config?(:bing_search_api_key)
   def available?(:bing_videos), do: has_resolver_config?(:bing_search_api_key)
   def available?(:youtube_videos), do: has_resolver_config?(:youtube_api_key)
@@ -601,6 +602,7 @@ defmodule Ret.MediaSearch do
 
   defp created_rooms_search(cursor, account_id, _query) do
     page_number = (cursor || "1") |> Integer.parse() |> elem(0)
+
     ecto_query =
       from h in Hub,
         where: h.created_by_account_id == ^account_id,
