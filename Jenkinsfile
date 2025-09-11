@@ -17,7 +17,7 @@ pipeline {
     stage('build') {
       steps {
         sh '''
-          /usr/bin/script --return -c \\\\"sudo /usr/bin/hab-docker-studio -k mozillareality run /bin/bash scripts/build.sh\\\\" /dev/null
+          /usr/bin/script --return -c \\\\"sudo /usr/bin/hab-docker-studio -k Hubs-Foundation run /bin/bash scripts/build.sh\\\\" /dev/null
         '''
 
         sh 'sudo /usr/bin/hab-pkg-upload $(ls -t results/*.hart | head -n 1)'
@@ -58,9 +58,9 @@ pipeline {
             def text = (
               "*<http://localhost:8080/job/${jobName}/${buildNumber}|#${buildNumber}>* *${jobName}* " +
               "<https://bldr.habitat.sh/#/pkgs/${packageIdent}|${packageIdent}>\n" +
-              "<https://github.com/mozilla/reticulum/commit/$gitSha|$gitSha> " +
+              "<https://github.com/Hubs-Foundation/reticulum/commit/$gitSha|$gitSha> " +
               "Reticulum -> ${retPoolIcon} `${retPool}`: ```${gitSha} ${gitMessage}```\n" +
-              "<https://smoke-hubs.mozilla.com/0zuesf6c6mf/smoke-test?required_ret_version=${retVersion}&required_ret_pool=${retPool}|Smoke Test> - to push:\n" +
+              "<https://smoke-hubs.hubsfoundation.org/0zuesf6c6mf/smoke-test?required_ret_version=${retVersion}&required_ret_pool=${retPool}|Smoke Test> - to push:\n" +
               "`/mr ret deploy ${retVersion} ${retPool}`"
             )
             sendSlackMessage(text, "#mr-builds", ":gift:", slackURL);
@@ -73,7 +73,7 @@ pipeline {
             def text = (
               "*<http://localhost:8080/job/${jobName}/${buildNumber}|#${buildNumber}>* *${jobName}* " +
               "<https://bldr.reticulum.io/#/pkgs/${packageIdent}|${packageIdent}>\n" +
-              "<https://github.com/mozilla/reticulum/commit/$gitSha|$gitSha> " +
+              "<https://github.com/Hubs-Foundation/reticulum/commit/$gitSha|$gitSha> " +
               "${packageIdent} built and uploaded - to promote:\n" +
               "`/mr promote-ret-qa ${packageIdent}`"
             )

@@ -13,14 +13,14 @@ dl="https://github.com/$org/$repo/releases/download/$ver/bio-${ver#"v"}-x86_64-l
 echo "[info] getting bio from: $dl" && curl -L -o bio.gz $dl && tar -xf bio.gz
 cp ./bio /usr/bin/bio && bio --version
 
-export HAB_ORIGIN=mozillareality
+export HAB_ORIGIN=hubsfoundation
 
 mkdir -p /hab/cache/keys/
 mkdir -p ./hab/cache/keys/
-echo $BLDR_RET_PUB_B64 | base64 -d > /hab/cache/keys/mozillareality-20190117233449.pub
-echo $BLDR_RET_PUB_B64 | base64 -d > ./hab/cache/keys/mozillareality-20190117233449.pub
-echo $BLDR_HAB_PVT_B64 | base64 -d > /hab/cache/keys/mozillareality-20190117233449.sig.key
-echo $BLDR_HAB_PVT_B64 | base64 -d > /hab/cache/keys/mozillareality-20190117233449.sig.key
+echo $BLDR_RET_PUB_B64 | base64 -d > /hab/cache/keys/hubsfoundation-20190117233449.pub
+echo $BLDR_RET_PUB_B64 | base64 -d > ./hab/cache/keys/hubsfoundation-20190117233449.pub
+echo $BLDR_HAB_PVT_B64 | base64 -d > /hab/cache/keys/hubsfoundation-20190117233449.sig.key
+echo $BLDR_HAB_PVT_B64 | base64 -d > /hab/cache/keys/hubsfoundation-20190117233449.sig.key
 
 echo "### build hab pkg"
 export HAB_AUTH_TOKEN=$BLDR_HAB_TOKEN
@@ -31,10 +31,10 @@ cp -r /ret/* /repo/ret/
 cd /repo
 cat > habitat/plan.sh << 'EOF'
 pkg_name=reticulum
-pkg_origin=mozillareality
+pkg_origin=hubsfoundation
 pkg_version="1.0.1"
-pkg_maintainer="Mozilla Mixed Reality <mixreality@mozilla.com>"
-pkg_upstream_url="http://github.com/mozilla/reticulum"
+pkg_maintainer="Hubs Foundation <info@hubsfoundation.org>"
+pkg_upstream_url="http://github.com/Hubs-Foundation/reticulum"
 pkg_license=('MPL-2.0')
 pkg_deps=(
     core/coreutils/8.32/20220311101609
@@ -46,8 +46,8 @@ pkg_deps=(
 pkg_build_deps=(
     core/coreutils/8.32/20220311101609
     core/git/2.23.0
-    mozillareality/erlang/23.3.4.18
-    mozillareality/elixir/1.14.3
+    hubsfoundation/erlang/23.3.4.18
+    hubsfoundation/elixir/1.14.3
 )
 pkg_exports=(
    [port]=phx.port
@@ -97,15 +97,15 @@ do_end() {
     return 0
 }
 EOF
-bio pkg build -k mozillareality .
+bio pkg build -k hubsfoundation .
 
 ### upload
 echo "### upload hab pkg"
 export HAB_BLDR_URL="https://bldr.reticulum.io"
 export HAB_AUTH_TOKEN=$BLDR_RET_TOKEN
-export HAB_ORIGIN_KEYS=mozillareality_ret
-echo $BLDR_RET_PUB_B64 | base64 -d > /hab/cache/keys/mozillareality-20190117233449.pub
-# cat /hab/cache/keys/mozillareality-20190117233449.pub
+export HAB_ORIGIN_KEYS=hubsfoundation_ret
+echo $BLDR_RET_PUB_B64 | base64 -d > /hab/cache/keys/hubsfoundation-20190117233449.pub
+# cat /hab/cache/keys/hubsfoundation-20190117233449.pub
 hart="/hab/cache/artifacts/$HAB_ORIGIN-reticulum*.hart"
 ls -lha $hart
 bio pkg upload $hart

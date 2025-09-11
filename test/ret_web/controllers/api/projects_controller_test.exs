@@ -226,7 +226,7 @@ defmodule RetWeb.ProjectsControllerTest do
     project_owned_file: project_owned_file,
     thumbnail_owned_file: thumbnail_owned_file
   } do
-    other_account = Account.find_or_create_account_for_email("test2@mozilla.com")
+    other_account = Account.find_or_create_account_for_email("test2@hubsfoundation.org")
 
     {:ok, project} =
       %Project{}

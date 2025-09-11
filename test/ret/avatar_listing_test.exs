@@ -11,8 +11,8 @@ defmodule Ret.AvatarListingTest do
   end
 
   setup _context do
-    account_1 = Account.find_or_create_account_for_email("test@mozilla.com")
-    account_2 = Account.find_or_create_account_for_email("test2@mozilla.com")
+    account_1 = Account.find_or_create_account_for_email("test@hubsfoundation.org")
+    account_2 = Account.find_or_create_account_for_email("test2@hubsfoundation.org")
 
     account_1_avatar_1 = create_avatar(account_1)
     account_1_avatar_2 = create_avatar(account_1)
