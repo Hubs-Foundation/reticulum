@@ -76,23 +76,21 @@ defmodule Ret.DiscordClient do
         {status, result} when status in [:commit, :ok] -> "#{result["nick"]}"
       end
 
-    nickname =
-      if !nickname or nickname == "" do
-        case Cachex.fetch(:discord_api, "/users/#{provider_account_id}") do
-          {status, result} when status in [:commit, :ok] -> "#{result["global_name"]}"
-        end
+    nickname = if !nickname or nickname == "" do
+       case Cachex.fetch(:discord_api, "/users/#{provider_account_id}") do
+        {status, result} when status in [:commit, :ok] -> "#{result["global_name"]}"
+      end
       else
         nickname
-      end
+    end
 
-    nickname =
-      if !nickname or nickname == "" do
-        case Cachex.fetch(:discord_api, "/users/#{provider_account_id}") do
-          {status, result} when status in [:commit, :ok] -> "#{result["username"]}"
-        end
+    nickname = if !nickname or nickname == "" do
+      case Cachex.fetch(:discord_api, "/users/#{provider_account_id}") do
+        {status, result} when status in [:commit, :ok] -> "#{result["username"]}"
+      end
       else
         nickname
-      end
+    end
   end
 
   def fetch_community_identifier(%Ret.OAuthProvider{
@@ -171,21 +169,18 @@ defmodule Ret.DiscordClient do
         case Cachex.fetch(:discord_api, "/guilds/#{community_id}/roles") do
           {status, result} when status in [:commit, :ok] -> result |> Map.new(&{&1["id"], &1})
         end
-
-      # Note: Whether the bitfield values in guild_roles are represented as strings or integers is inconsistent (possibly based on what permissions the user has), so every time they're used they need to be checked and, if needed, converted to integers.
+        # Note: Whether the bitfield values in guild_roles are represented as strings or integers is inconsistent (possibly based on what permissions the user has), so every time they're used they need to be checked and, if needed, converted to integers.
 
       role_everyone = guild_roles[community_id]
       permissions = role_everyone["permissions"]
 
       user_permissions = user_roles |> Enum.map(&guild_roles[&1]["permissions"])
 
-      permissions =
-        user_permissions
-        |> Enum.reduce(
-          permissions,
-          &(if(is_binary(&1), do: String.to_integer(&1), else: &1) |||
-              if(is_binary(&2), do: String.to_integer(&2), else: &2))
-        )
+      permissions = user_permissions |>
+      Enum.reduce(permissions, &(
+      (if is_binary(&1), do: String.to_integer(&1), else: &1) |||
+      (if is_binary(&2), do: String.to_integer(&2), else: &2)
+      ))
 
       if (permissions &&& @administrator) == @administrator do
         @all
@@ -208,21 +203,15 @@ defmodule Ret.DiscordClient do
             |> Map.get("permission_overwrites")
             |> Map.new(&{&1["id"], &1})
         end
-
-      # Note: Whether the bitfield values in channel_overwrites are represented as strings or integers is inconsistent (possibly based on what permissions the user has), so every time they're used they need to be checked and, if needed, converted to integers.
+        # Note: Whether the bitfield values in channel_overwrites are represented as strings or integers is inconsistent (possibly based on what permissions the user has), so every time they're used they need to be checked and, if needed, converted to integers.
 
       overwrite_everyone = channel_overwrites[community_id]
 
       permissions =
         if overwrite_everyone do
           (permissions &&&
-             ~~~if(is_binary(overwrite_everyone["deny"]),
-               do: String.to_integer(overwrite_everyone["deny"]),
-               else: overwrite_everyone["deny"]
-             )) |||
-            if is_binary(overwrite_everyone["allow"]),
-              do: String.to_integer(overwrite_everyone["allow"]),
-              else: overwrite_everyone["allow"]
+          ~~~(if is_binary(overwrite_everyone["deny"]), do: String.to_integer(overwrite_everyone["deny"]), else: overwrite_everyone["deny"])) |||
+          (if is_binary(overwrite_everyone["allow"]), do: String.to_integer(overwrite_everyone["allow"]), else: overwrite_everyone["allow"])
         else
           permissions
         end
@@ -231,21 +220,14 @@ defmodule Ret.DiscordClient do
       user_permissions =
         user_roles |> Enum.map(&channel_overwrites[&1]) |> Enum.filter(&(&1 != nil))
 
-      allow =
-        user_permissions
-        |> Enum.reduce(
-          @none,
-          &(if(is_binary(&1["allow"]), do: String.to_integer(&1["allow"]), else: &1["allow"]) |||
-              &2)
-        )
-
-      deny =
-        user_permissions
-        |> Enum.reduce(
-          @none,
-          &(if(is_binary(&1["deny"]), do: String.to_integer(&1["deny"]), else: &1["deny"]) |||
-              &2)
-        )
+      allow = user_permissions |> Enum.reduce(@none, &(
+      (if is_binary(&1["allow"]), do: String.to_integer(&1["allow"]), else: &1["allow"]) |||
+      &2
+      ))
+      deny = user_permissions |> Enum.reduce(@none, &(
+      (if is_binary(&1["deny"]), do: String.to_integer(&1["deny"]), else: &1["deny"]) |||
+      &2
+      ))
 
       permissions = (permissions &&& ~~~deny) ||| allow
 
@@ -255,13 +237,8 @@ defmodule Ret.DiscordClient do
       permissions =
         if overwrite_member do
           (permissions &&&
-             ~~~if(is_binary(overwrite_member["deny"]),
-               do: String.to_integer(overwrite_member["deny"]),
-               else: overwrite_member["deny"]
-             )) |||
-            if is_binary(overwrite_member["allow"]),
-              do: String.to_integer(overwrite_member["allow"]),
-              else: overwrite_member["allow"]
+          ~~~(if is_binary(overwrite_member["deny"]), do: String.to_integer(overwrite_member["deny"]), else: overwrite_member["deny"])) |||
+          (if is_binary(overwrite_member["allow"]), do: String.to_integer(overwrite_member["allow"]), else: overwrite_member["allow"])
         else
           permissions
         end

@@ -8,9 +8,7 @@ defmodule RetWeb.EntityTest do
 
   @payload_save_entity_state read_json("save_entity_state_payload.json")
   @payload_save_entity_state_2 read_json("save_entity_state_payload_2.json")
-  @payload_save_entity_state_promotable_no_token read_json(
-                                                   "save_entity_state_payload_promotable_no_token.json"
-                                                 )
+  @payload_save_entity_state_promotable_no_token read_json("save_entity_state_payload_promotable_no_token.json")
   @payload_save_entity_state_promotable read_json("save_entity_state_payload_promotable.json")
   @payload_save_entity_state_unpromotable read_json("save_entity_state_payload_unpromotable.json")
   @payload_update_entity_state read_json("update_entity_state_payload.json")

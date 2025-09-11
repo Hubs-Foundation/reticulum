@@ -288,7 +288,7 @@ defmodule Ret.Storage do
          _account,
          _require_token
        ) do
-    {:ok, owned_file}
+        {:ok, owned_file}
   end
 
   # Promoting a stored file to being owned has two side effects: the file is moved
@@ -310,11 +310,7 @@ defmodule Ret.Storage do
         "promotion_token" => actual_promotion_token
       } <-
         File.read!(meta_file_path) |> Poison.decode!(),
-      {:ok} <-
-        if(require_token,
-          do: check_promotion_token(actual_promotion_token, promotion_token),
-          else: {:ok}
-        ),
+      {:ok} <- (if require_token, do: check_promotion_token(actual_promotion_token, promotion_token), else: {:ok}),
       {:ok} <- check_blob_file_key(blob_file_path, key)
     ) do
       owned_file_params = %{

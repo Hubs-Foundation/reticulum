@@ -3,9 +3,7 @@ defmodule RetWeb.Email do
   alias Ret.{AppConfig}
 
   def auth_email(to_address, signin_args) do
-    app_name =
-      AppConfig.get_cached_config_value("translations|en|app-name") || RetWeb.Endpoint.host()
-
+    app_name = AppConfig.get_cached_config_value("translations|en|app-name") || RetWeb.Endpoint.host()
     app_full_name = AppConfig.get_cached_config_value("translations|en|app-full-name") || app_name
     admin_email = Application.get_env(:ret, Ret.Account)[:admin_email]
     custom_login_subject = AppConfig.get_cached_config_value("auth|login_subject")

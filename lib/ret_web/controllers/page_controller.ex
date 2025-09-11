@@ -65,24 +65,19 @@ defmodule RetWeb.PageController do
   defp render_scene_content(%t{} = scene, conn) when t in [Scene, SceneListing] do
     {app_config, app_config_script} = generate_app_config()
 
-    app_name =
-      app_config["translations"]["en"]["app-full-name"] ||
-        app_config["translations"]["en"]["app-name"] || RetWeb.Endpoint.host()
-
+    app_name = app_config["translations"]["en"]["app-full-name"] || app_config["translations"]["en"]["app-name"] || RetWeb.Endpoint.host()
     scene_meta_tags =
       Phoenix.View.render_to_string(RetWeb.PageView, "scene-meta.html",
         scene: scene,
         ret_meta: Ret.Meta.get_meta(include_repo: false),
         translations: app_config["translations"]["en"],
-        title: join_smart([scene.name, app_name]),
+        title: join_smart([ scene.name, app_name ]),
         name: scene.name,
-        description:
-          join_smart([
-            scene.description,
-            "A scene you can use in the #{app_name} immersive spaces and others powered by Hubs",
-            app_config["translations"]["en"]["app-description"]
-          ])
-          |> String.replace("\\n", " "),
+        description: join_smart([
+          scene.description,
+          "A scene you can use in the #{app_name} immersive spaces and others powered by Hubs",
+          app_config["translations"]["en"]["app-description"]
+        ]) |> String.replace("\\n", " "),
         app_config_script: {:safe, app_config_script |> with_script_tags},
         extra_script: {:safe, get_extra_script(:scene) |> with_script_tags},
         extra_html: {:safe, get_extra_html(:scene) || ""}
@@ -111,17 +106,13 @@ defmodule RetWeb.PageController do
   defp render_avatar_content(%t{} = avatar, conn) when t in [Avatar, AvatarListing] do
     {app_config, app_config_script} = generate_app_config()
 
-    app_name =
-      app_config["translations"]["en"]["app-full-name"] ||
-        app_config["translations"]["en"]["app-name"] || RetWeb.Endpoint.host()
-
+    app_name = app_config["translations"]["en"]["app-full-name"] || app_config["translations"]["en"]["app-name"] || RetWeb.Endpoint.host()
     avatar_meta_tags =
       Phoenix.View.render_to_string(RetWeb.PageView, "avatar-meta.html",
         avatar: avatar,
         title: join_smart([avatar.name, app_name]),
         name: avatar.name,
-        description:
-          "An avatar you can use in the #{app_name} immersive spaces and others powered by Hubs.",
+        description: "An avatar you can use in the #{app_name} immersive spaces and others powered by Hubs.",
         ret_meta: Ret.Meta.get_meta(include_repo: false),
         translations: app_config["translations"]["en"],
         root_url: RetWeb.Endpoint.url(),
@@ -153,9 +144,7 @@ defmodule RetWeb.PageController do
   defp render_homepage_content(conn, nil = _public_room_id) do
     {app_config, app_config_script} = generate_app_config()
 
-    app_name =
-      app_config["translations"]["en"]["app-full-name"] ||
-        app_config["translations"]["en"]["app-name"] || RetWeb.Endpoint.host()
+    app_name = app_config["translations"]["en"]["app-full-name"] || app_config["translations"]["en"]["app-name"] || RetWeb.Endpoint.host()
 
     index_meta_tags =
       Phoenix.View.render_to_string(
@@ -165,11 +154,10 @@ defmodule RetWeb.PageController do
         translations: app_config["translations"]["en"],
         app_name: app_name,
         title: join_smart([app_name, app_config["translations"]["en"]["app-tagline"]]),
-        description:
-          join_smart([
-            app_config["translations"]["en"]["app-description"],
-            "Immersive spaces, right in your browser, powered by Hubs"
-          ]),
+        description: join_smart(
+          [app_config["translations"]["en"]["app-description"],
+          "Immersive spaces, right in your browser, powered by Hubs"
+        ]),
         images: app_config["images"],
         app_config_script: {:safe, app_config_script |> with_script_tags},
         extra_script: {:safe, get_extra_script(:index) |> with_script_tags},
@@ -303,14 +291,11 @@ defmodule RetWeb.PageController do
             manifest =
               Phoenix.View.render_to_string(RetWeb.PageView, "manifest.webmanifest",
                 root_url: RetWeb.Endpoint.url(),
-                app_name:
-                  get_app_config_value("translations|en|app-name") || RetWeb.Endpoint.host(),
-                app_description:
-                  join_smart([
-                    get_app_config_value("translations|en|app-description"),
-                    "Immersive spaces, right in your browser, powered by Hubs"
-                  ])
-                  |> String.replace("\\n", " ")
+                app_name: get_app_config_value("translations|en|app-name") || RetWeb.Endpoint.host(),
+                app_description: join_smart([
+                  get_app_config_value("translations|en|app-description"),
+                  "Immersive spaces, right in your browser, powered by Hubs"
+                ]) |> String.replace("\\n", " ")
               )
 
             unless module_config(:skip_cache) do
@@ -499,22 +484,12 @@ defmodule RetWeb.PageController do
 
     app_name = app_config["translations"]["en"]["app-name"] || RetWeb.Endpoint.host()
     scene = hub.scene || hub.scene_listing
-
-    name =
-      cond do
-        hub.name && scene && scene.name && scene.name != hub.name ->
-          join_smart([hub.name, scene.name])
-
-        hub.name ->
-          hub.name
-
-        scene && scene.name ->
-          scene.name
-
-        true ->
-          "a room on " <> app_name
-      end
-
+    name = cond do
+      hub.name && scene && scene.name && scene.name != hub.name -> join_smart([hub.name, scene.name])
+      hub.name -> hub.name
+      scene && scene.name -> scene.name
+      true -> "a room on " <> app_name
+    end
     hub_meta_tags =
       Phoenix.View.render_to_string(RetWeb.PageView, "hub-meta.html",
         hub: hub,
@@ -524,22 +499,18 @@ defmodule RetWeb.PageController do
         translations: app_config["translations"]["en"],
         title: join_smart([hub.name, app_name]),
         name: name,
-        description:
-          join_smart([
-            hub.description,
-            "an immersive space in #{app_name}, right in your browser",
-            app_config["translations"]["en"]["app-description"],
-            "powered by Hubs."
-          ])
-          |> String.replace("\\n", " "),
-        description_social_media:
-          join_smart([
-            "Join others in an immersive space in #{app_name}, right in your browser",
-            hub.description,
-            app_config["translations"]["en"]["app-description"],
-            "powered by Hubs."
-          ])
-          |> String.replace("\\n", " "),
+        description: join_smart([
+          hub.description,
+          "an immersive space in #{app_name}, right in your browser",
+          app_config["translations"]["en"]["app-description"],
+          "powered by Hubs."
+        ]) |> String.replace("\\n", " "),
+        description_social_media: join_smart([
+          "Join others in an immersive space in #{app_name}, right in your browser",
+          hub.description,
+          app_config["translations"]["en"]["app-description"],
+          "powered by Hubs."
+        ]) |> String.replace("\\n", " "),
         app_config_script: {:safe, app_config_script |> with_script_tags},
         extra_script: {:safe, get_extra_script(:room) |> with_script_tags},
         extra_html: {:safe, get_extra_html(:room) || ""}
@@ -755,6 +726,7 @@ defmodule RetWeb.PageController do
   end
 
   defp cors_proxy_with_redirects(conn, url, redirect_count) do
+    
     %URI{authority: authority, host: host} = uri = URI.parse(url)
 
     resolved_ip = HttpUtils.resolve_ip(host)
@@ -789,10 +761,7 @@ defmodule RetWeb.PageController do
             proxy_url: "#{cors_scheme}://#{cors_host}:#{cors_port}",
             # Since we need to use the host for SSL verification, we provide the authority
             client_options: [
-              ssl: [
-                {:server_name_indication, to_charlist(authority)},
-                {:versions, [:"tlsv1.2", :"tlsv1.3"]}
-              ]
+              ssl: [{:server_name_indication, to_charlist(authority)}, {:versions, [:"tlsv1.2",:"tlsv1.3"]}]
             ]
           )
 
@@ -801,22 +770,15 @@ defmodule RetWeb.PageController do
 
         try do
           # First, make a HEAD request to check for redirects using HTTPoison
-          case HTTPoison.head(url, [],
-                 follow_redirect: false,
-                 ssl: [
-                   {:server_name_indication, to_charlist(authority)},
-                   {:versions, [:"tlsv1.2", :"tlsv1.3"]}
-                 ],
-                 timeout: 15_000,
-                 recv_timeout: 15_000
-               ) do
-            {:ok, %HTTPoison.Response{status_code: status_code, headers: headers}}
-            when status_code in [301, 302, 303, 307, 308] ->
+          case HTTPoison.head(url, [], [
+            follow_redirect: false,
+            ssl: [{:server_name_indication, to_charlist(authority)}, {:versions, [:"tlsv1.2", :"tlsv1.3"]}],
+            timeout: 15_000,
+            recv_timeout: 15_000
+          ]) do
+            {:ok, %HTTPoison.Response{status_code: status_code, headers: headers}} when status_code in [301, 302, 303, 307, 308] ->
               # Found a redirect
-              location_header =
-                headers
-                |> Enum.find(fn {k, _v} -> String.downcase(k) == "location" end)
-                |> elem(1)
+              location_header = headers |> Enum.find(fn {k, _v} -> String.downcase(k) == "location" end) |> elem(1)
 
               if location_header do
                 # Resolve relative URLs against the current URL
@@ -845,7 +807,6 @@ defmodule RetWeb.PageController do
           :exit, reason ->
             Logger.error("CORS Proxy: Request exited with reason: #{inspect(reason)}")
             conn |> send_resp(500, "Proxy request timed out or failed")
-
           kind, reason ->
             Logger.error("CORS Proxy: Request failed with #{kind}: #{inspect(reason)}")
             conn |> send_resp(500, "Proxy request failed")
@@ -858,21 +819,20 @@ defmodule RetWeb.PageController do
   end
 
   defp make_reverse_proxy_request(conn, _url, body, is_head, opts) do
-    proxy_conn =
-      %Conn{}
-      |> Map.merge(conn)
-      |> Map.put(
-        :method,
-        if is_head do
-          "HEAD"
-        else
-          conn.method
-        end
-      )
-      # Need to strip path_info since proxy plug reads it
-      |> Map.put(:path_info, [])
-      |> ReverseProxyPlug.request(body, opts)
-      |> ReverseProxyPlug.response(conn, opts)
+    proxy_conn = %Conn{}
+    |> Map.merge(conn)
+    |> Map.put(
+      :method,
+      if is_head do
+        "HEAD"
+      else
+        conn.method
+      end
+    )
+    # Need to strip path_info since proxy plug reads it
+    |> Map.put(:path_info, [])
+    |> ReverseProxyPlug.request(body, opts)
+    |> ReverseProxyPlug.response(conn, opts)
 
     proxy_conn
   end

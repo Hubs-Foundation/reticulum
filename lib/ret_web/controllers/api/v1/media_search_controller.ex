@@ -3,25 +3,25 @@ defmodule RetWeb.Api.V1.MediaSearchController do
   use Retry
 
   def index(conn, %{"source" => source, "filter" => "created", "user" => user} = params)
-      when source in ["rooms"] do
-    account = conn |> Guardian.Plug.current_resource()
+    when source in ["rooms"] do
+      account = conn |> Guardian.Plug.current_resource()
 
-    if account && account.account_id == String.to_integer(user) do
-      {:commit, results} =
-        %Ret.MediaSearchQuery{
-          source: "rooms",
-          cursor: params["cursor"] || "1",
-          user: account.account_id,
-          filter: "created",
-          q: params["q"]
-        }
-        |> Ret.MediaSearch.search()
+      if account && account.account_id == String.to_integer(user) do
+        {:commit, results} =
+          %Ret.MediaSearchQuery{
+            source: "rooms",
+            cursor: params["cursor"] || "1",
+            user: account.account_id,
+            filter: "created",
+            q: params["q"]
+          }
+          |> Ret.MediaSearch.search()
 
-      conn |> render("index.json", results: results)
-    else
-      conn |> send_resp(401, "You can only search created rooms for your own account.")
+        conn |> render("index.json", results: results)
+      else
+        conn |> send_resp(401, "You can only search created rooms for your own account.")
+      end
     end
-  end
 
   def index(conn, %{"source" => "rooms"} = params) do
     {:commit, results} =
