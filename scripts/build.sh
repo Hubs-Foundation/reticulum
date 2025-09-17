@@ -13,7 +13,7 @@ pushd "$DIR/.."
 
 pkg_test_deps=(
   core/git
-  mozillareality/postgresql
+  hubsfoundation/postgresql
 )
 
 export LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
@@ -34,7 +34,7 @@ ln -s "$(hab pkg path core/coreutils)/bin/env" /usr/bin/env
 deps="$(join_by " " "${pkg_deps[@]}") $(join_by " " "${pkg_build_deps[@]}") $(join_by " " "${pkg_test_deps[@]}")"
 
 hab pkg install -b $deps
-hab svc load mozillareality/postgresql &
+hab svc load hubsfoundation/postgresql &
 while ! [ -f /hab/svc/postgresql/PID ] ; do sleep 1; done
 
 MIX_ENV=test
@@ -47,7 +47,7 @@ TEST_EXIT_CODE=$?
 
 echo "Test and build exit code: $TEST_EXIT_CODE"
 
-hab svc unload mozillareality/postgresql
+hab svc unload hubsfoundation/postgresql
 popd
 
 exit $TEST_EXIT_CODE

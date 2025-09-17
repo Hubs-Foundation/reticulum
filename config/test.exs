@@ -51,7 +51,7 @@ config :sentry,
 
 config :ret, Ret.Repo.Migrations.AdminSchemaInit, postgrest_password: "password"
 config :ret, Ret.Locking, lock_timeout_ms: 1000 * 60 * 15
-config :ret, Ret.Account, admin_email: "admin@mozilla.com"
+config :ret, Ret.Account, admin_email: "admin@hubsfoundation.org"
 
 config :ret, RetWeb.HubChannel, enable_terminate_actions: false
 

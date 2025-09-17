@@ -61,7 +61,7 @@ defmodule RetWeb.SceneControllerTest do
     scene: scene
   } do
     {:ok, token, _claims} =
-      "test2@mozilla.com"
+      "test2@hubsfoundation.org"
       |> Ret.Account.find_or_create_account_for_email()
       |> Ret.Guardian.encode_and_sign()
 

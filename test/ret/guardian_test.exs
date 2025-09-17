@@ -5,7 +5,7 @@ defmodule Ret.GuardianTest do
   alias Ret.{Account, Guardian, Repo}
 
   test "retrieve account from token" do
-    account = Account.find_or_create_account_for_email("test@mozilla.com")
+    account = Account.find_or_create_account_for_email("test@hubsfoundation.org")
     token = account |> Account.credentials_for_account()
 
     {:ok, account2, _claims} = Guardian.resource_from_token(token)
@@ -14,12 +14,12 @@ defmodule Ret.GuardianTest do
   end
 
   test "avoid creation when looking up" do
-    Account.account_for_email("test@mozilla.com")
-    refute Account.exists_for_email?("test@mozilla.com")
+    Account.account_for_email("test@hubsfoundation.org")
+    refute Account.exists_for_email?("test@hubsfoundation.org")
   end
 
   test "does not retrieve account from revoked token" do
-    account = Account.find_or_create_account_for_email("test@mozilla.com")
+    account = Account.find_or_create_account_for_email("test@hubsfoundation.org")
     token = account |> Account.credentials_for_account()
 
     date = Timex.now() |> Timex.shift(seconds: 1) |> DateTime.truncate(:second)

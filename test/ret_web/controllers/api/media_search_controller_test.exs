@@ -11,9 +11,9 @@ defmodule RetWeb.MediaSearchControllerTest do
   end
 
   setup _context do
-    account_1 = Account.find_or_create_account_for_email("test@mozilla.com")
-    account_2 = Account.find_or_create_account_for_email("test2@mozilla.com")
-    account_3 = Account.find_or_create_account_for_email("test3@mozilla.com")
+    account_1 = Account.find_or_create_account_for_email("test@hubsfoundation.org")
+    account_2 = Account.find_or_create_account_for_email("test2@hubsfoundation.org")
+    account_3 = Account.find_or_create_account_for_email("test3@hubsfoundation.org")
 
     scene_1 = create_scene(account_1)
     scene_2 = create_scene(account_2)

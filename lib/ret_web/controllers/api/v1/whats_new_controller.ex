@@ -31,10 +31,10 @@ defmodule RetWeb.Api.V1.WhatsNewController do
     do: []
 
   defp fetch_pull_requests("hubs" = _source, cursor, token),
-    do: fetch_pull_requests("mozilla", "hubs", cursor, token)
+    do: fetch_pull_requests("Hubs-Foundation", "hubs", cursor, token)
 
   defp fetch_pull_requests("spoke" = _source, cursor, token),
-    do: fetch_pull_requests("mozilla", "spoke", cursor, token)
+    do: fetch_pull_requests("Hubs-Foundation", "spoke", cursor, token)
 
   defp fetch_pull_requests(_source, _cursor, _token),
     do: []
