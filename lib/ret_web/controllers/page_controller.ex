@@ -759,7 +759,10 @@ defmodule RetWeb.PageController do
             upstream: url,
             allowed_origins: allowed_origins,
             proxy_url: "#{cors_scheme}://#{cors_host}:#{cors_port}",
-            # Since we need to use the host for SSL verification, we provide the authority
+            # We need to force the host
+            # used for ssl verification here so that the connection isn't rejected.
+            # Note that we have to convert the authority to a charlist, since this uses Erlang's `ssl` module
+            # internally, which expects a charlist.
             client_options: [
               ssl: [{:server_name_indication, to_charlist(authority)}, {:versions, [:"tlsv1.2",:"tlsv1.3"]}]
             ]
