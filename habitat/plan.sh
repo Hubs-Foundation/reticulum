@@ -1,8 +1,8 @@
 pkg_name=reticulum
-pkg_origin=mozillareality
+pkg_origin=hubsfoundation
 pkg_version="1.0.1"
-pkg_maintainer="Mozilla Mixed Reality <mixreality@mozilla.com>"
-pkg_upstream_url="http://github.com/mozilla/reticulum"
+pkg_maintainer="Hubs Foundation <info@hubsfoundation.org>"
+pkg_upstream_url="http://github.com/Hubs-Foundation/reticulum"
 pkg_license=('MPL-2.0')
 pkg_deps=(
     core/coreutils/8.30/20190115012313
@@ -12,8 +12,8 @@ pkg_deps=(
 pkg_build_deps=(
     core/coreutils/8.30/20190115012313
     core/git/2.23.0
-    mozillareality/erlang/23.3.4.18
-    mozillareality/elixir/1.14.3
+    hubsfoundation/erlang/23.3.4.18
+    hubsfoundation/elixir/1.14.3
 )
 pkg_exports=(
    [port]=phx.port

@@ -17,37 +17,39 @@ defmodule RetWeb.AccountControllerTest do
     account = create_random_account()
     {:ok, token, _params} = account |> Ret.Guardian.encode_and_sign()
     conn = conn |> Plug.Conn.put_req_header("authorization", "bearer: " <> token)
-    req = conn |> api_v1_account_path(:create, %{data: %{email: "testapi@mozilla.com"}})
+    req = conn |> api_v1_account_path(:create, %{data: %{email: "testapi@hubsfoundation.org"}})
     conn = conn |> post(req)
 
-    assert !Account.exists_for_email?("testapi@mozilla.com")
+    assert !Account.exists_for_email?("testapi@hubsfoundation.org")
     assert conn.status === 401
     assert conn.resp_body === "Not authorized"
   end
 
   test "admins can create accounts", %{conn: conn} do
-    req = conn |> api_v1_account_path(:create, %{data: %{email: "testapi@mozilla.com"}})
+    req = conn |> api_v1_account_path(:create, %{data: %{email: "testapi@hubsfoundation.org"}})
     res = conn |> post(req) |> response(200) |> Poison.decode!()
 
-    account = Account.account_for_email("testapi@mozilla.com")
+    account = Account.account_for_email("testapi@hubsfoundation.org")
 
     assert account
     assert res["data"]["id"] === "#{account.account_id}"
-    assert res["data"]["login"]["email"] === "testapi@mozilla.com"
+    assert res["data"]["login"]["email"] === "testapi@hubsfoundation.org"
   end
 
   test "admins can create accounts with identities", %{conn: conn} do
     req =
       conn
-      |> api_v1_account_path(:create, %{data: %{email: "testapi@mozilla.com", name: "Test User"}})
+      |> api_v1_account_path(:create, %{
+        data: %{email: "testapi@hubsfoundation.org", name: "Test User"}
+      })
 
     res = conn |> post(req) |> response(200) |> Poison.decode!()
 
-    account = Account.account_for_email("testapi@mozilla.com")
+    account = Account.account_for_email("testapi@hubsfoundation.org")
 
     assert account
     assert res["data"]["id"] === "#{account.account_id}"
-    assert res["data"]["login"]["email"] === "testapi@mozilla.com"
+    assert res["data"]["login"]["email"] === "testapi@hubsfoundation.org"
     assert res["data"]["identity"]["name"] === "Test User"
   end
 
@@ -61,17 +63,17 @@ defmodule RetWeb.AccountControllerTest do
       "/api/v1/accounts",
       Poison.encode!(%{
         data: [
-          %{email: "testapi@mozilla.com", name: "Test User New"},
-          %{email: "testapi2@mozilla.com", name: "Test User 2 New"}
+          %{email: "testapi@hubsfoundation.org", name: "Test User New"},
+          %{email: "testapi2@hubsfoundation.org", name: "Test User 2 New"}
         ]
       })
     )
     |> response(207)
 
-    account = Account.account_for_email("testapi@mozilla.com")
+    account = Account.account_for_email("testapi@hubsfoundation.org")
     assert account.identity.name === "Test User New"
 
-    account = Account.account_for_email("testapi2@mozilla.com")
+    account = Account.account_for_email("testapi2@hubsfoundation.org")
     assert account.identity.name === "Test User 2 New"
   end
 
@@ -80,16 +82,16 @@ defmodule RetWeb.AccountControllerTest do
       conn
       |> api_v1_account_path(:create, %{
         data: [
-          %{email: "testapi1@mozilla.com"},
-          %{email: "testapi2@mozilla.com"},
+          %{email: "testapi1@hubsfoundation.org"},
+          %{email: "testapi2@hubsfoundation.org"},
           %{email: "invalidemail"}
         ]
       })
 
     res = conn |> post(req) |> response(207) |> Poison.decode!()
 
-    account1 = Account.account_for_email("testapi1@mozilla.com")
-    account2 = Account.account_for_email("testapi2@mozilla.com")
+    account1 = Account.account_for_email("testapi1@hubsfoundation.org")
+    account2 = Account.account_for_email("testapi2@hubsfoundation.org")
     result1 = res |> Enum.at(0)
     result2 = res |> Enum.at(1)
     result3 = res |> Enum.at(2)
@@ -98,10 +100,10 @@ defmodule RetWeb.AccountControllerTest do
     assert account2
     assert result1["status"] === 200
     assert result1["body"]["data"]["id"] === "#{account1.account_id}"
-    assert result1["body"]["data"]["login"]["email"] === "testapi1@mozilla.com"
+    assert result1["body"]["data"]["login"]["email"] === "testapi1@hubsfoundation.org"
     assert result2["status"] === 200
     assert result2["body"]["data"]["id"] === "#{account2.account_id}"
-    assert result2["body"]["data"]["login"]["email"] === "testapi2@mozilla.com"
+    assert result2["body"]["data"]["login"]["email"] === "testapi2@hubsfoundation.org"
     assert result3["status"] === 400
     assert result3["body"]["errors"] |> Enum.at(0) |> Map.get("code") === "MALFORMED_RECORD"
   end
@@ -127,7 +129,7 @@ defmodule RetWeb.AccountControllerTest do
   end
 
   test "should return 409 if account exists", %{conn: conn} do
-    req = conn |> api_v1_account_path(:create, %{data: %{email: "test@mozilla.com"}})
+    req = conn |> api_v1_account_path(:create, %{data: %{email: "test@hubsfoundation.org"}})
     conn |> post(req) |> response(409)
   end
 
@@ -135,7 +137,7 @@ defmodule RetWeb.AccountControllerTest do
     account = create_random_account()
     {:ok, token, _params} = account |> Ret.Guardian.encode_and_sign()
     conn = conn |> Plug.Conn.put_req_header("authorization", "bearer: " <> token)
-    req = conn |> api_v1_account_search_path(:create, %{email: "unknown@mozilla.com"})
+    req = conn |> api_v1_account_search_path(:create, %{email: "unknown@hubsfoundation.org"})
     conn = conn |> post(req)
 
     assert conn.status === 401
@@ -143,17 +145,17 @@ defmodule RetWeb.AccountControllerTest do
   end
 
   test "should return 404 if no such account exists", %{conn: conn} do
-    req = conn |> api_v1_account_search_path(:create, %{email: "unknown@mozilla.com"})
+    req = conn |> api_v1_account_search_path(:create, %{email: "unknown@hubsfoundation.org"})
     conn = conn |> post(req)
 
     assert conn.status === 404
   end
 
   test "should return account if account exists", %{conn: conn} do
-    req = conn |> api_v1_account_search_path(:create, %{email: "test@mozilla.com"})
+    req = conn |> api_v1_account_search_path(:create, %{email: "test@hubsfoundation.org"})
     res = conn |> post(req) |> response(200) |> Poison.decode!()
 
-    account = Account.account_for_email("test@mozilla.com")
+    account = Account.account_for_email("test@hubsfoundation.org")
     record = res["data"] |> Enum.at(0)
 
     assert record["id"] === "#{account.account_id}"

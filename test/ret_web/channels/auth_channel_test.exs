@@ -6,8 +6,8 @@ defmodule RetWeb.AuthChannelTest do
   alias RetWeb.{SessionSocket}
   alias Ret.{Account, AppConfig, Repo}
 
-  @test_email "admin1@mozilla.com"
-  @test_email2 "admin2@mozilla.com"
+  @test_email "admin1@hubsfoundation.org"
+  @test_email2 "admin2@hubsfoundation.org"
 
   setup [:create_account]
 
@@ -48,10 +48,14 @@ defmodule RetWeb.AuthChannelTest do
     disabled_account = create_account("disabled_account")
     disabled_account |> Ecto.Changeset.change(state: :disabled) |> Ret.Repo.update!()
 
-    push(socket, "auth_request", %{"email" => "disabled_account@mozilla.com", "origin" => "test"})
+    push(socket, "auth_request", %{
+      "email" => "disabled_account@hubsfoundation.org",
+      "origin" => "test"
+    })
+
     :timer.sleep(500)
 
-    refute login_token_for_email_exists?("disabled_account@mozilla.com")
+    refute login_token_for_email_exists?("disabled_account@hubsfoundation.org")
   end
 
   defp login_token_for_email_exists?(email) do

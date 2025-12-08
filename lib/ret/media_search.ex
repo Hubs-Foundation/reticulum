@@ -290,7 +290,12 @@ defmodule Ret.MediaSearch do
     end
   end
 
-  def search(%Ret.MediaSearchQuery{source: "youtube_videos", cursor: cursor, filter: filter, q: q}) do
+  def search(%Ret.MediaSearchQuery{
+        source: "youtube_videos",
+        cursor: cursor,
+        filter: filter,
+        q: q
+      }) do
     with api_key when is_binary(api_key) <- resolver_config(:youtube_api_key) do
       query =
         URI.encode_query(

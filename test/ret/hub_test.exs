@@ -16,7 +16,9 @@ defmodule Ret.HubTest do
       close_hub: false,
       mute_users: false,
       amplify_audio: false
-    } = hub |> Hub.perms_for_account(Ret.Account.account_for_email("non-creator@mozilla.com"))
+    } =
+      hub
+      |> Hub.perms_for_account(Ret.Account.account_for_email("non-creator@hubsfoundation.org"))
   end
 
   test "should deny permissions for anon", %{scene: scene} do

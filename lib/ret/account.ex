@@ -68,7 +68,10 @@ defmodule Ret.Account do
             _ -> false
           end
 
-        Repo.insert!(%Account{login: %Login{identifier_hash: identifier_hash}, is_admin: is_admin})
+        Repo.insert!(%Account{
+          login: %Login{identifier_hash: identifier_hash},
+          is_admin: is_admin
+        })
 
       true ->
         nil

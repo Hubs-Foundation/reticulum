@@ -28,7 +28,7 @@ defmodule RetWeb.HubControllerTest do
     disabled_account |> Ecto.Changeset.change(state: :disabled) |> Ret.Repo.update!()
 
     conn
-    |> put_auth_header_for_email("disabled_account@mozilla.com")
+    |> put_auth_header_for_email("disabled_account@hubsfoundation.org")
     |> create_hub("Test Hub")
     |> response(401)
   end
@@ -42,7 +42,7 @@ defmodule RetWeb.HubControllerTest do
 
     created_hub = Hub |> Repo.get_by(hub_sid: hub_id) |> Repo.preload(:created_by_account)
 
-    created_account = Ret.Account.account_for_email("test@mozilla.com")
+    created_account = Ret.Account.account_for_email("test@hubsfoundation.org")
     assert created_hub.created_by_account.account_id == created_account.account_id
   end
 
