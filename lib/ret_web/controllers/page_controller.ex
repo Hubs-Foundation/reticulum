@@ -726,7 +726,6 @@ defmodule RetWeb.PageController do
   end
 
   defp cors_proxy_with_redirects(conn, url, redirect_count) do
-    
     %URI{authority: authority, host: host} = uri = URI.parse(url)
 
     resolved_ip = HttpUtils.resolve_ip(host)
@@ -773,15 +772,22 @@ defmodule RetWeb.PageController do
 
         try do
           # First, make a HEAD request to check for redirects using HTTPoison
-          case HTTPoison.head(url, [], [
-            follow_redirect: false,
-            ssl: [{:server_name_indication, to_charlist(authority)}, {:versions, [:"tlsv1.2", :"tlsv1.3"]}],
-            timeout: 15_000,
-            recv_timeout: 15_000
-          ]) do
-            {:ok, %HTTPoison.Response{status_code: status_code, headers: headers}} when status_code in [301, 302, 303, 307, 308] ->
+          case HTTPoison.head(url, [],
+                 follow_redirect: false,
+                 ssl: [
+                   {:server_name_indication, to_charlist(authority)},
+                   {:versions, [:"tlsv1.2", :"tlsv1.3"]}
+                 ],
+                 timeout: 15_000,
+                 recv_timeout: 15_000
+               ) do
+            {:ok, %HTTPoison.Response{status_code: status_code, headers: headers}}
+            when status_code in [301, 302, 303, 307, 308] ->
               # Found a redirect
-              location_header = headers |> Enum.find(fn {k, _v} -> String.downcase(k) == "location" end) |> elem(1)
+              location_header =
+                headers
+                |> Enum.find(fn {k, _v} -> String.downcase(k) == "location" end)
+                |> elem(1)
 
               if location_header do
                 # Resolve relative URLs against the current URL
@@ -810,6 +816,7 @@ defmodule RetWeb.PageController do
           :exit, reason ->
             Logger.error("CORS Proxy: Request exited with reason: #{inspect(reason)}")
             conn |> send_resp(500, "Proxy request timed out or failed")
+
           kind, reason ->
             Logger.error("CORS Proxy: Request failed with #{kind}: #{inspect(reason)}")
             conn |> send_resp(500, "Proxy request failed")
@@ -822,20 +829,21 @@ defmodule RetWeb.PageController do
   end
 
   defp make_reverse_proxy_request(conn, _url, body, is_head, opts) do
-    proxy_conn = %Conn{}
-    |> Map.merge(conn)
-    |> Map.put(
-      :method,
-      if is_head do
-        "HEAD"
-      else
-        conn.method
-      end
-    )
-    # Need to strip path_info since proxy plug reads it
-    |> Map.put(:path_info, [])
-    |> ReverseProxyPlug.request(body, opts)
-    |> ReverseProxyPlug.response(conn, opts)
+    proxy_conn =
+      %Conn{}
+      |> Map.merge(conn)
+      |> Map.put(
+        :method,
+        if is_head do
+          "HEAD"
+        else
+          conn.method
+        end
+      )
+      # Need to strip path_info since proxy plug reads it
+      |> Map.put(:path_info, [])
+      |> ReverseProxyPlug.request(body, opts)
+      |> ReverseProxyPlug.response(conn, opts)
 
     proxy_conn
   end
