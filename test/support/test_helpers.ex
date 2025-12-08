@@ -47,7 +47,7 @@ defmodule Ret.TestHelpers do
   def create_account(prefix, is_admin \\ false)
 
   def create_account(prefix, is_admin) when is_binary(prefix) do
-    account = Account.find_or_create_account_for_email("#{prefix}@mozilla.com")
+    account = Account.find_or_create_account_for_email("#{prefix}@hubsfoundation.org")
 
     if is_admin do
       # Currently admin bits not set via any reticulum APIs, so avoid adding them to code for now.
@@ -56,7 +56,7 @@ defmodule Ret.TestHelpers do
         "update ret0.accounts set is_admin = 't' where account_id = #{account.account_id}"
       )
 
-      Account.find_or_create_account_for_email("#{prefix}@mozilla.com")
+      Account.find_or_create_account_for_email("#{prefix}@hubsfoundation.org")
     else
       account
     end
@@ -216,7 +216,11 @@ defmodule Ret.TestHelpers do
     {:ok, asset: asset}
   end
 
-  def create_project_asset(%{account: account, project: project, thumbnail_owned_file: owned_file}) do
+  def create_project_asset(%{
+        account: account,
+        project: project,
+        thumbnail_owned_file: owned_file
+      }) do
     {:ok, asset} =
       %Asset{}
       |> Asset.changeset(account, owned_file, owned_file, %{
