@@ -832,7 +832,7 @@ defmodule RetWeb.PageController do
                 make_reverse_proxy_request(conn, url, body, is_head, opts)
               end
 
-            {:ok, %HTTPoison.Response{status_code: status_code}} ->
+            {:ok, %HTTPoison.Response{}} ->
               # Not a redirect, use ReverseProxyPlug for the actual request
               make_reverse_proxy_request(conn, url, body, is_head, opts)
 

@@ -81,7 +81,6 @@ defmodule Ret.MediaResolver do
      |> resolved()}
   end
 
-  # Necessary short circuit around google.com root_host to skip YT-DL check for Poly
   def resolve(%MediaResolverQuery{url: %URI{host: "api.icosa.gallery"}} = query, root_host) do
     rate_limited_resolve(query, root_host, @icosa_rate_limit, fn ->
       resolve_non_video(query, root_host)
@@ -338,7 +337,7 @@ defmodule Ret.MediaResolver do
 
   defp resolve_non_video(
          %MediaResolverQuery{
-           url: %URI{host: "api.icosa.gallery", path: "/v1/assets/" <> asset_id} = uri
+           url: %URI{host: "api.icosa.gallery", path: "/v1/assets/" <> asset_id}
          },
          "icosa.gallery"
        ) do
