@@ -193,4 +193,5 @@ jobs:
             _build
           key: mix-${{ hashFiles('mix.lock') }}
 
+      - run: mix deps.get
       - run: mix format --check-formatted '{lib,priv,test,config}/**/*.{ex,exs}'
