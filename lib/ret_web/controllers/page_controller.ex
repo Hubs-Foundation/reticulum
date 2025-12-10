@@ -796,8 +796,8 @@ defmodule RetWeb.PageController do
                 {:server_name_indication, to_charlist(authority)},
                 {:versions, [:"tlsv1.2", :"tlsv1.3"]}
               ]
-            ]
-            # preserve_host_header: true
+            ],
+            error_callback: fn error -> Logger.error("CORS-proxy error: #{inspect(error)}") end
           )
 
         body = ReverseProxyPlug.read_body(conn)
