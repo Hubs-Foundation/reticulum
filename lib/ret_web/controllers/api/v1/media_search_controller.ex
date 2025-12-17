@@ -98,6 +98,7 @@ defmodule RetWeb.Api.V1.MediaSearchController do
   def index(conn, %{"source" => source} = params)
       when source in [
              "sketchfab",
+             "icosa",
              "tenor",
              "youtube_videos",
              "bing_videos",
