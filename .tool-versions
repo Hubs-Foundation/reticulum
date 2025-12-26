@@ -1,2 +1,3 @@
-elixir 1.14.3-otp-23
-erlang 23.3.4.18
+elixir 1.16-otp-25
+erlang 25.3.2.20
+# When changing versions, change it everywhere (check the README).
