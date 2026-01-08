@@ -57,20 +57,6 @@ jobs:
       fail-fast: false
       matrix:
         versions:
-#          - elixir: '1.14'
-#            otp: '24.2'
-#          - elixir: '1.14'
-#            otp: '24.3'
-#          - elixir: '1.14'
-#            otp: '25.3'
-#
-#          - elixir: '1.15'
-#            otp: '24.3'
-#          - elixir: '1.15'
-#            otp: '25.3'
-#          - elixir: '1.15'
-#            otp: '26.2'
-
           - elixir: '1.16'
             otp: '24.3'
           - elixir: '1.16'
@@ -98,11 +84,6 @@ jobs:
           - versions:   # current versions; already tested above
               elixir: '1.16'
               otp: '25.3'
-
-#          - versions:   # not supported
-#              elixir: '1.14'
-#              otp: '24.2'
-#            os: 'ubuntu-24.04'
           - versions:   # not supported
               elixir: '1.16'
               otp: '24.3'
@@ -152,17 +133,8 @@ jobs:
       fail-fast: false
       matrix:
         versions:
-#          - elixir: '1.14'
-#            otp: '24.3'
-#
-#          - elixir: '1.15'
-#            otp: '24.3'
-
           - elixir: '1.16'
             otp: '24.3'
-
-#          - elixir: '1.16'
-#            otp: '25.1'
 
           - elixir: '1.17'
             otp: '25.3'
