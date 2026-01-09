@@ -4,7 +4,7 @@ defmodule RetWeb.HealthControllerTest do
   import ExUnit.CaptureLog
   require Logger
 
-  test "GET /health returns 500 and logs error inspection when a check fails", %{conn: conn} do
+  test "GET /health, when a check fails, returns 500 and logs error & location", %{conn: conn} do
     log =
       capture_log([level: :error], fn ->
         # Cachex and RoomAssigner aren't mocked so this will fail.
@@ -13,6 +13,9 @@ defmodule RetWeb.HealthControllerTest do
         assert resp.resp_body === "error"
       end)
 
-    assert log =~ "Error"
+    # It should log health_controller.ex (reticulum code) even if the error
+    # occurs inside a library (like Enum or Cachex).
+    assert log =~ "Health check failed at"
+    assert log =~ "health_controller.ex"
   end
 end

@@ -21,7 +21,8 @@ defmodule RetWeb.HealthController do
       send_resp(conn, 200, "ok")
     rescue
       error ->
-        Logger.error("Health check failed: #{inspect(error)}")
+        {filename, line} = extract_our_code_location(__STACKTRACE__)
+        Logger.error("Health check failed at #{filename}:#{line}: #{inspect(error)}")
         send_resp(conn, 500, "error")
     end
   end
