@@ -1,7 +1,6 @@
 defmodule RetWeb.HealthController do
   use RetWeb, :controller
   import Ecto.Query
-  require Logger
 
   def index(conn, _params) do
     try do
@@ -21,11 +20,7 @@ defmodule RetWeb.HealthController do
       send_resp(conn, 200, "ok")
     rescue
       error ->
-        {filename, line, function} = extract_our_code_location(__STACKTRACE__)
-
-        Logger.error(
-          "Health check failed at #{filename}:#{line} calling #{function}: #{inspect(error)}"
-        )
+        log_our_code_location(__STACKTRACE__, error, "Health check failed")
 
         send_resp(conn, 500, "error")
     end

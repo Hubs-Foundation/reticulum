@@ -2,74 +2,75 @@ defmodule RetWeb.ControllerHelpersTest do
   use ExUnit.Case, async: true
 
   alias RetWeb.ControllerHelpers
+  import ExUnit.CaptureLog
+  require Logger
 
-  describe "extract_our_code_location/1" do
-    test "extracts location from a project module" do
-      stacktrace = [
-        {RetWeb.ControllerHelpers, :extract_our_code_location, 1,
-         [file: ~c"lib/ret_web/controllers/controller_helpers.ex", line: 25]}
-      ]
+  describe "log_our_code_location/3" do
+    test "ignores dependency modules and finds innermost project module" do
+      log =
+        capture_log([level: :error], fn ->
+          stacktrace = [
+            {Bamboo.Email, :new_email, 0,
+             [file: ~c"_build/test/lib/bamboo/ebin/Elixir.Bamboo.Email.beam", line: 190]},
+            {RetWeb.Email, :auth_email, 2, [file: ~c"lib/ret_web/email.ex", line: 19]},
+            {RetWeb.Endpoint, :get_cors_origins, 0, [file: ~c"lib/ret_web/endpoint.ex", line: 10]}
+          ]
 
-      assert {"controller_helpers.ex", 25, :unknown} ==
-               ControllerHelpers.extract_our_code_location(stacktrace)
-    end
+          ControllerHelpers.log_our_code_location(stacktrace, :email_error, "Pseudo-failure")
+        end)
 
-    test "ignores dependency modules and finds project module" do
-      stacktrace = [
-        {Plug.Conn, :send_resp, 3, [file: ~c"deps/plug/lib/plug/conn.ex", line: 400]},
-        {RetWeb.ControllerHelpers, :render_error_json, 3,
-         [file: ~c"lib/ret_web/controllers/controller_helpers.ex", line: 6]}
-      ]
-
-      assert {"controller_helpers.ex", 6, :send_resp} ==
-               ControllerHelpers.extract_our_code_location(stacktrace)
+      assert log =~ "Pseudo-failure"
+      assert log =~ "at email.ex:19"
+      assert log =~ "calling new_email"
+      assert log =~ ":email_error"
     end
 
     test "falls back to the first entry if no project module is found" do
-      stacktrace = [
-        {Plug.Conn, :send_resp, 3, [file: ~c"deps/plug/lib/plug/conn.ex", line: 400]},
-        {Phoenix.Controller, :render, 3,
-         [file: ~c"deps/phoenix/lib/phoenix/controller.ex", line: 100]}
-      ]
+      log =
+        capture_log([level: :error], fn ->
+          stacktrace = [
+            {Plug.Conn, :send_resp, 3, [file: ~c"deps/plug/lib/plug/spam.ex", line: 400]},
+            {Phoenix.Controller, :render, 3,
+             [file: ~c"deps/phoenix/lib/phoenix/controller.ex", line: 100]}
+          ]
 
-      assert {"conn.ex", 400, :unknown} ==
-               ControllerHelpers.extract_our_code_location(stacktrace)
-    end
+          ControllerHelpers.log_our_code_location(stacktrace, :another_error)
+        end)
 
-    test "handles stacktrace with charlist paths (standard in Erlang/Elixir)" do
-      stacktrace = [
-        {RetWeb.SomeModule, :some_func, 0, [file: ~c"lib/ret_web/some_module.ex", line: 10]}
-      ]
-
-      assert {"some_module.ex", 10, :unknown} ==
-               ControllerHelpers.extract_our_code_location(stacktrace)
+      assert log =~ "Failure"
+      assert log =~ "at spam.ex:400"
+      assert log =~ "calling unknown"
+      assert log =~ ":another_error"
     end
 
     test "handles malformed stacktrace entries by returning unknown" do
-      # This should trigger the rescue block because of the pattern match
-      stacktrace = [
-        {:not, :a, :standard, :entry}
-      ]
+      log =
+        capture_log([level: :error], fn ->
+          # This should trigger the rescue block because pattern doesn't match
+          stacktrace = [
+            {:not, :a, :standard, :entry}
+          ]
 
-      assert {"<unknown>", 0} ==
-               ControllerHelpers.extract_our_code_location(stacktrace)
+          ControllerHelpers.log_our_code_location(stacktrace, :spam_error, "Probe failure")
+        end)
+
+      assert log =~ "Probe failure"
+      assert log =~ "at <unknown>:0"
+      assert log =~ "calling unknown"
+      assert log =~ ":spam_error"
     end
 
-    test "handles empty stacktrace" do
-      assert {"<unknown>", 0} ==
-               ControllerHelpers.extract_our_code_location([])
-    end
+    test "handles empty stacktrace by returning unknown" do
+      log =
+        capture_log([level: :error], fn ->
+          # This should trigger the rescue block because there's no entry to match
+          ControllerHelpers.log_our_code_location([], :strange_error, "Weird failure")
+        end)
 
-    test "detects project module even if it is not the first one" do
-      stacktrace = [
-        {SomeOther.Module, :func, 0, [file: ~c"lib/other.ex", line: 1]},
-        {RetWeb.ControllerHelpers, :func, 0,
-         [file: ~c"lib/ret_web/controller_helpers.ex", line: 2]}
-      ]
-
-      # SomeOther.Module does not start with Elixir.Ret
-      assert {"controller_helpers.ex", 2, :func} ==
-               ControllerHelpers.extract_our_code_location(stacktrace)
+      assert log =~ "Weird failure"
+      assert log =~ "at <unknown>:0"
+      assert log =~ "calling unknown"
+      assert log =~ ":strange_error"
     end
   end
 end
