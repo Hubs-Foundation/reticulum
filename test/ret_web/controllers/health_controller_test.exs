@@ -15,7 +15,8 @@ defmodule RetWeb.HealthControllerTest do
 
     # It should log health_controller.ex (reticulum code) even if the error
     # occurs inside a library (like Enum or Cachex).
-    assert log =~ "Health check failed at"
-    assert log =~ "health_controller.ex"
+    assert log =~ "Health check failed"
+    assert log =~ "at health_controller.ex:14"
+    assert log =~ "calling count"
   end
 end

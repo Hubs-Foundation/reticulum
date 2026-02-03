@@ -24,8 +24,8 @@ defmodule RetWeb.ControllerHelpers do
 
   def extract_our_code_location(stacktrace) do
     try do
-      entry =
-        Enum.find(stacktrace, fn
+      ind =
+        Enum.find_index(stacktrace, fn
           {module, _function, _arity, [file: filepath, line: _line]} ->
             filepath = List.to_string(filepath)
 
@@ -39,12 +39,20 @@ defmodule RetWeb.ControllerHelpers do
           _ ->
             false
             # if no matching entry found, returns first entry
-        end) || hd(stacktrace)
+        end) || 0
 
-      {_module, _function, _arity, [file: filepath, line: line]} = entry
+      {_module, _function, _arity, [file: filepath, line: line]} = Enum.at(stacktrace, ind)
       filename = Path.basename(List.to_string(filepath))
 
-      {filename, line}
+      function =
+        if ind > 0 do
+          {_m, function, _a, [_f, _l]} = Enum.at(stacktrace, ind - 1)
+          function
+        else
+          :unknown
+        end
+
+      {filename, line, function}
     rescue
       _coding_error ->
         {"<unknown>", 0}
