@@ -62,6 +62,12 @@ defmodule RetWeb.ControllerHelpers do
 
     Logger.error("#{description} at #{filename}:#{line} calling #{function}: #{inspect(error)}")
 
+    if System.get_env("STACKTRACE") === "FULL" do
+      Logger.error(Exception.format_stacktrace(stacktrace))
+    else
+      Logger.debug("For full stacktraces, set the environment variable STACKTRACE to FULL.")
+    end
+
     {filename, line, function}
   end
 end
