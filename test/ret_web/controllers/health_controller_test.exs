@@ -4,6 +4,7 @@ defmodule RetWeb.HealthControllerTest do
   import ExUnit.CaptureLog
   require Logger
 
+  @tag :error_logging
   test "GET /health, when a check fails, returns 500 and logs error & location", %{conn: conn} do
     log =
       capture_log([level: :error], fn ->
@@ -17,6 +18,6 @@ defmodule RetWeb.HealthControllerTest do
     # occurs inside a library (like Enum or Cachex).
     assert log =~ "Health check failed"
     assert log =~ "at health_controller.ex:13"
-    assert log =~ "calling count"
+    assert log =~ "calling Enum.count"
   end
 end

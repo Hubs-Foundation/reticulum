@@ -59,6 +59,17 @@ Run the following commands at the root of the reticulum directory:
 
 Run `scripts/run.sh` if you have the hubs secret repo cloned. Otherwise `iex -S mix phx.server`
 
+## Development Aids
+
+### Environment Variables [INCOMPLETE]
+
+* STACKTRACE
+   * For errors logged using `log_our_code_location/3`, controls output verbosity.
+   * Valid values:
+      * `FULL`: prints a full stack trace in addition to the location in project code
+      * undefined or any other value: prints only the location in project code
+
+
 ## Run Hubs Against a Local Reticulum Instance
 
 ### 1. Setup the `hubs.local` hostname

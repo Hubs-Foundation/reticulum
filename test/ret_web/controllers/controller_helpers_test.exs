@@ -6,19 +6,22 @@ defmodule RetWeb.ControllerHelpersTest do
   require Logger
 
   setup_all do
-    Logger.configure(level: :debug)
+    Logger.configure(level: :info)
     :ok
   end
 
   describe "log_our_code_location/3" do
+    @tag :error_logging
     test "ignores dependency modules and finds innermost project module" do
       log =
-        capture_log([level: :debug], fn ->
+        capture_log([level: :info], fn ->
           stacktrace = [
             {Bamboo.Email, :new_email, 0,
              [file: ~c"_build/test/lib/bamboo/ebin/Elixir.Bamboo.Email.beam", line: 190]},
             {RetWeb.Email, :auth_email, 2, [file: ~c"lib/ret_web/email.ex", line: 19]},
-            {RetWeb.Endpoint, :get_cors_origins, 0, [file: ~c"lib/ret_web/endpoint.ex", line: 10]}
+            {RetWeb.Endpoint, :get_cors_origins, 0,
+             [file: ~c"lib/ret_web/endpoint.ex", line: 10]},
+            {RetWeb.Endpoint, :allowed_origin?, 1, [file: ~c"lib/ret_web/endpoint.ex", line: 16]}
           ]
 
           ControllerHelpers.log_our_code_location(stacktrace, :email_error, "Pseudo-failure")
@@ -26,14 +29,16 @@ defmodule RetWeb.ControllerHelpersTest do
 
       assert log =~ "Pseudo-failure"
       assert log =~ "at email.ex:19"
-      assert log =~ "calling new_email"
+      assert log =~ "calling Bamboo.Email.new_email"
       assert log =~ ":email_error"
       assert log =~ "For full stacktraces, set the environment variable STACKTRACE to FULL."
+      refute log =~ "Stack trace (most recent call first)"
     end
 
+    @tag :error_logging
     test "falls back to the first entry if no project module is found" do
       log =
-        capture_log([level: :debug], fn ->
+        capture_log([level: :info], fn ->
           stacktrace = [
             {Plug.Conn, :send_resp, 3, [file: ~c"deps/plug/lib/plug/spam.ex", line: 400]},
             {Phoenix.Controller, :render, 3,
@@ -48,11 +53,13 @@ defmodule RetWeb.ControllerHelpersTest do
       assert log =~ "calling unknown"
       assert log =~ ":another_error"
       assert log =~ "For full stacktraces, set the environment variable STACKTRACE to FULL."
+      refute log =~ "Stack trace (most recent call first)"
     end
 
-    test "handles malformed stacktrace entries by returning unknown" do
+    @tag :error_logging
+    test "handles malformed stacktrace entries by returning <malformed stacktrace>" do
       log =
-        capture_log([level: :debug], fn ->
+        capture_log([level: :info], fn ->
           # This should trigger the rescue block because pattern doesn't match
           stacktrace = [
             {:not, :a, :standard, :entry}
@@ -62,26 +69,30 @@ defmodule RetWeb.ControllerHelpersTest do
         end)
 
       assert log =~ "Probe failure"
-      assert log =~ "at <unknown>:0"
+      assert log =~ "at <malformed stacktrace>:0"
       assert log =~ "calling unknown"
       assert log =~ ":spam_error"
       assert log =~ "For full stacktraces, set the environment variable STACKTRACE to FULL."
+      refute log =~ "Stack trace (most recent call first)"
     end
 
-    test "handles empty stacktrace by returning unknown" do
+    @tag :error_logging
+    test "handles empty stacktrace by returning <malformed stacktrace>" do
       log =
-        capture_log([level: :debug], fn ->
+        capture_log([level: :info], fn ->
           # This should trigger the rescue block because there's no entry to match
           ControllerHelpers.log_our_code_location([], :strange_error, "Weird failure")
         end)
 
       assert log =~ "Weird failure"
-      assert log =~ "at <unknown>:0"
+      assert log =~ "at <malformed stacktrace>:0"
       assert log =~ "calling unknown"
       assert log =~ ":strange_error"
       assert log =~ "For full stacktraces, set the environment variable STACKTRACE to FULL."
+      refute log =~ "Stack trace (most recent call first)"
     end
 
+    @tag :error_logging
     test "logs full stacktrace when STACKTRACE environment variable is set to FULL" do
       System.put_env("STACKTRACE", "FULL")
 
@@ -90,7 +101,7 @@ defmodule RetWeb.ControllerHelpersTest do
       end)
 
       log =
-        capture_log([level: :debug], fn ->
+        capture_log([level: :info], fn ->
           stacktrace = [
             {RetWeb.Email, :auth_email, 2, [file: ~c"lib/ret_web/email.ex", line: 19]},
             {RetWeb.Endpoint, :get_cors_origins, 0, [file: ~c"lib/ret_web/endpoint.ex", line: 10]}
@@ -103,9 +114,35 @@ defmodule RetWeb.ControllerHelpersTest do
       assert log =~ "at email.ex:19"
       assert log =~ "calling unknown"
       assert log =~ ":full_error"
+      refute log =~ "For full stacktraces, set the environment variable STACKTRACE to FULL."
+      assert log =~ "Stack trace (most recent call first)"
       assert log =~ "RetWeb.Email.auth_email/2"
       assert log =~ "RetWeb.Endpoint.get_cors_origins/0"
+    end
+
+    @tag :error_logging
+    test "handles stacktrace entry without filepath by returning <unknown>" do
+      log =
+        capture_log([level: :info], fn ->
+          # Entry with arity but no location information
+          stacktrace = [
+            {RetWeb.HealthController, :index, 2, []}
+          ]
+
+          ControllerHelpers.log_our_code_location(
+            stacktrace,
+            :no_filepath_error,
+            "No-filepath failure"
+          )
+        end)
+
+      assert log =~ "No-filepath failure"
+      assert log =~ "at <unknown>:0"
+      assert log =~ "calling unknown"
+      assert log =~ ":no_filepath_error"
       refute log =~ "For full stacktraces, set the environment variable STACKTRACE to FULL."
+      assert log =~ "Stack trace (most recent call first)"
+      assert log =~ "RetWeb.HealthController.index/2"
     end
   end
 end
