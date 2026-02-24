@@ -17,6 +17,10 @@ defmodule RetWeb.EmailTest do
       assert email.subject == "Your localhost Sign-In Link"
       assert email.text_body =~ "To sign-in to localhost, please visit the link below."
       assert email.text_body =~ "http://localhost:4001/?auth_foo=42&token=test-token"
+      assert email.html_body =~ "To sign-in to localhost, please visit the link below."
+
+      assert email.html_body =~
+               "<a href=\"http://localhost:4001/?auth_foo=42&token=test-token\">http://localhost:4001/?auth_foo=42&token=test-token</a>"
     end
 
     test "returns an email with custom app name" do
@@ -26,6 +30,7 @@ defmodule RetWeb.EmailTest do
 
       assert email.subject == "Your My Hubs Instance Sign-In Link"
       assert email.text_body =~ "To sign-in to My Hubs Instance, please visit the link below."
+      assert email.html_body =~ "To sign-in to My Hubs Instance, please visit the link below."
 
       AppConfig.set_config_value("translations|en|app-name", nil)
     end
@@ -48,6 +53,9 @@ defmodule RetWeb.EmailTest do
       assert email.text_body =~
                "Surf to: http://localhost:4001/?auth_foo=42&token=test-token to log in."
 
+      assert email.html_body =~
+               "Surf to: <a href=\"http://localhost:4001/?auth_foo=42&token=test-token\">http://localhost:4001/?auth_foo=42&token=test-token</a> to log in."
+
       AppConfig.set_config_value("auth|login_body", nil)
     end
 
@@ -58,6 +66,9 @@ defmodule RetWeb.EmailTest do
 
       assert email.text_body =~
                "Custom body without placeholder.\n\nhttp://localhost:4001/?auth_foo=42&token=test-token"
+
+      assert email.html_body =~
+               "Custom body without placeholder.\n\n<a href=\"http://localhost:4001/?auth_foo=42&token=test-token\">http://localhost:4001/?auth_foo=42&token=test-token</a>"
 
       AppConfig.set_config_value("auth|login_body", nil)
     end

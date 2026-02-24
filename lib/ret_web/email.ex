@@ -17,17 +17,27 @@ defmodule RetWeb.Email do
         else: custom_login_subject
 
     email_body =
-      if string_is_nil_or_empty(custom_login_body),
-        do:
-          "To sign-in to #{app_name}, please visit the link below. If you did not make this request, please ignore this e-mail.\n\n #{RetWeb.Endpoint.url()}/?#{URI.encode_query(signin_args)}",
-        else: add_magic_link_to_custom_login_body(custom_login_body, signin_args)
+      if string_is_nil_or_empty(custom_login_body) do
+        instruction =
+          "To sign-in to #{app_name}, please visit the link below. If you did not make this request, please ignore this e-mail."
+
+        magic_link = "#{RetWeb.Endpoint.url()}/?#{URI.encode_query(signin_args)}"
+
+        [
+          text: "#{instruction}\n\n#{magic_link}",
+          html: "#{instruction}\n\n<a href=\"#{magic_link}\">#{magic_link}</a>"
+        ]
+      else
+        add_magic_link_to_custom_login_body(custom_login_body, signin_args)
+      end
 
     email =
       new_email()
       |> to(to_address)
       |> from({app_full_name, from_address()})
       |> subject(email_subject)
-      |> text_body(email_body)
+      |> text_body(email_body[:text])
+      |> html_body(email_body[:html])
 
     if admin_email && !System.get_env("TURKEY_MODE") do
       email |> put_header("Return-Path", admin_email)
@@ -44,9 +54,20 @@ defmodule RetWeb.Email do
     magic_link = "#{RetWeb.Endpoint.url()}/?#{URI.encode_query(signin_args)}"
 
     if Regex.match?(~r/{{ link }}/, custom_message) do
-      Regex.replace(~r/{{ link }}/, custom_message, magic_link)
+      [
+        text: Regex.replace(~r/{{ link }}/, custom_message, magic_link),
+        html:
+          Regex.replace(
+            ~r/{{ link }}/,
+            custom_message,
+            "<a href=\"#{magic_link}\">#{magic_link}</a>"
+          )
+      ]
     else
-      custom_message <> "\n\n" <> magic_link
+      [
+        text: "#{custom_message}\n\n#{magic_link}",
+        html: "#{custom_message}\n\n<a href=\"#{magic_link}\">#{magic_link}</a>"
+      ]
     end
   end
 
