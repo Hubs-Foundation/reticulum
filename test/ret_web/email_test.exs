@@ -3,6 +3,11 @@ defmodule RetWeb.EmailTest do
   alias RetWeb.Email
   alias Ret.AppConfig
 
+  setup do
+    Application.put_env(:ret, RetWeb.Email, from: "noreply")
+    :ok
+  end
+
   @to_address "test@example.com"
   @signin_args %{"token" => "test-token", "auth_foo" => "42"}
 
@@ -13,6 +18,7 @@ defmodule RetWeb.EmailTest do
     test "returns an email with default subject and body" do
       email = Email.auth_email(@to_address, @signin_args)
 
+      assert email.from == {"localhost", "noreply"}
       assert email.to == @to_address
       assert email.subject == "Your localhost Sign-In Link"
       assert email.text_body =~ "To sign-in to localhost, please visit the link below."
