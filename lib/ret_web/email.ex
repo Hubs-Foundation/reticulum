@@ -1,5 +1,5 @@
 defmodule RetWeb.Email do
-  use Bamboo.Phoenix, view: RetWeb.EmailView
+  import Swoosh.Email
   alias Ret.{AppConfig}
 
   def auth_email(to_address, signin_args) do
@@ -23,14 +23,14 @@ defmodule RetWeb.Email do
         else: add_magic_link_to_custom_login_body(custom_login_body, signin_args)
 
     email =
-      new_email()
+      new()
       |> to(to_address)
       |> from({app_full_name, from_address()})
       |> subject(email_subject)
       |> text_body(email_body)
 
     if admin_email && !System.get_env("TURKEY_MODE") do
-      email |> put_header("Return-Path", admin_email)
+      email |> header("Return-Path", admin_email)
     else
       email
     end

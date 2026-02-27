@@ -161,7 +161,7 @@ config :ret, RetWeb.Plugs.AddCSP,
   media_src: asset_hosts,
   manifest_src: asset_hosts
 
-config :ret, Ret.Mailer, adapter: Bamboo.LocalAdapter
+config :ret, Ret.Mailer, adapter: Swoosh.Adapters.Logger, log_full_email: true
 
 config :ret, RetWeb.Email, from: "info@hubs-mail.com"
 
