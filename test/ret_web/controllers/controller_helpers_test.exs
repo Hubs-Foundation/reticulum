@@ -57,7 +57,7 @@ defmodule RetWeb.ControllerHelpersTest do
     end
 
     @tag :error_logging
-    test "handles malformed stacktrace entries by returning <malformed stacktrace>" do
+    test "handles malformed stacktrace entries by logging full stack trace" do
       log =
         capture_log([level: :info], fn ->
           # This should trigger the rescue block because pattern doesn't match
@@ -72,12 +72,12 @@ defmodule RetWeb.ControllerHelpersTest do
       assert log =~ "at <malformed stacktrace>:0"
       assert log =~ "calling unknown"
       assert log =~ ":spam_error"
-      assert log =~ "For full stacktraces, set the environment variable STACKTRACE to FULL."
-      refute log =~ "Stack trace (most recent call first)"
+      refute log =~ "For full stacktraces, set the environment variable STACKTRACE to FULL."
+      assert log =~ "Stack trace (nonstandard)"
     end
 
     @tag :error_logging
-    test "handles empty stacktrace by returning <malformed stacktrace>" do
+    test "handles empty stacktrace by logging full stacktrace" do
       log =
         capture_log([level: :info], fn ->
           # This should trigger the rescue block because there's no entry to match
@@ -88,8 +88,8 @@ defmodule RetWeb.ControllerHelpersTest do
       assert log =~ "at <malformed stacktrace>:0"
       assert log =~ "calling unknown"
       assert log =~ ":strange_error"
-      assert log =~ "For full stacktraces, set the environment variable STACKTRACE to FULL."
-      refute log =~ "Stack trace (most recent call first)"
+      refute log =~ "For full stacktraces, set the environment variable STACKTRACE to FULL."
+      assert log =~ "Stack trace (most recent call first)"
     end
 
     @tag :error_logging

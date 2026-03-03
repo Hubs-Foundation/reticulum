@@ -64,10 +64,16 @@ defmodule RetWeb.ControllerHelpers do
 
     Logger.error("#{description} at #{filename}:#{line} calling #{function}: #{inspect(error)}")
 
-    if System.get_env("STACKTRACE") === "FULL" or filename === "<unknown>" do
-      Logger.error(
-        "Stack trace (most recent call first):\n" <> Exception.format_stacktrace(stacktrace)
-      )
+    if System.get_env("STACKTRACE") === "FULL" or filename === "<unknown>" or
+         filename === "<malformed stacktrace>" do
+      try do
+        Logger.error(
+          "Stack trace (most recent call first):\n" <> Exception.format_stacktrace(stacktrace)
+        )
+      rescue
+        _ ->
+          Logger.error("Stack trace (nonstandard):\n" <> inspect(stacktrace))
+      end
     else
       Logger.info("For full stacktraces, set the environment variable STACKTRACE to FULL.")
     end
