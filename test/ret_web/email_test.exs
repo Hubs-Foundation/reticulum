@@ -74,7 +74,29 @@ defmodule RetWeb.EmailTest do
       assert email.headers["Return-Path"] == "admin@hubsfoundation.org"
     end
 
-    # We don't test with environment variable TURKEY_MODE set, as changing global state
-    # between different tests would require workarounds to prevent race conditions.
+    test "omits Return-Path header if admin_email is set and TURKEY_MODE enabled" do
+      # admin_email is set to "admin@hubsfoundation.org" in config/test.exs
+      System.put_env("TURKEY_MODE", "1")
+
+      on_exit(fn ->
+        System.delete_env("TURKEY_MODE")
+      end)
+
+      email = Email.auth_email(@to_address, @signin_args)
+      refute Map.has_key?(email.headers, "Return-Path")
+    end
+
+    test "omits Return-Path header if admin_email is not set" do
+      # admin_email is set to "admin@hubsfoundation.org" in config/test.exs
+      admin_email = Application.get_env(:ret, Ret.Account)[:admin_email]
+      Application.put_env(:ret, Ret.Account, admin_email: nil)
+
+      on_exit(fn ->
+        Application.put_env(:ret, Ret.Account, admin_email: admin_email)
+      end)
+
+      email = Email.auth_email(@to_address, @signin_args)
+      refute Map.has_key?(email.headers, "Return-Path")
+    end
   end
 end
