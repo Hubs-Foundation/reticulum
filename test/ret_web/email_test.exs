@@ -73,5 +73,8 @@ defmodule RetWeb.EmailTest do
       email = Email.auth_email(@to_address, @signin_args)
       assert email.headers["Return-Path"] == "admin@hubsfoundation.org"
     end
+
+    # We don't test with environment variable TURKEY_MODE set, as changing global state
+    # between different tests would require workarounds to prevent race conditions.
   end
 end
