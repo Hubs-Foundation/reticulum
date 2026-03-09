@@ -19,7 +19,7 @@ defmodule RetWeb.EmailTest do
       email = Email.auth_email(@to_address, @signin_args)
 
       assert email.from == {"localhost", "noreply"}
-      assert email.to == @to_address
+      assert email.to == [{"", @to_address}]
       assert email.subject == "Your localhost Sign-In Link"
       assert email.text_body =~ "To sign-in to localhost, please visit the link below."
       assert email.text_body =~ "http://localhost:4001/?auth_foo=42&token=test-token"
