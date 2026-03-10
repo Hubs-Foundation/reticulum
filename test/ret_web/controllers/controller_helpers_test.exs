@@ -94,6 +94,7 @@ defmodule RetWeb.ControllerHelpersTest do
 
     @tag :error_logging
     test "logs full stacktrace when STACKTRACE environment variable is set to FULL" do
+      # Note: manipulation of this environment variable within async tests is deemed safe because it only relates to this module.
       System.put_env("STACKTRACE", "FULL")
 
       on_exit(fn ->
