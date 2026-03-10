@@ -2,6 +2,7 @@ defmodule RetWeb.ControllerHelpers do
   import Plug.Conn
   import Phoenix.Controller
   import RetWeb.ErrorHelpers
+  require Logger
 
   def render_error_json(conn, status, params) do
     conn
@@ -20,5 +21,63 @@ defmodule RetWeb.ControllerHelpers do
     code = Plug.Conn.Status.code(status)
     reason = Plug.Conn.Status.reason_phrase(code)
     render_error_json(conn, status, reason)
+  end
+
+  def log_our_code_location(stacktrace, error, description \\ "Failure") do
+    {filename, line, function} =
+      try do
+        ind =
+          Enum.find_index(stacktrace, fn
+            {module, _function, _arity, [file: filepath, line: _line]} ->
+              filepath = List.to_string(filepath)
+
+              is_not_dependency =
+                !String.contains?(filepath, "/deps/") && !String.contains?(filepath, "deps/")
+
+              is_reticulum_module = String.starts_with?(to_string(module), "Elixir.Ret")
+              is_not_dependency && is_reticulum_module
+
+            # if stacktrace entry isn't in usual format, skips it
+            _ ->
+              false
+              # if no matching entry found, returns first entry
+          end) || 0
+
+        {_module, _function, _arity, location} = Enum.at(stacktrace, ind)
+        filepath = Keyword.get(location, :file)
+        line = Keyword.get(location, :line, 0)
+        filename = if filepath, do: Path.basename(List.to_string(filepath)), else: "<unknown>"
+
+        function =
+          if ind > 0 do
+            {module, function, _ar, _location} = Enum.at(stacktrace, ind - 1)
+            "#{String.replace_prefix(to_string(module), "Elixir.", "")}.#{function}"
+          else
+            :unknown
+          end
+
+        {filename, line, function}
+      rescue
+        _coding_error ->
+          {"<malformed stacktrace>", 0, :unknown}
+      end
+
+    Logger.error("#{description} at #{filename}:#{line} calling #{function}: #{inspect(error)}")
+
+    if System.get_env("STACKTRACE") === "FULL" or filename === "<unknown>" or
+         filename === "<malformed stacktrace>" do
+      try do
+        Logger.error(
+          "Stack trace (most recent call first):\n" <> Exception.format_stacktrace(stacktrace)
+        )
+      rescue
+        _ ->
+          Logger.error("Stack trace (nonstandard):\n" <> inspect(stacktrace))
+      end
+    else
+      Logger.info("For full stacktraces, set the environment variable STACKTRACE to FULL.")
+    end
+
+    {filename, line, function}
   end
 end
