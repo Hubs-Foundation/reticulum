@@ -7,6 +7,8 @@ on:
     paths-ignore: [".github/**", "guides/**", "README.md", "LICENSE", "CODE_OF_CONDUCT.md"]
   workflow_dispatch:
 
+permissions: {}
+
 jobs:
   turkeyGitops:
     if: github.repository_owner == 'Hubs-Foundation'
