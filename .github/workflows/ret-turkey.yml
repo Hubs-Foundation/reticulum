@@ -1,9 +1,6 @@
 name: reticulum
 on:
   push:
-    branches:
-      - 'master'
-      - 'hotfix/**'
     paths-ignore: [".github/**", "guides/**", "README.md", "LICENSE", "CODE_OF_CONDUCT.md"]
   workflow_dispatch:
 
