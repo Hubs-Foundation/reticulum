@@ -56,7 +56,7 @@ config :ret, RetWeb.Endpoint,
 
 # Watch static and templates for browser reloading.
 config :ret, RetWeb.Endpoint,
-  # static_url: [scheme: "https", host: "assets-prod.reticulum.io", port: 443],
+  # static_url: [scheme: "https", host: "assets-prod.reticulum.io.invalid", port: 443],
   live_reload: [
     patterns: [
       ~r{priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$},
@@ -144,7 +144,7 @@ config :ret, Ret.Storage,
 asset_hosts =
   "https://localhost:4000 https://localhost:8080 " <>
     "https://#{host}:4000 https://#{host}:8080 https://#{host}:3000 https://#{host}:8989 https://#{host}:9090 https://#{cors_proxy_host}:4000 " <>
-    "https://assets-prod.reticulum.io https://asset-bundles-dev.reticulum.io https://asset-bundles-prod.reticulum.io"
+    "https://assets-prod.reticulum.io.invalid https://asset-bundles-dev.reticulum.io.invalid https://asset-bundles-prod.reticulum.io.invalid"
 
 websocket_hosts =
   "https://localhost:4000 https://localhost:8080 wss://localhost:4000 " <>

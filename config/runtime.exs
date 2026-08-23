@@ -6,7 +6,7 @@ config :ret, RetWeb.Plugs.PostgrestProxy,
 case config_env() do
   :dev ->
     db_hostname = System.get_env("DB_HOST", "localhost")
-    dialog_hostname = System.get_env("DIALOG_HOSTNAME", "dev-janus.reticulum.io")
+    dialog_hostname = System.get_env("DIALOG_HOSTNAME", "dev-janus.reticulum.io.invalid")
     hubs_admin_internal_hostname = System.get_env("HUBS_ADMIN_INTERNAL_HOSTNAME", "hubs.local")
     hubs_client_internal_hostname = System.get_env("HUBS_CLIENT_INTERNAL_HOSTNAME", "hubs.local")
     spoke_internal_hostname = System.get_env("SPOKE_INTERNAL_HOSTNAME", "hubs.local")
